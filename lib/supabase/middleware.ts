@@ -41,15 +41,20 @@ export async function updateSession(request: NextRequest) {
     // supabase.auth.getUser(). A simple mistake could make your app
     // vulnerable to security issues.
 
-    const {
-        data: { user },
-    } = await supabase.auth.getUser()
+    let user = null
+    try {
+        const result = await supabase.auth.getUser()
+        user = result.data.user
+    } catch (error) {
+        // Supabase might be down or not configured
+        console.warn('Supabase auth check failed - proceeding as anonymous:', error)
+    }
+
+    const protectedPaths = ['/dashboard', '/onboarding', '/admin'];
+    const isProtected = protectedPaths.some((path) => request.nextUrl.pathname.startsWith(path));
 
     // Protected routes - redirect to login if not authenticated
-    if (
-        !user &&
-        request.nextUrl.pathname.startsWith('/dashboard')
-    ) {
+    if (!user && isProtected) {
         const url = request.nextUrl.clone()
         url.pathname = '/login'
         return NextResponse.redirect(url)

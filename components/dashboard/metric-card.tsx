@@ -16,31 +16,26 @@ export function MetricCard({
     change,
     changeType = "neutral",
     icon: Icon,
-    iconColor = "text-violet-400",
+    iconColor = "text-[var(--text-muted)]",
 }: MetricCardProps) {
     return (
-        <div className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-6">
+        <div className="rounded-xl bg-[var(--surface)] border border-[var(--border)] p-5 transition-colors hover:border-[var(--border-hover)]">
             <div className="flex items-start justify-between">
                 <div className="space-y-1">
-                    <p className="text-sm text-zinc-400">{title}</p>
-                    <p className="text-3xl font-bold text-zinc-100">{value}</p>
+                    <p className="text-xs font-medium text-[var(--text-muted)] uppercase tracking-wider">{title}</p>
+                    <p className="text-2xl font-bold font-display text-[var(--text-primary)] tracking-tight">{value}</p>
                 </div>
-                <div
-                    className={cn(
-                        "w-10 h-10 rounded-lg flex items-center justify-center",
-                        "bg-zinc-800"
-                    )}
-                >
-                    <Icon className={cn("w-5 h-5", iconColor)} />
+                <div className="w-8 h-8 rounded-lg bg-[var(--surface-elevated)] flex items-center justify-center">
+                    <Icon className={cn("w-4 h-4", iconColor)} />
                 </div>
             </div>
             {change && (
                 <p
                     className={cn(
-                        "mt-3 text-sm",
-                        changeType === "positive" && "text-green-400",
-                        changeType === "negative" && "text-red-400",
-                        changeType === "neutral" && "text-zinc-400"
+                        "mt-3 text-xs",
+                        changeType === "positive" && "text-emerald-400",
+                        changeType === "negative" && "text-rose-400",
+                        changeType === "neutral" && "text-[var(--text-muted)]"
                     )}
                 >
                     {change}

@@ -6,6 +6,7 @@ export interface Organization {
     plan: 'free' | 'starter' | 'pro' | 'agency' | 'enterprise';
     stripe_customer_id: string | null;
     stripe_subscription_id: string | null;
+    razorpay_subscription_id: string | null;
     created_at: string;
     updated_at: string;
 }
@@ -17,6 +18,7 @@ export interface User {
     avatar_url: string | null;
     org_id: string;
     role: 'owner' | 'admin' | 'editor' | 'viewer';
+    is_super_admin: boolean;
     created_at: string;
 }
 
@@ -35,12 +37,15 @@ export interface WorkspaceSettings {
     auto_scan_enabled?: boolean;
     scan_frequency?: 'daily' | 'weekly' | 'monthly';
     notification_email?: string;
+    industry?: string;
+    target_audience?: string;
 }
 
 export interface Product {
     id: string;
     workspace_id: string;
     name: string;
+    website: string | null;
     description: string | null;
     keywords: string[];
     competitors: Competitor[];
@@ -88,12 +93,13 @@ export interface Citation {
 export interface ForumThread {
     id: string;
     workspace_id: string;
-    platform: 'reddit' | 'quora' | 'teambhp' | 'xbhp' | 'other';
+    platform: 'reddit' | 'quora' | 'teambhp' | 'xbhp' | 'youtube' | 'other';
     external_id: string;
     url: string;
     title: string;
     text: string | null;
     subreddit: string | null;
+    author: string | null;
     score: number;
     num_comments: number;
     opportunity_score: number;
@@ -103,6 +109,8 @@ export interface ForumThread {
     comment_draft: string | null;
     posted_at: string | null;
     posted_by: string | null;
+    discovered_at: string | null;
+    external_created_at: string | null;
     created_at: string;
 }
 

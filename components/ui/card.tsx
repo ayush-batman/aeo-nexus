@@ -7,7 +7,7 @@ export function Card({ className, ...props }: CardProps) {
     return (
         <div
             className={cn(
-                "rounded-xl border border-zinc-800 bg-zinc-900/50 backdrop-blur-sm",
+                "rounded-2xl bg-[var(--surface)] border border-[var(--border)] transition-colors",
                 className
             )}
             {...props}
@@ -27,7 +27,7 @@ export function CardHeader({ className, ...props }: CardProps) {
 export function CardTitle({ className, ...props }: CardProps) {
     return (
         <h3
-            className={cn("text-xl font-semibold text-zinc-100", className)}
+            className={cn("text-base font-semibold font-display text-[var(--text-primary)] tracking-tight", className)}
             {...props}
         />
     );
@@ -35,7 +35,7 @@ export function CardTitle({ className, ...props }: CardProps) {
 
 export function CardDescription({ className, ...props }: CardProps) {
     return (
-        <p className={cn("text-sm text-zinc-400", className)} {...props} />
+        <p className={cn("text-sm text-[var(--text-muted)]", className)} {...props} />
     );
 }
 

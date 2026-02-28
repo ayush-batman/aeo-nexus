@@ -1,10 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { scanLLM, calculateVisibilityScore, type LLMPlatform } from '@/lib/ai/llm-scanner';
+import { scanLLM, calculateVisibilityScore, getAvailablePlatforms, type LLMPlatform } from '@/lib/ai/llm-scanner';
+import { createClient } from '@/lib/supabase/server';
+import { getCurrentWorkspaceContext } from '@/lib/data-access';
 
 export async function POST(request: NextRequest) {
     try {
+        const context = await getCurrentWorkspaceContext();
+        if (!context) {
+            return NextResponse.json(
+                { error: 'Unauthorized' },
+                { status: 401 }
+            );
+        }
+
         const body = await request.json();
-        const { prompt, brandName, brandDomain, competitors, platforms } = body;
+        const { prompt, brandName, brandDomain, competitors, platforms, mode } = body;
 
         if (!prompt || !brandName) {
             return NextResponse.json(
@@ -13,14 +23,69 @@ export async function POST(request: NextRequest) {
             );
         }
 
-        // Run the scan
-        const results = await scanLLM({
+        const availableInfo = getAvailablePlatforms();
+        const availablePlatformIds = availableInfo.filter(p => p.available).map(p => p.platform);
+        const requestedPlatforms = (platforms as LLMPlatform[]) || availablePlatformIds;
+        let validPlatforms = requestedPlatforms.filter(p => availablePlatformIds.includes(p));
+
+        if (validPlatforms.length === 0) {
+            return NextResponse.json(
+                {
+                    error: 'No configured LLM platforms found. Please set API keys in .env.local.',
+                    available: availableInfo
+                },
+                { status: 400 }
+            );
+        }
+
+        const { results, errors: scanErrors } = await scanLLM({
             prompt,
             brandName,
             brandDomain,
             competitors: competitors || [],
-            platforms: (platforms as LLMPlatform[]) || ['gemini'],
+            platforms: validPlatforms,
+            mode,
         });
+
+        if (!results || results.length === 0) {
+            return NextResponse.json(
+                {
+                    error: 'All LLM platforms failed. Check API keys.',
+                    platformErrors: scanErrors,
+                },
+                { status: 500 }
+            );
+        }
+
+        // Persist results to Supabase
+        const supabase = await createClient(); // Use server client
+
+        const scanInserts = results.map(r => ({
+            workspace_id: context.workspaceId,
+            platform: r.platform,
+            prompt: r.prompt,
+            response: r.response,
+            brand_mentioned: r.brandMentioned,
+            brand_variants: r.brandVariants,
+            mention_position: r.mentionPosition,
+            sentiment: r.sentiment,
+            sentiment_score: r.sentimentScore,
+            sentiment_reason: r.sentimentReason,
+            competitors_mentioned: r.competitorsMentioned,
+            citations: r.citations,
+            list_items: r.listItems,
+            confidence: r.confidence,
+            // created_at is default
+        }));
+
+        const { error: insertError } = await supabase
+            .from('llm_scans')
+            .insert(scanInserts);
+
+        if (insertError) {
+            console.error('Failed to save scans to DB:', insertError);
+            // Don't fail the request, just log it
+        }
 
         // Calculate overall visibility score
         const visibilityScore = calculateVisibilityScore(results);
@@ -30,6 +95,7 @@ export async function POST(request: NextRequest) {
             results,
             visibilityScore,
             scannedAt: new Date().toISOString(),
+            platformErrors: scanErrors.length > 0 ? scanErrors : undefined,
         });
     } catch (error) {
         console.error('LLM scan error:', error);

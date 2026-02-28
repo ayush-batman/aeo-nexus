@@ -11,6 +11,7 @@ create table public.organizations (
   plan text not null default 'free' check (plan in ('free', 'starter', 'pro', 'agency', 'enterprise')),
   stripe_customer_id text,
   stripe_subscription_id text,
+  razorpay_subscription_id text,
   created_at timestamp with time zone default now(),
   updated_at timestamp with time zone default now()
 );
@@ -23,6 +24,7 @@ create table public.users (
   avatar_url text,
   org_id uuid references public.organizations(id) on delete cascade,
   role text not null default 'owner' check (role in ('owner', 'admin', 'editor', 'viewer')),
+  is_super_admin boolean default false,
   created_at timestamp with time zone default now()
 );
 
@@ -42,6 +44,7 @@ create table public.products (
   id uuid primary key default uuid_generate_v4(),
   workspace_id uuid not null references public.workspaces(id) on delete cascade,
   name text not null,
+  website text,
   description text,
   keywords text[] default '{}',
   competitors jsonb default '[]',
@@ -69,12 +72,13 @@ create table public.llm_scans (
 create table public.forum_threads (
   id uuid primary key default uuid_generate_v4(),
   workspace_id uuid not null references public.workspaces(id) on delete cascade,
-  platform text not null check (platform in ('reddit', 'quora', 'teambhp', 'xbhp', 'other')),
+  platform text not null check (platform in ('reddit', 'quora', 'teambhp', 'xbhp', 'youtube', 'other')),
   external_id text not null,
   url text not null,
   title text not null,
   text text,
   subreddit text,
+  author text,
   score integer default 0,
   num_comments integer default 0,
   opportunity_score integer default 0,
@@ -84,6 +88,8 @@ create table public.forum_threads (
   comment_draft text,
   posted_at timestamp with time zone,
   posted_by text,
+  discovered_at timestamp with time zone,
+  external_created_at timestamp with time zone,
   created_at timestamp with time zone default now(),
   
   unique(workspace_id, platform, external_id)
