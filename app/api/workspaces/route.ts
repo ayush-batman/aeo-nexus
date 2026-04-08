@@ -64,14 +64,14 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ error: 'Brand name is required' }, { status: 400 });
         }
 
-        // Check max workspaces (limit to 5 for now)
+        // Check max workspaces (limit to 50 for now)
         const { count } = await db
             .from('workspaces')
             .select('*', { count: 'exact', head: true })
             .eq('org_id', profile.org_id);
 
-        if ((count || 0) >= 5) {
-            return NextResponse.json({ error: 'Maximum 5 brands per account' }, { status: 403 });
+        if ((count || 0) >= 50) {
+            return NextResponse.json({ error: 'Maximum 50 brands per account' }, { status: 403 });
         }
 
         const { data: workspace, error } = await db
