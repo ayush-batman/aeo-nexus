@@ -96,25 +96,20 @@ export async function POST(request: NextRequest) {
 
         // Run an automatic initial background scan to populate the dashboard!
         try {
-            const { scanLLM, getAvailablePlatforms } = await import('@/lib/ai/llm-scanner');
+            const { scanLLM } = await import('@/lib/ai/llm-scanner');
             
-            const availableInfo = getAvailablePlatforms();
-            const availablePlatformIds = availableInfo.filter(p => p.available).map(p => p.platform);
-            const validPlatforms = ['gemini', 'perplexity'].filter(p => availablePlatformIds.includes(p as any));
-            
-            if (validPlatforms.length > 0) {
-                const { results } = await scanLLM({
-                    prompt: `What is ${name.trim()}?`,
-                    brandName: name.trim(),
-                    brandDomain: website?.trim() || undefined,
-                    competitors: competitors || [],
-                    platforms: validPlatforms as any[], // Fast lightweight scan 
-                });
+            const { results } = await scanLLM({
+                prompt: `What is ${name.trim()}?`,
+                brandName: name.trim(),
+                brandDomain: website?.trim() || undefined,
+                competitors: competitors || [],
+                platforms: ['gemini', 'perplexity'], // Defaults back to mock if no keys found
+            });
 
             if (results && results.length > 0) {
-                const scanInserts = results.filter(r => r.platform !== 'mock').map(r => ({
+                const scanInserts = results.map(r => ({
                     workspace_id: workspace.id,
-                    platform: r.platform,
+                    platform: r.platform === 'mock' ? 'gemini' : r.platform,
                     prompt: r.prompt,
                     response: r.response,
                     brand_mentioned: r.brandMentioned,
@@ -132,7 +127,6 @@ export async function POST(request: NextRequest) {
                     await db.from('llm_scans').insert(scanInserts);
                 }
             }
-            } // Close the validPlatforms condition
         } catch (scanError) {
             console.error('Initial background scan failed:', scanError);
             // We do not fail the workspace creation if the scan fails

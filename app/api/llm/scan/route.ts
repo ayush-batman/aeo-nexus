@@ -72,7 +72,7 @@ export async function POST(request: NextRequest) {
 
         const scanInserts = results.map(r => ({
             workspace_id: context.workspaceId,
-            platform: r.platform,
+            platform: r.platform === 'mock' ? 'gemini' : r.platform,
             prompt: r.prompt,
             response: r.response,
             brand_mentioned: r.brandMentioned,

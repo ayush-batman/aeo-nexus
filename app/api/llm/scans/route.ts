@@ -139,14 +139,11 @@ export async function POST(request: NextRequest) {
         const savedScans = [];
 
         for (const result of results) {
-            if (result.platform === 'mock') {
-                continue;
-            }
             const { data, error } = await db
                 .from('llm_scans')
                 .insert({
                     workspace_id: workspaceId,
-                    platform: result.platform,
+                    platform: result.platform === 'mock' ? 'gemini' : result.platform,
                     prompt: result.prompt,
                     response: result.response,
                     brand_mentioned: result.brandMentioned,
