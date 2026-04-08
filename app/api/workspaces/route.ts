@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 
+export const maxDuration = 60; // Extend Vercel timeout for initial LLMs scale
+
 // GET: List all workspaces for the current user's org
 export async function GET() {
     try {
@@ -90,6 +92,43 @@ export async function POST(request: NextRequest) {
         if (error) {
             console.error('Error creating workspace:', error);
             return NextResponse.json({ error: 'Failed to create workspace' }, { status: 500 });
+        }
+
+        // Run an automatic initial background scan to populate the dashboard!
+        try {
+            const { scanLLM } = await import('@/lib/ai/llm-scanner');
+            const { results } = await scanLLM({
+                prompt: `What is ${name.trim()}?`,
+                brandName: name.trim(),
+                brandDomain: website?.trim() || undefined,
+                competitors: competitors || [],
+                platforms: ['gemini', 'perplexity'], // Fast lightweight scan 
+            });
+
+            if (results && results.length > 0) {
+                const scanInserts = results.filter(r => r.platform !== 'mock').map(r => ({
+                    workspace_id: workspace.id,
+                    platform: r.platform,
+                    prompt: r.prompt,
+                    response: r.response,
+                    brand_mentioned: r.brandMentioned,
+                    brand_variants: r.brandVariants,
+                    mention_position: r.mentionPosition,
+                    sentiment: r.sentiment,
+                    sentiment_score: r.sentimentScore,
+                    sentiment_reason: r.sentimentReason,
+                    competitors_mentioned: r.competitorsMentioned,
+                    citations: r.citations,
+                    list_items: r.listItems,
+                    confidence: r.confidence,
+                }));
+                if (scanInserts.length > 0) {
+                    await db.from('llm_scans').insert(scanInserts);
+                }
+            }
+        } catch (scanError) {
+            console.error('Initial background scan failed:', scanError);
+            // We do not fail the workspace creation if the scan fails
         }
 
         return NextResponse.json({ workspace });
