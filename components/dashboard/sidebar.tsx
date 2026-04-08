@@ -96,13 +96,29 @@ export function Sidebar() {
     useEffect(() => {
         async function load() {
             try {
-                const res = await fetch("/api/workspaces");
-                if (res.ok) {
-                    const data = await res.json();
-                    setWorkspaces(data.workspaces || []);
-                    // Set first workspace as active if none selected
-                    if (data.workspaces?.length > 0 && !activeWorkspace) {
-                        setActiveWorkspace(data.workspaces[0]);
+                // Fetch workspaces and current active workspace in parallel
+                const [wsRes, activeRes] = await Promise.all([
+                    fetch("/api/workspaces"),
+                    fetch("/api/onboarding/context"),
+                ]);
+
+                let currentWorkspaceId: string | null = null;
+                if (activeRes.ok) {
+                    const activeData = await activeRes.json();
+                    currentWorkspaceId = activeData.workspaceId || null;
+                }
+
+                if (wsRes.ok) {
+                    const data = await wsRes.json();
+                    const wsList = data.workspaces || [];
+                    setWorkspaces(wsList);
+
+                    if (wsList.length > 0) {
+                        // Find the workspace that matches the server's active one
+                        const activeWs = currentWorkspaceId
+                            ? wsList.find((ws: Workspace) => ws.id === currentWorkspaceId)
+                            : null;
+                        setActiveWorkspace(activeWs || wsList[0]);
                     }
                 }
             } catch (e) {
@@ -128,14 +144,17 @@ export function Sidebar() {
         setActiveWorkspace(ws);
         setShowWsSwitcher(false);
         try {
-            await fetch("/api/workspaces/switch", {
+            const res = await fetch("/api/workspaces/switch", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ workspaceId: ws.id }),
             });
-            // Reload page to refresh all data for the new workspace
-            router.refresh();
-            window.location.reload();
+            // Wait for the response to fully resolve (cookie is set)
+            await res.json();
+            // Small delay to ensure cookie is persisted
+            await new Promise(resolve => setTimeout(resolve, 100));
+            // Full page reload to refresh all server components with new workspace
+            window.location.href = "/dashboard";
         } catch (e) {
             console.error("Failed to switch workspace:", e);
         }

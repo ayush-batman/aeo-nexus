@@ -70,7 +70,7 @@ interface PlatformVisibility {
 
 export default function LLMTrackerPage() {
     const [newPrompt, setNewPrompt] = useState("");
-    const [brandName, setBrandName] = useState("Dylect");
+    const [brandName, setBrandName] = useState("");
     const [isScanning, setIsScanning] = useState(false);
     const [selectedPlatforms, setSelectedPlatforms] = useState<string[]>(["gemini"]);
     const [scans, setScans] = useState<LLMScan[]>([]);
