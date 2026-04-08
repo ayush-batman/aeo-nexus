@@ -90,6 +90,7 @@ export function Sidebar() {
     const [newBrandWebsite, setNewBrandWebsite] = useState("");
     const [newBrandCompetitors, setNewBrandCompetitors] = useState("");
     const [creating, setCreating] = useState(false);
+    const [createError, setCreateError] = useState<string | null>(null);
     const wsRef = useRef<HTMLDivElement>(null);
 
     // Load workspaces
@@ -163,6 +164,7 @@ export function Sidebar() {
     async function createBrand() {
         if (!newBrandName.trim()) return;
         setCreating(true);
+        setCreateError(null);
         try {
             const competitors = newBrandCompetitors
                 .split(",")
@@ -188,9 +190,13 @@ export function Sidebar() {
                 setShowNewBrand(false);
                 // Switch to the new workspace
                 await switchWorkspace(newWs);
+            } else {
+                const data = await res.json();
+                setCreateError(data.error || "Failed to create brand");
             }
         } catch (e) {
             console.error("Failed to create brand:", e);
+            setCreateError("A network error occurred. Please try again.");
         } finally {
             setCreating(false);
         }
@@ -292,6 +298,11 @@ export function Sidebar() {
                             <div className="border-t border-[var(--border-default)] p-1">
                                 {showNewBrand ? (
                                     <div className="p-2 space-y-2">
+                                        {createError && (
+                                            <div className="p-2 text-xs text-red-500 bg-red-500/10 rounded border border-red-500/20">
+                                                {createError}
+                                            </div>
+                                        )}
                                         <input
                                             autoFocus
                                             placeholder="Brand name *"

@@ -3,6 +3,8 @@ import { scanLLM, calculateVisibilityScore, getAvailablePlatforms, type LLMPlatf
 import { createClient } from '@/lib/supabase/server';
 import { getCurrentWorkspaceContext } from '@/lib/data-access';
 
+export const maxDuration = 60; // Max timeout for Vercel
+
 export async function POST(request: NextRequest) {
     try {
         const context = await getCurrentWorkspaceContext();
@@ -58,7 +60,15 @@ export async function POST(request: NextRequest) {
         }
 
         // Persist results to Supabase
-        const supabase = await createClient(); // Use server client
+        const { createAdminClient } = await import('@/lib/supabase/admin');
+        let adminClient: ReturnType<typeof createAdminClient> | null = null;
+        try {
+            adminClient = createAdminClient();
+        } catch (error) {
+            console.warn('[llm/scan] Admin client unavailable, falling back to RLS client:', error);
+        }
+        
+        const db = adminClient ?? (await createClient());
 
         const scanInserts = results.map(r => ({
             workspace_id: context.workspaceId,
@@ -78,7 +88,7 @@ export async function POST(request: NextRequest) {
             // created_at is default
         }));
 
-        const { error: insertError } = await supabase
+        const { error: insertError } = await db
             .from('llm_scans')
             .insert(scanInserts);
 

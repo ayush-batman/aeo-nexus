@@ -177,20 +177,13 @@ export default function OnboardingPage() {
             }));
 
             if (results.length === 0) {
-                setScanResults([
-                    { platform: 'gemini', mentioned: true, sentiment: 'positive', score: 72 },
-                    { platform: 'claude', mentioned: true, sentiment: 'neutral', score: 65 },
-                ]);
+                setError("No results found. The LLM platforms may be unavailable.");
             } else {
                 setScanResults(results);
             }
         } catch (error) {
-            console.warn('Scan API failed, showing demo results:', error);
-            // Show demo results silently — no error banner since we have fallback data
-            setScanResults([
-                { platform: 'gemini', mentioned: true, sentiment: 'positive', score: 72 },
-                { platform: 'claude', mentioned: true, sentiment: 'neutral', score: 65 },
-            ]);
+            console.error('Scan API failed:', error);
+            setError(error instanceof Error ? error.message : 'Scan failed to complete. Please try again or check your API keys.');
         } finally {
             setScanning(false);
         }
