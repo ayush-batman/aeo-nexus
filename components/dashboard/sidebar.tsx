@@ -20,9 +20,19 @@ import {
     HelpCircle,
     BookOpen,
     Users,
+    ChevronDown,
+    Plus,
+    Check,
 } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { createClient } from "@/lib/supabase/client";
+
+interface Workspace {
+    id: string;
+    name: string;
+    settings?: { website?: string; competitors?: string[] };
+    created_at: string;
+}
 
 const navGroups = [
     {
@@ -71,6 +81,89 @@ export function Sidebar() {
     const router = useRouter();
     const [collapsed, setCollapsed] = useState(false);
 
+    // Workspace switcher state
+    const [workspaces, setWorkspaces] = useState<Workspace[]>([]);
+    const [activeWorkspace, setActiveWorkspace] = useState<Workspace | null>(null);
+    const [showWsSwitcher, setShowWsSwitcher] = useState(false);
+    const [showNewBrand, setShowNewBrand] = useState(false);
+    const [newBrandName, setNewBrandName] = useState("");
+    const [creating, setCreating] = useState(false);
+    const wsRef = useRef<HTMLDivElement>(null);
+
+    // Load workspaces
+    useEffect(() => {
+        async function load() {
+            try {
+                const res = await fetch("/api/workspaces");
+                if (res.ok) {
+                    const data = await res.json();
+                    setWorkspaces(data.workspaces || []);
+                    // Set first workspace as active if none selected
+                    if (data.workspaces?.length > 0 && !activeWorkspace) {
+                        setActiveWorkspace(data.workspaces[0]);
+                    }
+                }
+            } catch (e) {
+                console.error("Failed to load workspaces:", e);
+            }
+        }
+        load();
+    }, []);
+
+    // Click outside to close
+    useEffect(() => {
+        function handleClick(e: MouseEvent) {
+            if (wsRef.current && !wsRef.current.contains(e.target as Node)) {
+                setShowWsSwitcher(false);
+                setShowNewBrand(false);
+            }
+        }
+        document.addEventListener("mousedown", handleClick);
+        return () => document.removeEventListener("mousedown", handleClick);
+    }, []);
+
+    async function switchWorkspace(ws: Workspace) {
+        setActiveWorkspace(ws);
+        setShowWsSwitcher(false);
+        try {
+            await fetch("/api/workspaces/switch", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ workspaceId: ws.id }),
+            });
+            // Reload page to refresh all data for the new workspace
+            router.refresh();
+            window.location.reload();
+        } catch (e) {
+            console.error("Failed to switch workspace:", e);
+        }
+    }
+
+    async function createBrand() {
+        if (!newBrandName.trim()) return;
+        setCreating(true);
+        try {
+            const res = await fetch("/api/workspaces", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ name: newBrandName.trim() }),
+            });
+            if (res.ok) {
+                const data = await res.json();
+                const newWs = data.workspace;
+                setWorkspaces(prev => [...prev, newWs]);
+                setNewBrandName("");
+                setShowNewBrand(false);
+                // Switch to the new workspace
+                await switchWorkspace(newWs);
+            }
+        } catch (e) {
+            console.error("Failed to create brand:", e);
+        } finally {
+            setCreating(false);
+        }
+    }
+
     const handleSignOut = async () => {
         try {
             const supabase = createClient();
@@ -117,6 +210,94 @@ export function Sidebar() {
                     <ChevronLeft className={cn("w-4 h-4 transition-transform duration-200", collapsed && "rotate-180")} />
                 </button>
             </div>
+
+            {/* Workspace Switcher */}
+            {!collapsed && (
+                <div className="px-3 py-2 border-b border-[var(--border-subtle)] relative" ref={wsRef}>
+                    <button
+                        onClick={() => setShowWsSwitcher(!showWsSwitcher)}
+                        className="w-full flex items-center justify-between px-3 py-2 rounded-md bg-[var(--bg-surface)] border border-[var(--border-default)] hover:border-[var(--border-active)] transition-colors text-left"
+                    >
+                        <div className="flex items-center gap-2 min-w-0">
+                            <div className="w-5 h-5 rounded bg-[var(--accent-muted)] flex items-center justify-center text-[var(--accent-base)] text-[10px] font-bold flex-shrink-0">
+                                {(activeWorkspace?.name || "B")[0].toUpperCase()}
+                            </div>
+                            <span className="text-sm font-medium text-[var(--text-primary)] truncate">
+                                {activeWorkspace?.name || "Select Brand"}
+                            </span>
+                        </div>
+                        <ChevronDown className={cn("w-3.5 h-3.5 text-[var(--text-tertiary)] transition-transform", showWsSwitcher && "rotate-180")} />
+                    </button>
+
+                    {/* Dropdown */}
+                    {showWsSwitcher && (
+                        <div className="absolute left-3 right-3 top-full mt-1 z-50 bg-[var(--bg-raised)] border border-[var(--border-default)] rounded-lg shadow-lg overflow-hidden">
+                            <div className="p-1 max-h-48 overflow-y-auto">
+                                {workspaces.map((ws) => (
+                                    <button
+                                        key={ws.id}
+                                        onClick={() => switchWorkspace(ws)}
+                                        className={cn(
+                                            "w-full flex items-center justify-between px-3 py-2 rounded-md text-sm transition-colors",
+                                            activeWorkspace?.id === ws.id
+                                                ? "bg-[var(--accent-muted)] text-[var(--text-primary)]"
+                                                : "text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] hover:text-[var(--text-primary)]"
+                                        )}
+                                    >
+                                        <div className="flex items-center gap-2">
+                                            <div className="w-5 h-5 rounded bg-[var(--bg-surface)] flex items-center justify-center text-[10px] font-bold text-[var(--text-secondary)]">
+                                                {ws.name[0].toUpperCase()}
+                                            </div>
+                                            <span className="truncate">{ws.name}</span>
+                                        </div>
+                                        {activeWorkspace?.id === ws.id && (
+                                            <Check className="w-3.5 h-3.5 text-[var(--accent-base)]" />
+                                        )}
+                                    </button>
+                                ))}
+                            </div>
+
+                            <div className="border-t border-[var(--border-default)] p-1">
+                                {showNewBrand ? (
+                                    <div className="p-2 space-y-2">
+                                        <input
+                                            autoFocus
+                                            placeholder="Brand name..."
+                                            value={newBrandName}
+                                            onChange={(e) => setNewBrandName(e.target.value)}
+                                            onKeyDown={(e) => e.key === "Enter" && createBrand()}
+                                            className="w-full px-2 py-1.5 rounded bg-[var(--bg-surface)] border border-[var(--border-default)] text-sm text-[var(--text-primary)] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent-base)]"
+                                        />
+                                        <div className="flex gap-1">
+                                            <button
+                                                onClick={createBrand}
+                                                disabled={!newBrandName.trim() || creating}
+                                                className="flex-1 px-2 py-1.5 rounded bg-[var(--accent-base)] text-white text-xs font-medium disabled:opacity-40"
+                                            >
+                                                {creating ? "Creating..." : "Create"}
+                                            </button>
+                                            <button
+                                                onClick={() => { setShowNewBrand(false); setNewBrandName(""); }}
+                                                className="px-2 py-1.5 rounded bg-[var(--bg-surface)] text-[var(--text-secondary)] text-xs"
+                                            >
+                                                Cancel
+                                            </button>
+                                        </div>
+                                    </div>
+                                ) : (
+                                    <button
+                                        onClick={() => setShowNewBrand(true)}
+                                        className="w-full flex items-center gap-2 px-3 py-2 rounded-md text-sm text-[var(--accent-base)] hover:bg-[var(--accent-muted)] transition-colors"
+                                    >
+                                        <Plus className="w-3.5 h-3.5" />
+                                        Add Brand
+                                    </button>
+                                )}
+                            </div>
+                        </div>
+                    )}
+                </div>
+            )}
 
             {/* Navigation */}
             <nav className="flex-1 px-3 py-3 overflow-y-auto space-y-4">

@@ -169,7 +169,37 @@ export async function getCurrentWorkspaceContext(): Promise<{
         };
     }
 
-    // Ensure workspace exists
+    // Ensure workspace exists — check for active workspace cookie first
+    let workspaceSelectQuery;
+    let activeWsId: string | undefined;
+    
+    try {
+        const cookieStore = await cookies();
+        activeWsId = cookieStore.get('active-workspace-id')?.value;
+    } catch {
+        // cookies() may fail in some contexts
+    }
+
+    if (activeWsId) {
+        // Verify this workspace belongs to the user's org
+        const { data: workspace } = await db
+            .from('workspaces')
+            .select('id')
+            .eq('id', activeWsId)
+            .eq('org_id', profile.org_id)
+            .single();
+
+        if (workspace?.id) {
+            return {
+                userId: user.id,
+                orgId: profile.org_id,
+                workspaceId: workspace.id,
+                onboardingCompleted: profile.onboarding_completed ?? false,
+            };
+        }
+    }
+
+    // Fallback: pick first workspace
     const { data: workspace } = await db
         .from('workspaces')
         .select('id')
