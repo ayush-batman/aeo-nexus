@@ -283,28 +283,50 @@ export async function scanLLM(options: ScanOptions): Promise<ScanOutput> {
             };
 
             if (mode === 'battle') {
-                // Simple winner determination based on sentiment and position
-                // In a real implementation, we might ask the LLM explicitly "Who won?"
                 let winner = null;
-                let winnerReason = "No clear winner detected.";
+                let winnerReason = "No clear winner detected in the response.";
 
-                // Check position first
-                const myPos = scanResult.mentionPosition || 999;
-                const bestCompetitor = scanResult.competitorPositions.sort((a, b) => (a.position || 999) - (b.position || 999))[0];
-                const compPos = bestCompetitor?.position || 999;
+                const bestCompetitor = scanResult.competitorPositions[0];
+                const compName = bestCompetitor?.name || '';
+                
+                // 1. Check lists
+                let myPos = scanResult.mentionPosition || 999;
+                let compPos = bestCompetitor?.position || 999;
 
-                if (myPos < compPos) {
+                // 2. If lists didn't work (both 999), check raw text index
+                if (myPos === 999 && compPos === 999 && compName) {
+                    const myIndex = response.toLowerCase().indexOf(brandName.toLowerCase());
+                    const compIndex = response.toLowerCase().indexOf(compName.toLowerCase());
+                    
+                    if (myIndex !== -1) myPos = myIndex;
+                    if (compIndex !== -1) compPos = compIndex;
+                }
+
+                if (myPos !== 999 && compPos === 999) {
                     winner = brandName;
-                    winnerReason = `${brandName} appeared first in the response.`;
-                } else if (compPos < myPos) {
-                    winner = bestCompetitor.name;
-                    winnerReason = `${bestCompetitor.name} appeared first in the response.`;
-                } else {
-                    // Tie-break with sentiment
-                    if (scanResult.sentimentScore > 0.5) {
+                    winnerReason = `${brandName} was mentioned, but ${compName} was ignored entirely.`;
+                } else if (compPos !== 999 && myPos === 999) {
+                    winner = compName;
+                    winnerReason = `${compName} was mentioned, but ${brandName} was ignored entirely.`;
+                } else if (myPos !== 999 && compPos !== 999 && myPos !== compPos) {
+                    if (myPos < compPos) {
                         winner = brandName;
-                        winnerReason = `${brandName} had significantly better sentiment.`;
+                        winnerReason = `${brandName} was prioritized earlier in the response.`;
+                    } else {
+                        winner = compName;
+                        winnerReason = `${compName} was prioritized earlier in the response.`;
                     }
+                } else if (myPos !== 999 && compPos !== 999 && myPos === compPos) {
+                    // Tie break by sentiment
+                    if (scanResult.sentimentScore > 0.2) {
+                        winner = brandName;
+                        winnerReason = `${brandName} was favored slightly in sentiment.`;
+                    } else if (scanResult.sentimentScore < -0.2) {
+                        winner = compName;
+                        winnerReason = `${compName} received more positive sentiment.`;
+                    }
+                } else {
+                    winnerReason = `Neither brand was mentioned by the AI.`;
                 }
 
                 (scanResult as BattleResult).winner = winner;
@@ -353,23 +375,45 @@ export async function scanLLM(options: ScanOptions): Promise<ScanOutput> {
 
             if (mode === 'battle') {
                 let winner = null;
-                let winnerReason = "No clear winner detected.";
+                let winnerReason = "No clear winner detected in the response.";
 
-                const myPos = mockScanResult.mentionPosition || 999;
-                const bestCompetitor = mockScanResult.competitorPositions.sort((a, b) => (a.position || 999) - (b.position || 999))[0];
-                const compPos = bestCompetitor?.position || 999;
+                const bestCompetitor = mockScanResult.competitorPositions[0];
+                const compName = bestCompetitor?.name || '';
+                
+                let myPos = mockScanResult.mentionPosition || 999;
+                let compPos = bestCompetitor?.position || 999;
 
-                if (myPos < compPos) {
+                if (myPos === 999 && compPos === 999 && compName) {
+                    const myIndex = mockResponse.toLowerCase().indexOf(brandName.toLowerCase());
+                    const compIndex = mockResponse.toLowerCase().indexOf(compName.toLowerCase());
+                    if (myIndex !== -1) myPos = myIndex;
+                    if (compIndex !== -1) compPos = compIndex;
+                }
+
+                if (myPos !== 999 && compPos === 999) {
                     winner = brandName;
-                    winnerReason = `${brandName} appeared first in the response.`;
-                } else if (compPos < myPos) {
-                    winner = bestCompetitor.name;
-                    winnerReason = `${bestCompetitor.name} appeared first in the response.`;
-                } else {
-                    if (mockScanResult.sentimentScore > 0.5) {
+                    winnerReason = `${brandName} was mentioned, but ${compName} was ignored entirely.`;
+                } else if (compPos !== 999 && myPos === 999) {
+                    winner = compName;
+                    winnerReason = `${compName} was mentioned, but ${brandName} was ignored entirely.`;
+                } else if (myPos !== 999 && compPos !== 999 && myPos !== compPos) {
+                    if (myPos < compPos) {
                         winner = brandName;
-                        winnerReason = `${brandName} had significantly better sentiment.`;
+                        winnerReason = `${brandName} was prioritized earlier in the response.`;
+                    } else {
+                        winner = compName;
+                        winnerReason = `${compName} was prioritized earlier in the response.`;
                     }
+                } else if (myPos !== 999 && compPos !== 999 && myPos === compPos) {
+                    if (mockScanResult.sentimentScore > 0.2) {
+                        winner = brandName;
+                        winnerReason = `${brandName} was favored slightly in sentiment.`;
+                    } else if (mockScanResult.sentimentScore < -0.2) {
+                        winner = compName;
+                        winnerReason = `${compName} received more positive sentiment.`;
+                    }
+                } else {
+                    winnerReason = `Neither brand was mentioned by the AI.`;
                 }
 
                 (mockScanResult as BattleResult).winner = winner;

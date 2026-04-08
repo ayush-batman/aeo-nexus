@@ -308,7 +308,7 @@ export default function PromptResearchPage() {
                         {/* Brand context (inline editable) */}
                         <Card>
                             <CardContent className="p-4">
-                                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                                <div className="grid grid-cols-1 lg:grid-cols-4 gap-3 items-end">
                                     <div>
                                         <label className="block text-xs font-medium text-[var(--text-ghost)] mb-1">Your Brand</label>
                                         <Input
@@ -336,12 +336,23 @@ export default function PromptResearchPage() {
                                             className="bg-[var(--bg-base)]/50 h-9"
                                         />
                                     </div>
+                                    <Button 
+                                        className="h-9 bg-indigo-500 hover:bg-indigo-600 text-white w-full"
+                                        onClick={() => {
+                                            // The list updates reactively, this just provides visual submission UX
+                                            const el = document.getElementById('template-results');
+                                            if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                                        }}
+                                    >
+                                        <Search className="w-4 h-4 mr-2" />
+                                        Search Templates
+                                    </Button>
                                 </div>
                             </CardContent>
                         </Card>
 
                         {/* Category filters */}
-                        <div className="flex flex-wrap gap-2">
+                        <div id="template-results" className="flex flex-wrap gap-2 pt-2">
                             <button
                                 onClick={() => setSelectedCategory('all')}
                                 className={cn(

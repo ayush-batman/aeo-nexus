@@ -85,6 +85,20 @@ export async function auditContent(url: string): Promise<AuditResult> {
         let score = 70; // Start baseline
         const issues: string[] = [];
 
+        // Core SEO tags
+        if ($('title').length === 0) {
+            score -= 10;
+            issues.push('Missing Title tag - critical for AI ingestion and context.');
+        }
+
+        if (!metaDescription) {
+            score -= 10;
+            issues.push('Missing Meta Description - AI agents use this for quick summarization.');
+        } else if (metaDescription.length < 50) {
+            score -= 5;
+            issues.push('Meta Description is too short (<50 chars) - provides insufficient context.');
+        }
+
         // H1 check
         if (h1Count === 0) {
             score -= 10;
@@ -100,9 +114,32 @@ export async function auditContent(url: string): Promise<AuditResult> {
             issues.push('Low structural depth (few H2s) - hard for agents to parse sub-topics.');
         }
 
+        // Layout semantics
+        if ($('main, article').length === 0) {
+            score -= 5;
+            issues.push('Missing semantic tags (<main>, <article>) - makes it hard for agents to isolate primary content.');
+        }
+
+        // Image context
+        let missingAltCount = 0;
+        $('img').each((_, el) => {
+            const alt = $(el).attr('alt');
+            if (!alt || alt.trim() === '') {
+                missingAltCount++;
+            }
+        });
+        if (missingAltCount > 0) {
+            const penalty = Math.min(15, missingAltCount * 2); // Max -15 penalty
+            score -= penalty;
+            issues.push(`${missingAltCount} images missing alt text - AI vision models rely on this for multi-modal context.`);
+        }
+
         // Schema check
         if (schemas.length > 0) {
             score += 15;
+            if (schemas.length > 2) {
+                score += 5; // Bonus for rich schema
+            }
         } else {
             score -= 10;
             issues.push('No Schema.org markup found - crucial for structured data extraction by AI.');
@@ -110,9 +147,11 @@ export async function auditContent(url: string): Promise<AuditResult> {
 
         // Content depth
         if (wordCount < 300) {
-            score -= 10;
+            score -= 15;
             issues.push('Thin content (<300 words) - minimal context for LLMs.');
-        } else if (wordCount > 1000) {
+        } else if (wordCount > 1500) {
+            score += 10; // Extra bonus for deep content
+        } else if (wordCount > 800) {
             score += 5;
         }
 

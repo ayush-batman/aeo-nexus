@@ -154,7 +154,7 @@ export default function ForumHubPage() {
         const supabase = createClient();
 
         const channel = supabase
-            .channel('forum-hub-threads')
+            .channel('forum-hub-threads-changes')
             .on(
                 'postgres_changes',
                 { event: '*', schema: 'public', table: 'forum_threads' },
@@ -176,7 +176,11 @@ export default function ForumHubPage() {
             )
             .subscribe();
 
-    }, [activeTab]);
+        return () => {
+            supabase.removeChannel(channel);
+        };
+
+    }, [activeTab, selectedThread?.id]);
 
     // Check source configuration
     useEffect(() => {
