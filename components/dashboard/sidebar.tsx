@@ -87,6 +87,8 @@ export function Sidebar() {
     const [showWsSwitcher, setShowWsSwitcher] = useState(false);
     const [showNewBrand, setShowNewBrand] = useState(false);
     const [newBrandName, setNewBrandName] = useState("");
+    const [newBrandWebsite, setNewBrandWebsite] = useState("");
+    const [newBrandCompetitors, setNewBrandCompetitors] = useState("");
     const [creating, setCreating] = useState(false);
     const wsRef = useRef<HTMLDivElement>(null);
 
@@ -143,16 +145,27 @@ export function Sidebar() {
         if (!newBrandName.trim()) return;
         setCreating(true);
         try {
+            const competitors = newBrandCompetitors
+                .split(",")
+                .map(c => c.trim())
+                .filter(Boolean);
+
             const res = await fetch("/api/workspaces", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ name: newBrandName.trim() }),
+                body: JSON.stringify({
+                    name: newBrandName.trim(),
+                    website: newBrandWebsite.trim() || undefined,
+                    competitors,
+                }),
             });
             if (res.ok) {
                 const data = await res.json();
                 const newWs = data.workspace;
                 setWorkspaces(prev => [...prev, newWs]);
                 setNewBrandName("");
+                setNewBrandWebsite("");
+                setNewBrandCompetitors("");
                 setShowNewBrand(false);
                 // Switch to the new workspace
                 await switchWorkspace(newWs);
@@ -262,9 +275,21 @@ export function Sidebar() {
                                     <div className="p-2 space-y-2">
                                         <input
                                             autoFocus
-                                            placeholder="Brand name..."
+                                            placeholder="Brand name *"
                                             value={newBrandName}
                                             onChange={(e) => setNewBrandName(e.target.value)}
+                                            className="w-full px-2 py-1.5 rounded bg-[var(--bg-surface)] border border-[var(--border-default)] text-sm text-[var(--text-primary)] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent-base)]"
+                                        />
+                                        <input
+                                            placeholder="Website (e.g. example.com)"
+                                            value={newBrandWebsite}
+                                            onChange={(e) => setNewBrandWebsite(e.target.value)}
+                                            className="w-full px-2 py-1.5 rounded bg-[var(--bg-surface)] border border-[var(--border-default)] text-sm text-[var(--text-primary)] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent-base)]"
+                                        />
+                                        <input
+                                            placeholder="Competitors (comma-separated)"
+                                            value={newBrandCompetitors}
+                                            onChange={(e) => setNewBrandCompetitors(e.target.value)}
                                             onKeyDown={(e) => e.key === "Enter" && createBrand()}
                                             className="w-full px-2 py-1.5 rounded bg-[var(--bg-surface)] border border-[var(--border-default)] text-sm text-[var(--text-primary)] placeholder:text-[var(--text-tertiary)] focus:outline-none focus:border-[var(--accent-base)]"
                                         />
@@ -274,10 +299,10 @@ export function Sidebar() {
                                                 disabled={!newBrandName.trim() || creating}
                                                 className="flex-1 px-2 py-1.5 rounded bg-[var(--accent-base)] text-white text-xs font-medium disabled:opacity-40"
                                             >
-                                                {creating ? "Creating..." : "Create"}
+                                                {creating ? "Creating..." : "Create Brand"}
                                             </button>
                                             <button
-                                                onClick={() => { setShowNewBrand(false); setNewBrandName(""); }}
+                                                onClick={() => { setShowNewBrand(false); setNewBrandName(""); setNewBrandWebsite(""); setNewBrandCompetitors(""); }}
                                                 className="px-2 py-1.5 rounded bg-[var(--bg-surface)] text-[var(--text-secondary)] text-xs"
                                             >
                                                 Cancel
