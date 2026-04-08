@@ -70,24 +70,24 @@ export function AddScheduleModal({ isOpen, onClose, onSuccess, platformsMap }: A
 
     return (
         <Dialog open={isOpen} onOpenChange={onClose}>
-            <DialogContent className="sm:max-w-[425px] bg-[var(--background)] border-[var(--border)] text-[var(--text-primary)]">
+            <DialogContent className="sm:max-w-[425px] bg-[var(--bg-base)] border-[var(--border-default)] text-[var(--text-primary)]">
                 <DialogHeader>
                     <DialogTitle>Add Automated Scan</DialogTitle>
                 </DialogHeader>
                 <form onSubmit={handleSubmit} className="space-y-6 mt-4">
                     <div className="space-y-2">
-                        <Label htmlFor="prompt" className="text-[var(--text-muted)] text-xs">Prompt to Track</Label>
+                        <Label htmlFor="prompt" className="text-[var(--text-secondary)] text-xs">Prompt to Track</Label>
                         <Input
                             id="prompt"
                             placeholder="e.g. Best CRM software for small business"
                             value={prompt}
                             onChange={(e) => setPrompt(e.target.value)}
-                            className="bg-[var(--surface)] border-[var(--border)]"
+                            className="bg-[var(--bg-surface)] border-[var(--border-default)]"
                         />
                     </div>
 
                     <div className="space-y-2">
-                        <Label className="text-[var(--text-muted)] text-xs">Platforms</Label>
+                        <Label className="text-[var(--text-secondary)] text-xs">Platforms</Label>
                         <div className="flex flex-wrap gap-2">
                             {platformsMap.map((p) => (
                                 <button
@@ -97,8 +97,8 @@ export function AddScheduleModal({ isOpen, onClose, onSuccess, platformsMap }: A
                                     className={cn(
                                         "flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm transition-all",
                                         selectedPlatforms.includes(p.id)
-                                            ? "bg-[var(--surface-elevated)] text-[var(--text-primary)] border border-[var(--border-hover)]"
-                                            : "bg-[var(--surface-elevated)] text-[var(--text-ghost)] border border-transparent hover:border-[var(--border)]"
+                                            ? "bg-[var(--bg-raised)] text-[var(--text-primary)] border border-[var(--border-hover)]"
+                                            : "bg-[var(--bg-raised)] text-[var(--text-ghost)] border border-transparent hover:border-[var(--border-default)]"
                                     )}
                                 >
                                     <div className={cn("w-2 h-2 rounded-full", p.color)} />
@@ -109,12 +109,12 @@ export function AddScheduleModal({ isOpen, onClose, onSuccess, platformsMap }: A
                     </div>
 
                     <div className="space-y-2">
-                        <Label htmlFor="frequency" className="text-[var(--text-muted)] text-xs">Frequency</Label>
+                        <Label htmlFor="frequency" className="text-[var(--text-secondary)] text-xs">Frequency</Label>
                         <Select value={frequency} onValueChange={setFrequency}>
-                            <SelectTrigger className="bg-[var(--surface)] border-[var(--border)]">
+                            <SelectTrigger className="bg-[var(--bg-surface)] border-[var(--border-default)]">
                                 <SelectValue placeholder="Select frequency" />
                             </SelectTrigger>
-                            <SelectContent className="bg-[var(--surface)] border-[var(--border)] text-[var(--text-primary)]">
+                            <SelectContent className="bg-[var(--bg-surface)] border-[var(--border-default)] text-[var(--text-primary)]">
                                 <SelectItem value="daily">Daily</SelectItem>
                                 <SelectItem value="weekly">Weekly</SelectItem>
                                 <SelectItem value="monthly">Monthly</SelectItem>
@@ -125,7 +125,7 @@ export function AddScheduleModal({ isOpen, onClose, onSuccess, platformsMap }: A
                     {error && <p className="text-red-400 text-sm">{error}</p>}
 
                     <div className="flex justify-end gap-3 pb-2 pt-4">
-                        <Button type="button" variant="ghost" onClick={onClose} className="hover:bg-[var(--surface-elevated)] hover:text-[var(--text-primary)]">
+                        <Button type="button" variant="ghost" onClick={onClose} className="hover:bg-[var(--bg-raised)] hover:text-[var(--text-primary)]">
                             Cancel
                         </Button>
                         <Button type="submit" disabled={isSubmitting} className="bg-indigo-500 hover:bg-violet-700 text-white">

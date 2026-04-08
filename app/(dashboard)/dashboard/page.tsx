@@ -25,8 +25,8 @@ import { formatDistanceToNow } from "date-fns";
 import Link from "next/link";
 
 interface DashboardStats {
-    aeoHealthScore: number;
-    aeoScoreChange: number;
+    aeloHealthScore: number;
+    aeloScoreChange: number;
     llmVisibility: number;
     llmVisibilityChange: number;
     forumThreadCount: number;
@@ -165,7 +165,7 @@ export default function DashboardPage() {
             <>
                 <Header
                     title="Dashboard"
-                    description="Your AEO performance at a glance"
+                    description="Your Aelo performance at a glance"
                 />
                 <DashboardSkeleton />
             </>
@@ -177,14 +177,14 @@ export default function DashboardPage() {
             <>
                 <Header
                     title="Dashboard"
-                    description="Your AEO performance at a glance"
+                    description="Your Aelo performance at a glance"
                 />
                 <div className="p-6">
                     <div className="rounded-xl border border-red-500/20 bg-red-500/10 p-6 flex items-center gap-4">
                         <AlertCircle className="w-8 h-8 text-red-400" />
                         <div>
                             <h3 className="text-lg font-semibold text-red-400">Error Loading Dashboard</h3>
-                            <p className="text-[var(--text-muted)]">{error}</p>
+                            <p className="text-[var(--text-secondary)]">{error}</p>
                             <Button
                                 variant="outline"
                                 className="mt-4"
@@ -200,8 +200,8 @@ export default function DashboardPage() {
     }
 
     const stats = data?.stats || {
-        aeoHealthScore: 0,
-        aeoScoreChange: 0,
+        aeloHealthScore: 0,
+        aeloScoreChange: 0,
         llmVisibility: 0,
         llmVisibilityChange: 0,
         forumThreadCount: 0,
@@ -229,7 +229,7 @@ export default function DashboardPage() {
         <>
             <Header
                 title="Dashboard"
-                description="Your AEO performance at a glance"
+                description="Your Aelo performance at a glance"
             />
 
             <div className="p-6 space-y-6">
@@ -241,39 +241,86 @@ export default function DashboardPage() {
                     </div>
                 )}
 
-                {/* AEO Health Score */}
-                <div className="rounded-xl border border-[var(--border)] bg-[var(--surface)] p-6">
+                {/* Aelo Health Score */}
+                <div
+                    className="rounded-lg p-6 relative overflow-hidden"
+                    style={{
+                        background: "linear-gradient(135deg, var(--accent-muted), var(--bg-base))",
+                        border: "1px solid rgba(99,102,241,0.2)",
+                    }}
+                >
+                    {/* Top gradient accent */}
+                    <div
+                        className="absolute top-0 left-0 right-0 h-[2px]"
+                        style={{ background: "linear-gradient(90deg, transparent, var(--accent-base), var(--data-teal), transparent)" }}
+                    />
                     <div className="flex items-center justify-between">
                         <div>
-                            <p className="text-xs font-medium text-[var(--text-muted)] uppercase tracking-wider mb-1">AEO Health Score</p>
+                            <p
+                                className="text-[10px] font-bold uppercase tracking-widest mb-1"
+                                style={{ color: "var(--text-secondary)" }}
+                            >
+                                Aelo Health Score
+                            </p>
                             <div className="flex items-baseline gap-3">
-                                <span className="text-5xl font-bold font-display text-[var(--text-primary)] tracking-tight">{stats.aeoHealthScore}</span>
-                                <span className="text-xl text-[var(--text-ghost)]">/100</span>
-                                {stats.aeoScoreChange !== 0 && (
-                                    <Badge variant={stats.aeoScoreChange > 0 ? "success" : "destructive"}>
-                                        {stats.aeoScoreChange > 0 ? "+" : ""}{stats.aeoScoreChange} this week
+                                <span
+                                    className="text-6xl font-bold tracking-tight"
+                                    style={{
+                                        background: "linear-gradient(135deg, #FAFAFA, var(--accent-hover))",
+                                        WebkitBackgroundClip: "text",
+                                        WebkitTextFillColor: "transparent",
+                                        backgroundClip: "text",
+                                    }}
+                                >
+                                    {stats.aeloHealthScore}
+                                </span>
+                                <span className="text-xl" style={{ color: "var(--text-tertiary)" }}>/100</span>
+                                {stats.aeloScoreChange !== 0 && (
+                                    <Badge variant={stats.aeloScoreChange > 0 ? "success" : "destructive"}>
+                                        {stats.aeloScoreChange > 0 ? "+" : ""}{stats.aeloScoreChange} this week
                                     </Badge>
                                 )}
                             </div>
-                            <p className="text-sm text-[var(--text-muted)] mt-2">
-                                {stats.aeoHealthScore === 0
+                            <p className="text-sm mt-2" style={{ color: "var(--text-secondary)" }}>
+                                {stats.aeloHealthScore === 0
                                     ? "Run your first LLM scan to start tracking visibility"
-                                    : stats.aeoScoreChange > 0
+                                    : stats.aeloScoreChange > 0
                                         ? "Your brand visibility across AI platforms is improving"
                                         : "Monitor and optimize your AI presence"
                                 }
                             </p>
                         </div>
-                        <div className="hidden md:block">
-                            <div className="w-28 h-28 rounded-full border-[6px] border-indigo-500/15 flex items-center justify-center relative">
+                        <div className="hidden md:flex items-center justify-center">
+                            {/* Orbital glow ring */}
+                            <div
+                                className="relative w-28 h-28 flex items-center justify-center"
+                                style={{ filter: "drop-shadow(0 0 16px var(--accent-glow))" }}
+                            >
+                                <svg width="112" height="112" viewBox="0 0 112 112" className="absolute">
+                                    {/* Track */}
+                                    <circle cx="56" cy="56" r="48" fill="none" stroke="var(--accent-muted)" strokeWidth="6" />
+                                    {/* Progress */}
+                                    <circle
+                                        cx="56" cy="56" r="48"
+                                        fill="none"
+                                        stroke="url(#ring-grad)"
+                                        strokeWidth="6"
+                                        strokeLinecap="round"
+                                        strokeDasharray={`${(stats.aeloHealthScore / 100) * 301.6} 301.6`}
+                                        transform="rotate(-90 56 56)"
+                                    />
+                                    <defs>
+                                        <linearGradient id="ring-grad" x1="0%" y1="0%" x2="100%" y2="0%">
+                                            <stop offset="0%" stopColor="var(--accent-base)" />
+                                            <stop offset="100%" stopColor="var(--data-teal)" />
+                                        </linearGradient>
+                                    </defs>
+                                </svg>
                                 <div
-                                    className="absolute inset-0 rounded-full"
-                                    style={{
-                                        background: `conic-gradient(from 0deg, #6366F1 0%, #6366F1 ${stats.aeoHealthScore}%, transparent ${stats.aeoHealthScore}%, transparent 100%)`,
-                                    }}
-                                />
-                                <div className="w-20 h-20 rounded-full bg-[var(--background)] flex items-center justify-center z-10">
-                                    <Zap className="w-8 h-8 text-indigo-400" />
+                                    className="w-20 h-20 rounded-full flex items-center justify-center z-10"
+                                    style={{ background: "var(--bg-base)" }}
+                                >
+                                    <Zap className="w-7 h-7" style={{ color: "var(--accent-hover)" }} />
                                 </div>
                             </div>
                         </div>
@@ -291,7 +338,7 @@ export default function DashboardPage() {
                         }
                         changeType={stats.llmVisibilityChange > 0 ? "positive" : stats.llmVisibilityChange < 0 ? "negative" : "neutral"}
                         icon={Eye}
-                        iconColor="text-[var(--text-muted)]"
+                        accentColor="violet"
                     />
                     <MetricCard
                         title="Forum Threads"
@@ -299,7 +346,7 @@ export default function DashboardPage() {
                         change={`${stats.highPriorityThreads} high-priority opportunities`}
                         changeType="neutral"
                         icon={MessageSquare}
-                        iconColor="text-[var(--text-muted)]"
+                        accentColor="cyan"
                     />
                     <MetricCard
                         title="Share of Voice"
@@ -310,7 +357,7 @@ export default function DashboardPage() {
                         }
                         changeType={stats.shareOfVoiceChange > 0 ? "positive" : "neutral"}
                         icon={TrendingUp}
-                        iconColor="text-[var(--text-muted)]"
+                        accentColor="emerald"
                     />
                     <MetricCard
                         title="Content Score"
@@ -321,7 +368,7 @@ export default function DashboardPage() {
                         }
                         changeType="neutral"
                         icon={FileText}
-                        iconColor="text-[var(--text-muted)]"
+                        accentColor="amber"
                     />
                 </div>
 
@@ -336,29 +383,29 @@ export default function DashboardPage() {
                         </CardHeader>
                         <CardContent>
                             <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-                                <div className="md:col-span-1 border-r border-[var(--border)] pr-6">
-                                    <p className="text-xs font-medium text-[var(--text-muted)] uppercase tracking-wider mb-1">AI-Driven Visits</p>
-                                    <p className="text-3xl font-bold font-display text-[var(--text-primary)] tracking-tight">{analytics.aiVisits}</p>
-                                    <div className="mt-2 text-xs text-[var(--text-ghost)]">
+                                <div className="md:col-span-1 border-r border-[var(--border-default)] pr-6">
+                                    <p className="text-xs font-medium text-[var(--text-secondary)] uppercase tracking-wider mb-1">AI-Driven Visits</p>
+                                    <p className="text-3xl font-bold text-[var(--text-primary)] tracking-tight">{analytics.aiVisits}</p>
+                                    <div className="mt-2 text-xs text-[var(--text-tertiary)]">
                                         Last 30 days • {analytics.totalVisits > 0
                                             ? `${((analytics.aiVisits / analytics.totalVisits) * 100).toFixed(1)}% of total traffic`
                                             : "No traffic data yet"}
                                     </div>
                                     <div className="mt-4 p-3 bg-indigo-500/5 rounded-lg border border-indigo-500/10">
-                                        <p className="text-xs text-[var(--text-muted)]">
+                                        <p className="text-xs text-[var(--text-secondary)]">
                                             Add the <code>&lt;script&gt;</code> tag to your site to track this.
                                         </p>
                                     </div>
                                 </div>
                                 <div className="md:col-span-3">
-                                    <p className="text-xs font-medium text-[var(--text-muted)] uppercase tracking-wider mb-4">Traffic by AI Source</p>
+                                    <p className="text-xs font-medium text-[var(--text-secondary)] uppercase tracking-wider mb-4">Traffic by AI Source</p>
                                     <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                                         {['chatgpt', 'gemini', 'perplexity', 'claude'].map(source => (
-                                            <div key={source} className="bg-[var(--surface-elevated)] rounded-lg p-4 border border-[var(--border)]">
-                                                <p className="text-xs text-[var(--text-muted)] capitalize mb-2">{source}</p>
+                                            <div key={source} className="bg-[var(--bg-raised)] rounded-lg p-4 border border-[var(--border-default)]">
+                                                <p className="text-xs text-[var(--text-secondary)] capitalize mb-2">{source}</p>
                                                 <div className="flex items-end justify-between">
-                                                    <span className="text-xl font-bold font-display text-[var(--text-primary)]">{analytics.sources[source] || 0}</span>
-                                                    <div className="h-1 w-10 bg-[var(--surface)] rounded-full overflow-hidden">
+                                                    <span className="text-xl font-bold text-[var(--text-primary)]">{analytics.sources[source] || 0}</span>
+                                                    <div className="h-1 w-10 bg-[var(--bg-surface)] rounded-full overflow-hidden">
                                                         <div
                                                             className="h-full bg-indigo-500"
                                                             style={{ width: `${Math.min(100, ((analytics.sources[source] || 0) / (analytics.aiVisits || 1)) * 100)}%` }}
@@ -391,15 +438,15 @@ export default function DashboardPage() {
                                 recentMentions.map((item) => (
                                     <div
                                         key={item.id}
-                                        className="flex items-center justify-between p-3 rounded-lg bg-[var(--surface-elevated)] hover:border-[var(--border-hover)] border border-transparent transition-all"
+                                        className="flex items-center justify-between p-3 rounded-lg bg-[var(--bg-raised)] hover:border-[var(--border-hover)] border border-transparent transition-all"
                                     >
                                         <div className="flex items-center gap-3">
-                                            <div className="w-8 h-8 rounded-lg bg-[var(--surface)] flex items-center justify-center">
-                                                <Search className="w-4 h-4 text-[var(--text-ghost)]" />
+                                            <div className="w-8 h-8 rounded-lg bg-[var(--bg-surface)] flex items-center justify-center">
+                                                <Search className="w-4 h-4 text-[var(--text-tertiary)]" />
                                             </div>
                                             <div>
                                                 <p className="text-sm font-medium text-[var(--text-primary)]">{item.prompt}</p>
-                                                <p className="text-xs text-[var(--text-ghost)]">
+                                                <p className="text-xs text-[var(--text-tertiary)]">
                                                     {item.platform} • {formatDistanceToNow(new Date(item.createdAt), { addSuffix: true })}
                                                 </p>
                                             </div>
@@ -412,7 +459,7 @@ export default function DashboardPage() {
                                     </div>
                                 ))
                             ) : (
-                                <div className="text-center py-8 text-[var(--text-ghost)]">
+                                <div className="text-center py-8 text-[var(--text-tertiary)]">
                                     <Search className="w-12 h-12 mx-auto mb-3 opacity-50" />
                                     <p>No LLM mentions yet</p>
                                     <Link href="/dashboard/llm-tracker">
@@ -440,15 +487,15 @@ export default function DashboardPage() {
                                 threads.map((item) => (
                                     <div
                                         key={item.id}
-                                        className="flex items-center justify-between p-3 rounded-lg bg-[var(--surface-elevated)] hover:border-[var(--border-hover)] border border-transparent transition-all cursor-pointer"
+                                        className="flex items-center justify-between p-3 rounded-lg bg-[var(--bg-raised)] hover:border-[var(--border-hover)] border border-transparent transition-all cursor-pointer"
                                     >
                                         <div className="flex items-center gap-3">
-                                            <div className="w-8 h-8 rounded-lg bg-[var(--surface)] border border-[var(--border)] flex items-center justify-center text-xs font-bold font-mono text-[var(--text-secondary)]">
+                                            <div className="w-8 h-8 rounded-lg bg-[var(--bg-surface)] border border-[var(--border-default)] flex items-center justify-center text-xs font-bold font-mono text-[var(--text-secondary)]">
                                                 {item.opportunity_score}
                                             </div>
                                             <div>
                                                 <p className="text-sm font-medium text-[var(--text-primary)] line-clamp-1">{item.title}</p>
-                                                <p className="text-xs text-[var(--text-ghost)]">
+                                                <p className="text-xs text-[var(--text-tertiary)]">
                                                     {item.platform === 'reddit' && item.subreddit ? `r/${item.subreddit}` : item.platform} • {getIntentType(item)}
                                                 </p>
                                             </div>
@@ -459,7 +506,7 @@ export default function DashboardPage() {
                                     </div>
                                 ))
                             ) : (
-                                <div className="text-center py-8 text-[var(--text-ghost)]">
+                                <div className="text-center py-8 text-[var(--text-tertiary)]">
                                     <MessageSquare className="w-12 h-12 mx-auto mb-3 opacity-50" />
                                     <p>No forum threads discovered yet</p>
                                     <Link href="/dashboard/forum-hub">

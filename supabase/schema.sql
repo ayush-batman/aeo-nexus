@@ -1,4 +1,4 @@
--- AEO Nexus Database Schema
+-- Aelo Nexus Database Schema
 -- Run this in Supabase SQL Editor
 
 -- Enable UUID extension
@@ -113,7 +113,7 @@ create table public.content_analyses (
   workspace_id uuid not null references public.workspaces(id) on delete cascade,
   url text not null,
   title text,
-  aeo_score integer default 0,
+  aelo_score integer default 0,
   readability_score integer default 0,
   eeat_score integer default 0,
   schema_present text[] default '{}',

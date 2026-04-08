@@ -66,20 +66,21 @@ export default function ResetPasswordPage() {
     };
 
     return (
-        <div className="min-h-screen bg-[var(--background)] flex items-center justify-center p-6">
+        <div className="min-h-screen bg-[var(--bg-base)] flex items-center justify-center p-6">
             <div className="w-full max-w-md">
                 {/* Logo */}
-                <div className="flex items-center justify-center gap-2 mb-8">
-                    <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center">
-                        <Zap className="w-6 h-6 text-white" />
-                    </div>
-                    <span className="text-2xl font-bold bg-gradient-to-r from-violet-400 to-indigo-400 bg-clip-text text-transparent">
-                        Lumina
+                <div className="flex items-center justify-center gap-2.5 mb-8">
+                    <svg width="32" height="32" viewBox="0 0 28 28" fill="none">
+                        <path d="M14 3 A11 11 0 1 1 5.2 20.5" stroke="var(--text-primary)" strokeWidth="2.5" strokeLinecap="round" fill="none" />
+                        <circle cx="14" cy="14" r="3" fill="var(--accent-base)" />
+                    </svg>
+                    <span className="text-2xl font-bold tracking-tight text-[var(--text-primary)]">
+                        Aelo
                     </span>
                 </div>
 
                 {/* Card */}
-                <div className="rounded-xl border border-[var(--border)] bg-[var(--surface)] p-8">
+                <div className="rounded-xl border border-[var(--border-default)] bg-[var(--bg-surface)] p-8">
                     {success ? (
                         <div className="text-center">
                             <div className="w-16 h-16 rounded-full bg-green-500/10 flex items-center justify-center mx-auto mb-4">
@@ -88,7 +89,7 @@ export default function ResetPasswordPage() {
                             <h1 className="text-2xl font-semibold text-[var(--text-primary)] mb-2">
                                 Password updated!
                             </h1>
-                            <p className="text-sm text-[var(--text-muted)] mb-6">
+                            <p className="text-sm text-[var(--text-secondary)] mb-6">
                                 Redirecting you to the dashboard...
                             </p>
                         </div>
@@ -97,7 +98,7 @@ export default function ResetPasswordPage() {
                             <h1 className="text-2xl font-semibold text-[var(--text-primary)] text-center mb-2">
                                 Set new password
                             </h1>
-                            <p className="text-sm text-[var(--text-muted)] text-center mb-8">
+                            <p className="text-sm text-[var(--text-secondary)] text-center mb-8">
                                 Enter your new password below
                             </p>
 
@@ -150,7 +151,7 @@ export default function ResetPasswordPage() {
                             </form>
 
                             <div className="mt-6 text-center">
-                                <Link href="/login" className="text-sm text-[var(--text-muted)] hover:text-[var(--text-secondary)]">
+                                <Link href="/login" className="text-sm text-[var(--text-secondary)] hover:text-[var(--text-secondary)]">
                                     Back to Sign In
                                 </Link>
                             </div>

@@ -8,7 +8,7 @@ export function Skeleton({ className }: SkeletonProps) {
     return (
         <div
             className={cn(
-                "animate-pulse rounded-md bg-[var(--surface-elevated)]",
+                "animate-pulse rounded-md bg-[var(--bg-raised)]",
                 className
             )}
         />
@@ -17,7 +17,7 @@ export function Skeleton({ className }: SkeletonProps) {
 
 export function MetricCardSkeleton() {
     return (
-        <div className="rounded-xl border border-[var(--border)] bg-[var(--surface)] p-5">
+        <div className="rounded-xl border border-[var(--border-default)] bg-[var(--bg-surface)] p-5">
             <div className="flex items-center justify-between mb-3">
                 <Skeleton className="h-3 w-24" />
                 <Skeleton className="h-8 w-8 rounded-lg" />
@@ -30,7 +30,7 @@ export function MetricCardSkeleton() {
 
 export function LLMMentionSkeleton() {
     return (
-        <div className="flex items-center justify-between p-3 rounded-lg bg-[var(--surface-elevated)]">
+        <div className="flex items-center justify-between p-3 rounded-lg bg-[var(--bg-raised)]">
             <div className="flex items-center gap-3">
                 <Skeleton className="w-8 h-8 rounded-lg" />
                 <div>
@@ -45,7 +45,7 @@ export function LLMMentionSkeleton() {
 
 export function ForumThreadSkeleton() {
     return (
-        <div className="flex items-center justify-between p-3 rounded-lg bg-[var(--surface-elevated)]">
+        <div className="flex items-center justify-between p-3 rounded-lg bg-[var(--bg-raised)]">
             <div className="flex items-center gap-3">
                 <Skeleton className="w-8 h-8 rounded-lg" />
                 <div>
@@ -61,8 +61,8 @@ export function ForumThreadSkeleton() {
 export function DashboardSkeleton() {
     return (
         <div className="p-6 space-y-6">
-            {/* AEO Health Score Skeleton */}
-            <div className="rounded-xl border border-[var(--border)] bg-[var(--surface)] p-6">
+            {/* Aelo Health Score Skeleton */}
+            <div className="rounded-xl border border-[var(--border-default)] bg-[var(--bg-surface)] p-6">
                 <div className="flex items-center justify-between">
                     <div>
                         <Skeleton className="h-3 w-28 mb-3" />
@@ -86,7 +86,7 @@ export function DashboardSkeleton() {
 
             {/* Two Column Layout Skeleton */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <div className="rounded-xl border border-[var(--border)] bg-[var(--surface)] p-6">
+                <div className="rounded-xl border border-[var(--border-default)] bg-[var(--bg-surface)] p-6">
                     <div className="flex justify-between mb-4">
                         <Skeleton className="h-5 w-40" />
                         <Skeleton className="h-7 w-20" />
@@ -97,7 +97,7 @@ export function DashboardSkeleton() {
                         ))}
                     </div>
                 </div>
-                <div className="rounded-xl border border-[var(--border)] bg-[var(--surface)] p-6">
+                <div className="rounded-xl border border-[var(--border-default)] bg-[var(--bg-surface)] p-6">
                     <div className="flex justify-between mb-4">
                         <Skeleton className="h-5 w-48" />
                         <Skeleton className="h-7 w-20" />

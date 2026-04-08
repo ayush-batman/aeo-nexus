@@ -1,7 +1,7 @@
 import { MetadataRoute } from 'next';
 
 export default function sitemap(): MetadataRoute.Sitemap {
-    const baseUrl = 'https://aeo-saas-chi.vercel.app';
+    const baseUrl = 'https://aelo-saas-chi.vercel.app';
 
     return [
         {

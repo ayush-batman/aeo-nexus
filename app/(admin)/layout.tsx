@@ -15,7 +15,7 @@ export default async function AdminLayout({
     }
 
     return (
-        <div className="min-h-screen bg-[var(--background)]">
+        <div className="min-h-screen bg-[var(--bg-base)]">
             <AdminSidebar />
             <main className="pl-64 transition-all duration-300">
                 {children}

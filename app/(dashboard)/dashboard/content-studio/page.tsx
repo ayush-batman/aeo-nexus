@@ -22,8 +22,12 @@ import {
     AlertTriangle,
     Info,
     ShieldCheck,
+    Network,
+    Lightbulb
 } from "lucide-react";
 import { TechnicalAudit } from "@/components/dashboard/content-studio/technical-audit";
+import { TopicClustering } from "@/components/dashboard/content-studio/topic-clustering";
+import { OriginalityScorer } from "@/components/dashboard/content-studio/originality-scorer";
 
 const schemaTypes = [
     { id: "faq", name: "FAQ", icon: "❓", description: "Frequently Asked Questions" },
@@ -56,7 +60,7 @@ interface AuditResult {
 }
 
 export default function ContentStudioPage() {
-    const [activeTab, setActiveTab] = useState<"analyzer" | "schema" | "writer" | "technical">("analyzer");
+    const [activeTab, setActiveTab] = useState<"analyzer" | "schema" | "writer" | "technical" | "clustering" | "originality">("analyzer");
     const [url, setUrl] = useState("");
     const [isAnalyzing, setIsAnalyzing] = useState(false);
     const [auditResult, setAuditResult] = useState<AuditResult | null>(null);
@@ -215,9 +219,11 @@ export default function ContentStudioPage() {
 
             <div className="p-6 space-y-6">
                 {/* Tabs */}
-                <div className="flex gap-2 border-b border-[var(--border)] pb-4">
+                <div className="flex gap-2 border-b border-[var(--border-default)] pb-4">
                     {[
                         { id: "analyzer", label: "Content Analyzer", icon: Search },
+                        { id: "originality", label: "Originality Scorer", icon: Lightbulb },
+                        { id: "clustering", label: "Topic Clustering", icon: Network },
                         { id: "schema", label: "Schema Generator", icon: Code },
                         { id: "writer", label: "AI Writer", icon: Sparkles },
                         { id: "technical", label: "Technical Audit", icon: ShieldCheck },
@@ -229,7 +235,7 @@ export default function ContentStudioPage() {
                                 "flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all",
                                 activeTab === tab.id
                                     ? "bg-indigo-500/20 text-indigo-400 border border-indigo-500/30"
-                                    : "text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--surface-elevated)]"
+                                    : "text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-raised)]"
                             )}
                         >
                             <tab.icon className="w-4 h-4" />
@@ -271,7 +277,7 @@ export default function ContentStudioPage() {
                                             <Search className="w-8 h-8 text-indigo-400" />
                                         </div>
                                         <h3 className="text-xl font-semibold text-[var(--text-primary)] mb-2">Ready to optimize your content?</h3>
-                                        <p className="text-[var(--text-muted)] mb-8">
+                                        <p className="text-[var(--text-secondary)] mb-8">
                                             Enter a URL above to get a comprehensive audit of your page's "Answer Engine Optimization" readiness.
                                         </p>
                                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-left">
@@ -280,7 +286,7 @@ export default function ContentStudioPage() {
                                                 { icon: FileText, title: "Content Depth", desc: "Word count & structure" },
                                                 { icon: Zap, title: "Readability", desc: "Ease of AI parsing" }
                                             ].map((item, i) => (
-                                                <div key={i} className="p-4 rounded-xl bg-[var(--surface)] border border-[var(--border)]">
+                                                <div key={i} className="p-4 rounded-xl bg-[var(--bg-surface)] border border-[var(--border-default)]">
                                                     <item.icon className="w-5 h-5 text-indigo-400 mb-2" />
                                                     <div className="font-medium text-[var(--text-primary)]">{item.title}</div>
                                                     <div className="text-xs text-[var(--text-ghost)]">{item.desc}</div>
@@ -309,8 +315,8 @@ export default function ContentStudioPage() {
                                 {[1, 2, 3].map((i) => (
                                     <Card key={i}>
                                         <CardContent className="p-6 text-center">
-                                            <div className="h-10 w-16 mx-auto bg-[var(--surface-elevated)] animate-pulse rounded mb-2" />
-                                            <div className="h-4 w-20 mx-auto bg-[var(--surface-elevated)] animate-pulse rounded" />
+                                            <div className="h-10 w-16 mx-auto bg-[var(--bg-raised)] animate-pulse rounded mb-2" />
+                                            <div className="h-4 w-20 mx-auto bg-[var(--bg-raised)] animate-pulse rounded" />
                                         </CardContent>
                                     </Card>
                                 ))}
@@ -326,7 +332,7 @@ export default function ContentStudioPage() {
                                             <div className={cn("text-4xl font-bold mb-2", getScoreColor(auditResult.score))}>
                                                 {auditResult.score}
                                             </div>
-                                            <p className="text-sm text-[var(--text-muted)]">AEO Score</p>
+                                            <p className="text-sm text-[var(--text-secondary)]">Aelo Score</p>
                                             <Badge variant="outline" className={cn("mt-2 text-xs", getScoreColor(auditResult.score))}>
                                                 {getScoreLabel(auditResult.score)}
                                             </Badge>
@@ -337,7 +343,7 @@ export default function ContentStudioPage() {
                                             <div className="text-4xl font-bold text-blue-400 mb-2">
                                                 {auditResult.content.wordCount.toLocaleString()}
                                             </div>
-                                            <p className="text-sm text-[var(--text-muted)]">Word Count</p>
+                                            <p className="text-sm text-[var(--text-secondary)]">Word Count</p>
                                             <Badge variant="outline" className={cn(
                                                 "mt-2 text-xs",
                                                 auditResult.content.wordCount > 1000 ? "text-green-400" :
@@ -353,7 +359,7 @@ export default function ContentStudioPage() {
                                             <div className="text-4xl font-bold text-orange-400 mb-2">
                                                 {auditResult.content.qnaCount}
                                             </div>
-                                            <p className="text-sm text-[var(--text-muted)]">Q&A Pairs Found</p>
+                                            <p className="text-sm text-[var(--text-secondary)]">Q&A Pairs Found</p>
                                             <Badge variant="outline" className={cn(
                                                 "mt-2 text-xs",
                                                 auditResult.content.qnaCount > 2 ? "text-green-400" : "text-yellow-400"
@@ -371,7 +377,7 @@ export default function ContentStudioPage() {
                                     </CardHeader>
                                     <CardContent>
                                         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                                            <div className="bg-[var(--surface-elevated)] rounded-lg p-3 text-center">
+                                            <div className="bg-[var(--bg-raised)] rounded-lg p-3 text-center">
                                                 <p className="text-2xl font-bold text-[var(--text-primary)]">{auditResult.structure.h1Count}</p>
                                                 <p className="text-xs text-[var(--text-ghost)]">H1 Tags</p>
                                                 {auditResult.structure.h1Count === 1 ? (
@@ -380,7 +386,7 @@ export default function ContentStudioPage() {
                                                     <AlertTriangle className="w-4 h-4 text-yellow-400 mx-auto mt-1" />
                                                 )}
                                             </div>
-                                            <div className="bg-[var(--surface-elevated)] rounded-lg p-3 text-center">
+                                            <div className="bg-[var(--bg-raised)] rounded-lg p-3 text-center">
                                                 <p className="text-2xl font-bold text-[var(--text-primary)]">{auditResult.structure.h2Count}</p>
                                                 <p className="text-xs text-[var(--text-ghost)]">H2 Tags</p>
                                                 {auditResult.structure.h2Count >= 2 ? (
@@ -389,7 +395,7 @@ export default function ContentStudioPage() {
                                                     <AlertTriangle className="w-4 h-4 text-yellow-400 mx-auto mt-1" />
                                                 )}
                                             </div>
-                                            <div className="bg-[var(--surface-elevated)] rounded-lg p-3 text-center">
+                                            <div className="bg-[var(--bg-raised)] rounded-lg p-3 text-center">
                                                 <p className="text-2xl font-bold text-[var(--text-primary)]">
                                                     {auditResult.structure.hasSchema ? "Yes" : "No"}
                                                 </p>
@@ -400,7 +406,7 @@ export default function ContentStudioPage() {
                                                     <AlertCircle className="w-4 h-4 text-red-400 mx-auto mt-1" />
                                                 )}
                                             </div>
-                                            <div className="bg-[var(--surface-elevated)] rounded-lg p-3 text-center">
+                                            <div className="bg-[var(--bg-raised)] rounded-lg p-3 text-center">
                                                 <p className="text-2xl font-bold text-[var(--text-primary)]">
                                                     {auditResult.structure.metaDescription ? "Yes" : "No"}
                                                 </p>
@@ -449,9 +455,9 @@ export default function ContentStudioPage() {
                                                 </p>
                                             </div>
                                         )}
-                                        <div className="mt-4 p-3 rounded-lg bg-[var(--surface-elevated)] border border-[var(--border)]">
+                                        <div className="mt-4 p-3 rounded-lg bg-[var(--bg-raised)] border border-[var(--border-default)]">
                                             <p className="text-sm text-[var(--text-secondary)] font-medium">Summary</p>
-                                            <p className="text-sm text-[var(--text-muted)] mt-1">{auditResult.summary}</p>
+                                            <p className="text-sm text-[var(--text-secondary)] mt-1">{auditResult.summary}</p>
                                         </div>
                                     </CardContent>
                                 </Card>
@@ -476,7 +482,7 @@ export default function ContentStudioPage() {
                                             "w-full flex items-center gap-3 p-3 rounded-lg text-left transition-all",
                                             selectedSchema === schema.id
                                                 ? "bg-indigo-500/20 border border-indigo-500/30"
-                                                : "bg-[var(--surface-elevated)] hover:bg-[var(--surface-elevated)] border border-transparent"
+                                                : "bg-[var(--bg-raised)] hover:bg-[var(--bg-raised)] border border-transparent"
                                         )}
                                     >
                                         <span className="text-2xl">{schema.icon}</span>
@@ -488,9 +494,9 @@ export default function ContentStudioPage() {
                                 ))}
 
                                 {/* Schema Dynamic Context Form */}
-                                <div className="space-y-3 pt-4 border-t border-[var(--border)]">
+                                <div className="space-y-3 pt-4 border-t border-[var(--border-default)]">
                                     <div>
-                                        <label className="block text-xs font-medium text-[var(--text-muted)] mb-1">Brand Name *</label>
+                                        <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">Brand Name *</label>
                                         <Input
                                             placeholder="e.g. Dylect"
                                             value={schemaBrand}
@@ -498,7 +504,7 @@ export default function ContentStudioPage() {
                                         />
                                     </div>
                                     <div>
-                                        <label className="block text-xs font-medium text-[var(--text-muted)] mb-1">Brief Description</label>
+                                        <label className="block text-xs font-medium text-[var(--text-secondary)] mb-1">Brief Description</label>
                                         <Input
                                             placeholder="What is this page about?"
                                             value={schemaDescription}
@@ -536,7 +542,7 @@ export default function ContentStudioPage() {
                                 </Button>
                             </CardHeader>
                             <CardContent>
-                                <pre className="bg-[var(--surface)] p-4 rounded-lg text-sm text-green-400 overflow-x-auto max-h-[500px] overflow-y-auto whitespace-pre-wrap">
+                                <pre className="bg-[var(--bg-surface)] p-4 rounded-lg text-sm text-green-400 overflow-x-auto max-h-[500px] overflow-y-auto whitespace-pre-wrap">
                                     {isGeneratingSchema ? "Generating custom JSON-LD schema..." : (generatedSchema || "Select a schema type and fill out the form to generate dynamic JSON-LD data")}
                                 </pre>
                                 {generatedSchema && (
@@ -565,7 +571,7 @@ export default function ContentStudioPage() {
                                         Content Type
                                     </label>
                                     <select
-                                        className="w-full h-10 rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 text-sm text-[var(--text-primary)]"
+                                        className="w-full h-10 rounded-lg border border-[var(--border-default)] bg-[var(--bg-surface)] px-3 text-sm text-[var(--text-primary)]"
                                         value={writerContentType}
                                         onChange={(e) => setWriterContentType(e.target.value)}
                                     >
@@ -591,7 +597,7 @@ export default function ContentStudioPage() {
                                     Topic / Brief *
                                 </label>
                                 <textarea
-                                    className="w-full h-32 rounded-lg border border-[var(--border)] bg-[var(--surface)] px-3 py-2 text-sm text-[var(--text-primary)] placeholder:text-[var(--text-ghost)]"
+                                    className="w-full h-32 rounded-lg border border-[var(--border-default)] bg-[var(--bg-surface)] px-3 py-2 text-sm text-[var(--text-primary)] placeholder:text-[var(--text-ghost)]"
                                     placeholder="Describe what you want to write about..."
                                     value={writerTopic}
                                     onChange={(e) => setWriterTopic(e.target.value)}
@@ -629,11 +635,11 @@ export default function ContentStudioPage() {
                             </Button>
                         </CardHeader>
                         <CardContent>
-                            <div className="bg-[var(--surface)] border border-[var(--border)] rounded-lg p-4 h-[400px] overflow-y-auto w-full prose prose-invert prose-sm max-w-none">
+                            <div className="bg-[var(--bg-surface)] border border-[var(--border-default)] rounded-lg p-4 h-[400px] overflow-y-auto w-full prose prose-invert prose-sm max-w-none">
                                 {isGeneratingWriter ? (
                                     <div className="flex flex-col items-center justify-center h-full text-[var(--text-ghost)]">
                                         <Sparkles className="w-8 h-8 mb-4 animate-pulse text-indigo-400" />
-                                        <p>Our AI is drafting AEO-optimized content...</p>
+                                        <p>Our AI is drafting Aelo-optimized content...</p>
                                     </div>
                                 ) : generatedContent ? (
                                     <div className="whitespace-pre-wrap">{generatedContent}</div>
@@ -649,6 +655,12 @@ export default function ContentStudioPage() {
 
                 {/* Technical Audit */}
                 {activeTab === "technical" && <TechnicalAudit />}
+
+                {/* Topic Clustering */}
+                {activeTab === "clustering" && <TopicClustering />}
+
+                {/* Originality Scorer */}
+                {activeTab === "originality" && <OriginalityScorer />}
             </div>
         </>
     );

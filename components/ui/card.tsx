@@ -7,7 +7,7 @@ export function Card({ className, ...props }: CardProps) {
     return (
         <div
             className={cn(
-                "rounded-2xl bg-[var(--surface)] border border-[var(--border)] transition-colors",
+                "rounded-lg bg-[var(--bg-surface)] border border-[var(--border-default)] transition-colors",
                 className
             )}
             {...props}
@@ -35,7 +35,7 @@ export function CardTitle({ className, ...props }: CardProps) {
 
 export function CardDescription({ className, ...props }: CardProps) {
     return (
-        <p className={cn("text-sm text-[var(--text-muted)]", className)} {...props} />
+        <p className={cn("text-sm text-[var(--text-secondary)]", className)} {...props} />
     );
 }
 

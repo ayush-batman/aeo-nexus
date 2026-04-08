@@ -342,8 +342,8 @@ export default function ForumHubPage() {
 
                 {/* Source status info */}
                 {activeSourceCount !== null && (
-                    <div className="rounded-xl border border-[var(--border)]/50 bg-[var(--surface-elevated)]/30 p-3 flex items-center gap-3">
-                        <div className="flex items-center gap-2 text-xs text-[var(--text-muted)]">
+                    <div className="rounded-xl border border-[var(--border-default)]/50 bg-[var(--bg-raised)]/30 p-3 flex items-center gap-3">
+                        <div className="flex items-center gap-2 text-xs text-[var(--text-secondary)]">
                             <Radar className="w-4 h-4 text-indigo-400" />
                             <span className="font-medium text-[var(--text-secondary)]">{activeSourceCount} sources active:</span>
                             {Object.entries(sourcesStatus).map(([key, active]) => {
@@ -351,7 +351,7 @@ export default function ForumHubPage() {
                                 return config ? (
                                     <span key={key} className={cn(
                                         "flex items-center gap-1 px-2 py-0.5 rounded-full text-xs",
-                                        active ? `${config.color} bg-[var(--surface-elevated)]/50` : "text-[var(--text-ghost)] line-through"
+                                        active ? `${config.color} bg-[var(--bg-raised)]/50` : "text-[var(--text-ghost)] line-through"
                                     )}>
                                         {config.icon}
                                         {config.label}
@@ -371,7 +371,7 @@ export default function ForumHubPage() {
                                 "px-4 py-2 rounded-lg text-sm font-medium transition-all",
                                 activeTab === "discover"
                                     ? "bg-indigo-500/20 text-indigo-400 border border-indigo-500/30"
-                                    : "text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--surface-elevated)]"
+                                    : "text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-raised)]"
                             )}
                         >
                             <Search className="w-4 h-4 inline mr-2" />
@@ -383,7 +383,7 @@ export default function ForumHubPage() {
                                 "px-4 py-2 rounded-lg text-sm font-medium transition-all",
                                 activeTab === "queue"
                                     ? "bg-indigo-500/20 text-indigo-400 border border-indigo-500/30"
-                                    : "text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--surface-elevated)]"
+                                    : "text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-raised)]"
                             )}
                         >
                             <MessageSquare className="w-4 h-4 inline mr-2" />
@@ -420,7 +420,7 @@ export default function ForumHubPage() {
                                 "px-3 py-1 rounded-full text-xs font-medium transition-all",
                                 platformFilter === "all"
                                     ? "bg-indigo-500/20 text-indigo-400 border border-indigo-500/30"
-                                    : "bg-[var(--surface-elevated)] text-[var(--text-muted)] hover:text-[var(--text-primary)]"
+                                    : "bg-[var(--bg-raised)] text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
                             )}
                         >
                             All
@@ -436,7 +436,7 @@ export default function ForumHubPage() {
                                         "px-3 py-1 rounded-full text-xs font-medium transition-all flex items-center gap-1",
                                         platformFilter === key
                                             ? "bg-indigo-500/20 text-indigo-400 border border-indigo-500/30"
-                                            : "bg-[var(--surface-elevated)] text-[var(--text-muted)] hover:text-[var(--text-primary)]"
+                                            : "bg-[var(--bg-raised)] text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
                                     )}
                                 >
                                     {config.icon}
@@ -469,13 +469,13 @@ export default function ForumHubPage() {
                                         placeholder="Industry (e.g. Hiking)"
                                         value={discoveryIndustry}
                                         onChange={(e) => setDiscoveryIndustry(e.target.value)}
-                                        className="bg-[var(--surface)] border-[var(--border)] h-9 text-sm"
+                                        className="bg-[var(--bg-surface)] border-[var(--border-default)] h-9 text-sm"
                                     />
                                     <Input
                                         placeholder="Audience (e.g. Beginners)"
                                         value={discoveryAudience}
                                         onChange={(e) => setDiscoveryAudience(e.target.value)}
-                                        className="bg-[var(--surface)] border-[var(--border)] h-9 text-sm"
+                                        className="bg-[var(--bg-surface)] border-[var(--border-default)] h-9 text-sm"
                                     />
                                 </div>
                                 <Button
@@ -529,7 +529,7 @@ export default function ForumHubPage() {
                                     <div className="flex gap-2">
                                         <Input
                                             placeholder="Add subreddit..."
-                                            className="h-8 text-sm bg-[var(--surface-elevated)] border-[var(--border)]"
+                                            className="h-8 text-sm bg-[var(--bg-raised)] border-[var(--border-default)]"
                                             onKeyDown={(e) => {
                                                 if (e.key === 'Enter') {
                                                     const val = e.currentTarget.value.trim();
@@ -555,7 +555,7 @@ export default function ForumHubPage() {
                                 </div>
                             </div>
 
-                            <div className="flex gap-2 justify-end pt-2 border-t border-[var(--border)]">
+                            <div className="flex gap-2 justify-end pt-2 border-t border-[var(--border-default)]">
                                 <Button variant="ghost" onClick={() => setShowDiscovery(false)}>
                                     Cancel
                                 </Button>
@@ -613,7 +613,7 @@ export default function ForumHubPage() {
                         <CardContent className="space-y-3 max-h-[600px] overflow-y-auto">
                             {loading ? (
                                 Array.from({ length: 4 }).map((_, i) => (
-                                    <div key={i} className="p-4 rounded-lg bg-[var(--surface-elevated)]">
+                                    <div key={i} className="p-4 rounded-lg bg-[var(--bg-raised)]">
                                         <Skeleton className="h-4 w-12 mb-2" />
                                         <Skeleton className="h-4 w-3/4 mb-2" />
                                         <Skeleton className="h-3 w-1/2" />
@@ -633,7 +633,7 @@ export default function ForumHubPage() {
                                                 "p-4 rounded-lg cursor-pointer transition-all duration-300 animate-in fade-in slide-in-from-bottom-2 fill-mode-backwards",
                                                 selectedThread?.id === thread.id
                                                     ? "bg-violet-900/30 border-l-4 border-l-violet-500 shadow-xl"
-                                                    : "bg-[var(--surface-elevated)]/20 hover:bg-[var(--surface-elevated)] border-l-4 border-l-transparent hover:border-l-zinc-600"
+                                                    : "bg-[var(--bg-raised)]/20 hover:bg-[var(--bg-raised)] border-l-4 border-l-transparent hover:border-l-zinc-600"
                                             )}
                                         >
                                             <div className="flex items-start justify-between gap-3">
@@ -710,7 +710,7 @@ export default function ForumHubPage() {
                         <CardContent className="space-y-4">
                             {selectedThread ? (
                                 <>
-                                    <div className="p-3 bg-[var(--surface-elevated)] rounded-lg">
+                                    <div className="p-3 bg-[var(--bg-raised)] rounded-lg">
                                         <p className="text-sm text-[var(--text-secondary)] font-medium mb-1">
                                             {selectedThread.title}
                                         </p>
@@ -736,7 +736,7 @@ export default function ForumHubPage() {
                                                         "px-3 py-1.5 rounded-lg text-sm transition-all",
                                                         selectedTone === tone.id
                                                             ? "bg-indigo-500/20 text-indigo-400 border border-indigo-500/30"
-                                                            : "bg-[var(--surface-elevated)] text-[var(--text-muted)] hover:text-[var(--text-primary)]"
+                                                            : "bg-[var(--bg-raised)] text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
                                                     )}
                                                 >
                                                     {tone.emoji} {tone.name}
@@ -765,7 +765,7 @@ export default function ForumHubPage() {
 
                                     {generatedComment && (
                                         <div className="space-y-3">
-                                            <div className="p-4 bg-[var(--surface)] rounded-lg border border-[var(--border)]">
+                                            <div className="p-4 bg-[var(--bg-surface)] rounded-lg border border-[var(--border-default)]">
                                                 <p className="text-sm text-[var(--text-secondary)] whitespace-pre-wrap">
                                                     {generatedComment}
                                                 </p>
@@ -797,8 +797,8 @@ export default function ForumHubPage() {
 
                                     {selectedThread.comment_draft && !generatedComment && (
                                         <div className="space-y-3">
-                                            <p className="text-sm text-[var(--text-muted)]">Existing draft:</p>
-                                            <div className="p-4 bg-[var(--surface)] rounded-lg border border-[var(--border)]">
+                                            <p className="text-sm text-[var(--text-secondary)]">Existing draft:</p>
+                                            <div className="p-4 bg-[var(--bg-surface)] rounded-lg border border-[var(--border-default)]">
                                                 <p className="text-sm text-[var(--text-secondary)] whitespace-pre-wrap">
                                                     {selectedThread.comment_draft}
                                                 </p>

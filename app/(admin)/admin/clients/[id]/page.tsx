@@ -29,7 +29,7 @@ export default async function ClientDetailPage({ params }: PageProps) {
             {/* Back Link */}
             <Link
                 href="/admin/clients"
-                className="inline-flex items-center gap-2 text-[var(--text-muted)] hover:text-white mb-6 transition-colors"
+                className="inline-flex items-center gap-2 text-[var(--text-secondary)] hover:text-white mb-6 transition-colors"
             >
                 <ArrowLeft className="w-4 h-4" />
                 Back to Clients
@@ -55,8 +55,8 @@ export default async function ClientDetailPage({ params }: PageProps) {
 
             {/* Info Grid */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-                <div className="bg-[var(--surface)] border border-[var(--border)] rounded-xl p-4">
-                    <div className="flex items-center gap-2 text-[var(--text-muted)] mb-2">
+                <div className="bg-[var(--bg-surface)] border border-[var(--border-default)] rounded-xl p-4">
+                    <div className="flex items-center gap-2 text-[var(--text-secondary)] mb-2">
                         <Calendar className="w-4 h-4" />
                         <span className="text-sm">Created</span>
                     </div>
@@ -68,15 +68,15 @@ export default async function ClientDetailPage({ params }: PageProps) {
                         })}
                     </p>
                 </div>
-                <div className="bg-[var(--surface)] border border-[var(--border)] rounded-xl p-4">
-                    <div className="flex items-center gap-2 text-[var(--text-muted)] mb-2">
+                <div className="bg-[var(--bg-surface)] border border-[var(--border-default)] rounded-xl p-4">
+                    <div className="flex items-center gap-2 text-[var(--text-secondary)] mb-2">
                         <Users className="w-4 h-4" />
                         <span className="text-sm">Team Members</span>
                     </div>
                     <p className="text-white font-medium">{users.length} users</p>
                 </div>
-                <div className="bg-[var(--surface)] border border-[var(--border)] rounded-xl p-4">
-                    <div className="flex items-center gap-2 text-[var(--text-muted)] mb-2">
+                <div className="bg-[var(--bg-surface)] border border-[var(--border-default)] rounded-xl p-4">
+                    <div className="flex items-center gap-2 text-[var(--text-secondary)] mb-2">
                         <Briefcase className="w-4 h-4" />
                         <span className="text-sm">Workspaces</span>
                     </div>
@@ -86,7 +86,7 @@ export default async function ClientDetailPage({ params }: PageProps) {
 
             {/* Stripe Info */}
             {(organization.stripe_customer_id || organization.stripe_subscription_id) && (
-                <div className="bg-[var(--surface)] border border-[var(--border)] rounded-xl p-6 mb-8">
+                <div className="bg-[var(--bg-surface)] border border-[var(--border-default)] rounded-xl p-6 mb-8">
                     <h2 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
                         <CreditCard className="w-5 h-5 text-emerald-400" />
                         Billing Information
@@ -109,27 +109,27 @@ export default async function ClientDetailPage({ params }: PageProps) {
             )}
 
             {/* Users Table */}
-            <div className="bg-[var(--surface)] border border-[var(--border)] rounded-xl overflow-hidden mb-8">
-                <div className="px-6 py-4 border-b border-[var(--border)]">
+            <div className="bg-[var(--bg-surface)] border border-[var(--border-default)] rounded-xl overflow-hidden mb-8">
+                <div className="px-6 py-4 border-b border-[var(--border-default)]">
                     <h2 className="text-lg font-semibold text-white flex items-center gap-2">
                         <Users className="w-5 h-5 text-indigo-400" />
                         Team Members
                     </h2>
                 </div>
                 <table className="w-full">
-                    <thead className="bg-[var(--surface-elevated)]">
+                    <thead className="bg-[var(--bg-raised)]">
                         <tr>
-                            <th className="text-left px-6 py-3 text-sm font-medium text-[var(--text-muted)]">User</th>
-                            <th className="text-left px-6 py-3 text-sm font-medium text-[var(--text-muted)]">Role</th>
-                            <th className="text-left px-6 py-3 text-sm font-medium text-[var(--text-muted)]">Joined</th>
+                            <th className="text-left px-6 py-3 text-sm font-medium text-[var(--text-secondary)]">User</th>
+                            <th className="text-left px-6 py-3 text-sm font-medium text-[var(--text-secondary)]">Role</th>
+                            <th className="text-left px-6 py-3 text-sm font-medium text-[var(--text-secondary)]">Joined</th>
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-zinc-800">
                         {users.map((user) => (
-                            <tr key={user.id} className="hover:bg-[var(--surface-elevated)]/30">
+                            <tr key={user.id} className="hover:bg-[var(--bg-raised)]/30">
                                 <td className="px-6 py-4">
                                     <div className="flex items-center gap-3">
-                                        <div className="w-8 h-8 rounded-full bg-[var(--surface-elevated)] flex items-center justify-center">
+                                        <div className="w-8 h-8 rounded-full bg-[var(--bg-raised)] flex items-center justify-center">
                                             <span className="text-white text-sm font-medium">
                                                 {user.full_name?.[0] || user.email[0].toUpperCase()}
                                             </span>
@@ -145,7 +145,7 @@ export default async function ClientDetailPage({ params }: PageProps) {
                                         {user.role}
                                     </span>
                                 </td>
-                                <td className="px-6 py-4 text-[var(--text-muted)] text-sm">
+                                <td className="px-6 py-4 text-[var(--text-secondary)] text-sm">
                                     {new Date(user.created_at).toLocaleDateString()}
                                 </td>
                             </tr>
@@ -155,8 +155,8 @@ export default async function ClientDetailPage({ params }: PageProps) {
             </div>
 
             {/* Workspaces */}
-            <div className="bg-[var(--surface)] border border-[var(--border)] rounded-xl overflow-hidden">
-                <div className="px-6 py-4 border-b border-[var(--border)]">
+            <div className="bg-[var(--bg-surface)] border border-[var(--border-default)] rounded-xl overflow-hidden">
+                <div className="px-6 py-4 border-b border-[var(--border-default)]">
                     <h2 className="text-lg font-semibold text-white flex items-center gap-2">
                         <Briefcase className="w-5 h-5 text-emerald-400" />
                         Workspaces (Brands)
@@ -168,7 +168,7 @@ export default async function ClientDetailPage({ params }: PageProps) {
                     ) : (
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                             {workspaces.map((ws) => (
-                                <div key={ws.id} className="bg-[var(--surface-elevated)] rounded-lg p-4">
+                                <div key={ws.id} className="bg-[var(--bg-raised)] rounded-lg p-4">
                                     <p className="text-white font-medium">{ws.name}</p>
                                     <p className="text-[var(--text-ghost)] text-sm">
                                         Created {new Date(ws.created_at).toLocaleDateString()}
@@ -185,7 +185,7 @@ export default async function ClientDetailPage({ params }: PageProps) {
 
 function getPlanBadgeClass(plan: string): string {
     const classes: Record<string, string> = {
-        free: "bg-[var(--surface-elevated)] text-[var(--text-secondary)]",
+        free: "bg-[var(--bg-raised)] text-[var(--text-secondary)]",
         starter: "bg-emerald-900/50 text-emerald-400 border border-emerald-700",
         pro: "bg-violet-900/50 text-indigo-400 border border-violet-700",
         agency: "bg-rose-900/50 text-rose-400 border border-rose-700",
@@ -199,7 +199,7 @@ function getRoleBadgeClass(role: string): string {
         owner: "bg-amber-900/50 text-amber-400",
         admin: "bg-violet-900/50 text-indigo-400",
         editor: "bg-emerald-900/50 text-emerald-400",
-        viewer: "bg-[var(--surface-elevated)] text-[var(--text-secondary)]",
+        viewer: "bg-[var(--bg-raised)] text-[var(--text-secondary)]",
     };
     return classes[role] || classes.viewer;
 }

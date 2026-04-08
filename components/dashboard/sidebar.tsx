@@ -13,25 +13,57 @@ import {
     Settings,
     LogOut,
     ChevronLeft,
-    Zap,
     Sparkles,
     Swords,
     Lightbulb,
+    FlaskConical,
+    HelpCircle,
+    BookOpen,
+    Users,
 } from "lucide-react";
 import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 
-const navigation = [
-    { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
-    { name: "Agent Auditor", href: "/dashboard/audit", icon: Sparkles },
-    { name: "Battle Arena", href: "/dashboard/battle", icon: Swords },
-    { name: "LLM Tracker", href: "/dashboard/llm-tracker", icon: Search },
-    { name: "Prompt Research", href: "/dashboard/prompts", icon: Lightbulb },
-    { name: "Content Studio", href: "/dashboard/content-studio", icon: FileText },
-    { name: "Forum Hub", href: "/dashboard/forum-hub", icon: MessageSquare },
-    { name: "Analytics", href: "/dashboard/analytics", icon: BarChart3 },
-    { name: "Products", href: "/dashboard/products", icon: Package },
-    { name: "Settings", href: "/dashboard/settings", icon: Settings },
+const navGroups = [
+    {
+        label: "Overview",
+        items: [
+            { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
+        ],
+    },
+    {
+        label: "Analyze",
+        items: [
+            { name: "LLM Tracker", href: "/dashboard/llm-tracker", icon: Search },
+            { name: "Agent Auditor", href: "/dashboard/audit", icon: Sparkles },
+            { name: "Battle Arena", href: "/dashboard/battle", icon: Swords },
+            { name: "Question Mine", href: "/dashboard/question-mine", icon: HelpCircle },
+            { name: "Prompt Research", href: "/dashboard/prompts", icon: Lightbulb },
+        ],
+    },
+    {
+        label: "Grow",
+        items: [
+            { name: "Content Studio", href: "/dashboard/content-studio", icon: FileText },
+            { name: "Forum Hub", href: "/dashboard/forum-hub", icon: MessageSquare },
+            { name: "Playbook", href: "/dashboard/playbook", icon: BookOpen },
+            { name: "Experiments", href: "/dashboard/experiments", icon: FlaskConical },
+        ],
+    },
+    {
+        label: "Measure",
+        items: [
+            { name: "Analytics", href: "/dashboard/analytics", icon: BarChart3 },
+            { name: "Attribution", href: "/dashboard/attribution", icon: Users },
+        ],
+    },
+    {
+        label: "Workspace",
+        items: [
+            { name: "Products", href: "/dashboard/products", icon: Package },
+            { name: "Settings", href: "/dashboard/settings", icon: Settings },
+        ],
+    },
 ];
 
 export function Sidebar() {
@@ -51,88 +83,87 @@ export function Sidebar() {
     return (
         <aside
             className={cn(
-                "fixed left-0 top-0 z-40 h-screen glass flex flex-col transition-all duration-300",
-                collapsed ? "w-16" : "w-64"
+                "fixed left-0 top-0 z-40 h-screen flex flex-col transition-all duration-200 bg-[var(--bg-base)] border-r border-[var(--border-subtle)]",
+                collapsed ? "w-16" : "w-60"
             )}
-            style={{ borderRight: '1px solid var(--border)' }}
         >
             {/* Logo */}
-            <div
-                className="flex h-16 items-center justify-between px-4"
-                style={{ borderBottom: '1px solid var(--border)' }}
-            >
+            <div className="flex h-14 items-center justify-between px-4 flex-shrink-0 border-b border-[var(--border-subtle)]">
                 {!collapsed && (
                     <Link href="/dashboard" className="flex items-center gap-2.5 group">
-                        <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center shadow-lg shadow-indigo-500/20 group-hover:shadow-indigo-500/40 transition-shadow">
-                            <Zap className="w-4.5 h-4.5 text-white" />
-                        </div>
-                        <span className="text-lg font-bold font-display text-gradient">
-                            Lumina
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M12 2L2 22h20L12 2z" className="fill-[var(--accent-base)]" />
+                            <path d="M12 9L7 19h10L12 9z" className="fill-[var(--bg-base)]" />
+                        </svg>
+                        <span className="text-[15px] font-semibold tracking-tight text-[var(--text-primary)]">
+                            Aelo
                         </span>
                     </Link>
                 )}
+
                 {collapsed && (
-                    <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center mx-auto shadow-lg shadow-indigo-500/20">
-                        <Zap className="w-4.5 h-4.5 text-white" />
+                    <div className="flex items-center justify-center mx-auto">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M12 2L2 22h20L12 2z" className="fill-[var(--accent-base)]" />
+                            <path d="M12 9L7 19h10L12 9z" className="fill-[var(--bg-base)]" />
+                        </svg>
                     </div>
                 )}
+
                 <button
                     onClick={() => setCollapsed(!collapsed)}
-                    className="p-1.5 rounded-lg text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--surface)] transition-all"
+                    className="p-1.5 text-[var(--text-tertiary)] hover:text-[var(--text-primary)] transition-colors flex-shrink-0"
                 >
-                    <ChevronLeft
-                        className={cn("w-4 h-4 transition-transform duration-200", collapsed && "rotate-180")}
-                    />
+                    <ChevronLeft className={cn("w-4 h-4 transition-transform duration-200", collapsed && "rotate-180")} />
                 </button>
             </div>
 
             {/* Navigation */}
-            <nav className="flex-1 px-3 py-4 space-y-0.5 overflow-y-auto">
-                {navigation.map((item) => {
-                    const isActive = pathname === item.href || pathname.startsWith(item.href + "/");
-                    return (
-                        <Link
-                            key={item.name}
-                            href={item.href}
-                            className={cn(
-                                "flex items-center gap-3 px-3 py-2 rounded-xl text-[13px] font-medium transition-all duration-150 relative group",
-                                isActive
-                                    ? "text-white"
-                                    : "text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--surface)]"
-                            )}
-                        >
-                            {/* Active background pill */}
-                            {isActive && (
-                                <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-indigo-500/15 to-violet-500/10 border border-indigo-500/20" />
-                            )}
-
-                            {/* Active indicator bar */}
-                            {isActive && (
-                                <div className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 rounded-r-full bg-indigo-500" />
-                            )}
-
-                            <item.icon className={cn(
-                                "w-[18px] h-[18px] flex-shrink-0 relative z-10 transition-colors",
-                                isActive ? "text-indigo-400" : "text-[var(--text-muted)] group-hover:text-[var(--text-secondary)]"
-                            )} />
-                            {!collapsed && (
-                                <span className="relative z-10">{item.name}</span>
-                            )}
-                        </Link>
-                    );
-                })}
+            <nav className="flex-1 px-3 py-3 overflow-y-auto space-y-4">
+                {navGroups.map((group) => (
+                    <div key={group.label}>
+                        {!collapsed && (
+                            <p className="px-3 mb-1.5 text-[10px] font-semibold uppercase tracking-widest text-[var(--text-ghost)]">
+                                {group.label}
+                            </p>
+                        )}
+                        {collapsed && (
+                            <div className="mx-auto my-2 h-px w-6 bg-[var(--border-subtle)]" />
+                        )}
+                        <div className="space-y-0.5">
+                            {group.items.map((item) => {
+                                const isActive = pathname === item.href || (item.href !== "/dashboard" && pathname.startsWith(item.href + "/"));
+                                return (
+                                    <Link
+                                        key={item.name}
+                                        href={item.href}
+                                        title={collapsed ? item.name : undefined}
+                                        className={cn(
+                                            "nav-item",
+                                            isActive && "active",
+                                            collapsed && "justify-center px-0 w-10 h-10 mx-auto gap-0"
+                                        )}
+                                    >
+                                        <item.icon className="w-[18px] h-[18px] flex-shrink-0" strokeWidth={1.5} />
+                                        {!collapsed && <span>{item.name}</span>}
+                                    </Link>
+                                );
+                            })}
+                        </div>
+                    </div>
+                ))}
             </nav>
 
-            {/* User section */}
-            <div className="p-3" style={{ borderTop: '1px solid var(--border)' }}>
+            {/* Sign Out */}
+            <div className="p-3 border-t border-[var(--border-subtle)]">
                 <button
                     onClick={handleSignOut}
                     className={cn(
-                        "flex items-center gap-3 w-full px-3 py-2 rounded-xl text-[13px] font-medium",
-                        "text-[var(--text-muted)] hover:text-rose-400 hover:bg-rose-500/10 transition-all duration-150"
+                        "flex items-center gap-3 w-full px-3 py-2 rounded-md transition-all text-[var(--text-secondary)] hover:text-[var(--data-red)] hover:bg-[var(--data-red-muted)] text-[13px] font-medium",
+                        collapsed && "justify-center px-0 w-10 h-10 mx-auto"
                     )}
                 >
-                    <LogOut className="w-[18px] h-[18px] flex-shrink-0" />
+                    <LogOut className="w-[18px] h-[18px] flex-shrink-0" strokeWidth={1.5} />
                     {!collapsed && <span>Sign Out</span>}
                 </button>
             </div>

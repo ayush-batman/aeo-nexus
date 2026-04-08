@@ -1,0 +1,3162 @@
+
+> aeo-nexus@0.1.0 build
+> next build
+
+▲ Next.js 16.2.1 (Turbopack)
+- Environments: .env.local
+
+⚠ The "middleware" file convention is deprecated. Please use "proxy" instead. Learn more: https://nextjs.org/docs/messages/middleware-to-proxy
+  Creating an optimized production build ...
+
+> Build error occurred
+Error: Turbopack build failed with 135 errors:
+./app/globals.css
+Error evaluating Node.js code
+Error: Cannot find module './lib/source-map-generator'
+    at node_modules/source-map-js/source-map.js:6:30 [/Users/ayush/Desktop/projects/aeo-saas/.next/build/chunks/node_modules_046cymd._.js:1691:15]
+    at module evaluation (node_modules/source-map-js/source-map.js:6:30) [/Users/ayush/Desktop/projects/aeo-saas/.next/build/chunks/node_modules_046cymd._.js:1694:3]
+    at moduleFactory (turbopack:///[turbopack]/nodejs/runtime/build-base.ts:57:5) [/Users/ayush/Desktop/projects/aeo-saas/.next/build/chunks/[turbopack]_runtime.js:840:9]
+    at instantiateModule (turbopack:///[turbopack]/nodejs/runtime/build-base.ts:90:10) [/Users/ayush/Desktop/projects/aeo-saas/.next/build/chunks/[turbopack]_runtime.js:864:12]
+    at getOrInstantiateModuleFromParent (turbopack:///[turbopack]/shared/runtime/runtime-utils.ts:440:10) [/Users/ayush/Desktop/projects/aeo-saas/.next/build/chunks/[turbopack]_runtime.js:289:12]
+    at module evaluation (node_modules/postcss/lib/input.js:5:46) [/Users/ayush/Desktop/projects/aeo-saas/.next/build/chunks/node_modules_046cymd._.js:1825:71]
+    at moduleFactory (turbopack:///[turbopack]/nodejs/runtime/build-base.ts:57:5) [/Users/ayush/Desktop/projects/aeo-saas/.next/build/chunks/[turbopack]_runtime.js:840:9]
+    at instantiateModule (turbopack:///[turbopack]/nodejs/runtime/build-base.ts:90:10) [/Users/ayush/Desktop/projects/aeo-saas/.next/build/chunks/[turbopack]_runtime.js:864:12]
+    at getOrInstantiateModuleFromParent (turbopack:///[turbopack]/shared/runtime/runtime-utils.ts:440:10) [/Users/ayush/Desktop/projects/aeo-saas/.next/build/chunks/[turbopack]_runtime.js:289:12]
+    at Input (node_modules/postcss/lib/fromJSON.js:6:5) [/Users/ayush/Desktop/projects/aeo-saas/.next/build/chunks/node_modules_046cymd._.js:2194:35]
+
+Import trace:
+  Client Component Browser:
+    ./app/globals.css [Client Component Browser]
+    ./app/layout.tsx [Server Component]
+
+
+./node_modules/undici/lib/dispatcher/socks5-proxy-agent.js:12:24
+Module not found: Can't resolve '../core/connect'
+  [90m10 |[0m ...estroy } = requ...
+  [90m11 |[0m ...)
+[31m[1m>[0m [90m12 |[0m ...e([32m'../core/conn...[0m
+  [90m   |[0m    [31m[1m^^^^^^^^^^^^^^^^^^[0m
+  [90m13 |[0m ...[32m'node:util'[0m)
+  [90m14 |[0m ...
+  [90m15 |[0m ...[32mi:socks5-proxy'[0m)
+
+
+
+Import trace:
+  App Route:
+    ./node_modules/undici/lib/dispatcher/socks5-proxy-agent.js
+    ./node_modules/undici/index.js
+    ./node_modules/cheerio/dist/esm/index.js
+    ./app/api/audit/technical/route.ts
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+./node_modules/undici/lib/dispatcher/socks5-proxy-agent.js:8:34
+Module not found: Can't resolve '../core/errors'
+  [90m 6 |[0m ...[90mince it is not ...[0m
+  [90m 7 |[0m ...[32matcher-base'[0m)
+[31m[1m>[0m [90m 8 |[0m ...re([32m'../core/err...[0m
+  [90m   |[0m    [31m[1m^^^^^^^^^^^^^^^^^^[0m
+  [90m 9 |[0m ...[32more/socks5-clie...[0m
+  [90m10 |[0m ...= require([32m'../c...[0m
+  [90m11 |[0m ...
+
+
+
+Import trace:
+  App Route:
+    ./node_modules/undici/lib/dispatcher/socks5-proxy-agent.js
+    ./node_modules/undici/index.js
+    ./node_modules/cheerio/dist/esm/index.js
+    ./app/api/audit/technical/route.ts
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+./node_modules/undici/lib/dispatcher/socks5-proxy-agent.js:10:41
+Module not found: Can't resolve '../core/symbols'
+  [90m 8 |[0m ...[32more/errors'[0m)
+  [90m 9 |[0m ...[32ms5-client'[0m)
+[31m[1m>[0m [90m10 |[0m ...e([32m'../core/symb...[0m
+  [90m   |[0m    [31m[1m^^^^^^^^^^^^^^^^^^[0m
+  [90m11 |[0m ...
+  [90m12 |[0m ...[32mt'[0m)
+  [90m13 |[0m ...
+
+
+
+Import trace:
+  App Route:
+    ./node_modules/undici/lib/dispatcher/socks5-proxy-agent.js
+    ./node_modules/undici/index.js
+    ./node_modules/cheerio/dist/esm/index.js
+    ./app/api/audit/technical/route.ts
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+./node_modules/date-fns/formatDistance.js:1:1
+Module not found: Can't resolve './_lib/defaultLocale.js'
+[31m[1m>[0m [90m1 |[0m ...le } [36mfrom[0m [32m"./_li...[0m
+  [90m  |[0m    [31m[1m^^^^^^^^^^^^^^^^^^^[0m
+  [90m2 |[0m ...ptions } [36mfrom[0m [32m"....[0m
+  [90m3 |[0m ...OffsetInMillisec...
+  [90m4 |[0m ...tes } [36mfrom[0m [32m"./_l...[0m
+
+
+
+Import traces:
+  Client Component Browser:
+    ./node_modules/date-fns/formatDistance.js [Client Component Browser]
+    ./node_modules/date-fns/formatDistanceToNow.js [Client Component Browser]
+    ./app/(dashboard)/dashboard/forum-hub/page.tsx [Client Component Browser]
+    ./app/(dashboard)/dashboard/forum-hub/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./node_modules/date-fns/formatDistance.js [Client Component SSR]
+    ./node_modules/date-fns/formatDistanceToNow.js [Client Component SSR]
+    ./app/(dashboard)/dashboard/forum-hub/page.tsx [Client Component SSR]
+    ./app/(dashboard)/dashboard/forum-hub/page.tsx [Server Component]
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+./node_modules/date-fns/formatDistance.js:2:1
+Module not found: Can't resolve './_lib/defaultOptions.js'
+  [90m1 |[0m ... } [36mfrom[0m [32m"./_lib/...[0m
+[31m[1m>[0m [90m2 |[0m ...ions } [36mfrom[0m [32m"./_...[0m
+  [90m  |[0m    [31m[1m^^^^^^^^^^^^^^^^^^^[0m
+  [90m3 |[0m ...fsetInMillisecon...
+  [90m4 |[0m ...s } [36mfrom[0m [32m"./_lib...[0m
+  [90m5 |[0m ...[36mfrom[0m [32m"./compareA...[0m
+
+
+
+Import traces:
+  Client Component Browser:
+    ./node_modules/date-fns/formatDistance.js [Client Component Browser]
+    ./node_modules/date-fns/formatDistanceToNow.js [Client Component Browser]
+    ./app/(dashboard)/dashboard/forum-hub/page.tsx [Client Component Browser]
+    ./app/(dashboard)/dashboard/forum-hub/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./node_modules/date-fns/formatDistance.js [Client Component SSR]
+    ./node_modules/date-fns/formatDistanceToNow.js [Client Component SSR]
+    ./app/(dashboard)/dashboard/forum-hub/page.tsx [Client Component SSR]
+    ./app/(dashboard)/dashboard/forum-hub/page.tsx [Server Component]
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+./node_modules/date-fns/differenceInSeconds.js:1:1
+Module not found: Can't resolve './_lib/getRoundingMethod.js'
+[31m[1m>[0m [90m1 |[0m ...od } [36mfrom[0m [32m"./_li...[0m
+  [90m  |[0m    [31m[1m^^^^^^^^^^^^^^^^^^^[0m
+  [90m2 |[0m ...liseconds } [36mfrom[0m.[32m..[0m
+  [90m3 |[0m ...
+  [90m4 |[0m ...
+
+
+
+Import traces:
+  Client Component Browser:
+    ./node_modules/date-fns/differenceInSeconds.js [Client Component Browser]
+    ./node_modules/date-fns/formatDistance.js [Client Component Browser]
+    ./node_modules/date-fns/formatDistanceToNow.js [Client Component Browser]
+    ./app/(dashboard)/dashboard/forum-hub/page.tsx [Client Component Browser]
+    ./app/(dashboard)/dashboard/forum-hub/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./node_modules/date-fns/differenceInSeconds.js [Client Component SSR]
+    ./node_modules/date-fns/formatDistance.js [Client Component SSR]
+    ./node_modules/date-fns/formatDistanceToNow.js [Client Component SSR]
+    ./app/(dashboard)/dashboard/forum-hub/page.tsx [Client Component SSR]
+    ./app/(dashboard)/dashboard/forum-hub/page.tsx [Server Component]
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+./node_modules/date-fns/formatDistance.js:3:1
+Module not found: Can't resolve './_lib/getTimezoneOffsetInMilliseconds.js'
+  [90m1 |[0m ...[32mdefaultLocale.js"[0m;
+  [90m2 |[0m ...[32mlib/defaultOptio...[0m
+[31m[1m>[0m [90m3 |[0m ...ds } [36mfrom[0m [32m"./_li...[0m
+  [90m  |[0m    [31m[1m^^^^^^^^^^^^^^^^^^^[0m
+  [90m4 |[0m ...[32m/normalizeDates....[0m
+  [90m5 |[0m ...[32msc.js"[0m;
+  [90m6 |[0m ...} [36mfrom[0m [32m"./consta...[0m
+
+
+
+Import traces:
+  Client Component Browser:
+    ./node_modules/date-fns/formatDistance.js [Client Component Browser]
+    ./node_modules/date-fns/formatDistanceToNow.js [Client Component Browser]
+    ./app/(dashboard)/dashboard/forum-hub/page.tsx [Client Component Browser]
+    ./app/(dashboard)/dashboard/forum-hub/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./node_modules/date-fns/formatDistance.js [Client Component SSR]
+    ./node_modules/date-fns/formatDistanceToNow.js [Client Component SSR]
+    ./app/(dashboard)/dashboard/forum-hub/page.tsx [Client Component SSR]
+    ./app/(dashboard)/dashboard/forum-hub/page.tsx [Server Component]
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+./node_modules/date-fns/differenceInCalendarMonths.js:1:1
+Module not found: Can't resolve './_lib/normalizeDates.js'
+[31m[1m>[0m [90m1 |[0m ...es } [36mfrom[0m [32m"./_li...[0m
+  [90m  |[0m    [31m[1m^^^^^^^^^^^^^^^^^^^[0m
+  [90m2 |[0m ...
+  [90m3 |[0m ...
+  [90m4 |[0m ...nceInCalendarMon...
+
+
+
+Import traces:
+  Client Component Browser:
+    ./node_modules/date-fns/differenceInCalendarMonths.js [Client Component Browser]
+    ./node_modules/date-fns/differenceInMonths.js [Client Component Browser]
+    ./node_modules/date-fns/formatDistance.js [Client Component Browser]
+    ./node_modules/date-fns/formatDistanceToNow.js [Client Component Browser]
+    ./app/(dashboard)/dashboard/forum-hub/page.tsx [Client Component Browser]
+    ./app/(dashboard)/dashboard/forum-hub/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./node_modules/date-fns/differenceInCalendarMonths.js [Client Component SSR]
+    ./node_modules/date-fns/differenceInMonths.js [Client Component SSR]
+    ./node_modules/date-fns/formatDistance.js [Client Component SSR]
+    ./node_modules/date-fns/formatDistanceToNow.js [Client Component SSR]
+    ./app/(dashboard)/dashboard/forum-hub/page.tsx [Client Component SSR]
+    ./app/(dashboard)/dashboard/forum-hub/page.tsx [Server Component]
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+./node_modules/date-fns/differenceInMonths.js:1:1
+Module not found: Can't resolve './_lib/normalizeDates.js'
+[31m[1m>[0m [90m1 |[0m ...es } [36mfrom[0m [32m"./_li...[0m
+  [90m  |[0m    [31m[1m^^^^^^^^^^^^^^^^^^^[0m
+  [90m2 |[0m ... [36mfrom[0m [32m"./compare...[0m
+  [90m3 |[0m ...CalendarMonths }.[36m..[0m
+  [90m4 |[0m ...onth } [36mfrom[0m [32m"./i...[0m
+
+
+
+Import traces:
+  Client Component Browser:
+    ./node_modules/date-fns/differenceInMonths.js [Client Component Browser]
+    ./node_modules/date-fns/formatDistance.js [Client Component Browser]
+    ./node_modules/date-fns/formatDistanceToNow.js [Client Component Browser]
+    ./app/(dashboard)/dashboard/forum-hub/page.tsx [Client Component Browser]
+    ./app/(dashboard)/dashboard/forum-hub/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./node_modules/date-fns/differenceInMonths.js [Client Component SSR]
+    ./node_modules/date-fns/formatDistance.js [Client Component SSR]
+    ./node_modules/date-fns/formatDistanceToNow.js [Client Component SSR]
+    ./app/(dashboard)/dashboard/forum-hub/page.tsx [Client Component SSR]
+    ./app/(dashboard)/dashboard/forum-hub/page.tsx [Server Component]
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+./node_modules/date-fns/formatDistance.js:4:1
+Module not found: Can't resolve './_lib/normalizeDates.js'
+  [90m2 |[0m ...tions } [36mfrom[0m [32m"./...[0m
+  [90m3 |[0m ...ffsetInMilliseco...
+[31m[1m>[0m [90m4 |[0m ...es } [36mfrom[0m [32m"./_li...[0m
+  [90m  |[0m    [31m[1m^^^^^^^^^^^^^^^^^^^[0m
+  [90m5 |[0m ... [36mfrom[0m [32m"./compare...[0m
+  [90m6 |[0m ..., minutesInMonth...
+  [90m7 |[0m ...Months } [36mfrom[0m [32m"....[0m
+
+
+
+Import traces:
+  Client Component Browser:
+    ./node_modules/date-fns/formatDistance.js [Client Component Browser]
+    ./node_modules/date-fns/formatDistanceToNow.js [Client Component Browser]
+    ./app/(dashboard)/dashboard/forum-hub/page.tsx [Client Component Browser]
+    ./app/(dashboard)/dashboard/forum-hub/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./node_modules/date-fns/formatDistance.js [Client Component SSR]
+    ./node_modules/date-fns/formatDistanceToNow.js [Client Component SSR]
+    ./app/(dashboard)/dashboard/forum-hub/page.tsx [Client Component SSR]
+    ./app/(dashboard)/dashboard/forum-hub/page.tsx [Server Component]
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+./node_modules/date-fns/index.js:11:1
+Module not found: Can't resolve './addQuarters.js'
+  [90m 9 |[0m ...[36mfrom[0m [32m"./addMinu...[0m
+  [90m10 |[0m ...[36mfrom[0m [32m"./addMont...[0m
+[31m[1m>[0m [90m11 |[0m ...[36mfrom[0m [32m"./addQuar...[0m
+  [90m   |[0m    [31m[1m^^^^^^^^^^^^^^^^^^[0m
+  [90m12 |[0m ...[36mfrom[0m [32m"./addSeco...[0m
+  [90m13 |[0m ...[36mfrom[0m [32m"./addWeek...[0m
+  [90m14 |[0m ...[36mfrom[0m [32m"./addYear...[0m
+
+
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+./node_modules/date-fns/index.js:12:1
+Module not found: Can't resolve './addSeconds.js'
+  [90m10 |[0m ...[36mfrom[0m [32m"./addMont...[0m
+  [90m11 |[0m ...[36mfrom[0m [32m"./addQuar...[0m
+[31m[1m>[0m [90m12 |[0m ...[36mfrom[0m [32m"./addSeco...[0m
+  [90m   |[0m    [31m[1m^^^^^^^^^^^^^^^^^^[0m
+  [90m13 |[0m ...[36mfrom[0m [32m"./addWeek...[0m
+  [90m14 |[0m ...[36mfrom[0m [32m"./addYear...[0m
+  [90m15 |[0m ...[36mfrom[0m [32m"./areInte...[0m
+
+
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+./node_modules/react-dom/client.js:35:20
+Module not found: Can't resolve './cjs/react-dom-client.production.js'
+
+
+Import trace:
+  Browser:
+    ./node_modules/react-dom/client.js
+    ./node_modules/next/dist/client/index.js
+    ./node_modules/next/dist/client/next-turbopack.js
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+./node_modules/react-dom/index.js:35:20
+Module not found: Can't resolve './cjs/react-dom.production.js'
+
+
+Import trace:
+  Browser:
+    ./node_modules/react-dom/index.js
+    ./node_modules/next/dist/client/script.js
+    ./node_modules/next/dist/client/index.js
+    ./node_modules/next/dist/client/next-turbopack.js
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+./node_modules/date-fns/index.js:20:1
+Module not found: Can't resolve './compareDesc.js'
+  [90m18 |[0m ...[36mfrom[0m [32m"./closest...[0m
+  [90m19 |[0m ...[36mfrom[0m [32m"./compare...[0m
+[31m[1m>[0m [90m20 |[0m ...[36mfrom[0m [32m"./compare...[0m
+  [90m   |[0m    [31m[1m^^^^^^^^^^^^^^^^^^[0m
+  [90m21 |[0m ...[36mfrom[0m [32m"./constru...[0m
+  [90m22 |[0m ...[36mfrom[0m [32m"./constru...[0m
+  [90m23 |[0m ...[36mfrom[0m [32m"./daysToW...[0m
+
+
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+./node_modules/date-fns/index.js:38:1
+Module not found: Can't resolve './differenceInQuarters.js'
+  [90m36 |[0m ...[32m"./differenceIn...[0m
+  [90m37 |[0m ...[32m"./differenceIn...[0m
+[31m[1m>[0m [90m38 |[0m ...[32m"./differenceIn...[0m
+  [90m   |[0m    [31m[1m^^^^^^^^^^^^^^^^^^[0m
+  [90m39 |[0m ...[32m"./differenceIn...[0m
+  [90m40 |[0m ...[32m"./differenceIn...[0m
+  [90m41 |[0m ...[32m"./differenceIn...[0m
+
+
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+./node_modules/date-fns/index.js:41:1
+Module not found: Can't resolve './differenceInYears.js'
+  [90m39 |[0m ...[36mm[0m [32m"./difference...[0m
+  [90m40 |[0m ...[36mm[0m [32m"./difference...[0m
+[31m[1m>[0m [90m41 |[0m ...[36mm[0m [32m"./difference...[0m
+  [90m   |[0m    [31m[1m^^^^^^^^^^^^^^^^^^[0m
+  [90m42 |[0m ...[36mm[0m [32m"./eachDayOfI...[0m
+  [90m43 |[0m ...[36mm[0m [32m"./eachHourOf...[0m
+  [90m44 |[0m ...[36mm[0m [32m"./eachMinute...[0m
+
+
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+./node_modules/undici/lib/dispatcher/socks5-proxy-agent.js:7:24
+Module not found: Can't resolve './dispatcher-base'
+  [90m 5 |[0m ...
+  [90m 6 |[0m ...[90monally since it...[0m
+[31m[1m>[0m [90m 7 |[0m ...([32m'./dispatcher-...[0m
+  [90m   |[0m    [31m[1m^^^^^^^^^^^^^^^^^^[0m
+  [90m 8 |[0m ... = require([32m'../...[0m
+  [90m 9 |[0m ...re([32m'../core/soc...[0m
+  [90m10 |[0m ...stroy } = requi...
+
+
+
+Import trace:
+  App Route:
+    ./node_modules/undici/lib/dispatcher/socks5-proxy-agent.js
+    ./node_modules/undici/index.js
+    ./node_modules/cheerio/dist/esm/index.js
+    ./app/api/audit/technical/route.ts
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+./node_modules/date-fns/index.js:47:1
+Module not found: Can't resolve './eachWeekOfInterval.js'
+  [90m45 |[0m ... [32m"./eachMonthOf...[0m
+  [90m46 |[0m ... [32m"./eachQuarter...[0m
+[31m[1m>[0m [90m47 |[0m ... [32m"./eachWeekOfI...[0m
+  [90m   |[0m    [31m[1m^^^^^^^^^^^^^^^^^^[0m
+  [90m48 |[0m ... [32m"./eachWeekend...[0m
+  [90m49 |[0m ... [32m"./eachWeekend...[0m
+  [90m50 |[0m ... [32m"./eachWeekend...[0m
+
+
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+./node_modules/undici/lib/core/socks5-client.js:5:52
+Module not found: Can't resolve './errors'
+  [90m3 |[0m ...
+  [90m4 |[0m ...
+[31m[1m>[0m [90m5 |[0m ...equire([32m'./errors'[0m)
+  [90m  |[0m    [31m[1m^^^^^^^^^^^^^^^^^^^[0m
+  [90m6 |[0m ...
+  [90m7 |[0m ...
+  [90m8 |[0m ...
+
+
+
+Import trace:
+  App Route:
+    ./node_modules/undici/lib/core/socks5-client.js
+    ./node_modules/undici/lib/dispatcher/socks5-proxy-agent.js
+    ./node_modules/undici/index.js
+    ./node_modules/cheerio/dist/esm/index.js
+    ./app/api/audit/technical/route.ts
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+./node_modules/undici/lib/core/socks5-utils.js:5:34
+Module not found: Can't resolve './errors'
+  [90m3 |[0m ...[32muffer'[0m)
+  [90m4 |[0m ...
+[31m[1m>[0m [90m5 |[0m ...equire([32m'./errors'[0m)
+  [90m  |[0m    [31m[1m^^^^^^^^^^^^^^^^^^^[0m
+  [90m6 |[0m ...
+  [90m7 |[0m ...
+  [90m8 |[0m ...its [36mtype[0m
+
+
+
+Import trace:
+  App Route:
+    ./node_modules/undici/lib/core/socks5-utils.js
+    ./node_modules/undici/lib/core/socks5-client.js
+    ./node_modules/undici/lib/dispatcher/socks5-proxy-agent.js
+    ./node_modules/undici/index.js
+    ./node_modules/cheerio/dist/esm/index.js
+    ./app/api/audit/technical/route.ts
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+./node_modules/date-fns/index.js:88:1
+Module not found: Can't resolve './getISOWeek.js'
+  [90m86 |[0m ...[36mfrom[0m [32m"./getHour...[0m
+  [90m87 |[0m ...[36mfrom[0m [32m"./getISOD...[0m
+[31m[1m>[0m [90m88 |[0m ...[36mfrom[0m [32m"./getISOW...[0m
+  [90m   |[0m    [31m[1m^^^^^^^^^^^^^^^^^^[0m
+  [90m89 |[0m ...[36mfrom[0m [32m"./getISOW...[0m
+  [90m90 |[0m ...[36mfrom[0m [32m"./getISOW...[0m
+  [90m91 |[0m ...[36mfrom[0m [32m"./getMill...[0m
+
+
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+./node_modules/date-fns/index.js:96:1
+Module not found: Can't resolve './getSeconds.js'
+  [90m94 |[0m ...[36mfrom[0m [32m"./getOver...[0m
+  [90m95 |[0m ...[36mfrom[0m [32m"./getQuar...[0m
+[31m[1m>[0m [90m96 |[0m ...[36mfrom[0m [32m"./getSeco...[0m
+  [90m   |[0m    [31m[1m^^^^^^^^^^^^^^^^^^[0m
+  [90m97 |[0m ...[36mfrom[0m [32m"./getTime...[0m
+  [90m98 |[0m ...[36mfrom[0m [32m"./getUnix...[0m
+  [90m99 |[0m ...[36mfrom[0m [32m"./getWeek...[0m
+
+
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+./node_modules/date-fns/index.js:101:1
+Module not found: Can't resolve './getWeekYear.js'
+  [90m 99 |[0m ...[36mfrom[0m [32m"./getWee...[0m
+  [90m100 |[0m ...[36mfrom[0m [32m"./getWee...[0m
+[31m[1m>[0m [90m101 |[0m ...[36mfrom[0m [32m"./getWee...[0m
+  [90m    |[0m    [31m[1m^^^^^^^^^^^^^^^^^[0m
+  [90m102 |[0m ...[36mfrom[0m [32m"./getWee...[0m
+  [90m103 |[0m ...[36mfrom[0m [32m"./getYea...[0m
+  [90m104 |[0m ...[36mfrom[0m [32m"./hoursT...[0m
+
+
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+./node_modules/date-fns/index.js:109:1
+Module not found: Can't resolve './intlFormat.js'
+  [90m107 |[0m ...[36mfrom[0m [32m"./interv...[0m
+  [90m108 |[0m ...[36mfrom[0m [32m"./interv...[0m
+[31m[1m>[0m [90m109 |[0m ...[36mfrom[0m [32m"./intlFo...[0m
+  [90m    |[0m    [31m[1m^^^^^^^^^^^^^^^^^[0m
+  [90m110 |[0m ...[36mfrom[0m [32m"./intlFo...[0m
+  [90m111 |[0m ...[36mfrom[0m [32m"./isAfte...[0m
+  [90m112 |[0m ...[36mfrom[0m [32m"./isBefo...[0m
+
+
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+./node_modules/date-fns/index.js:110:1
+Module not found: Can't resolve './intlFormatDistance.js'
+  [90m108 |[0m ... [32m"./intervalTo...[0m
+  [90m109 |[0m ... [32m"./intlFormat...[0m
+[31m[1m>[0m [90m110 |[0m ... [32m"./intlFormat...[0m
+  [90m    |[0m    [31m[1m^^^^^^^^^^^^^^^^^[0m
+  [90m111 |[0m ... [32m"./isAfter.js"[0m;
+  [90m112 |[0m ... [32m"./isBefore.js"[0m;
+  [90m113 |[0m ... [32m"./isDate.js"[0m;
+
+
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+./node_modules/date-fns/index.js:111:1
+Module not found: Can't resolve './isAfter.js'
+  [90m109 |[0m ...* [36mfrom[0m [32m"./intl...[0m
+  [90m110 |[0m ...* [36mfrom[0m [32m"./intl...[0m
+[31m[1m>[0m [90m111 |[0m ...* [36mfrom[0m [32m"./isAf...[0m
+  [90m    |[0m    [31m[1m^^^^^^^^^^^^^^^^^[0m
+  [90m112 |[0m ...* [36mfrom[0m [32m"./isBe...[0m
+  [90m113 |[0m ...* [36mfrom[0m [32m"./isDa...[0m
+  [90m114 |[0m ...* [36mfrom[0m [32m"./isEq...[0m
+
+
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+./node_modules/date-fns/index.js:124:1
+Module not found: Can't resolve './isSameDay.js'
+  [90m122 |[0m ... [36mfrom[0m [32m"./isMon...[0m
+  [90m123 |[0m ... [36mfrom[0m [32m"./isPas...[0m
+[31m[1m>[0m [90m124 |[0m ... [36mfrom[0m [32m"./isSam...[0m
+  [90m    |[0m    [31m[1m^^^^^^^^^^^^^^^^^[0m
+  [90m125 |[0m ... [36mfrom[0m [32m"./isSam...[0m
+  [90m126 |[0m ... [36mfrom[0m [32m"./isSam...[0m
+  [90m127 |[0m ... [36mfrom[0m [32m"./isSam...[0m
+
+
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+./node_modules/date-fns/index.js:130:1
+Module not found: Can't resolve './isSameQuarter.js'
+  [90m128 |[0m ...[36mrom[0m [32m"./isSameM...[0m
+  [90m129 |[0m ...[36mrom[0m [32m"./isSameM...[0m
+[31m[1m>[0m [90m130 |[0m ...[36mrom[0m [32m"./isSameQ...[0m
+  [90m    |[0m    [31m[1m^^^^^^^^^^^^^^^^^[0m
+  [90m131 |[0m ...[36mrom[0m [32m"./isSameS...[0m
+  [90m132 |[0m ...[36mrom[0m [32m"./isSameW...[0m
+  [90m133 |[0m ...[36mrom[0m [32m"./isSameY...[0m
+
+
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+./node_modules/date-fns/index.js:135:1
+Module not found: Can't resolve './isSunday.js'
+  [90m133 |[0m ... [36mfrom[0m [32m"./isSam...[0m
+  [90m134 |[0m ... [36mfrom[0m [32m"./isSat...[0m
+[31m[1m>[0m [90m135 |[0m ... [36mfrom[0m [32m"./isSun...[0m
+  [90m    |[0m    [31m[1m^^^^^^^^^^^^^^^^^[0m
+  [90m136 |[0m ... [36mfrom[0m [32m"./isThi...[0m
+  [90m137 |[0m ... [36mfrom[0m [32m"./isThi...[0m
+  [90m138 |[0m ... [36mfrom[0m [32m"./isThi...[0m
+
+
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+./node_modules/date-fns/index.js:158:1
+Module not found: Can't resolve './lastDayOfWeek.js'
+  [90m156 |[0m ...[36mrom[0m [32m"./lastDay...[0m
+  [90m157 |[0m ...[36mrom[0m [32m"./lastDay...[0m
+[31m[1m>[0m [90m158 |[0m ...[36mrom[0m [32m"./lastDay...[0m
+  [90m    |[0m    [31m[1m^^^^^^^^^^^^^^^^^[0m
+  [90m159 |[0m ...[36mrom[0m [32m"./lastDay...[0m
+  [90m160 |[0m ...[36mrom[0m [32m"./lightFo...[0m
+  [90m161 |[0m ...[36mrom[0m [32m"./max.js"[0m;
+
+
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+./node_modules/undici/index.js:17:13
+Module not found: Can't resolve './lib/api'
+  [90m15 |[0m ...quire([32m'./lib/co...[0m
+  [90m16 |[0m ...[33mArgumentError[0m }...
+[31m[1m>[0m [90m17 |[0m ...uire([32m'./lib/api'[0m)
+  [90m   |[0m    [31m[1m^^^^^^^^^^^^^^^^^^[0m
+  [90m18 |[0m ...ector = require.[32m..[0m
+  [90m19 |[0m ...[33mt[0m = require([32m'./...[0m
+  [90m20 |[0m ...[33mlHistory[0m, [33mMockC...[0m
+
+
+
+Import trace:
+  App Route:
+    ./node_modules/undici/index.js
+    ./node_modules/cheerio/dist/esm/index.js
+    ./app/api/audit/technical/route.ts
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+./node_modules/undici/index.js:59:21
+Module not found: Can't resolve './lib/cache/memory-cache-store'
+  [90m57 |[0m ...
+  [90m58 |[0m ...
+[31m[1m>[0m [90m59 |[0m ...[32mb/cache/memory-...[0m
+  [90m   |[0m    [31m[1m^^^^^^^^^^^^^^^^^^[0m
+  [90m60 |[0m ...
+  [90m61 |[0m ...
+  [90m62 |[0m ...[32m'./lib/cache/sq...[0m
+
+
+
+Import trace:
+  App Route:
+    ./node_modules/undici/index.js
+    ./node_modules/cheerio/dist/esm/index.js
+    ./app/api/audit/technical/route.ts
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+./node_modules/undici/index.js:62:26
+Module not found: Can't resolve './lib/cache/sqlite-cache-store'
+  [90m60 |[0m ...
+  [90m61 |[0m ...
+[31m[1m>[0m [90m62 |[0m ...[32mb/cache/sqlite-...[0m
+  [90m   |[0m    [31m[1m^^^^^^^^^^^^^^^^^^[0m
+  [90m63 |[0m ...[33mStore[0m = [33mSqliteC...[0m
+  [90m64 |[0m ...
+  [90m65 |[0m ...onnector
+
+
+
+Import trace:
+  App Route:
+    ./node_modules/undici/index.js
+    ./node_modules/cheerio/dist/esm/index.js
+    ./app/api/audit/technical/route.ts
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+./node_modules/undici/index.js:18:24
+Module not found: Can't resolve './lib/core/connect'
+  [90m16 |[0m ... = errors
+  [90m17 |[0m ...[32m'[0m)
+[31m[1m>[0m [90m18 |[0m ...([32m'./lib/core/co...[0m
+  [90m   |[0m    [31m[1m^^^^^^^^^^^^^^^^^^[0m
+  [90m19 |[0m ...[32mlib/mock/mock-c...[0m
+  [90m20 |[0m ...[33mallHistoryLog[0m }...
+  [90m21 |[0m ...[32mib/mock/mock-ag...[0m
+
+
+
+Import trace:
+  App Route:
+    ./node_modules/undici/index.js
+    ./node_modules/cheerio/dist/esm/index.js
+    ./app/api/audit/technical/route.ts
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+./node_modules/undici/index.js:14:16
+Module not found: Can't resolve './lib/core/errors'
+  [90m12 |[0m ...uire([32m'./lib/dis...[0m
+  [90m13 |[0m ...ire([32m'./lib/disp...[0m
+[31m[1m>[0m [90m14 |[0m ...([32m'./lib/core/er...[0m
+  [90m   |[0m    [31m[1m^^^^^^^^^^^^^^^^^^[0m
+  [90m15 |[0m ...[32m./lib/core/util'[0m)
+  [90m16 |[0m ...[33mtError[0m } = errors
+  [90m17 |[0m ...[32m/lib/api'[0m)
+
+
+
+Import trace:
+  App Route:
+    ./node_modules/undici/index.js
+    ./node_modules/cheerio/dist/esm/index.js
+    ./app/api/audit/technical/route.ts
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+./node_modules/undici/index.js:175:24
+Module not found: Can't resolve './lib/core/symbols'
+  [90m173 |[0m ...
+  [90m174 |[0m ...re([32m'./lib/web/...[0m
+[31m[1m>[0m [90m175 |[0m ...([32m'./lib/core/s...[0m
+  [90m    |[0m    [31m[1m^^^^^^^^^^^^^^^^^[0m
+  [90m176 |[0m ...
+  [90m177 |[0m ...[33mcheStorage[0m(kCo...
+  [90m178 |[0m ...
+
+
+
+Import trace:
+  App Route:
+    ./node_modules/undici/index.js
+    ./node_modules/cheerio/dist/esm/index.js
+    ./app/api/audit/technical/route.ts
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+./node_modules/undici/index.js:15:14
+Module not found: Can't resolve './lib/core/util'
+  [90m13 |[0m ...equire([32m'./lib/d...[0m
+  [90m14 |[0m ...ire([32m'./lib/core...[0m
+[31m[1m>[0m [90m15 |[0m ...e([32m'./lib/core/u...[0m
+  [90m   |[0m    [31m[1m^^^^^^^^^^^^^^^^^^[0m
+  [90m16 |[0m ...[33mmentError[0m } = e...
+  [90m17 |[0m ...([32m'./lib/api'[0m)
+  [90m18 |[0m ...r = require([32m'./...[0m
+
+
+
+Import trace:
+  App Route:
+    ./node_modules/undici/index.js
+    ./node_modules/cheerio/dist/esm/index.js
+    ./app/api/audit/technical/route.ts
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+./node_modules/undici/index.js:8:15
+Module not found: Can't resolve './lib/dispatcher/agent'
+  [90m 6 |[0m ...quire([32m'./lib/di...[0m
+  [90m 7 |[0m ...require([32m'./lib/...[0m
+[31m[1m>[0m [90m 8 |[0m ...[32m./lib/dispatche...[0m
+  [90m   |[0m    [31m[1m^^^^^^^^^^^^^^^^^^[0m
+  [90m 9 |[0m ...ire([32m'./lib/disp...[0m
+  [90m10 |[0m ...= require([32m'./li...[0m
+  [90m11 |[0m ... = require([32m'./l...[0m
+
+
+
+Import trace:
+  App Route:
+    ./node_modules/undici/index.js
+    ./node_modules/cheerio/dist/esm/index.js
+    ./app/api/audit/technical/route.ts
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+./node_modules/undici/index.js:6:22
+Module not found: Can't resolve './lib/dispatcher/balanced-pool'
+  [90m4 |[0m ...[32m/dispatcher/disp...[0m
+  [90m5 |[0m ...[32mtcher/pool'[0m)
+[31m[1m>[0m [90m6 |[0m ...[32mib/dispatcher/ba...[0m
+  [90m  |[0m    [31m[1m^^^^^^^^^^^^^^^^^^^[0m
+  [90m7 |[0m ...[32m/lib/dispatcher/...[0m
+  [90m8 |[0m ...[32matcher/agent'[0m)
+  [90m9 |[0m ...[32m/dispatcher/prox...[0m
+
+
+
+Import trace:
+  App Route:
+    ./node_modules/undici/index.js
+    ./node_modules/cheerio/dist/esm/index.js
+    ./app/api/audit/technical/route.ts
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+./node_modules/undici/index.js:3:16
+Module not found: Can't resolve './lib/dispatcher/client'
+  [90m1 |[0m ...
+  [90m2 |[0m ...
+[31m[1m>[0m [90m3 |[0m ...[32m./lib/dispatcher...[0m
+  [90m  |[0m    [31m[1m^^^^^^^^^^^^^^^^^^^[0m
+  [90m4 |[0m ...re([32m'./lib/dispat...[0m
+  [90m5 |[0m ...[32mlib/dispatcher/p...[0m
+  [90m6 |[0m ...uire([32m'./lib/disp...[0m
+
+
+
+Import trace:
+  App Route:
+    ./node_modules/undici/index.js
+    ./node_modules/cheerio/dist/esm/index.js
+    ./app/api/audit/technical/route.ts
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+./node_modules/undici/index.js:4:20
+Module not found: Can't resolve './lib/dispatcher/dispatcher'
+  [90m2 |[0m ...
+  [90m3 |[0m ...[32mdispatcher/client'[0m)
+[31m[1m>[0m [90m4 |[0m ...[32mlib/dispatcher/d...[0m
+  [90m  |[0m    [31m[1m^^^^^^^^^^^^^^^^^^^[0m
+  [90m5 |[0m ...[32mspatcher/pool'[0m)
+  [90m6 |[0m ...[32m./lib/dispatcher...[0m
+  [90m7 |[0m ...([32m'./lib/dispatch...[0m
+
+
+
+Import trace:
+  App Route:
+    ./node_modules/undici/index.js
+    ./node_modules/cheerio/dist/esm/index.js
+    ./app/api/audit/technical/route.ts
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+./node_modules/undici/index.js:11:27
+Module not found: Can't resolve './lib/dispatcher/env-http-proxy-agent'
+  [90m 9 |[0m ...[32mr/proxy-agent'[0m)
+  [90m10 |[0m ...[32mpatcher/socks5-...[0m
+[31m[1m>[0m [90m11 |[0m ...[32mspatcher/env-ht...[0m
+  [90m   |[0m    [31m[1m^^^^^^^^^^^^^^^^^^[0m
+  [90m12 |[0m ...[32mr/retry-agent'[0m)
+  [90m13 |[0m ...[32m/h2c-client'[0m)
+  [90m14 |[0m ...
+
+
+
+Import trace:
+  App Route:
+    ./node_modules/undici/index.js
+    ./node_modules/cheerio/dist/esm/index.js
+    ./app/api/audit/technical/route.ts
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+./node_modules/undici/index.js:13:19
+Module not found: Can't resolve './lib/dispatcher/h2c-client'
+  [90m11 |[0m ...ire([32m'./lib/disp...[0m
+  [90m12 |[0m ...[32mlib/dispatcher/...[0m
+[31m[1m>[0m [90m13 |[0m ...[32mib/dispatcher/h...[0m
+  [90m   |[0m    [31m[1m^^^^^^^^^^^^^^^^^^[0m
+  [90m14 |[0m ...[32mcore/errors'[0m)
+  [90m15 |[0m ...[32mre/util'[0m)
+  [90m16 |[0m ... = errors
+
+
+
+Import trace:
+  App Route:
+    ./node_modules/undici/index.js
+    ./node_modules/cheerio/dist/esm/index.js
+    ./app/api/audit/technical/route.ts
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+./node_modules/undici/index.js:5:14
+Module not found: Can't resolve './lib/dispatcher/pool'
+  [90m3 |[0m ...e([32m'./lib/dispatc...[0m
+  [90m4 |[0m ...quire([32m'./lib/dis...[0m
+[31m[1m>[0m [90m5 |[0m ...[32m'./lib/dispatche...[0m
+  [90m  |[0m    [31m[1m^^^^^^^^^^^^^^^^^^^[0m
+  [90m6 |[0m ...require([32m'./lib/d...[0m
+  [90m7 |[0m ...= require([32m'./lib...[0m
+  [90m8 |[0m ...([32m'./lib/dispatch...[0m
+
+
+
+Import trace:
+  App Route:
+    ./node_modules/undici/index.js
+    ./node_modules/cheerio/dist/esm/index.js
+    ./app/api/audit/technical/route.ts
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+./node_modules/undici/index.js:9:20
+Module not found: Can't resolve './lib/dispatcher/proxy-agent'
+  [90m 7 |[0m ...[32m'./lib/dispatch...[0m
+  [90m 8 |[0m ...[32mspatcher/agent'[0m)
+[31m[1m>[0m [90m 9 |[0m ...[32mib/dispatcher/p...[0m
+  [90m   |[0m    [31m[1m^^^^^^^^^^^^^^^^^^[0m
+  [90m10 |[0m ...e([32m'./lib/dispat...[0m
+  [90m11 |[0m ...re([32m'./lib/dispa...[0m
+  [90m12 |[0m ...[32mib/dispatcher/r...[0m
+
+
+
+Import trace:
+  App Route:
+    ./node_modules/undici/index.js
+    ./node_modules/cheerio/dist/esm/index.js
+    ./app/api/audit/technical/route.ts
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+./node_modules/undici/index.js:12:20
+Module not found: Can't resolve './lib/dispatcher/retry-agent'
+  [90m10 |[0m ...e([32m'./lib/dispat...[0m
+  [90m11 |[0m ...re([32m'./lib/dispa...[0m
+[31m[1m>[0m [90m12 |[0m ...[32mib/dispatcher/r...[0m
+  [90m   |[0m    [31m[1m^^^^^^^^^^^^^^^^^^[0m
+  [90m13 |[0m ...[32mb/dispatcher/h2...[0m
+  [90m14 |[0m ...[32more/errors'[0m)
+  [90m15 |[0m ...[32me/util'[0m)
+
+
+
+Import trace:
+  App Route:
+    ./node_modules/undici/index.js
+    ./node_modules/cheerio/dist/esm/index.js
+    ./app/api/audit/technical/route.ts
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+./node_modules/undici/index.js:7:24
+Module not found: Can't resolve './lib/dispatcher/round-robin-pool'
+  [90m 5 |[0m ...[32m/pool'[0m)
+  [90m 6 |[0m ...[32mspatcher/balanc...[0m
+[31m[1m>[0m [90m 7 |[0m ...[32mdispatcher/roun...[0m
+  [90m   |[0m    [31m[1m^^^^^^^^^^^^^^^^^^[0m
+  [90m 8 |[0m ...[32mr/agent'[0m)
+  [90m 9 |[0m ...[32matcher/proxy-ag...[0m
+  [90m10 |[0m ...[32mb/dispatcher/so...[0m
+
+
+
+Import trace:
+  App Route:
+    ./node_modules/undici/index.js
+    ./node_modules/cheerio/dist/esm/index.js
+    ./app/api/audit/technical/route.ts
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+./node_modules/undici/index.js:26:54
+Module not found: Can't resolve './lib/global'
+  [90m24 |[0m ...
+  [90m25 |[0m ...[32m'[0m)
+[31m[1m>[0m [90m26 |[0m ...ire([32m'./lib/glob...[0m
+  [90m   |[0m    [31m[1m^^^^^^^^^^^^^^^^^^[0m
+  [90m27 |[0m ...[32m-handler'[0m)
+  [90m28 |[0m ...[32mandler'[0m)
+  [90m29 |[0m ...
+
+
+
+Import trace:
+  App Route:
+    ./node_modules/undici/index.js
+    ./node_modules/cheerio/dist/esm/index.js
+    ./app/api/audit/technical/route.ts
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+./node_modules/undici/index.js:27:26
+Module not found: Can't resolve './lib/handler/decorator-handler'
+  [90m25 |[0m ...[32mdler/retry-hand...[0m
+  [90m26 |[0m ...ispatcher } = r...
+[31m[1m>[0m [90m27 |[0m ...[32m/handler/decora...[0m
+  [90m   |[0m    [31m[1m^^^^^^^^^^^^^^^^^^[0m
+  [90m28 |[0m ...[32mhandler/redirec...[0m
+  [90m29 |[0m ...
+  [90m30 |[0m ...)
+
+
+
+Import trace:
+  App Route:
+    ./node_modules/undici/index.js
+    ./node_modules/cheerio/dist/esm/index.js
+    ./app/api/audit/technical/route.ts
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+./node_modules/undici/index.js:28:25
+Module not found: Can't resolve './lib/handler/redirect-handler'
+  [90m26 |[0m ...lDispatcher } =...
+  [90m27 |[0m ...[32mib/handler/deco...[0m
+[31m[1m>[0m [90m28 |[0m ...[32mb/handler/redir...[0m
+  [90m   |[0m    [31m[1m^^^^^^^^^^^^^^^^^^[0m
+  [90m29 |[0m ...
+  [90m30 |[0m ...pi)
+  [90m31 |[0m ...
+
+
+
+Import trace:
+  App Route:
+    ./node_modules/undici/index.js
+    ./node_modules/cheerio/dist/esm/index.js
+    ./app/api/audit/technical/route.ts
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+./node_modules/undici/index.js:25:22
+Module not found: Can't resolve './lib/handler/retry-handler'
+  [90m23 |[0m ...[32mlib/mock/snapsh...[0m
+  [90m24 |[0m ...[32m/mock/mock-erro...[0m
+[31m[1m>[0m [90m25 |[0m ...[32mib/handler/retr...[0m
+  [90m   |[0m    [31m[1m^^^^^^^^^^^^^^^^^^[0m
+  [90m26 |[0m ...lobalDispatcher...
+  [90m27 |[0m ...[32m'./lib/handler/...[0m
+  [90m28 |[0m ...[32m./lib/handler/r...[0m
+
+
+
+Import trace:
+  App Route:
+    ./node_modules/undici/index.js
+    ./node_modules/cheerio/dist/esm/index.js
+    ./app/api/audit/technical/route.ts
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+./node_modules/undici/index.js:53:10
+Module not found: Can't resolve './lib/interceptor/cache'
+  [90m51 |[0m ...[32mlib/interceptor...[0m
+  [90m52 |[0m ...[32mib/interceptor/...[0m
+[31m[1m>[0m [90m53 |[0m ...[32m/lib/intercepto...[0m
+  [90m   |[0m    [31m[1m^^^^^^^^^^^^^^^^^^[0m
+  [90m54 |[0m ...re([32m'./lib/inter...[0m
+  [90m55 |[0m ...ire([32m'./lib/inte...[0m
+  [90m56 |[0m ...
+
+
+
+Import trace:
+  App Route:
+    ./node_modules/undici/index.js
+    ./node_modules/cheerio/dist/esm/index.js
+    ./app/api/audit/technical/route.ts
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+./node_modules/undici/index.js:54:15
+Module not found: Can't resolve './lib/interceptor/decompress'
+  [90m52 |[0m ...[32mrceptor/dns'[0m),
+  [90m53 |[0m ...[32mterceptor/cache'[0m),
+[31m[1m>[0m [90m54 |[0m ...[32mib/interceptor/...[0m
+  [90m   |[0m    [31m[1m^^^^^^^^^^^^^^^^^^[0m
+  [90m55 |[0m ...[32mlib/interceptor...[0m
+  [90m56 |[0m ...
+  [90m57 |[0m ...
+
+
+
+Import trace:
+  App Route:
+    ./node_modules/undici/index.js
+    ./node_modules/cheerio/dist/esm/index.js
+    ./app/api/audit/technical/route.ts
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+./node_modules/undici/index.js:55:16
+Module not found: Can't resolve './lib/interceptor/deduplicate'
+  [90m53 |[0m ...[32mrceptor/cache'[0m),
+  [90m54 |[0m ...[32m/interceptor/de...[0m
+[31m[1m>[0m [90m55 |[0m ...[32mb/interceptor/d...[0m
+  [90m   |[0m    [31m[1m^^^^^^^^^^^^^^^^^^[0m
+  [90m56 |[0m ...
+  [90m57 |[0m ...
+  [90m58 |[0m ... {
+
+
+
+Import trace:
+  App Route:
+    ./node_modules/undici/index.js
+    ./node_modules/cheerio/dist/esm/index.js
+    ./app/api/audit/technical/route.ts
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+./node_modules/undici/index.js:52:8
+Module not found: Can't resolve './lib/interceptor/dns'
+  [90m50 |[0m ...([32m'./lib/interce...[0m
+  [90m51 |[0m ...[32m'./lib/intercep...[0m
+[31m[1m>[0m [90m52 |[0m ...[32m./lib/intercept...[0m
+  [90m   |[0m    [31m[1m^^^^^^^^^^^^^^^^^^[0m
+  [90m53 |[0m ...([32m'./lib/interce...[0m
+  [90m54 |[0m ...quire([32m'./lib/in...[0m
+  [90m55 |[0m ...equire([32m'./lib/i...[0m
+
+
+
+Import trace:
+  App Route:
+    ./node_modules/undici/index.js
+    ./node_modules/cheerio/dist/esm/index.js
+    ./app/api/audit/technical/route.ts
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+./node_modules/undici/index.js:51:9
+Module not found: Can't resolve './lib/interceptor/dump'
+  [90m49 |[0m ...require([32m'./lib/...[0m
+  [90m50 |[0m ...[32m'./lib/intercep...[0m
+[31m[1m>[0m [90m51 |[0m ...[32m./lib/intercept...[0m
+  [90m   |[0m    [31m[1m^^^^^^^^^^^^^^^^^^[0m
+  [90m52 |[0m ...[32m/lib/intercepto...[0m
+  [90m53 |[0m ...[32m'./lib/intercep...[0m
+  [90m54 |[0m ...uire([32m'./lib/int...[0m
+
+
+
+Import trace:
+  App Route:
+    ./node_modules/undici/index.js
+    ./node_modules/cheerio/dist/esm/index.js
+    ./app/api/audit/technical/route.ts
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+./node_modules/undici/index.js:48:13
+Module not found: Can't resolve './lib/interceptor/redirect'
+  [90m46 |[0m ...[33mHandler[0m = [33mRedir...[0m
+  [90m47 |[0m ...tors = {
+[31m[1m>[0m [90m48 |[0m ...[32mlib/interceptor...[0m
+  [90m   |[0m    [31m[1m^^^^^^^^^^^^^^^^^^[0m
+  [90m49 |[0m ...e([32m'./lib/interc...[0m
+  [90m50 |[0m ...[32m/interceptor/re...[0m
+  [90m51 |[0m ...[32minterceptor/dum..[0m.
+
+
+
+Import trace:
+  App Route:
+    ./node_modules/undici/index.js
+    ./node_modules/cheerio/dist/esm/index.js
+    ./app/api/audit/technical/route.ts
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+./node_modules/undici/index.js:49:18
+Module not found: Can't resolve './lib/interceptor/response-error'
+  [90m47 |[0m ...
+  [90m48 |[0m ...[32mrceptor/redirec..[0m.
+[31m[1m>[0m [90m49 |[0m ...[32m/interceptor/re...[0m
+  [90m   |[0m    [31m[1m^^^^^^^^^^^^^^^^^^[0m
+  [90m50 |[0m ...[32mptor/retry'[0m),
+  [90m51 |[0m ...[32mtor/dump'[0m),
+  [90m52 |[0m ...[32mor/dns'[0m),
+
+
+
+Import trace:
+  App Route:
+    ./node_modules/undici/index.js
+    ./node_modules/cheerio/dist/esm/index.js
+    ./app/api/audit/technical/route.ts
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+./node_modules/undici/index.js:50:10
+Module not found: Can't resolve './lib/interceptor/retry'
+  [90m48 |[0m ...([32m'./lib/interce...[0m
+  [90m49 |[0m ...quire([32m'./lib/in...[0m
+[31m[1m>[0m [90m50 |[0m ...[32m/lib/intercepto...[0m
+  [90m   |[0m    [31m[1m^^^^^^^^^^^^^^^^^^[0m
+  [90m51 |[0m ...[32mlib/interceptor...[0m
+  [90m52 |[0m ...[32mib/interceptor/...[0m
+  [90m53 |[0m ...[32m/lib/intercepto...[0m
+
+
+
+Import trace:
+  App Route:
+    ./node_modules/undici/index.js
+    ./node_modules/cheerio/dist/esm/index.js
+    ./app/api/audit/technical/route.ts
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+./node_modules/undici/index.js:21:19
+Module not found: Can't resolve './lib/mock/mock-agent'
+  [90m19 |[0m ...[32m'./lib/mock/moc...[0m
+  [90m20 |[0m ...[33mckCallHistoryLo.[0m..
+[31m[1m>[0m [90m21 |[0m ...[32m./lib/mock/mock...[0m
+  [90m   |[0m    [31m[1m^^^^^^^^^^^^^^^^^^[0m
+  [90m22 |[0m ...[32m/lib/mock/mock-...[0m
+  [90m23 |[0m ...re([32m'./lib/mock/...[0m
+  [90m24 |[0m ...[32m'./lib/mock/moc...[0m
+
+
+
+Import trace:
+  App Route:
+    ./node_modules/undici/index.js
+    ./node_modules/cheerio/dist/esm/index.js
+    ./app/api/audit/technical/route.ts
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+./node_modules/undici/index.js:20:49
+Module not found: Can't resolve './lib/mock/mock-call-history'
+  [90m18 |[0m ...
+  [90m19 |[0m ...
+[31m[1m>[0m [90m20 |[0m ...[32mib/mock/mock-ca...[0m
+  [90m   |[0m    [31m[1m^^^^^^^^^^^^^^^^^^[0m
+  [90m21 |[0m ...
+  [90m22 |[0m ...
+  [90m23 |[0m ...
+
+
+
+Import trace:
+  App Route:
+    ./node_modules/undici/index.js
+    ./node_modules/cheerio/dist/esm/index.js
+    ./app/api/audit/technical/route.ts
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+./node_modules/undici/index.js:19:20
+Module not found: Can't resolve './lib/mock/mock-client'
+  [90m17 |[0m ...[32mpi'[0m)
+  [90m18 |[0m ...re([32m'./lib/core/...[0m
+[31m[1m>[0m [90m19 |[0m ...[32m./lib/mock/mock...[0m
+  [90m   |[0m    [31m[1m^^^^^^^^^^^^^^^^^^[0m
+  [90m20 |[0m ...[33mkCallHistoryLog[0m...
+  [90m21 |[0m ...[32m/lib/mock/mock-...[0m
+  [90m22 |[0m ...[32mlib/mock/mock-p...[0m
+
+
+
+Import trace:
+  App Route:
+    ./node_modules/undici/index.js
+    ./node_modules/cheerio/dist/esm/index.js
+    ./app/api/audit/technical/route.ts
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+./node_modules/undici/index.js:24:20
+Module not found: Can't resolve './lib/mock/mock-errors'
+  [90m22 |[0m ...[32mlib/mock/mock-p...[0m
+  [90m23 |[0m ...e([32m'./lib/mock/s...[0m
+[31m[1m>[0m [90m24 |[0m ...[32m./lib/mock/mock...[0m
+  [90m   |[0m    [31m[1m^^^^^^^^^^^^^^^^^^[0m
+  [90m25 |[0m ...([32m'./lib/handler...[0m
+  [90m26 |[0m ... setGlobalDispa...
+  [90m27 |[0m ...uire([32m'./lib/han...[0m
+
+
+
+Import trace:
+  App Route:
+    ./node_modules/undici/index.js
+    ./node_modules/cheerio/dist/esm/index.js
+    ./app/api/audit/technical/route.ts
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+./node_modules/undici/index.js:22:18
+Module not found: Can't resolve './lib/mock/mock-pool'
+  [90m20 |[0m ...[33mMockCallHistory...[0m
+  [90m21 |[0m ...([32m'./lib/mock/mo...[0m
+[31m[1m>[0m [90m22 |[0m ...[32m'./lib/mock/moc...[0m
+  [90m   |[0m    [31m[1m^^^^^^^^^^^^^^^^^^[0m
+  [90m23 |[0m ...uire([32m'./lib/moc...[0m
+  [90m24 |[0m ...e([32m'./lib/mock/m...[0m
+  [90m25 |[0m ...ire([32m'./lib/hand...[0m
+
+
+
+Import trace:
+  App Route:
+    ./node_modules/undici/index.js
+    ./node_modules/cheerio/dist/esm/index.js
+    ./app/api/audit/technical/route.ts
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+./node_modules/undici/index.js:23:23
+Module not found: Can't resolve './lib/mock/snapshot-agent'
+  [90m21 |[0m ...[32mmock/mock-agent'[0m)
+  [90m22 |[0m ...[32mock/mock-pool'[0m)
+[31m[1m>[0m [90m23 |[0m ...[32mlib/mock/snapsh...[0m
+  [90m   |[0m    [31m[1m^^^^^^^^^^^^^^^^^^[0m
+  [90m24 |[0m ...[32m/mock/mock-erro...[0m
+  [90m25 |[0m ...[32mib/handler/retr...[0m
+  [90m26 |[0m ...lobalDispatcher...
+
+
+
+Import trace:
+  App Route:
+    ./node_modules/undici/index.js
+    ./node_modules/cheerio/dist/esm/index.js
+    ./app/api/audit/technical/route.ts
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+./node_modules/source-map-js/source-map.js:7:29
+Module not found: Can't resolve './lib/source-map-consumer'
+  [90m5 |[0m ...
+  [90m6 |[0m ...[32m./lib/source-map...[0m
+[31m[1m>[0m [90m7 |[0m ...[32m/lib/source-map-...[0m
+  [90m  |[0m    [31m[1m^^^^^^^^^^^^^^^^^^^[0m
+  [90m8 |[0m ...[32murce-node'[0m).[33mSour...[0m
+  [90m9 |[0m ...
+
+
+
+Import trace:
+  postcss:
+    ./node_modules/source-map-js/source-map.js
+    ./node_modules/postcss/lib/map-generator.js
+    ./node_modules/postcss/lib/lazy-result.js
+    ./node_modules/postcss/lib/postcss.js
+    ./node_modules/postcss/lib/postcss.mjs
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+./node_modules/source-map-js/source-map.js:6:30
+Module not found: Can't resolve './lib/source-map-generator'
+  [90m4 |[0m ...[90m-Clause[0m
+  [90m5 |[0m ...
+[31m[1m>[0m [90m6 |[0m ...[32m/lib/source-map-...[0m
+  [90m  |[0m    [31m[1m^^^^^^^^^^^^^^^^^^^[0m
+  [90m7 |[0m ...[32mlib/source-map-c...[0m
+  [90m8 |[0m ...[32mrce-node'[0m).[33mSourc...[0m
+  [90m9 |[0m ...
+
+
+
+Import trace:
+  postcss:
+    ./node_modules/source-map-js/source-map.js
+    ./node_modules/postcss/lib/map-generator.js
+    ./node_modules/postcss/lib/lazy-result.js
+    ./node_modules/postcss/lib/postcss.js
+    ./node_modules/postcss/lib/postcss.mjs
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+./node_modules/source-map-js/source-map.js:8:22
+Module not found: Can't resolve './lib/source-node'
+  [90m6 |[0m ...= require([32m'./lib...[0m
+  [90m7 |[0m ... require([32m'./lib/...[0m
+[31m[1m>[0m [90m8 |[0m ...e([32m'./lib/source-...[0m
+  [90m  |[0m    [31m[1m^^^^^^^^^^^^^^^^^^^[0m
+  [90m9 |[0m ...
+
+
+
+Import trace:
+  postcss:
+    ./node_modules/source-map-js/source-map.js
+    ./node_modules/postcss/lib/map-generator.js
+    ./node_modules/postcss/lib/lazy-result.js
+    ./node_modules/postcss/lib/postcss.js
+    ./node_modules/postcss/lib/postcss.mjs
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+./node_modules/undici/index.js:174:26
+Module not found: Can't resolve './lib/web/cache/cachestorage'
+  [90m172 |[0m ...lobalOrigin
+  [90m173 |[0m ...
+[31m[1m>[0m [90m174 |[0m ...[32mib/web/cache/c...[0m
+  [90m    |[0m    [31m[1m^^^^^^^^^^^^^^^^^[0m
+  [90m175 |[0m ...[32m/core/symbols'[0m)
+  [90m176 |[0m ...
+  [90m177 |[0m ...[33mage[0m(kConstruct)
+
+
+
+Import trace:
+  App Route:
+    ./node_modules/undici/index.js
+    ./node_modules/cheerio/dist/esm/index.js
+    ./app/api/audit/technical/route.ts
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+./node_modules/undici/index.js:179:77
+Module not found: Can't resolve './lib/web/cookies'
+  [90m177 |[0m ...
+  [90m178 |[0m ...
+[31m[1m>[0m [90m179 |[0m ...([32m'./lib/web/co...[0m
+  [90m    |[0m    [31m[1m^^^^^^^^^^^^^^^^^[0m
+  [90m180 |[0m ...
+  [90m181 |[0m ...
+  [90m182 |[0m ...
+
+
+
+Import trace:
+  App Route:
+    ./node_modules/undici/index.js
+    ./node_modules/cheerio/dist/esm/index.js
+    ./app/api/audit/technical/route.ts
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+./node_modules/undici/index.js:217:25
+Module not found: Can't resolve './lib/web/eventsource/eventsource'
+  [90m215 |[0m ...
+  [90m216 |[0m ...
+[31m[1m>[0m [90m217 |[0m ...[32mweb/eventsourc...[0m
+  [90m    |[0m    [31m[1m^^^^^^^^^^^^^^^^^[0m
+  [90m218 |[0m ...
+  [90m219 |[0m ...[33me[0m
+  [90m220 |[0m ...
+
+
+
+Import trace:
+  App Route:
+    ./node_modules/undici/index.js
+    ./node_modules/cheerio/dist/esm/index.js
+    ./app/api/audit/technical/route.ts
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+./node_modules/undici/index.js:124:19
+Module not found: Can't resolve './lib/web/fetch'
+  [90m122 |[0m ...Dispatcher = g...
+  [90m123 |[0m ...
+[31m[1m>[0m [90m124 |[0m ...e([32m'./lib/web/f...[0m
+  [90m    |[0m    [31m[1m^^^^^^^^^^^^^^^^^[0m
+  [90m125 |[0m ...
+  [90m126 |[0m ...[90m module load t...[0m
+  [90m127 |[0m ...[90m when bundled ...[0m
+
+
+
+Import trace:
+  App Route:
+    ./node_modules/undici/index.js
+    ./node_modules/cheerio/dist/esm/index.js
+    ./app/api/audit/technical/route.ts
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+./node_modules/undici/index.js:187:47
+Module not found: Can't resolve './lib/web/fetch/data-url'
+  [90m185 |[0m ...
+  [90m186 |[0m ...
+[31m[1m>[0m [90m187 |[0m ...[32m/lib/web/fetch...[0m
+  [90m    |[0m    [31m[1m^^^^^^^^^^^^^^^^^[0m
+  [90m188 |[0m ...
+  [90m189 |[0m ...
+  [90m190 |[0m ...
+
+
+
+Import trace:
+  App Route:
+    ./node_modules/undici/index.js
+    ./node_modules/cheerio/dist/esm/index.js
+    ./app/api/audit/technical/route.ts
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+./node_modules/undici/index.js:167:27
+Module not found: Can't resolve './lib/web/fetch/formdata'
+  [90m165 |[0m ...[32m/lib/web/fetch...[0m
+  [90m166 |[0m ...[32mlib/web/fetch/...[0m
+[31m[1m>[0m [90m167 |[0m ...[32m/lib/web/fetch...[0m
+  [90m    |[0m    [31m[1m^^^^^^^^^^^^^^^^^[0m
+  [90m168 |[0m ...
+  [90m169 |[0m ...igin } = requi...
+  [90m170 |[0m ...
+
+
+
+Import trace:
+  App Route:
+    ./node_modules/undici/index.js
+    ./node_modules/cheerio/dist/esm/index.js
+    ./app/api/audit/technical/route.ts
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+./node_modules/undici/index.js:169:46
+Module not found: Can't resolve './lib/web/fetch/global'
+  [90m167 |[0m ...[32mmdata'[0m).[33mFormData[0m
+  [90m168 |[0m ...
+[31m[1m>[0m [90m169 |[0m ...[32m./lib/web/fetc...[0m
+  [90m    |[0m    [31m[1m^^^^^^^^^^^^^^^^^[0m
+  [90m170 |[0m ...
+  [90m171 |[0m ...
+  [90m172 |[0m ...
+
+
+
+Import trace:
+  App Route:
+    ./node_modules/undici/index.js
+    ./node_modules/cheerio/dist/esm/index.js
+    ./app/api/audit/technical/route.ts
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+./node_modules/undici/index.js:164:26
+Module not found: Can't resolve './lib/web/fetch/headers'
+  [90m162 |[0m ...
+  [90m163 |[0m ...
+[31m[1m>[0m [90m164 |[0m ...[32m/lib/web/fetch...[0m
+  [90m    |[0m    [31m[1m^^^^^^^^^^^^^^^^^[0m
+  [90m165 |[0m ...[32m./lib/web/fetc...[0m
+  [90m166 |[0m ...[32m/lib/web/fetch...[0m
+  [90m167 |[0m ...[32m./lib/web/fetc...[0m
+
+
+
+Import trace:
+  App Route:
+    ./node_modules/undici/index.js
+    ./node_modules/cheerio/dist/esm/index.js
+    ./app/api/audit/technical/route.ts
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+./node_modules/undici/index.js:166:26
+Module not found: Can't resolve './lib/web/fetch/request'
+  [90m164 |[0m ...[32m/lib/web/fetch...[0m
+  [90m165 |[0m ...[32m./lib/web/fetc...[0m
+[31m[1m>[0m [90m166 |[0m ...[32m/lib/web/fetch...[0m
+  [90m    |[0m    [31m[1m^^^^^^^^^^^^^^^^^[0m
+  [90m167 |[0m ...[32m./lib/web/fetc...[0m
+  [90m168 |[0m ...
+  [90m169 |[0m ...rigin } = requ...
+
+
+
+Import trace:
+  App Route:
+    ./node_modules/undici/index.js
+    ./node_modules/cheerio/dist/esm/index.js
+    ./app/api/audit/technical/route.ts
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+./node_modules/undici/index.js:165:27
+Module not found: Can't resolve './lib/web/fetch/response'
+  [90m163 |[0m ...
+  [90m164 |[0m ...[32mlib/web/fetch/...[0m
+[31m[1m>[0m [90m165 |[0m ...[32m/lib/web/fetch...[0m
+  [90m    |[0m    [31m[1m^^^^^^^^^^^^^^^^^[0m
+  [90m166 |[0m ...[32mlib/web/fetch/...[0m
+  [90m167 |[0m ...[32m/lib/web/fetch...[0m
+  [90m168 |[0m ...
+
+
+
+Import trace:
+  App Route:
+    ./node_modules/undici/index.js
+    ./node_modules/cheerio/dist/esm/index.js
+    ./app/api/audit/technical/route.ts
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+./node_modules/undici/index.js:192:50
+Module not found: Can't resolve './lib/web/websocket/events'
+  [90m190 |[0m ...
+  [90m191 |[0m ...
+[31m[1m>[0m [90m192 |[0m ...[32mlib/web/websoc...[0m
+  [90m    |[0m    [31m[1m^^^^^^^^^^^^^^^^^[0m
+  [90m193 |[0m ...[32msocket'[0m)
+  [90m194 |[0m ...
+  [90m195 |[0m ...
+
+
+
+Import trace:
+  App Route:
+    ./node_modules/undici/index.js
+    ./node_modules/cheerio/dist/esm/index.js
+    ./app/api/audit/technical/route.ts
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+./node_modules/undici/index.js:201:33
+Module not found: Can't resolve './lib/web/websocket/stream/websocketerror'
+  [90m199 |[0m ...
+  [90m200 |[0m ...[32m/websocket/str...[0m
+[31m[1m>[0m [90m201 |[0m ...[32mwebsocket/stre...[0m
+  [90m    |[0m    [31m[1m^^^^^^^^^^^^^^^^^[0m
+  [90m202 |[0m ...
+  [90m203 |[0m ...)
+  [90m204 |[0m ...
+
+
+
+Import trace:
+  App Route:
+    ./node_modules/undici/index.js
+    ./node_modules/cheerio/dist/esm/index.js
+    ./app/api/audit/technical/route.ts
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+./node_modules/undici/index.js:200:34
+Module not found: Can't resolve './lib/web/websocket/stream/websocketstream'
+  [90m198 |[0m ...
+  [90m199 |[0m ...
+[31m[1m>[0m [90m200 |[0m ...[32mwebsocket/stre...[0m
+  [90m    |[0m    [31m[1m^^^^^^^^^^^^^^^^^[0m
+  [90m201 |[0m ...[32mebsocket/strea...[0m
+  [90m202 |[0m ...
+  [90m203 |[0m ...
+
+
+
+Import trace:
+  App Route:
+    ./node_modules/undici/index.js
+    ./node_modules/cheerio/dist/esm/index.js
+    ./app/api/audit/technical/route.ts
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+./node_modules/undici/index.js:193:29
+Module not found: Can't resolve './lib/web/websocket/websocket'
+  [90m191 |[0m ...
+  [90m192 |[0m ...[33ment[0m } = requir..[32m.[0m
+[31m[1m>[0m [90m193 |[0m ...[32mb/web/websocke...[0m
+  [90m    |[0m    [31m[1m^^^^^^^^^^^^^^^^^[0m
+  [90m194 |[0m ...
+  [90m195 |[0m ...
+  [90m196 |[0m ...
+
+
+
+Import trace:
+  App Route:
+    ./node_modules/undici/index.js
+    ./node_modules/cheerio/dist/esm/index.js
+    ./app/api/audit/technical/route.ts
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+./node_modules/date-fns/index.js:162:1
+Module not found: Can't resolve './milliseconds.js'
+  [90m160 |[0m ...[36mrom[0m [32m"./lightFo...[0m
+  [90m161 |[0m ...[36mrom[0m [32m"./max.js"[0m;
+[31m[1m>[0m [90m162 |[0m ...[36mrom[0m [32m"./millise...[0m
+  [90m    |[0m    [31m[1m^^^^^^^^^^^^^^^^^[0m
+  [90m163 |[0m ...[36mrom[0m [32m"./millise...[0m
+  [90m164 |[0m ...[36mrom[0m [32m"./millise...[0m
+  [90m165 |[0m ...[36mrom[0m [32m"./millise...[0m
+
+
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+./node_modules/date-fns/index.js:173:1
+Module not found: Can't resolve './nextFriday.js'
+  [90m171 |[0m ...[36mfrom[0m [32m"./months...[0m
+  [90m172 |[0m ...[36mfrom[0m [32m"./nextDa...[0m
+[31m[1m>[0m [90m173 |[0m ...[36mfrom[0m [32m"./nextFr...[0m
+  [90m    |[0m    [31m[1m^^^^^^^^^^^^^^^^^[0m
+  [90m174 |[0m ...[36mfrom[0m [32m"./nextMo...[0m
+  [90m175 |[0m ...[36mfrom[0m [32m"./nextSa...[0m
+  [90m176 |[0m ...[36mfrom[0m [32m"./nextSu...[0m
+
+
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+./node_modules/date-fns/index.js:178:1
+Module not found: Can't resolve './nextTuesday.js'
+  [90m176 |[0m ...[36mfrom[0m [32m"./nextSu...[0m
+  [90m177 |[0m ...[36mfrom[0m [32m"./nextTh...[0m
+[31m[1m>[0m [90m178 |[0m ...[36mfrom[0m [32m"./nextTu...[0m
+  [90m    |[0m    [31m[1m^^^^^^^^^^^^^^^^^[0m
+  [90m179 |[0m ...[36mfrom[0m [32m"./nextWe...[0m
+  [90m180 |[0m ...[36mfrom[0m [32m"./parse....[0m
+  [90m181 |[0m ...[36mfrom[0m [32m"./parseI...[0m
+
+
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+./node_modules/date-fns/index.js:179:1
+Module not found: Can't resolve './nextWednesday.js'
+  [90m177 |[0m ...[36mrom[0m [32m"./nextThu...[0m
+  [90m178 |[0m ...[36mrom[0m [32m"./nextTue...[0m
+[31m[1m>[0m [90m179 |[0m ...[36mrom[0m [32m"./nextWed...[0m
+  [90m    |[0m    [31m[1m^^^^^^^^^^^^^^^^^[0m
+  [90m180 |[0m ...[36mrom[0m [32m"./parse.js"[0m;
+  [90m181 |[0m ...[36mrom[0m [32m"./parseIS...[0m
+  [90m182 |[0m ...[36mrom[0m [32m"./parseJS...[0m
+
+
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+./node_modules/undici/lib/dispatcher/socks5-proxy-agent.js:11:14
+Module not found: Can't resolve './pool'
+  [90m 9 |[0m ...[33mClient[0m } = requ...
+  [90m10 |[0m ...tch, kClose, kD...
+[31m[1m>[0m [90m11 |[0m ...equire([32m'./pool'[0m)
+  [90m   |[0m    [31m[1m^^^^^^^^^^^^^^^^^[0m
+  [90m12 |[0m ...nector = requir..[32m.[0m
+  [90m13 |[0m ...og } = require([32m...[0m
+  [90m14 |[0m ...
+
+
+
+Import trace:
+  App Route:
+    ./node_modules/undici/lib/dispatcher/socks5-proxy-agent.js
+    ./node_modules/undici/index.js
+    ./node_modules/cheerio/dist/esm/index.js
+    ./app/api/audit/technical/route.ts
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+./node_modules/date-fns/index.js:190:1
+Module not found: Can't resolve './previousWednesday.js'
+  [90m188 |[0m ...[36mm[0m [32m"./previousT...[0m
+  [90m189 |[0m ...[36mm[0m [32m"./previousT...[0m
+[31m[1m>[0m [90m190 |[0m ...[36mm[0m [32m"./previousW...[0m
+  [90m    |[0m    [31m[1m^^^^^^^^^^^^^^^^^[0m
+  [90m191 |[0m ...[36mm[0m [32m"./quartersT...[0m
+  [90m192 |[0m ...[36mm[0m [32m"./quartersT...[0m
+  [90m193 |[0m ...[36mm[0m [32m"./roundToNe...[0m
+
+
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+./node_modules/date-fns/index.js:195:1
+Module not found: Can't resolve './secondsToHours.js'
+  [90m193 |[0m ...[36mom[0m [32m"./roundToN...[0m
+  [90m194 |[0m ...[36mom[0m [32m"./roundToN...[0m
+[31m[1m>[0m [90m195 |[0m ...[36mom[0m [32m"./secondsT...[0m
+  [90m    |[0m    [31m[1m^^^^^^^^^^^^^^^^^[0m
+  [90m196 |[0m ...[36mom[0m [32m"./secondsT...[0m
+  [90m197 |[0m ...[36mom[0m [32m"./secondsT...[0m
+  [90m198 |[0m ...[36mom[0m [32m"./set.js"[0m;
+
+
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+./node_modules/date-fns/index.js:216:1
+Module not found: Can't resolve './startOfDecade.js'
+  [90m214 |[0m ...[36mrom[0m [32m"./setYear...[0m
+  [90m215 |[0m ...[36mrom[0m [32m"./startOf...[0m
+[31m[1m>[0m [90m216 |[0m ...[36mrom[0m [32m"./startOf...[0m
+  [90m    |[0m    [31m[1m^^^^^^^^^^^^^^^^^[0m
+  [90m217 |[0m ...[36mrom[0m [32m"./startOf...[0m
+  [90m218 |[0m ...[36mrom[0m [32m"./startOf...[0m
+  [90m219 |[0m ...[36mrom[0m [32m"./startOf...[0m
+
+
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+./node_modules/date-fns/index.js:224:1
+Module not found: Can't resolve './startOfToday.js'
+  [90m222 |[0m ...[36mrom[0m [32m"./startOf...[0m
+  [90m223 |[0m ...[36mrom[0m [32m"./startOf...[0m
+[31m[1m>[0m [90m224 |[0m ...[36mrom[0m [32m"./startOf...[0m
+  [90m    |[0m    [31m[1m^^^^^^^^^^^^^^^^^[0m
+  [90m225 |[0m ...[36mrom[0m [32m"./startOf...[0m
+  [90m226 |[0m ...[36mrom[0m [32m"./startOf...[0m
+  [90m227 |[0m ...[36mrom[0m [32m"./startOf...[0m
+
+
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+./node_modules/date-fns/index.js:229:1
+Module not found: Can't resolve './startOfYesterday.js'
+  [90m227 |[0m ...[36mm[0m [32m"./startOfWe...[0m
+  [90m228 |[0m ...[36mm[0m [32m"./startOfYe...[0m
+[31m[1m>[0m [90m229 |[0m ...[36mm[0m [32m"./startOfYe...[0m
+  [90m    |[0m    [31m[1m^^^^^^^^^^^^^^^^^[0m
+  [90m230 |[0m ...[36mm[0m [32m"./sub.js"[0m;
+  [90m231 |[0m ...[36mm[0m [32m"./subBusine...[0m
+  [90m232 |[0m ...[36mm[0m [32m"./subDays.js"[0m;
+
+
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+./node_modules/date-fns/index.js:230:1
+Module not found: Can't resolve './sub.js'
+  [90m228 |[0m ...[36mt[0m * [36mfrom[0m [32m"./st...[0m
+  [90m229 |[0m ...[36mt[0m * [36mfrom[0m [32m"./st...[0m
+[31m[1m>[0m [90m230 |[0m ...[36mt[0m * [36mfrom[0m [32m"./su...[0m
+  [90m    |[0m    [31m[1m^^^^^^^^^^^^^^^^^[0m
+  [90m231 |[0m ...[36mt[0m * [36mfrom[0m [32m"./su...[0m
+  [90m232 |[0m ...[36mt[0m * [36mfrom[0m [32m"./su...[0m
+  [90m233 |[0m ...[36mt[0m * [36mfrom[0m [32m"./su...[0m
+
+
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+./node_modules/date-fns/index.js:240:1
+Module not found: Can't resolve './subWeeks.js'
+  [90m238 |[0m ... [36mfrom[0m [32m"./subQu...[0m
+  [90m239 |[0m ... [36mfrom[0m [32m"./subSe...[0m
+[31m[1m>[0m [90m240 |[0m ... [36mfrom[0m [32m"./subWe...[0m
+  [90m    |[0m    [31m[1m^^^^^^^^^^^^^^^^^[0m
+  [90m241 |[0m ... [36mfrom[0m [32m"./subYe...[0m
+  [90m242 |[0m ... [36mfrom[0m [32m"./toDat...[0m
+  [90m243 |[0m ... [36mfrom[0m [32m"./trans...[0m
+
+
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+./node_modules/d3-scale/src/band.js:1:1
+Module not found: Can't resolve 'd3-array'
+[31m[1m>[0m [90m1 |[0m ... [36mas[0m sequence} [36mfr..[0m.
+  [90m  |[0m    [31m[1m^^^^^^^^^^^^^^^^^^^[0m
+  [90m2 |[0m ...ange} [36mfrom[0m [32m"./in...[0m
+  [90m3 |[0m ...l [36mfrom[0m [32m"./ordina...[0m
+  [90m4 |[0m ...
+
+
+
+Import traces:
+  Client Component Browser:
+    ./node_modules/d3-scale/src/band.js [Client Component Browser]
+    ./node_modules/d3-scale/src/index.js [Client Component Browser]
+    ./node_modules/victory-vendor/es/d3-scale.js [Client Component Browser]
+    ./node_modules/recharts/es6/state/selectors/combiners/combineRealScaleType.js [Client Component Browser]
+    ./node_modules/recharts/es6/state/selectors/tooltipSelectors.js [Client Component Browser]
+    ./node_modules/recharts/es6/polar/Pie.js [Client Component Browser]
+    ./app/(dashboard)/dashboard/analytics/page.tsx [Client Component Browser]
+    ./app/(dashboard)/dashboard/analytics/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./node_modules/d3-scale/src/band.js [Client Component SSR]
+    ./node_modules/d3-scale/src/index.js [Client Component SSR]
+    ./node_modules/victory-vendor/es/d3-scale.js [Client Component SSR]
+    ./node_modules/recharts/es6/state/selectors/combiners/combineRealScaleType.js [Client Component SSR]
+    ./node_modules/recharts/es6/state/selectors/tooltipSelectors.js [Client Component SSR]
+    ./node_modules/recharts/es6/polar/Pie.js [Client Component SSR]
+    ./app/(dashboard)/dashboard/analytics/page.tsx [Client Component SSR]
+    ./app/(dashboard)/dashboard/analytics/page.tsx [Server Component]
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+./node_modules/d3-scale/src/continuous.js:1:1
+Module not found: Can't resolve 'd3-array'
+[31m[1m>[0m [90m1 |[0m ...bisect} [36mfrom[0m [32m"d3...[0m
+  [90m  |[0m    [31m[1m^^^^^^^^^^^^^^^^^^^[0m
+  [90m2 |[0m ...interpolate [36mas[0m i...
+  [90m3 |[0m ...onstant [36mfrom[0m [32m"./...[0m
+  [90m4 |[0m ...umber [36mfrom[0m [32m"./nu...[0m
+
+
+
+Import traces:
+  Client Component Browser:
+    ./node_modules/d3-scale/src/continuous.js [Client Component Browser]
+    ./node_modules/d3-scale/src/diverging.js [Client Component Browser]
+    ./node_modules/d3-scale/src/index.js [Client Component Browser]
+    ./node_modules/victory-vendor/es/d3-scale.js [Client Component Browser]
+    ./node_modules/recharts/es6/state/selectors/combiners/combineConfiguredScale.js [Client Component Browser]
+    ./node_modules/recharts/es6/state/selectors/axisSelectors.js [Client Component Browser]
+    ./node_modules/recharts/es6/cartesian/XAxis.js [Client Component Browser]
+    ./app/(dashboard)/dashboard/analytics/page.tsx [Client Component Browser]
+    ./app/(dashboard)/dashboard/analytics/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./node_modules/d3-scale/src/continuous.js [Client Component SSR]
+    ./node_modules/d3-scale/src/diverging.js [Client Component SSR]
+    ./node_modules/d3-scale/src/index.js [Client Component SSR]
+    ./node_modules/victory-vendor/es/d3-scale.js [Client Component SSR]
+    ./node_modules/recharts/es6/state/selectors/combiners/combineConfiguredScale.js [Client Component SSR]
+    ./node_modules/recharts/es6/state/selectors/axisSelectors.js [Client Component SSR]
+    ./node_modules/recharts/es6/cartesian/XAxis.js [Client Component SSR]
+    ./app/(dashboard)/dashboard/analytics/page.tsx [Client Component SSR]
+    ./app/(dashboard)/dashboard/analytics/page.tsx [Server Component]
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+./node_modules/d3-scale/src/linear.js:1:1
+Module not found: Can't resolve 'd3-array'
+[31m[1m>[0m [90m1 |[0m ...tickIncrement} [36mf...[0m
+  [90m  |[0m    [31m[1m^^^^^^^^^^^^^^^^^^^[0m
+  [90m2 |[0m ...us, {copy} [36mfrom[0m [32m...[0m
+  [90m3 |[0m ...ge} [36mfrom[0m [32m"./init...[0m
+  [90m4 |[0m ...at [36mfrom[0m [32m"./tickF...[0m
+
+
+
+Import traces:
+  Client Component Browser:
+    ./node_modules/d3-scale/src/linear.js [Client Component Browser]
+    ./node_modules/d3-scale/src/index.js [Client Component Browser]
+    ./node_modules/victory-vendor/es/d3-scale.js [Client Component Browser]
+    ./node_modules/recharts/es6/state/selectors/combiners/combineRealScaleType.js [Client Component Browser]
+    ./node_modules/recharts/es6/state/selectors/tooltipSelectors.js [Client Component Browser]
+    ./node_modules/recharts/es6/polar/Pie.js [Client Component Browser]
+    ./app/(dashboard)/dashboard/analytics/page.tsx [Client Component Browser]
+    ./app/(dashboard)/dashboard/analytics/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./node_modules/d3-scale/src/linear.js [Client Component SSR]
+    ./node_modules/d3-scale/src/index.js [Client Component SSR]
+    ./node_modules/victory-vendor/es/d3-scale.js [Client Component SSR]
+    ./node_modules/recharts/es6/state/selectors/combiners/combineRealScaleType.js [Client Component SSR]
+    ./node_modules/recharts/es6/state/selectors/tooltipSelectors.js [Client Component SSR]
+    ./node_modules/recharts/es6/polar/Pie.js [Client Component SSR]
+    ./app/(dashboard)/dashboard/analytics/page.tsx [Client Component SSR]
+    ./app/(dashboard)/dashboard/analytics/page.tsx [Server Component]
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+./node_modules/d3-scale/src/log.js:1:1
+Module not found: Can't resolve 'd3-array'
+[31m[1m>[0m [90m1 |[0m ...{ticks} [36mfrom[0m [32m"d3...[0m
+  [90m  |[0m    [31m[1m^^^^^^^^^^^^^^^^^^^[0m
+  [90m2 |[0m ...{format, formatS...
+  [90m3 |[0m ...nice [36mfrom[0m [32m"./nic...[0m
+  [90m4 |[0m ...{copy, transform...
+
+
+
+Import traces:
+  Client Component Browser:
+    ./node_modules/d3-scale/src/log.js [Client Component Browser]
+    ./node_modules/d3-scale/src/index.js [Client Component Browser]
+    ./node_modules/victory-vendor/es/d3-scale.js [Client Component Browser]
+    ./node_modules/recharts/es6/state/selectors/combiners/combineRealScaleType.js [Client Component Browser]
+    ./node_modules/recharts/es6/state/selectors/tooltipSelectors.js [Client Component Browser]
+    ./node_modules/recharts/es6/polar/Pie.js [Client Component Browser]
+    ./app/(dashboard)/dashboard/analytics/page.tsx [Client Component Browser]
+    ./app/(dashboard)/dashboard/analytics/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./node_modules/d3-scale/src/log.js [Client Component SSR]
+    ./node_modules/d3-scale/src/index.js [Client Component SSR]
+    ./node_modules/victory-vendor/es/d3-scale.js [Client Component SSR]
+    ./node_modules/recharts/es6/state/selectors/combiners/combineRealScaleType.js [Client Component SSR]
+    ./node_modules/recharts/es6/state/selectors/tooltipSelectors.js [Client Component SSR]
+    ./node_modules/recharts/es6/polar/Pie.js [Client Component SSR]
+    ./app/(dashboard)/dashboard/analytics/page.tsx [Client Component SSR]
+    ./app/(dashboard)/dashboard/analytics/page.tsx [Server Component]
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+./node_modules/d3-scale/src/ordinal.js:1:1
+Module not found: Can't resolve 'd3-array'
+[31m[1m>[0m [90m1 |[0m ...[33mnternMap[0m} [36mfrom[0m [32m"...[0m
+  [90m  |[0m    [31m[1m^^^^^^^^^^^^^^^^^^^[0m
+  [90m2 |[0m ...nitRange} [36mfrom[0m [32m"...[0m
+  [90m3 |[0m ...
+  [90m4 |[0m ...[36mnst[0m implicit = [33mS...[0m
+
+
+
+Import traces:
+  Client Component Browser:
+    ./node_modules/d3-scale/src/ordinal.js [Client Component Browser]
+    ./node_modules/d3-scale/src/index.js [Client Component Browser]
+    ./node_modules/victory-vendor/es/d3-scale.js [Client Component Browser]
+    ./node_modules/recharts/es6/state/selectors/combiners/combineRealScaleType.js [Client Component Browser]
+    ./node_modules/recharts/es6/state/selectors/tooltipSelectors.js [Client Component Browser]
+    ./node_modules/recharts/es6/polar/Pie.js [Client Component Browser]
+    ./app/(dashboard)/dashboard/analytics/page.tsx [Client Component Browser]
+    ./app/(dashboard)/dashboard/analytics/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./node_modules/d3-scale/src/ordinal.js [Client Component SSR]
+    ./node_modules/d3-scale/src/index.js [Client Component SSR]
+    ./node_modules/victory-vendor/es/d3-scale.js [Client Component SSR]
+    ./node_modules/recharts/es6/state/selectors/combiners/combineRealScaleType.js [Client Component SSR]
+    ./node_modules/recharts/es6/state/selectors/tooltipSelectors.js [Client Component SSR]
+    ./node_modules/recharts/es6/polar/Pie.js [Client Component SSR]
+    ./app/(dashboard)/dashboard/analytics/page.tsx [Client Component SSR]
+    ./app/(dashboard)/dashboard/analytics/page.tsx [Server Component]
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+./node_modules/d3-scale/src/quantile.js:1:1
+Module not found: Can't resolve 'd3-array'
+[31m[1m>[0m [90m1 |[0m ...uantileSorted [36mas[0m...
+  [90m  |[0m    [31m[1m^^^^^^^^^^^^^^^^^^^[0m
+  [90m2 |[0m ...[32mnit.js"[0m;
+  [90m3 |[0m ...
+  [90m4 |[0m ...tile() {
+
+
+
+Import traces:
+  Client Component Browser:
+    ./node_modules/d3-scale/src/quantile.js [Client Component Browser]
+    ./node_modules/d3-scale/src/index.js [Client Component Browser]
+    ./node_modules/victory-vendor/es/d3-scale.js [Client Component Browser]
+    ./node_modules/recharts/es6/state/selectors/combiners/combineRealScaleType.js [Client Component Browser]
+    ./node_modules/recharts/es6/state/selectors/tooltipSelectors.js [Client Component Browser]
+    ./node_modules/recharts/es6/polar/Pie.js [Client Component Browser]
+    ./app/(dashboard)/dashboard/analytics/page.tsx [Client Component Browser]
+    ./app/(dashboard)/dashboard/analytics/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./node_modules/d3-scale/src/quantile.js [Client Component SSR]
+    ./node_modules/d3-scale/src/index.js [Client Component SSR]
+    ./node_modules/victory-vendor/es/d3-scale.js [Client Component SSR]
+    ./node_modules/recharts/es6/state/selectors/combiners/combineRealScaleType.js [Client Component SSR]
+    ./node_modules/recharts/es6/state/selectors/tooltipSelectors.js [Client Component SSR]
+    ./node_modules/recharts/es6/polar/Pie.js [Client Component SSR]
+    ./app/(dashboard)/dashboard/analytics/page.tsx [Client Component SSR]
+    ./app/(dashboard)/dashboard/analytics/page.tsx [Server Component]
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+./node_modules/d3-scale/src/quantize.js:1:1
+Module not found: Can't resolve 'd3-array'
+[31m[1m>[0m [90m1 |[0m ...bisect} [36mfrom[0m [32m"d3...[0m
+  [90m  |[0m    [31m[1m^^^^^^^^^^^^^^^^^^^[0m
+  [90m2 |[0m ...linearish} [36mfrom[0m [32m...[0m
+  [90m3 |[0m ...initRange} [36mfrom[0m [32m...[0m
+  [90m4 |[0m ...
+
+
+
+Import traces:
+  Client Component Browser:
+    ./node_modules/d3-scale/src/quantize.js [Client Component Browser]
+    ./node_modules/d3-scale/src/index.js [Client Component Browser]
+    ./node_modules/victory-vendor/es/d3-scale.js [Client Component Browser]
+    ./node_modules/recharts/es6/state/selectors/combiners/combineRealScaleType.js [Client Component Browser]
+    ./node_modules/recharts/es6/state/selectors/tooltipSelectors.js [Client Component Browser]
+    ./node_modules/recharts/es6/polar/Pie.js [Client Component Browser]
+    ./app/(dashboard)/dashboard/analytics/page.tsx [Client Component Browser]
+    ./app/(dashboard)/dashboard/analytics/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./node_modules/d3-scale/src/quantize.js [Client Component SSR]
+    ./node_modules/d3-scale/src/index.js [Client Component SSR]
+    ./node_modules/victory-vendor/es/d3-scale.js [Client Component SSR]
+    ./node_modules/recharts/es6/state/selectors/combiners/combineRealScaleType.js [Client Component SSR]
+    ./node_modules/recharts/es6/state/selectors/tooltipSelectors.js [Client Component SSR]
+    ./node_modules/recharts/es6/polar/Pie.js [Client Component SSR]
+    ./app/(dashboard)/dashboard/analytics/page.tsx [Client Component SSR]
+    ./app/(dashboard)/dashboard/analytics/page.tsx [Server Component]
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+./node_modules/d3-scale/src/sequentialQuantile.js:1:1
+Module not found: Can't resolve 'd3-array'
+[31m[1m>[0m [90m1 |[0m ... bisect, quantil...
+  [90m  |[0m    [31m[1m^^^^^^^^^^^^^^^^^^^[0m
+  [90m2 |[0m ...[36mfrom[0m [32m"./continuo...[0m
+  [90m3 |[0m ...olator} [36mfrom[0m [32m"./...[0m
+  [90m4 |[0m ...
+
+
+
+Import traces:
+  Client Component Browser:
+    ./node_modules/d3-scale/src/sequentialQuantile.js [Client Component Browser]
+    ./node_modules/d3-scale/src/index.js [Client Component Browser]
+    ./node_modules/victory-vendor/es/d3-scale.js [Client Component Browser]
+    ./node_modules/recharts/es6/state/selectors/combiners/combineRealScaleType.js [Client Component Browser]
+    ./node_modules/recharts/es6/state/selectors/tooltipSelectors.js [Client Component Browser]
+    ./node_modules/recharts/es6/polar/Pie.js [Client Component Browser]
+    ./app/(dashboard)/dashboard/analytics/page.tsx [Client Component Browser]
+    ./app/(dashboard)/dashboard/analytics/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./node_modules/d3-scale/src/sequentialQuantile.js [Client Component SSR]
+    ./node_modules/d3-scale/src/index.js [Client Component SSR]
+    ./node_modules/victory-vendor/es/d3-scale.js [Client Component SSR]
+    ./node_modules/recharts/es6/state/selectors/combiners/combineRealScaleType.js [Client Component SSR]
+    ./node_modules/recharts/es6/state/selectors/tooltipSelectors.js [Client Component SSR]
+    ./node_modules/recharts/es6/polar/Pie.js [Client Component SSR]
+    ./app/(dashboard)/dashboard/analytics/page.tsx [Client Component SSR]
+    ./app/(dashboard)/dashboard/analytics/page.tsx [Server Component]
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+./node_modules/d3-scale/src/threshold.js:1:1
+Module not found: Can't resolve 'd3-array'
+[31m[1m>[0m [90m1 |[0m ...bisect} [36mfrom[0m [32m"d3...[0m
+  [90m  |[0m    [31m[1m^^^^^^^^^^^^^^^^^^^[0m
+  [90m2 |[0m ...initRange} [36mfrom[0m [32m...[0m
+  [90m3 |[0m ...
+  [90m4 |[0m ...[36mefault[0m [36mfunction[0m ...
+
+
+
+Import traces:
+  Client Component Browser:
+    ./node_modules/d3-scale/src/threshold.js [Client Component Browser]
+    ./node_modules/d3-scale/src/index.js [Client Component Browser]
+    ./node_modules/victory-vendor/es/d3-scale.js [Client Component Browser]
+    ./node_modules/recharts/es6/state/selectors/combiners/combineRealScaleType.js [Client Component Browser]
+    ./node_modules/recharts/es6/state/selectors/tooltipSelectors.js [Client Component Browser]
+    ./node_modules/recharts/es6/polar/Pie.js [Client Component Browser]
+    ./app/(dashboard)/dashboard/analytics/page.tsx [Client Component Browser]
+    ./app/(dashboard)/dashboard/analytics/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./node_modules/d3-scale/src/threshold.js [Client Component SSR]
+    ./node_modules/d3-scale/src/index.js [Client Component SSR]
+    ./node_modules/victory-vendor/es/d3-scale.js [Client Component SSR]
+    ./node_modules/recharts/es6/state/selectors/combiners/combineRealScaleType.js [Client Component SSR]
+    ./node_modules/recharts/es6/state/selectors/tooltipSelectors.js [Client Component SSR]
+    ./node_modules/recharts/es6/polar/Pie.js [Client Component SSR]
+    ./app/(dashboard)/dashboard/analytics/page.tsx [Client Component SSR]
+    ./app/(dashboard)/dashboard/analytics/page.tsx [Server Component]
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+./node_modules/d3-scale/src/tickFormat.js:1:1
+Module not found: Can't resolve 'd3-array'
+[31m[1m>[0m [90m1 |[0m ...ickStep} [36mfrom[0m [32m"d...[0m
+  [90m  |[0m    [31m[1m^^^^^^^^^^^^^^^^^^^[0m
+  [90m2 |[0m ...ormat, formatPre...
+  [90m3 |[0m ...
+  [90m4 |[0m ...[36mfault[0m [36mfunction[0m t...
+
+
+
+Import traces:
+  Client Component Browser:
+    ./node_modules/d3-scale/src/tickFormat.js [Client Component Browser]
+    ./node_modules/d3-scale/src/index.js [Client Component Browser]
+    ./node_modules/victory-vendor/es/d3-scale.js [Client Component Browser]
+    ./node_modules/recharts/es6/state/selectors/combiners/combineConfiguredScale.js [Client Component Browser]
+    ./node_modules/recharts/es6/state/selectors/tooltipSelectors.js [Client Component Browser]
+    ./node_modules/recharts/es6/polar/Pie.js [Client Component Browser]
+    ./app/(dashboard)/dashboard/analytics/page.tsx [Client Component Browser]
+    ./app/(dashboard)/dashboard/analytics/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./node_modules/d3-scale/src/tickFormat.js [Client Component SSR]
+    ./node_modules/d3-scale/src/index.js [Client Component SSR]
+    ./node_modules/victory-vendor/es/d3-scale.js [Client Component SSR]
+    ./node_modules/recharts/es6/state/selectors/combiners/combineConfiguredScale.js [Client Component SSR]
+    ./node_modules/recharts/es6/state/selectors/tooltipSelectors.js [Client Component SSR]
+    ./node_modules/recharts/es6/polar/Pie.js [Client Component SSR]
+    ./app/(dashboard)/dashboard/analytics/page.tsx [Client Component SSR]
+    ./app/(dashboard)/dashboard/analytics/page.tsx [Server Component]
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+./node_modules/d3-scale/src/time.js:1:1
+Module not found: Can't resolve 'd3-time'
+[31m[1m>[0m [90m1 |[0m ...r, timeMinute, t...
+  [90m  |[0m    [31m[1m^^^^^^^^^^^^^^^^^^^[0m
+  [90m2 |[0m ...
+  [90m3 |[0m ...
+  [90m4 |[0m ...
+
+
+
+Import traces:
+  Client Component Browser:
+    ./node_modules/d3-scale/src/time.js [Client Component Browser]
+    ./node_modules/d3-scale/src/index.js [Client Component Browser]
+    ./node_modules/victory-vendor/es/d3-scale.js [Client Component Browser]
+    ./node_modules/recharts/es6/state/selectors/combiners/combineRealScaleType.js [Client Component Browser]
+    ./node_modules/recharts/es6/state/selectors/tooltipSelectors.js [Client Component Browser]
+    ./node_modules/recharts/es6/polar/Pie.js [Client Component Browser]
+    ./app/(dashboard)/dashboard/analytics/page.tsx [Client Component Browser]
+    ./app/(dashboard)/dashboard/analytics/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./node_modules/d3-scale/src/time.js [Client Component SSR]
+    ./node_modules/d3-scale/src/index.js [Client Component SSR]
+    ./node_modules/victory-vendor/es/d3-scale.js [Client Component SSR]
+    ./node_modules/recharts/es6/state/selectors/combiners/combineRealScaleType.js [Client Component SSR]
+    ./node_modules/recharts/es6/state/selectors/tooltipSelectors.js [Client Component SSR]
+    ./node_modules/recharts/es6/polar/Pie.js [Client Component SSR]
+    ./app/(dashboard)/dashboard/analytics/page.tsx [Client Component SSR]
+    ./app/(dashboard)/dashboard/analytics/page.tsx [Server Component]
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+./node_modules/d3-scale/src/utcTime.js:1:1
+Module not found: Can't resolve 'd3-time'
+[31m[1m>[0m [90m1 |[0m ...r, utcMinute, ut...
+  [90m  |[0m    [31m[1m^^^^^^^^^^^^^^^^^^^[0m
+  [90m2 |[0m ...
+  [90m3 |[0m ...
+  [90m4 |[0m ...
+
+
+
+Import traces:
+  Client Component Browser:
+    ./node_modules/d3-scale/src/utcTime.js [Client Component Browser]
+    ./node_modules/d3-scale/src/index.js [Client Component Browser]
+    ./node_modules/victory-vendor/es/d3-scale.js [Client Component Browser]
+    ./node_modules/recharts/es6/state/selectors/combiners/combineRealScaleType.js [Client Component Browser]
+    ./node_modules/recharts/es6/state/selectors/tooltipSelectors.js [Client Component Browser]
+    ./node_modules/recharts/es6/polar/Pie.js [Client Component Browser]
+    ./app/(dashboard)/dashboard/analytics/page.tsx [Client Component Browser]
+    ./app/(dashboard)/dashboard/analytics/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./node_modules/d3-scale/src/utcTime.js [Client Component SSR]
+    ./node_modules/d3-scale/src/index.js [Client Component SSR]
+    ./node_modules/victory-vendor/es/d3-scale.js [Client Component SSR]
+    ./node_modules/recharts/es6/state/selectors/combiners/combineRealScaleType.js [Client Component SSR]
+    ./node_modules/recharts/es6/state/selectors/tooltipSelectors.js [Client Component SSR]
+    ./node_modules/recharts/es6/polar/Pie.js [Client Component SSR]
+    ./app/(dashboard)/dashboard/analytics/page.tsx [Client Component SSR]
+    ./app/(dashboard)/dashboard/analytics/page.tsx [Server Component]
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+./node_modules/d3-time-format/src/locale.js:1:1
+Module not found: Can't resolve 'd3-time'
+[31m[1m>[0m [90m 1 |[0m ...[36mmport[0m {
+  [90m   |[0m    [31m[1m^^^^^^^[0m
+[31m[1m>[0m [90m 2 |[0m ... timeDay,
+  [90m   |[0m    [31m[1m^^^^^^^^^^[0m
+[31m[1m>[0m [90m 3 |[0m ... timeSunday,
+  [90m   |[0m    [31m[1m^^^^^^^^^^^^^[0m
+[31m[1m>[0m [90m 4 |[0m ... timeMonday,
+  [90m   |[0m    [31m[1m^^^^^^^^^^^^^[0m
+[31m[1m>[0m [90m 5 |[0m ... timeThursday,
+  [90m   |[0m    [31m[1m^^^^^^^^^^^^^^^[0m
+[31m[1m>[0m [90m 6 |[0m ... timeYear,
+  [90m   |[0m    [31m[1m^^^^^^^^^^^[0m
+[31m[1m>[0m [90m 7 |[0m ... utcDay,
+  [90m   |[0m    [31m[1m^^^^^^^^^[0m
+[31m[1m>[0m [90m 8 |[0m ... utcSunday,
+  [90m   |[0m    [31m[1m^^^^^^^^^^^^[0m
+[31m[1m>[0m [90m 9 |[0m ... utcMonday,
+  [90m   |[0m    [31m[1m^^^^^^^^^^^^[0m
+[31m[1m>[0m [90m10 |[0m ... utcThursday,
+  [90m   |[0m    [31m[1m^^^^^^^^^^^^^^[0m
+[31m[1m>[0m [90m11 |[0m ... utcYear
+  [90m   |[0m    [31m[1m^^^^^^^^^[0m
+[31m[1m>[0m [90m12 |[0m ... [36mfrom[0m [32m"d3-time"[0m;
+  [90m   |[0m    [31m[1m^^^^^^^^^^^^^^^^^[0m
+  [90m13 |[0m ...
+  [90m14 |[0m ...[36munction[0m localDa...
+  [90m15 |[0m ... [36mif[0m ([35m0[0m <= d.y &...
+
+
+
+Import traces:
+  Client Component Browser:
+    ./node_modules/d3-time-format/src/locale.js [Client Component Browser]
+    ./node_modules/d3-time-format/src/defaultLocale.js [Client Component Browser]
+    ./node_modules/d3-scale/src/utcTime.js [Client Component Browser]
+    ./node_modules/d3-scale/src/index.js [Client Component Browser]
+    ./node_modules/victory-vendor/es/d3-scale.js [Client Component Browser]
+    ./node_modules/recharts/es6/state/selectors/combiners/combineRealScaleType.js [Client Component Browser]
+    ./node_modules/recharts/es6/state/selectors/tooltipSelectors.js [Client Component Browser]
+    ./node_modules/recharts/es6/polar/Pie.js [Client Component Browser]
+    ./app/(dashboard)/dashboard/analytics/page.tsx [Client Component Browser]
+    ./app/(dashboard)/dashboard/analytics/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./node_modules/d3-time-format/src/locale.js [Client Component SSR]
+    ./node_modules/d3-time-format/src/defaultLocale.js [Client Component SSR]
+    ./node_modules/d3-scale/src/utcTime.js [Client Component SSR]
+    ./node_modules/d3-scale/src/index.js [Client Component SSR]
+    ./node_modules/victory-vendor/es/d3-scale.js [Client Component SSR]
+    ./node_modules/recharts/es6/state/selectors/combiners/combineRealScaleType.js [Client Component SSR]
+    ./node_modules/recharts/es6/state/selectors/tooltipSelectors.js [Client Component SSR]
+    ./node_modules/recharts/es6/polar/Pie.js [Client Component SSR]
+    ./app/(dashboard)/dashboard/analytics/page.tsx [Client Component SSR]
+    ./app/(dashboard)/dashboard/analytics/page.tsx [Server Component]
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+./node_modules/dom-serializer/lib/esm/index.js:4:1
+Module not found: Can't resolve 'domelementtype'
+  [90m2 |[0m ...[90mdencies[0m
+  [90m3 |[0m ...
+[31m[1m>[0m [90m4 |[0m ...[33mmentType[0m [36mfrom[0m [32m"d...[0m
+  [90m  |[0m    [31m[1m^^^^^^^^^^^^^^^^^^^[0m
+  [90m5 |[0m ...XML, escapeAttri...
+  [90m6 |[0m ...
+  [90m7 |[0m ...[33mVG[0m and [33mMathML[0m ta...
+
+
+
+Import trace:
+  App Route:
+    ./node_modules/dom-serializer/lib/esm/index.js
+    ./node_modules/cheerio/dist/esm/load-parse.js
+    ./app/api/audit/technical/route.ts
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+./node_modules/domhandler/lib/esm/index.js:1:1
+Module not found: Can't resolve 'domelementtype'
+[31m[1m>[0m [90m1 |[0m ...[33mntType[0m } [36mfrom[0m [32m"d...[0m
+  [90m  |[0m    [31m[1m^^^^^^^^^^^^^^^^^^^[0m
+  [90m2 |[0m ...[33mnt[0m, [33mText[0m, [33mCommen.[0m..
+  [90m3 |[0m ...[32m"./node.js"[0m;
+  [90m4 |[0m ...[90mions[0m
+
+
+
+Import trace:
+  App Route:
+    ./node_modules/domhandler/lib/esm/index.js
+    ./node_modules/cheerio/dist/esm/parsers/parse5-adapter.js
+    ./node_modules/cheerio/dist/esm/load-parse.js
+    ./app/api/audit/technical/route.ts
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+./node_modules/domhandler/lib/esm/node.js:1:1
+Module not found: Can't resolve 'domelementtype'
+[31m[1m>[0m [90m1 |[0m ...Tag [36mas[0m isTagRaw ..[36m.[0m
+  [90m  |[0m    [31m[1m^^^^^^^^^^^^^^^^^^^[0m
+  [90m2 |[0m ...
+  [90m3 |[0m ...sed [36mas[0m the proto...
+  [90m4 |[0m ... structure.
+
+
+
+Import trace:
+  App Route:
+    ./node_modules/domhandler/lib/esm/node.js
+    ./node_modules/cheerio/dist/esm/parse.js
+    ./node_modules/cheerio/dist/esm/load-parse.js
+    ./app/api/audit/technical/route.ts
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+./node_modules/domutils/lib/esm/stringify.js:3:1
+Module not found: Can't resolve 'domelementtype'
+  [90m1 |[0m ..., isCDATA, isTex...
+  [90m2 |[0m ...TML [36mfrom[0m [32m"dom-se...[0m
+[31m[1m>[0m [90m3 |[0m ...[33mntType[0m } [36mfrom[0m [32m"d...[0m
+  [90m  |[0m    [31m[1m^^^^^^^^^^^^^^^^^^^[0m
+  [90m4 |[0m ...
+  [90m5 |[0m ...[33mtringify[0m
+  [90m6 |[0m ... [33mUse[0m the [32m`dom-se...[0m
+
+
+
+Import trace:
+  App Route:
+    ./node_modules/domutils/lib/esm/stringify.js
+    ./node_modules/cheerio/dist/esm/static.js
+    ./node_modules/cheerio/dist/esm/index.js
+    ./app/api/audit/technical/route.ts
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+./node_modules/html-to-text/node_modules/htmlparser2/lib/esm/index.js:48:1
+Module not found: Can't resolve 'domelementtype'
+  [90m46 |[0m ...[90mrobably be remo...[0m
+  [90m47 |[0m ...
+[31m[1m>[0m [90m48 |[0m ...[33mentType[0m [36mfrom[0m [32m"d...[0m
+  [90m   |[0m    [31m[1m^^^^^^^^^^^^^^^^^^[0m
+  [90m49 |[0m ... } [36mfrom[0m [32m"domuti...[0m
+  [90m50 |[0m ... } [36mfrom[0m [32m"domuti...[0m
+  [90m51 |[0m ...efaultOptions =...
+
+
+
+Import trace:
+  App Route:
+    ./node_modules/html-to-text/node_modules/htmlparser2/lib/esm/index.js
+    ./node_modules/html-to-text/lib/html-to-text.mjs
+    ./node_modules/@react-email/render/dist/node/index.mjs
+    ./node_modules/resend/dist/index.mjs
+    ./lib/email.ts
+    ./app/api/auth/signup/route.ts
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+./node_modules/htmlparser2/dist/esm/index.js:60:1
+Module not found: Can't resolve 'domelementtype'
+  [90m58 |[0m ...[90mrobably be remo...[0m
+  [90m59 |[0m ...
+[31m[1m>[0m [90m60 |[0m ...[33mentType[0m [36mfrom[0m [32m"d...[0m
+  [90m   |[0m    [31m[1m^^^^^^^^^^^^^^^^^^[0m
+  [90m61 |[0m ... } [36mfrom[0m [32m"domuti...[0m
+  [90m62 |[0m ... } [36mfrom[0m [32m"domuti...[0m
+  [90m63 |[0m ...efaultOptions =...
+
+
+
+Import traces:
+  #1 [App Route]:
+    ./node_modules/htmlparser2/dist/esm/index.js
+    ./node_modules/cheerio/dist/esm/index.js
+    ./app/api/audit/technical/route.ts
+
+  #2 [App Route]:
+    ./node_modules/htmlparser2/dist/esm/index.js
+    ./node_modules/cheerio/dist/esm/load.js
+    ./node_modules/cheerio/dist/esm/load-parse.js
+    ./app/api/audit/technical/route.ts
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+./node_modules/jspdf/dist/jspdf.es.min.js:51:46
+Module not found: Can't resolve 'fflate'
+  [90m49 |[0m ...
+  [90m50 |[0m ...
+[31m[1m>[0m [90m51 |[0m ...bSync [36mas[0m e}[36mfrom[0m[32m...[0m
+  [90m   |[0m    [31m[1m^^^^^^^^^^^^^^^^^^[0m
+  [90m52 |[0m ...
+  [90m53 |[0m ...
+  [90m54 |[0m ...
+
+
+
+Import trace:
+  Client Component Browser:
+    ./node_modules/jspdf/dist/jspdf.es.min.js [Client Component Browser]
+    ./app/(dashboard)/dashboard/analytics/page.tsx [Client Component Browser]
+    ./app/(dashboard)/dashboard/analytics/page.tsx [Server Component]
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+./node_modules/jspdf/dist/jspdf.node.min.js:51:62
+Module not found: Can't resolve 'fflate'
+  [90m49 |[0m ...
+  [90m50 |[0m ...
+[31m[1m>[0m [90m51 |[0m ...equire([32m"fflate"[0m...
+  [90m   |[0m    [31m[1m^^^^^^^^^^^^^^^^^[0m
+  [90m52 |[0m ...
+  [90m53 |[0m ...
+  [90m54 |[0m ...
+
+
+
+Import trace:
+  Client Component SSR:
+    ./node_modules/jspdf/dist/jspdf.node.min.js [Client Component SSR]
+    ./app/(dashboard)/dashboard/analytics/page.tsx [Client Component SSR]
+    ./app/(dashboard)/dashboard/analytics/page.tsx [Server Component]
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+./node_modules/react-style-singleton/dist/es2015/singleton.js:1:1
+Module not found: Can't resolve 'get-nonce'
+[31m[1m>[0m [90m1 |[0m ...etNonce } [36mfrom[0m [32m'...[0m
+  [90m  |[0m    [31m[1m^^^^^^^^^^^^^^^^^^^[0m
+  [90m2 |[0m ...akeStyleTag() {
+  [90m3 |[0m ...ocument)
+  [90m4 |[0m ...[36mturn[0m [36mnull[0m;
+
+
+
+Import traces:
+  Client Component Browser:
+    ./node_modules/react-style-singleton/dist/es2015/singleton.js [Client Component Browser]
+    ./node_modules/react-style-singleton/dist/es2015/index.js [Client Component Browser]
+    ./node_modules/react-remove-scroll/dist/es2015/SideEffect.js [Client Component Browser]
+    ./node_modules/react-remove-scroll/dist/es2015/sidecar.js [Client Component Browser]
+    ./node_modules/react-remove-scroll/dist/es2015/Combination.js [Client Component Browser]
+    ./node_modules/@radix-ui/react-select/dist/index.mjs [Client Component Browser]
+    ./components/ui/select.tsx [Client Component Browser]
+    ./components/dashboard/llm-tracker/add-schedule-modal.tsx [Client Component Browser]
+    ./components/dashboard/llm-tracker/scheduled-scans.tsx [Client Component Browser]
+    ./app/(dashboard)/dashboard/llm-tracker/page.tsx [Client Component Browser]
+    ./app/(dashboard)/dashboard/llm-tracker/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./node_modules/react-style-singleton/dist/es2015/singleton.js [Client Component SSR]
+    ./node_modules/react-style-singleton/dist/es2015/index.js [Client Component SSR]
+    ./node_modules/react-remove-scroll/dist/es2015/SideEffect.js [Client Component SSR]
+    ./node_modules/react-remove-scroll/dist/es2015/sidecar.js [Client Component SSR]
+    ./node_modules/react-remove-scroll/dist/es2015/Combination.js [Client Component SSR]
+    ./node_modules/@radix-ui/react-select/dist/index.mjs [Client Component SSR]
+    ./components/ui/select.tsx [Client Component SSR]
+    ./components/dashboard/llm-tracker/add-schedule-modal.tsx [Client Component SSR]
+    ./components/dashboard/llm-tracker/scheduled-scans.tsx [Client Component SSR]
+    ./app/(dashboard)/dashboard/llm-tracker/page.tsx [Client Component SSR]
+    ./app/(dashboard)/dashboard/llm-tracker/page.tsx [Server Component]
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+./node_modules/@supabase/storage-js/dist/index.mjs:1:1
+Module not found: Can't resolve 'iceberg-js'
+[31m[1m>[0m [90m1 |[0m ...[33mRestCatalog[0m } [36mfr..[0m.
+  [90m  |[0m    [31m[1m^^^^^^^^^^^^^^^^^^^[0m
+  [90m2 |[0m ...
+  [90m3 |[0m ...[90mb/common/errors.ts[0m
+  [90m4 |[0m ...
+
+
+
+Import traces:
+  App Route:
+    ./node_modules/@supabase/storage-js/dist/index.mjs
+    ./node_modules/@supabase/supabase-js/dist/index.mjs
+    ./app/api/analytics/track/route.ts
+
+  Edge Middleware:
+    ./node_modules/@supabase/storage-js/dist/index.mjs
+    ./node_modules/@supabase/supabase-js/dist/index.mjs
+    ./node_modules/@supabase/ssr/dist/module/createServerClient.js
+    ./lib/supabase/middleware.ts
+    ./middleware.ts
+
+  Client Component Browser:
+    ./node_modules/@supabase/storage-js/dist/index.mjs [Client Component Browser]
+    ./node_modules/@supabase/supabase-js/dist/index.mjs [Client Component Browser]
+    ./node_modules/@supabase/ssr/dist/module/createBrowserClient.js [Client Component Browser]
+    ./lib/supabase/client.ts [Client Component Browser]
+    ./app/(dashboard)/dashboard/forum-hub/page.tsx [Client Component Browser]
+    ./app/(dashboard)/dashboard/forum-hub/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./node_modules/@supabase/storage-js/dist/index.mjs [Client Component SSR]
+    ./node_modules/@supabase/supabase-js/dist/index.mjs [Client Component SSR]
+    ./node_modules/@supabase/ssr/dist/module/createBrowserClient.js [Client Component SSR]
+    ./lib/supabase/client.ts [Client Component SSR]
+    ./app/(dashboard)/dashboard/forum-hub/page.tsx [Client Component SSR]
+    ./app/(dashboard)/dashboard/forum-hub/page.tsx [Server Component]
+
+  Server Component:
+    ./node_modules/@supabase/storage-js/dist/index.mjs
+    ./node_modules/@supabase/supabase-js/dist/index.mjs
+    ./node_modules/@supabase/ssr/dist/module/createServerClient.js
+    ./lib/supabase/server.ts
+    ./lib/admin.ts
+    ./app/(admin)/admin/settings/page.tsx
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+./lib/rate-limit.ts:1:1
+Module not found: Can't resolve 'lru-cache'
+[31m[1m>[0m [90m1 |[0m ...[33mRUCache[0m } [36mfrom[0m [32m'...[0m
+  [90m  |[0m    [31m[1m^^^^^^^^^^^^^^^^^^^[0m
+  [90m2 |[0m ...
+  [90m3 |[0m ...[33mimiterOptions[0m = {
+  [90m4 |[0m ...TokenPerInterval...
+
+
+
+Import trace:
+  App Route:
+    ./lib/rate-limit.ts
+    ./app/api/prompts/discover/route.ts
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+./node_modules/fast-png/lib-esm/PngDecoder.js:2:1
+Module not found: Can't resolve 'pako'
+  [90m1 |[0m ...} [36mfrom[0m [32m'iobuffer'[0m;
+[31m[1m>[0m [90m2 |[0m ...[33mInflate[0m [36mas[0m [33mInfla...[0m
+  [90m  |[0m    [31m[1m^^^^^^^^^^^^^^^^^^^[0m
+  [90m3 |[0m ...} [36mfrom[0m [32m'./helper...[0m
+  [90m4 |[0m ...erlaceAdam7 } [36mfr..[0m.
+  [90m5 |[0m ...erlaceNull } [36mfro.[0m.[32m.[0m
+
+
+
+Import traces:
+  Client Component Browser:
+    ./node_modules/fast-png/lib-esm/PngDecoder.js [Client Component Browser]
+    ./node_modules/fast-png/lib-esm/index.js [Client Component Browser]
+    ./node_modules/jspdf/dist/jspdf.es.min.js [Client Component Browser]
+    ./app/(dashboard)/dashboard/analytics/page.tsx [Client Component Browser]
+    ./app/(dashboard)/dashboard/analytics/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./node_modules/fast-png/lib-esm/PngDecoder.js [Client Component SSR]
+    ./node_modules/fast-png/lib-esm/index.js [Client Component SSR]
+    ./node_modules/jspdf/dist/jspdf.node.min.js [Client Component SSR]
+    ./app/(dashboard)/dashboard/analytics/page.tsx [Client Component SSR]
+    ./app/(dashboard)/dashboard/analytics/page.tsx [Server Component]
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+./node_modules/fast-png/lib-esm/PngEncoder.js:2:1
+Module not found: Can't resolve 'pako'
+  [90m1 |[0m ...{ [33mIOBuffer[0m } [36mfro.[0m.[32m.[0m
+[31m[1m>[0m [90m2 |[0m ...{ deflate } [36mfrom[0m.[32m..[0m
+  [90m  |[0m    [31m[1m^^^^^^^^^^^^^^^^^^^[0m
+  [90m3 |[0m ...{ writeCrc } [36mfro.[0m.[32m.[0m
+  [90m4 |[0m ...{ writeSignature...
+  [90m5 |[0m ...{ encodetEXt } [36mf...[0m
+
+
+
+Import traces:
+  Client Component Browser:
+    ./node_modules/fast-png/lib-esm/PngEncoder.js [Client Component Browser]
+    ./node_modules/fast-png/lib-esm/index.js [Client Component Browser]
+    ./node_modules/jspdf/dist/jspdf.es.min.js [Client Component Browser]
+    ./app/(dashboard)/dashboard/analytics/page.tsx [Client Component Browser]
+    ./app/(dashboard)/dashboard/analytics/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./node_modules/fast-png/lib-esm/PngEncoder.js [Client Component SSR]
+    ./node_modules/fast-png/lib-esm/index.js [Client Component SSR]
+    ./node_modules/jspdf/dist/jspdf.node.min.js [Client Component SSR]
+    ./app/(dashboard)/dashboard/analytics/page.tsx [Client Component SSR]
+    ./app/(dashboard)/dashboard/analytics/page.tsx [Server Component]
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+./node_modules/cheerio/dist/esm/parsers/parse5-adapter.js:2:1
+Module not found: Can't resolve 'parse5'
+  [90m1 |[0m ...[32mmhandler'[0m;
+[31m[1m>[0m [90m2 |[0m ..., parseFragment,...
+  [90m  |[0m    [31m[1m^^^^^^^^^^^^^^^^^^^[0m
+  [90m3 |[0m ...Adapter } [36mfrom[0m [32m'...[0m
+  [90m4 |[0m ...
+  [90m5 |[0m ...[32me5`[0m [36min[0m the conte...
+
+
+
+Import trace:
+  App Route:
+    ./node_modules/cheerio/dist/esm/parsers/parse5-adapter.js
+    ./node_modules/cheerio/dist/esm/load-parse.js
+    ./app/api/audit/technical/route.ts
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+./node_modules/parse5-htmlparser2-tree-adapter/dist/index.js:1:1
+Module not found: Can't resolve 'parse5'
+[31m[1m>[0m [90m1 |[0m ...{ html } [36mfrom[0m [32m'p...[0m
+  [90m  |[0m    [31m[1m^^^^^^^^^^^^^^^^^^^[0m
+  [90m2 |[0m ...{ [33mElement[0m, [33mDocum...[0m
+  [90m3 |[0m ...[36mn[0m enquoteDoctype...
+  [90m4 |[0m ...[36mst[0m quote = id.in...
+
+
+
+Import trace:
+  App Route:
+    ./node_modules/parse5-htmlparser2-tree-adapter/dist/index.js
+    ./node_modules/cheerio/dist/esm/index.js
+    ./app/api/audit/technical/route.ts
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+./node_modules/parse5-parser-stream/dist/index.js:2:1
+Module not found: Can't resolve 'parse5'
+  [90m1 |[0m ... [33mWritable[0m } [36mfrom[0m.[32m..[0m
+[31m[1m>[0m [90m2 |[0m ... [33mParser[0m } [36mfrom[0m [32m'...[0m
+  [90m  |[0m    [31m[1m^^^^^^^^^^^^^^^^^^^[0m
+  [90m3 |[0m ...[90mt-disable unicor...[0m
+  [90m4 |[0m ...
+  [90m5 |[0m ...[33mming[0m [33mHTML[0m parser.[36m..[0m
+
+
+
+Import trace:
+  App Route:
+    ./node_modules/parse5-parser-stream/dist/index.js
+    ./node_modules/cheerio/dist/esm/index.js
+    ./app/api/audit/technical/route.ts
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+./node_modules/raf/index.js:1:11
+Module not found: Can't resolve 'performance-now'
+[31m[1m>[0m [90m1 |[0m ...re([32m'performance-...[0m
+  [90m  |[0m    [31m[1m^^^^^^^^^^^^^^^^^^^[0m
+  [90m2 |[0m ...[36mof[0m window === [32m'u...[0m
+  [90m3 |[0m ...[32m'moz'[0m, [32m'webkit'[0m]
+  [90m4 |[0m ...[32mnimationFrame'[0m
+
+
+
+Import traces:
+  Client Component Browser:
+    ./node_modules/raf/index.js [Client Component Browser]
+    ./node_modules/canvg/lib/index.es.js [Client Component Browser]
+    ./node_modules/jspdf/dist/jspdf.es.min.js [Client Component Browser]
+    ./app/(dashboard)/dashboard/analytics/page.tsx [Client Component Browser]
+    ./app/(dashboard)/dashboard/analytics/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./node_modules/raf/index.js [Client Component SSR]
+    ./node_modules/canvg/lib/index.cjs [Client Component SSR]
+    ./node_modules/jspdf/dist/jspdf.node.min.js [Client Component SSR]
+    ./app/(dashboard)/dashboard/analytics/page.tsx [Client Component SSR]
+    ./app/(dashboard)/dashboard/analytics/page.tsx [Server Component]
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+./node_modules/recharts/es6/state/RechartsStoreProvider.js:3:1
+Module not found: Can't resolve 'react-redux'
+  [90m1 |[0m ... [33mReact[0m [36mfrom[0m [32m'rea...[0m
+  [90m2 |[0m ...eRef } [36mfrom[0m [32m'rea...[0m
+[31m[1m>[0m [90m3 |[0m ...[33movider[0m } [36mfrom[0m [32m'r...[0m
+  [90m  |[0m    [31m[1m^^^^^^^^^^^^^^^^^^^[0m
+  [90m4 |[0m ...eateRechartsStor...
+  [90m5 |[0m ...eIsPanorama } [36mfr..[0m.
+  [90m6 |[0m ...[33mchartsReduxConte..[0m.
+
+
+
+Import traces:
+  Client Component Browser:
+    ./node_modules/recharts/es6/state/RechartsStoreProvider.js [Client Component Browser]
+    ./node_modules/recharts/es6/chart/PolarChart.js [Client Component Browser]
+    ./node_modules/recharts/es6/chart/PieChart.js [Client Component Browser]
+    ./app/(dashboard)/dashboard/analytics/page.tsx [Client Component Browser]
+    ./app/(dashboard)/dashboard/analytics/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./node_modules/recharts/es6/state/RechartsStoreProvider.js [Client Component SSR]
+    ./node_modules/recharts/es6/chart/PolarChart.js [Client Component SSR]
+    ./node_modules/recharts/es6/chart/PieChart.js [Client Component SSR]
+    ./app/(dashboard)/dashboard/analytics/page.tsx [Client Component SSR]
+    ./app/(dashboard)/dashboard/analytics/page.tsx [Server Component]
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+./node_modules/recharts/es6/util/propsAreEqual.js:1:1
+Module not found: Can't resolve 'react-redux'
+[31m[1m>[0m [90m1 |[0m ...lowEqual } [36mfrom[0m [32m...[0m
+  [90m  |[0m    [31m[1m^^^^^^^^^^^^^^^^^^^[0m
+  [90m2 |[0m ...allowCompare = [36mn..[0m.
+  [90m3 |[0m ...[90m be an array of ...[0m
+  [90m4 |[0m ...[32mrottledEvents'[0m]);
+
+
+
+Import traces:
+  Client Component Browser:
+    ./node_modules/recharts/es6/util/propsAreEqual.js [Client Component Browser]
+    ./node_modules/recharts/es6/cartesian/Line.js [Client Component Browser]
+    ./app/(dashboard)/dashboard/analytics/page.tsx [Client Component Browser]
+    ./app/(dashboard)/dashboard/analytics/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./node_modules/recharts/es6/util/propsAreEqual.js [Client Component SSR]
+    ./node_modules/recharts/es6/cartesian/Line.js [Client Component SSR]
+    ./app/(dashboard)/dashboard/analytics/page.tsx [Client Component SSR]
+    ./app/(dashboard)/dashboard/analytics/page.tsx [Server Component]
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+./node_modules/canvg/lib/index.cjs:54:23
+Module not found: Can't resolve 'stackblur-canvas'
+  [90m52 |[0m ...[32mreflect.apply.j..[0m.
+  [90m53 |[0m ...[32mreflect.get-pro...[0m
+[31m[1m>[0m [90m54 |[0m ...e([32m'stackblur-ca...[0m
+  [90m   |[0m    [31m[1m^^^^^^^^^^^^^^^^^^[0m
+  [90m55 |[0m ...
+  [90m56 |[0m ...cy (e) { [36mreturn[0m...
+  [90m57 |[0m ...
+
+
+
+Import trace:
+  Client Component SSR:
+    ./node_modules/canvg/lib/index.cjs [Client Component SSR]
+    ./node_modules/jspdf/dist/jspdf.node.min.js [Client Component SSR]
+    ./app/(dashboard)/dashboard/analytics/page.tsx [Client Component SSR]
+    ./app/(dashboard)/dashboard/analytics/page.tsx [Server Component]
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+./node_modules/canvg/lib/index.es.js:20:1
+Module not found: Can't resolve 'stackblur-canvas'
+  [90m18 |[0m ...[33mData[0m } [36mfrom[0m [32m'sv...[0m
+  [90m19 |[0m ...[32mmodules/es.rege...[0m
+[31m[1m>[0m [90m20 |[0m ...GBA } [36mfrom[0m [32m'sta...[0m
+  [90m   |[0m    [31m[1m^^^^^^^^^^^^^^^^^^[0m
+  [90m21 |[0m ...
+  [90m22 |[0m ...
+  [90m23 |[0m ...t [36mfor[0m [32m`Offscree...[0m
+
+
+
+Import trace:
+  Client Component Browser:
+    ./node_modules/canvg/lib/index.es.js [Client Component Browser]
+    ./node_modules/jspdf/dist/jspdf.es.min.js [Client Component Browser]
+    ./app/(dashboard)/dashboard/analytics/page.tsx [Client Component Browser]
+    ./app/(dashboard)/dashboard/analytics/page.tsx [Server Component]
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+./node_modules/svix/dist/webhook.js:4:28
+Module not found: Can't resolve 'standardwebhooks'
+  [90m2 |[0m ...[32m__esModule"[0m, { v...
+  [90m3 |[0m ...[33mkVerificationErr..[0m.
+[31m[1m>[0m [90m4 |[0m ...re([32m"standardwebh...[0m
+  [90m  |[0m    [31m[1m^^^^^^^^^^^^^^^^^^^[0m
+  [90m5 |[0m ...([32m"standardwebhoo...[0m
+  [90m6 |[0m ...[32mWebhookVerificat...[0m
+  [90m7 |[0m ...
+
+
+
+Import trace:
+  App Route:
+    ./node_modules/svix/dist/webhook.js
+    ./node_modules/svix/dist/index.js
+    ./node_modules/resend/dist/index.mjs
+    ./lib/email.ts
+    ./app/api/auth/signup/route.ts
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+./node_modules/svix/dist/webhook.js:5:26
+Module not found: Can't resolve 'standardwebhooks'
+  [90m3 |[0m ...[33mookVerificationE...[0m
+  [90m4 |[0m ...uire([32m"standardwe...[0m
+[31m[1m>[0m [90m5 |[0m ...re([32m"standardwebh...[0m
+  [90m  |[0m    [31m[1m^^^^^^^^^^^^^^^^^^^[0m
+  [90m6 |[0m ... [32m"WebhookVerific...[0m
+  [90m7 |[0m ...
+  [90m8 |[0m ...s) {
+
+
+
+Import trace:
+  App Route:
+    ./node_modules/svix/dist/webhook.js
+    ./node_modules/svix/dist/index.js
+    ./node_modules/resend/dist/index.mjs
+    ./lib/email.ts
+    ./app/api/auth/signup/route.ts
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+./node_modules/canvg/lib/index.cjs:46:19
+Module not found: Can't resolve 'svg-pathdata'
+  [90m44 |[0m ...[32mabel/runtime/he...[0m
+  [90m45 |[0m ...[32mes/es.array.fil...[0m
+[31m[1m>[0m [90m46 |[0m ...ire([32m'svg-pathda...[0m
+  [90m   |[0m    [31m[1m^^^^^^^^^^^^^^^^^^[0m
+  [90m47 |[0m ...[32mes/es.regexp.to...[0m
+  [90m48 |[0m ...ized = require([32m...[0m
+  [90m49 |[0m ...[32mes/es.array.ite...[0m
+
+
+
+Import trace:
+  Client Component SSR:
+    ./node_modules/canvg/lib/index.cjs [Client Component SSR]
+    ./node_modules/jspdf/dist/jspdf.node.min.js [Client Component SSR]
+    ./app/(dashboard)/dashboard/analytics/page.tsx [Client Component SSR]
+    ./app/(dashboard)/dashboard/analytics/page.tsx [Server Component]
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+./node_modules/canvg/lib/index.es.js:18:1
+Module not found: Can't resolve 'svg-pathdata'
+  [90m16 |[0m ...[32ms/modules/es.st...[0m
+  [90m17 |[0m ...[32ms/modules/es.ar...[0m
+[31m[1m>[0m [90m18 |[0m ...[33mthData[0m } [36mfrom[0m [32m'...[0m
+  [90m   |[0m    [31m[1m^^^^^^^^^^^^^^^^^^[0m
+  [90m19 |[0m ...[32ms/modules/es.re...[0m
+  [90m20 |[0m ...sRGBA } [36mfrom[0m [32m's...[0m
+  [90m21 |[0m ...
+
+
+
+Import trace:
+  Client Component Browser:
+    ./node_modules/canvg/lib/index.es.js [Client Component Browser]
+    ./node_modules/jspdf/dist/jspdf.es.min.js [Client Component Browser]
+    ./app/(dashboard)/dashboard/analytics/page.tsx [Client Component Browser]
+    ./app/(dashboard)/dashboard/analytics/page.tsx [Server Component]
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+./node_modules/encoding-sniffer/dist/esm/sniffer.js:1:1
+Module not found: Can't resolve 'whatwg-encoding'
+[31m[1m>[0m [90m1 |[0m ...oName } [36mfrom[0m [32m"wh...[0m
+  [90m  |[0m    [31m[1m^^^^^^^^^^^^^^^^^^^[0m
+  [90m2 |[0m ...[90m.spec.whatwg.org...[0m
+  [90m3 |[0m ...
+  [90m4 |[0m ...[33me[0m) {
+
+
+
+Import trace:
+  App Route:
+    ./node_modules/encoding-sniffer/dist/esm/sniffer.js
+    ./node_modules/encoding-sniffer/dist/esm/index.js
+    ./node_modules/cheerio/dist/esm/index.js
+    ./app/api/audit/technical/route.ts
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+    at moduleFactory (turbopack:///[turbopack]/nodejs/runtime/build-base.ts:57:5) [/Users/ayush/Desktop/projects/aeo-saas/.next/build/chunks/[turbopack]_runtime.js:840:9])
+    at instantiateModule (turbopack:///[turbopack]/nodejs/runtime/build-base.ts:90:10) [/Users/ayush/Desktop/projects/aeo-saas/.next/build/chunks/[turbopack]_runtime.js:864:12])
+    at getOrInstantiateModuleFromParent (turbopack:///[turbopack]/shared/runtime/runtime-utils.ts:440:10) [/Users/ayush/Desktop/projects/aeo-saas/.next/build/chunks/[turbopack]_runtime.js:289:12])
+    at moduleFactory (turbopack:///[turbopack]/nodejs/runtime/build-base.ts:57:5) [/Users/ayush/Desktop/projects/aeo-saas/.next/build/chunks/[turbopack]_runtime.js:840:9])
+    at instantiateModule (turbopack:///[turbopack]/nodejs/runtime/build-base.ts:90:10) [/Users/ayush/Desktop/projects/aeo-saas/.next/build/chunks/[turbopack]_runtime.js:864:12])
+    at getOrInstantiateModuleFromParent (turbopack:///[turbopack]/shared/runtime/runtime-utils.ts:440:10) [/Users/ayush/Desktop/projects/aeo-saas/.next/build/chunks/[turbopack]_runtime.js:289:12])
+    at <unknown> (https://nextjs.org/docs/messages/module-not-found)
+    at <unknown> (https://nextjs.org/docs/messages/module-not-found)
+    at <unknown> (https://nextjs.org/docs/messages/module-not-found)
+    at <unknown> (https://nextjs.org/docs/messages/module-not-found)
+    at <unknown> (https://nextjs.org/docs/messages/module-not-found)
+    at <unknown> (https://nextjs.org/docs/messages/module-not-found)
+    at <unknown> (https://nextjs.org/docs/messages/module-not-found)
+    at <unknown> (https://nextjs.org/docs/messages/module-not-found)
+    at <unknown> (https://nextjs.org/docs/messages/module-not-found)
+    at <unknown> (https://nextjs.org/docs/messages/module-not-found)
+    at <unknown> (https://nextjs.org/docs/messages/module-not-found)
+    at <unknown> (https://nextjs.org/docs/messages/module-not-found)
+    at <unknown> (https://nextjs.org/docs/messages/module-not-found)
+    at <unknown> (https://nextjs.org/docs/messages/module-not-found)
+    at <unknown> (https://nextjs.org/docs/messages/module-not-found)
+    at <unknown> (https://nextjs.org/docs/messages/module-not-found)
+    at <unknown> (https://nextjs.org/docs/messages/module-not-found)
+    at <unknown> (https://nextjs.org/docs/messages/module-not-found)
+    at <unknown> (https://nextjs.org/docs/messages/module-not-found)
+    at <unknown> (https://nextjs.org/docs/messages/module-not-found)
+    at <unknown> (https://nextjs.org/docs/messages/module-not-found)
+    at <unknown> (https://nextjs.org/docs/messages/module-not-found)
+    at <unknown> (https://nextjs.org/docs/messages/module-not-found)
+    at <unknown> (https://nextjs.org/docs/messages/module-not-found)
+    at <unknown> (https://nextjs.org/docs/messages/module-not-found)
+    at <unknown> (https://nextjs.org/docs/messages/module-not-found)
+    at <unknown> (https://nextjs.org/docs/messages/module-not-found)
+    at <unknown> (https://nextjs.org/docs/messages/module-not-found)
+    at <unknown> (https://nextjs.org/docs/messages/module-not-found)
+    at <unknown> (https://nextjs.org/docs/messages/module-not-found)
+    at <unknown> (https://nextjs.org/docs/messages/module-not-found)
+    at <unknown> (https://nextjs.org/docs/messages/module-not-found)
+    at <unknown> (https://nextjs.org/docs/messages/module-not-found)
+    at <unknown> (https://nextjs.org/docs/messages/module-not-found)
+    at <unknown> (https://nextjs.org/docs/messages/module-not-found)
+    at <unknown> (https://nextjs.org/docs/messages/module-not-found)
+    at <unknown> (https://nextjs.org/docs/messages/module-not-found)
+    at <unknown> (https://nextjs.org/docs/messages/module-not-found)
+    at <unknown> (https://nextjs.org/docs/messages/module-not-found)
+    at <unknown> (https://nextjs.org/docs/messages/module-not-found)
+    at <unknown> (https://nextjs.org/docs/messages/module-not-found)
+    at <unknown> (https://nextjs.org/docs/messages/module-not-found)
+    at <unknown> (https://nextjs.org/docs/messages/module-not-found)
+    at <unknown> (https://nextjs.org/docs/messages/module-not-found)
+    at <unknown> (https://nextjs.org/docs/messages/module-not-found)
+    at <unknown> (https://nextjs.org/docs/messages/module-not-found)
+    at <unknown> (https://nextjs.org/docs/messages/module-not-found)
+    at <unknown> (https://nextjs.org/docs/messages/module-not-found)
+    at <unknown> (https://nextjs.org/docs/messages/module-not-found)
+    at <unknown> (https://nextjs.org/docs/messages/module-not-found)
+    at <unknown> (https://nextjs.org/docs/messages/module-not-found)
+    at <unknown> (https://nextjs.org/docs/messages/module-not-found)
+    at <unknown> (https://nextjs.org/docs/messages/module-not-found)
+    at <unknown> (https://nextjs.org/docs/messages/module-not-found)
+    at <unknown> (https://nextjs.org/docs/messages/module-not-found)
+    at <unknown> (https://nextjs.org/docs/messages/module-not-found)
+    at <unknown> (https://nextjs.org/docs/messages/module-not-found)
+    at <unknown> (https://nextjs.org/docs/messages/module-not-found)
+    at <unknown> (https://nextjs.org/docs/messages/module-not-found)
+    at <unknown> (https://nextjs.org/docs/messages/module-not-found)
+    at <unknown> (https://nextjs.org/docs/messages/module-not-found)
+    at <unknown> (https://nextjs.org/docs/messages/module-not-found)
+    at <unknown> (https://nextjs.org/docs/messages/module-not-found)
+    at <unknown> (https://nextjs.org/docs/messages/module-not-found)
+    at <unknown> (https://nextjs.org/docs/messages/module-not-found)
+    at <unknown> (https://nextjs.org/docs/messages/module-not-found)
+    at <unknown> (https://nextjs.org/docs/messages/module-not-found)
+    at <unknown> (https://nextjs.org/docs/messages/module-not-found)
+    at <unknown> (https://nextjs.org/docs/messages/module-not-found)
+    at <unknown> (https://nextjs.org/docs/messages/module-not-found)
+    at <unknown> (https://nextjs.org/docs/messages/module-not-found)
+    at <unknown> (https://nextjs.org/docs/messages/module-not-found)
+    at <unknown> (https://nextjs.org/docs/messages/module-not-found)
+    at <unknown> (https://nextjs.org/docs/messages/module-not-found)
+    at <unknown> (https://nextjs.org/docs/messages/module-not-found)
+    at <unknown> (https://nextjs.org/docs/messages/module-not-found)
+    at <unknown> (https://nextjs.org/docs/messages/module-not-found)
+    at <unknown> (https://nextjs.org/docs/messages/module-not-found)
+    at <unknown> (https://nextjs.org/docs/messages/module-not-found)
+    at <unknown> (https://nextjs.org/docs/messages/module-not-found)
+    at <unknown> (https://nextjs.org/docs/messages/module-not-found)
+    at <unknown> (https://nextjs.org/docs/messages/module-not-found)
+    at <unknown> (https://nextjs.org/docs/messages/module-not-found)
+    at <unknown> (https://nextjs.org/docs/messages/module-not-found)
+    at <unknown> (https://nextjs.org/docs/messages/module-not-found)
+    at <unknown> (https://nextjs.org/docs/messages/module-not-found)
+    at <unknown> (https://nextjs.org/docs/messages/module-not-found)
+    at <unknown> (https://nextjs.org/docs/messages/module-not-found)
+    at <unknown> (https://nextjs.org/docs/messages/module-not-found)
+    at <unknown> (https://nextjs.org/docs/messages/module-not-found)
+    at <unknown> (https://nextjs.org/docs/messages/module-not-found)
+    at <unknown> (https://nextjs.org/docs/messages/module-not-found)
+    at <unknown> (https://nextjs.org/docs/messages/module-not-found)
+    at <unknown> (https://nextjs.org/docs/messages/module-not-found)
+    at <unknown> (https://nextjs.org/docs/messages/module-not-found)
+    at <unknown> (https://nextjs.org/docs/messages/module-not-found)
+    at <unknown> (https://nextjs.org/docs/messages/module-not-found)
+    at <unknown> (https://nextjs.org/docs/messages/module-not-found)
+    at <unknown> (https://nextjs.org/docs/messages/module-not-found)
+    at <unknown> (https://nextjs.org/docs/messages/module-not-found)
+    at <unknown> (https://nextjs.org/docs/messages/module-not-found)
+    at <unknown> (https://nextjs.org/docs/messages/module-not-found)
+    at <unknown> (https://nextjs.org/docs/messages/module-not-found)
+    at <unknown> (https://nextjs.org/docs/messages/module-not-found)
+    at <unknown> (https://nextjs.org/docs/messages/module-not-found)
+    at <unknown> (https://nextjs.org/docs/messages/module-not-found)
+    at <unknown> (https://nextjs.org/docs/messages/module-not-found)
+    at <unknown> (https://nextjs.org/docs/messages/module-not-found)
+    at <unknown> (https://nextjs.org/docs/messages/module-not-found)
+    at <unknown> (https://nextjs.org/docs/messages/module-not-found)
+    at <unknown> (https://nextjs.org/docs/messages/module-not-found)
+    at <unknown> (https://nextjs.org/docs/messages/module-not-found)
+    at <unknown> (https://nextjs.org/docs/messages/module-not-found)
+    at <unknown> (https://nextjs.org/docs/messages/module-not-found)
+    at <unknown> (https://nextjs.org/docs/messages/module-not-found)
+    at <unknown> (https://nextjs.org/docs/messages/module-not-found)
+    at <unknown> (https://nextjs.org/docs/messages/module-not-found)
+    at ./node_modules/ (supabase/storage-js/dist/index.mjs:1:1)
+    at <unknown> (https://nextjs.org/docs/messages/module-not-found)
+    at <unknown> (./lib/rate-limit.ts:1:1)
+    at <unknown> (https://nextjs.org/docs/messages/module-not-found)
+    at <unknown> (https://nextjs.org/docs/messages/module-not-found)
+    at <unknown> (https://nextjs.org/docs/messages/module-not-found)
+    at <unknown> (https://nextjs.org/docs/messages/module-not-found)
+    at <unknown> (https://nextjs.org/docs/messages/module-not-found)
+    at <unknown> (https://nextjs.org/docs/messages/module-not-found)
+    at <unknown> (https://nextjs.org/docs/messages/module-not-found)
+    at <unknown> (https://nextjs.org/docs/messages/module-not-found)
+    at <unknown> (https://nextjs.org/docs/messages/module-not-found)
+    at <unknown> (https://nextjs.org/docs/messages/module-not-found)
+    at <unknown> (https://nextjs.org/docs/messages/module-not-found)
+    at <unknown> (https://nextjs.org/docs/messages/module-not-found)
+    at <unknown> (https://nextjs.org/docs/messages/module-not-found)
+    at <unknown> (https://nextjs.org/docs/messages/module-not-found)
+    at <unknown> (https://nextjs.org/docs/messages/module-not-found)
+    at <unknown> (https://nextjs.org/docs/messages/module-not-found)

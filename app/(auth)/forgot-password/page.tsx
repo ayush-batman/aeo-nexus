@@ -39,20 +39,21 @@ export default function ForgotPasswordPage() {
     };
 
     return (
-        <div className="min-h-screen bg-[var(--background)] flex items-center justify-center p-6">
+        <div className="min-h-screen bg-[var(--bg-base)] flex items-center justify-center p-6">
             <div className="w-full max-w-md">
                 {/* Logo */}
-                <div className="flex items-center justify-center gap-2 mb-8">
-                    <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center">
-                        <Zap className="w-6 h-6 text-white" />
-                    </div>
-                    <span className="text-2xl font-bold bg-gradient-to-r from-violet-400 to-indigo-400 bg-clip-text text-transparent">
-                        Lumina
+                <div className="flex items-center justify-center gap-2.5 mb-8">
+                    <svg width="32" height="32" viewBox="0 0 28 28" fill="none">
+                        <path d="M14 3 A11 11 0 1 1 5.2 20.5" stroke="var(--text-primary)" strokeWidth="2.5" strokeLinecap="round" fill="none" />
+                        <circle cx="14" cy="14" r="3" fill="var(--accent-base)" />
+                    </svg>
+                    <span className="text-2xl font-bold tracking-tight text-[var(--text-primary)]">
+                        Aelo
                     </span>
                 </div>
 
                 {/* Card */}
-                <div className="rounded-xl border border-[var(--border)] bg-[var(--surface)] p-8">
+                <div className="rounded-xl border border-[var(--border-default)] bg-[var(--bg-surface)] p-8">
                     {success ? (
                         <div className="text-center">
                             <div className="w-16 h-16 rounded-full bg-green-500/10 flex items-center justify-center mx-auto mb-4">
@@ -61,7 +62,7 @@ export default function ForgotPasswordPage() {
                             <h1 className="text-2xl font-semibold text-[var(--text-primary)] mb-2">
                                 Check your email
                             </h1>
-                            <p className="text-sm text-[var(--text-muted)] mb-6">
+                            <p className="text-sm text-[var(--text-secondary)] mb-6">
                                 We&apos;ve sent a password reset link to <strong className="text-[var(--text-primary)]">{email}</strong>
                             </p>
                             <Link href="/login">
@@ -76,7 +77,7 @@ export default function ForgotPasswordPage() {
                             <h1 className="text-2xl font-semibold text-[var(--text-primary)] text-center mb-2">
                                 Forgot your password?
                             </h1>
-                            <p className="text-sm text-[var(--text-muted)] text-center mb-8">
+                            <p className="text-sm text-[var(--text-secondary)] text-center mb-8">
                                 Enter your email and we&apos;ll send you a reset link
                             </p>
 
@@ -114,7 +115,7 @@ export default function ForgotPasswordPage() {
                             </form>
 
                             <div className="mt-6 text-center">
-                                <Link href="/login" className="text-sm text-indigo-400 hover:text-indigo-300 flex items-center justify-center gap-1">
+                                <Link href="/login" className="text-sm text-[var(--accent-base)] hover:text-[var(--text-secondary)] flex items-center justify-center gap-1">
                                     <ArrowLeft className="w-4 h-4" />
                                     Back to Sign In
                                 </Link>

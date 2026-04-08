@@ -5,7 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Zap, AlertCircle, Loader2 } from "lucide-react";
+import { AlertCircle, Loader2 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 
 function LoginForm() {
@@ -47,7 +47,6 @@ function LoginForm() {
         } catch (err) {
             console.error("Login error:", err);
             if (err instanceof Error) {
-                // Check for specific Supabase error codes or messages
                 if (err.message.includes("Invalid login credentials") || err.message.includes("invalid_grant")) {
                     setError("Invalid email or password. Please check your credentials.");
                 } else if (err.message.includes("Email not confirmed")) {
@@ -64,30 +63,31 @@ function LoginForm() {
     };
 
     return (
-        <div className="min-h-screen bg-[var(--background)] flex items-center justify-center p-6">
+        <div className="min-h-screen bg-black flex items-center justify-center p-6">
             <div className="w-full max-w-md">
                 {/* Logo */}
-                <div className="flex items-center justify-center gap-2 mb-8">
-                    <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center">
-                        <Zap className="w-6 h-6 text-white" />
-                    </div>
-                    <span className="text-2xl font-bold bg-gradient-to-r from-violet-400 to-indigo-400 bg-clip-text text-transparent">
-                        Lumina
+                <div className="flex items-center justify-center gap-2.5 mb-8">
+                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M12 2L2 22h20L12 2z" className="fill-[var(--accent-base)]" />
+                        <path d="M12 9L7 19h10L12 9z" className="fill-black" />
+                    </svg>
+                    <span className="text-xl font-semibold tracking-tight text-[var(--text-primary)]">
+                        Aelo
                     </span>
                 </div>
 
                 {/* Card */}
-                <div className="rounded-xl border border-[var(--border)] bg-[var(--surface)] p-8">
-                    <h1 className="text-2xl font-semibold text-[var(--text-primary)] text-center mb-2">
+                <div className="rounded-lg border border-[var(--border-default)] bg-[var(--bg-surface)] p-8">
+                    <h1 className="text-xl font-semibold text-[var(--text-primary)] text-center mb-1">
                         Welcome back
                     </h1>
-                    <p className="text-sm text-[var(--text-muted)] text-center mb-8">
+                    <p className="text-sm text-[var(--text-secondary)] text-center mb-8">
                         Sign in to your account to continue
                     </p>
 
                     {error && (
-                        <div className="mb-4 p-3 rounded-lg bg-red-500/10 border border-red-500/20 flex items-center gap-2 text-red-400 text-sm">
-                            <AlertCircle className="w-4 h-4" />
+                        <div className="mb-4 p-3 rounded-md bg-[var(--data-red-muted)] border border-red-500/20 flex items-center gap-2 text-red-400 text-sm">
+                            <AlertCircle className="w-4 h-4 flex-shrink-0" />
                             {error}
                         </div>
                     )}
@@ -120,14 +120,14 @@ function LoginForm() {
                         </div>
 
                         <div className="flex items-center justify-between text-sm">
-                            <label className="flex items-center gap-2 text-[var(--text-muted)]">
+                            <label className="flex items-center gap-2 text-[var(--text-secondary)]">
                                 <input
                                     type="checkbox"
-                                    className="rounded border-[var(--border)] bg-[var(--surface)]"
+                                    className="rounded border-[var(--border-default)] bg-[var(--bg-surface)]"
                                 />
                                 Remember me
                             </label>
-                            <Link href="/forgot-password" className="text-indigo-400 hover:text-indigo-300">
+                            <Link href="/forgot-password" className="text-[var(--accent-base)] hover:text-[var(--accent-hover)] transition-colors">
                                 Forgot password?
                             </Link>
                         </div>
@@ -144,17 +144,18 @@ function LoginForm() {
                         </Button>
                     </form>
 
-                    <div className="mt-6 text-center text-sm text-[var(--text-muted)]">
-                        <Link href="/signup" className="text-indigo-400 hover:text-indigo-300">
+                    <div className="mt-6 text-center text-sm text-[var(--text-secondary)]">
+                        Don&apos;t have an account?{' '}
+                        <Link href="/signup" className="text-[var(--accent-base)] hover:text-[var(--accent-hover)] transition-colors">
                             Sign up
                         </Link>
                     </div>
 
                     {process.env.NEXT_PUBLIC_ENABLE_DEV_AUTH_BYPASS === 'true' && (
-                        <div className="mt-6 pt-6 border-t border-[var(--border)]">
+                        <div className="mt-6 pt-6 border-t border-[var(--border-default)]">
                             <Button
                                 variant="outline"
-                                className="w-full border-yellow-500/50 text-yellow-500 hover:bg-yellow-500/10 hover:text-yellow-400"
+                                className="w-full border-amber-500/50 text-amber-500 hover:bg-amber-500/10 hover:text-amber-400"
                                 onClick={() => {
                                     document.cookie = "dev-auth-bypass=true; path=/; max-age=86400";
                                     router.push("/dashboard");
@@ -174,8 +175,8 @@ function LoginForm() {
 export default function LoginPage() {
     return (
         <Suspense fallback={
-            <div className="min-h-screen bg-[var(--background)] flex items-center justify-center p-6">
-                <Loader2 className="w-8 h-8 text-violet-500 animate-spin" />
+            <div className="min-h-screen bg-black flex items-center justify-center p-6">
+                <Loader2 className="w-8 h-8 text-[var(--accent-base)] animate-spin" />
             </div>
         }>
             <LoginForm />

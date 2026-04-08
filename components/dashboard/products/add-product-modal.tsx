@@ -108,12 +108,12 @@ export function AddProductModal({ isOpen, onClose, onSuccess, productToEdit, wor
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 animate-in fade-in duration-200">
-            <div className="bg-[var(--surface)] border border-[var(--border)] rounded-xl shadow-2xl w-full max-w-md overflow-hidden animate-in zoom-in-95 duration-200">
-                <div className="flex items-center justify-between p-4 border-b border-[var(--border)]">
+            <div className="bg-[var(--bg-surface)] border border-[var(--border-default)] rounded-xl shadow-2xl w-full max-w-md overflow-hidden animate-in zoom-in-95 duration-200">
+                <div className="flex items-center justify-between p-4 border-b border-[var(--border-default)]">
                     <h2 className="text-lg font-semibold text-[var(--text-primary)]">
                         {productToEdit ? "Edit Product" : "Add New Product"}
                     </h2>
-                    <Button variant="ghost" size="icon" onClick={onClose} className="h-8 w-8 text-[var(--text-muted)] hover:text-[var(--text-primary)]">
+                    <Button variant="ghost" size="icon" onClick={onClose} className="h-8 w-8 text-[var(--text-secondary)] hover:text-[var(--text-primary)]">
                         <X className="w-4 h-4" />
                     </Button>
                 </div>
@@ -129,10 +129,10 @@ export function AddProductModal({ isOpen, onClose, onSuccess, productToEdit, wor
                         <Label htmlFor="name" className="text-[var(--text-secondary)]">Product Name <span className="text-red-400">*</span></Label>
                         <Input
                             id="name"
-                            placeholder="e.g. Lumina"
+                            placeholder="e.g. Aelo"
                             value={name}
                             onChange={(e) => setName(e.target.value)}
-                            className="bg-[var(--background)] border-[var(--border)]"
+                            className="bg-[var(--bg-base)] border-[var(--border-default)]"
                             autoFocus
                         />
                     </div>
@@ -144,7 +144,7 @@ export function AddProductModal({ isOpen, onClose, onSuccess, productToEdit, wor
                             placeholder="Short description of what it does"
                             value={description}
                             onChange={(e) => setDescription(e.target.value)}
-                            className="bg-[var(--background)] border-[var(--border)]"
+                            className="bg-[var(--bg-base)] border-[var(--border-default)]"
                         />
                     </div>
 
@@ -156,7 +156,7 @@ export function AddProductModal({ isOpen, onClose, onSuccess, productToEdit, wor
                             placeholder="https://example.com"
                             value={website}
                             onChange={(e) => setWebsite(e.target.value)}
-                            className="bg-[var(--background)] border-[var(--border)]"
+                            className="bg-[var(--bg-base)] border-[var(--border-default)]"
                         />
                     </div>
 
@@ -167,7 +167,7 @@ export function AddProductModal({ isOpen, onClose, onSuccess, productToEdit, wor
                             placeholder="e.g. CRM, Sales, B2B"
                             value={keywordsStr}
                             onChange={(e) => setKeywordsStr(e.target.value)}
-                            className="bg-[var(--background)] border-[var(--border)]"
+                            className="bg-[var(--bg-base)] border-[var(--border-default)]"
                         />
                         <p className="text-xs text-[var(--text-ghost)]">These help the AI identify relevant discussions.</p>
                     </div>

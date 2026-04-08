@@ -19,7 +19,7 @@ export function Badge({ className, variant = "default", ...props }: BadgeProps) 
                 variant === "destructive" &&
                 "bg-rose-500/10 text-rose-400 border border-rose-500/15",
                 variant === "outline" &&
-                "border border-[var(--border)] text-[var(--text-muted)]",
+                "border border-[var(--border-default)] text-[var(--text-secondary)]",
                 className
             )}
             {...props}

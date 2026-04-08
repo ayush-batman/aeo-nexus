@@ -29,12 +29,12 @@ export function AdminSidebar() {
     return (
         <aside
             className={cn(
-                "fixed left-0 top-0 z-40 h-screen bg-[var(--background)] border-r border-[var(--border)] transition-all duration-300 flex flex-col",
+                "fixed left-0 top-0 z-40 h-screen bg-[var(--bg-base)] border-r border-[var(--border-default)] transition-all duration-300 flex flex-col",
                 collapsed ? "w-16" : "w-64"
             )}
         >
             {/* Logo */}
-            <div className="flex h-16 items-center justify-between px-4 border-b border-[var(--border)]">
+            <div className="flex h-16 items-center justify-between px-4 border-b border-[var(--border-default)]">
                 {!collapsed && (
                     <Link href="/admin" className="flex items-center gap-2">
                         <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-rose-600 to-orange-600 flex items-center justify-center">
@@ -52,7 +52,7 @@ export function AdminSidebar() {
                 )}
                 <button
                     onClick={() => setCollapsed(!collapsed)}
-                    className="p-1.5 rounded-lg hover:bg-[var(--surface-elevated)] text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors"
+                    className="p-1.5 rounded-lg hover:bg-[var(--bg-raised)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
                 >
                     <ChevronLeft
                         className={cn("w-4 h-4 transition-transform", collapsed && "rotate-180")}
@@ -73,7 +73,7 @@ export function AdminSidebar() {
                                 "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all",
                                 isActive
                                     ? "bg-gradient-to-r from-rose-600/20 to-orange-600/20 text-rose-400 border border-rose-500/20"
-                                    : "text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--surface-elevated)]"
+                                    : "text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-raised)]"
                             )}
                         >
                             <item.icon className="w-5 h-5 flex-shrink-0" />
@@ -83,12 +83,12 @@ export function AdminSidebar() {
                 })}
 
                 {/* Divider */}
-                <div className="my-4 border-t border-[var(--border)]" />
+                <div className="my-4 border-t border-[var(--border-default)]" />
 
                 {/* Back to Dashboard */}
                 <Link
                     href="/dashboard"
-                    className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--surface-elevated)] transition-colors"
+                    className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-raised)] transition-colors"
                 >
                     <ArrowLeft className="w-5 h-5 flex-shrink-0" />
                     {!collapsed && <span>Back to Dashboard</span>}
@@ -96,10 +96,10 @@ export function AdminSidebar() {
             </nav>
 
             {/* User section */}
-            <div className="p-3 border-t border-[var(--border)]">
+            <div className="p-3 border-t border-[var(--border-default)]">
                 <button
                     className={cn(
-                        "flex items-center gap-3 w-full px-3 py-2.5 rounded-lg text-sm font-medium text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--surface-elevated)] transition-colors"
+                        "flex items-center gap-3 w-full px-3 py-2.5 rounded-lg text-sm font-medium text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-raised)] transition-colors"
                     )}
                 >
                     <LogOut className="w-5 h-5 flex-shrink-0" />

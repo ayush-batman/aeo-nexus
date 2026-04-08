@@ -36,7 +36,7 @@ async function getPeopleAlsoAsk(topic: string, brandName?: string, industry?: st
         const genAI = new GoogleGenerativeAI(apiKey);
         const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
 
-        const prompt = `You are an SEO expert specializing in AI Engine Optimization (AEO). 
+        const prompt = `You are an SEO expert specializing in AI Engine Optimization (Aelo). 
 Generate exactly 10 "People Also Ask" style questions that real users would search for related to the topic below.
 ${brandName ? `Brand context: ${brandName}` : ''}
 ${industry ? `Industry: ${industry}` : ''}

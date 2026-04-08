@@ -4,7 +4,7 @@ import * as React from 'react';
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
-const FROM_EMAIL = 'Lumina <welcome@aeonexus.com>'; // Replace with your verified domain when going to production
+const FROM_EMAIL = 'Aelo <welcome@aeonexus.com>'; // Replace with your verified domain when going to production
 
 export async function sendWelcomeEmail(to: string, name?: string) {
     if (!process.env.RESEND_API_KEY) {
@@ -16,7 +16,7 @@ export async function sendWelcomeEmail(to: string, name?: string) {
         const { data, error } = await resend.emails.send({
             from: FROM_EMAIL,
             to: [to],
-            subject: 'Welcome to Lumina 🚀',
+            subject: 'Welcome to Aelo 🚀',
             react: WelcomeEmail({ firstName: name }),
         });
 

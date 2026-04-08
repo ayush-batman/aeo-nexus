@@ -11,6 +11,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn, getScoreColor, getScoreBgColor } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/client";
 import { ScheduledScans } from "@/components/dashboard/llm-tracker/scheduled-scans";
+import { QuestionVariants } from "@/components/dashboard/llm-tracker/question-variants";
 import {
     Search,
     Sparkles,
@@ -24,6 +25,7 @@ import {
     AlertCircle,
     Radio,
     Link2,
+    Layers,
     ChevronDown,
     ChevronUp,
     Users,
@@ -279,7 +281,7 @@ export default function LLMTrackerPage() {
             <div className="p-6">
                 <Tabs defaultValue="manual" className="space-y-6">
                     <div className="flex items-center justify-between">
-                        <TabsList className="bg-[var(--surface-elevated)] border-[var(--border)]">
+                        <TabsList className="bg-[var(--bg-raised)] border-[var(--border-default)]">
                             <TabsTrigger value="manual" className="data-[state=active]:bg-indigo-500 data-[state=active]:text-white">
                                 <Search className="w-4 h-4 mr-2" />
                                 Manual Scan
@@ -287,6 +289,10 @@ export default function LLMTrackerPage() {
                             <TabsTrigger value="schedules" className="data-[state=active]:bg-indigo-500 data-[state=active]:text-white">
                                 <Bot className="w-4 h-4 mr-2" />
                                 Scheduled Scans
+                            </TabsTrigger>
+                            <TabsTrigger value="variants" className="data-[state=active]:bg-indigo-500 data-[state=active]:text-white">
+                                <Layers className="w-4 h-4 mr-2" />
+                                Question Variants
                             </TabsTrigger>
                         </TabsList>
 
@@ -325,7 +331,7 @@ export default function LLMTrackerPage() {
                                         <Card key={platform.id}>
                                             <CardContent className="p-4">
                                                 <div className="flex items-center justify-between mb-2">
-                                                    <span className="text-sm text-[var(--text-muted)]">{platform.name}</span>
+                                                    <span className="text-sm text-[var(--text-secondary)]">{platform.name}</span>
                                                     <div className={cn(
                                                         "flex items-center gap-1 text-xs",
                                                         change > 0 && "text-green-400",
@@ -344,7 +350,7 @@ export default function LLMTrackerPage() {
                                                     </span>
                                                     <span className="text-[var(--text-ghost)] text-sm mb-1">/100</span>
                                                 </div>
-                                                <div className="mt-2 h-1.5 bg-[var(--surface-elevated)] rounded-full overflow-hidden">
+                                                <div className="mt-2 h-1.5 bg-[var(--bg-raised)] rounded-full overflow-hidden">
                                                     <div
                                                         className={cn("h-full rounded-full transition-all",
                                                             score >= 70 ? "bg-green-500" :
@@ -409,7 +415,7 @@ export default function LLMTrackerPage() {
                                 )}
 
                                 <div className="flex items-center gap-2">
-                                    <span className="text-sm text-[var(--text-muted)]">Platforms:</span>
+                                    <span className="text-sm text-[var(--text-secondary)]">Platforms:</span>
                                     <div className="flex gap-2">
                                         {platforms.map((platform) => (
                                             <button
@@ -418,8 +424,8 @@ export default function LLMTrackerPage() {
                                                 className={cn(
                                                     "flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm transition-all",
                                                     selectedPlatforms.includes(platform.id)
-                                                        ? "bg-[var(--surface-elevated)] text-[var(--text-primary)] border border-[var(--border-hover)]"
-                                                        : "bg-[var(--surface-elevated)] text-[var(--text-ghost)] border border-transparent hover:border-[var(--border)]"
+                                                        ? "bg-[var(--bg-raised)] text-[var(--text-primary)] border border-[var(--border-hover)]"
+                                                        : "bg-[var(--bg-raised)] text-[var(--text-ghost)] border border-transparent hover:border-[var(--border-default)]"
                                                 )}
                                             >
                                                 <div className={cn("w-2 h-2 rounded-full", platform.color)} />
@@ -431,7 +437,7 @@ export default function LLMTrackerPage() {
 
                                 {/* Region / Language */}
                                 <div className="flex items-center gap-2">
-                                    <span className="text-sm text-[var(--text-muted)]">Region:</span>
+                                    <span className="text-sm text-[var(--text-secondary)]">Region:</span>
                                     <div className="flex gap-1.5 flex-wrap">
                                         {REGIONS.map((region) => (
                                             <button
@@ -440,8 +446,8 @@ export default function LLMTrackerPage() {
                                                 className={cn(
                                                     "px-2.5 py-1 rounded-lg text-xs transition-all",
                                                     scanRegion === region.id
-                                                        ? "bg-[var(--surface-elevated)] text-[var(--text-primary)] border border-[var(--border-hover)]"
-                                                        : "bg-[var(--surface-elevated)] text-[var(--text-ghost)] border border-transparent hover:border-[var(--border)]"
+                                                        ? "bg-[var(--bg-raised)] text-[var(--text-primary)] border border-[var(--border-hover)]"
+                                                        : "bg-[var(--bg-raised)] text-[var(--text-ghost)] border border-transparent hover:border-[var(--border-default)]"
                                                 )}
                                             >
                                                 {region.label}
@@ -452,10 +458,10 @@ export default function LLMTrackerPage() {
 
                                 {/* Competitors */}
                                 <div className="flex items-center gap-2 flex-wrap">
-                                    <span className="text-sm text-[var(--text-muted)]">Competitors:</span>
+                                    <span className="text-sm text-[var(--text-secondary)]">Competitors:</span>
                                     {competitors.length > 0 ? (
                                         competitors.map(c => (
-                                            <div key={c} className="flex items-center gap-1 px-2 py-1 rounded bg-[var(--surface-elevated)] border border-[var(--border)] text-xs text-[var(--text-secondary)]">
+                                            <div key={c} className="flex items-center gap-1 px-2 py-1 rounded bg-[var(--bg-raised)] border border-[var(--border-default)] text-xs text-[var(--text-secondary)]">
                                                 {c}
                                                 <button onClick={() => setCompetitors(prev => prev.filter(x => x !== c))} className="text-[var(--text-ghost)] hover:text-red-400">
                                                     <X className="w-3 h-3" />
@@ -494,7 +500,7 @@ export default function LLMTrackerPage() {
                                 {loading ? (
                                     <div className="space-y-3">
                                         {Array.from({ length: 3 }).map((_, i) => (
-                                            <div key={i} className="p-4 rounded-lg bg-[var(--surface-elevated)]">
+                                            <div key={i} className="p-4 rounded-lg bg-[var(--bg-raised)]">
                                                 <Skeleton className="h-4 w-3/4 mb-3" />
                                                 <Skeleton className="h-3 w-1/2" />
                                             </div>
@@ -505,7 +511,7 @@ export default function LLMTrackerPage() {
                                         {scanGroups.map((scan, index) => (
                                             <div
                                                 key={index}
-                                                className="p-4 rounded-lg bg-[var(--surface-elevated)] hover:bg-[var(--surface-elevated)] transition-colors cursor-pointer"
+                                                className="p-4 rounded-lg bg-[var(--bg-raised)] hover:bg-[var(--bg-raised)] transition-colors cursor-pointer"
                                             >
                                                 <div className="flex items-start justify-between gap-4">
                                                     <div className="flex-1 min-w-0">
@@ -590,11 +596,11 @@ export default function LLMTrackerPage() {
 
                                                 {/* Expanded details */}
                                                 {expandedScan === index && (
-                                                    <div className="mt-3 pt-3 border-t border-[var(--border)]/50 space-y-3">
+                                                    <div className="mt-3 pt-3 border-t border-[var(--border-default)]/50 space-y-3">
                                                         {/* Citations */}
                                                         {scan.citations.length > 0 && (
                                                             <div>
-                                                                <p className="text-xs font-medium text-[var(--text-muted)] mb-2 flex items-center gap-1">
+                                                                <p className="text-xs font-medium text-[var(--text-secondary)] mb-2 flex items-center gap-1">
                                                                     <Link2 className="w-3 h-3" /> Cited Sources
                                                                 </p>
                                                                 <div className="space-y-1">
@@ -621,7 +627,7 @@ export default function LLMTrackerPage() {
                                                         {/* Competitor positions */}
                                                         {scan.competitors.length > 0 && (
                                                             <div>
-                                                                <p className="text-xs font-medium text-[var(--text-muted)] mb-2 flex items-center gap-1">
+                                                                <p className="text-xs font-medium text-[var(--text-secondary)] mb-2 flex items-center gap-1">
                                                                     <Users className="w-3 h-3" /> Competitor Mentions
                                                                 </p>
                                                                 <div className="flex flex-wrap gap-2">
@@ -692,13 +698,13 @@ export default function LLMTrackerPage() {
                                                                 {PRIORITY_CONFIG[rec.priority].label}
                                                             </span>
                                                             {rec.metric && (
-                                                                <Badge variant="outline" className="text-[10px] px-1.5 py-0 border-[var(--border)]">
+                                                                <Badge variant="outline" className="text-[10px] px-1.5 py-0 border-[var(--border-default)]">
                                                                     {rec.metric}
                                                                 </Badge>
                                                             )}
                                                         </div>
                                                         <h4 className="font-semibold text-[var(--text-primary)] mb-1">{rec.title}</h4>
-                                                        <p className="text-sm text-[var(--text-muted)] mb-2">{rec.description}</p>
+                                                        <p className="text-sm text-[var(--text-secondary)] mb-2">{rec.description}</p>
                                                         <div className="flex items-start gap-2 text-sm">
                                                             <span className="text-indigo-400 font-medium flex-shrink-0">Action:</span>
                                                             <span className="text-[var(--text-secondary)]">{rec.action}</span>
@@ -709,7 +715,7 @@ export default function LLMTrackerPage() {
                                                             <Button
                                                                 size="sm"
                                                                 variant="outline"
-                                                                className="flex-shrink-0 border-[var(--border)] text-[var(--text-secondary)] hover:bg-[var(--surface-elevated)]"
+                                                                className="flex-shrink-0 border-[var(--border-default)] text-[var(--text-secondary)] hover:bg-[var(--bg-raised)]"
                                                             >
                                                                 {rec.linkLabel || 'Go'}
                                                                 <ArrowRight className="w-3 h-3 ml-1" />
@@ -773,6 +779,10 @@ export default function LLMTrackerPage() {
 
                     <TabsContent value="schedules" className="mt-0">
                         <ScheduledScans platformsMap={platforms} />
+                    </TabsContent>
+
+                    <TabsContent value="variants" className="mt-0">
+                        <QuestionVariants />
                     </TabsContent>
                 </Tabs>
             </div>

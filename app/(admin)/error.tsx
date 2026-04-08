@@ -18,7 +18,7 @@ export default function AdminError({
                 <h2 className="text-xl font-bold text-[var(--text-primary)] mb-3">
                     Admin Error
                 </h2>
-                <p className="text-sm text-[var(--text-muted)] mb-6">
+                <p className="text-sm text-[var(--text-secondary)] mb-6">
                     {error.message || "Failed to load admin panel."}
                 </p>
                 <div className="flex gap-3 justify-center">

@@ -59,7 +59,7 @@ export function Header({ title, description }: HeaderProps) {
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ markAllRead: true }),
             });
-            setNotifications(prev => prev.map(n => ({ ...n, read: true })));
+            setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
             setUnreadCount(0);
         } catch {
             // fail silently
@@ -75,27 +75,38 @@ export function Header({ title, description }: HeaderProps) {
         return `${Math.floor(hrs / 24)}d ago`;
     }
 
+    const notifTypeIcon: Record<string, string> = {
+        visibility_drop: "📉",
+        competitor_overtake: "⚡",
+        hot_thread: "🔥",
+        new_citation: "✨",
+        citation_lost: "🔗",
+        negative_sentiment: "⚠️",
+    };
+
     return (
-        <header className="h-14 glass sticky top-0 z-30" style={{ borderBottom: '1px solid var(--border)' }}>
+        <header className="h-14 sticky top-0 z-30 bg-[rgba(0,0,0,0.8)] border-b border-[var(--border-subtle)] backdrop-blur-xl">
             <div className="flex items-center justify-between h-full px-6">
                 {/* Title */}
                 <div>
-                    <h1 className="text-lg font-semibold font-display text-[var(--text-primary)] tracking-tight">
+                    <h1 className="text-lg font-semibold tracking-tight text-[var(--text-primary)] leading-tight">
                         {title}
                     </h1>
                     {description && (
-                        <p className="text-xs text-[var(--text-muted)] -mt-0.5">{description}</p>
+                        <p className="text-xs text-[var(--text-secondary)] mt-0.5">
+                            {description}
+                        </p>
                     )}
                 </div>
 
-                {/* Right side */}
-                <div className="flex items-center gap-2">
+                {/* Right side actions */}
+                <div className="flex items-center gap-3">
                     {/* Search */}
                     <div className="relative hidden md:block">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-[var(--text-ghost)]" />
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-[var(--text-secondary)] pointer-events-none" />
                         <input
                             placeholder="Search..."
-                            className="w-56 h-8 pl-9 pr-3 text-xs rounded-lg bg-[var(--surface)] border border-[var(--border)] text-[var(--text-secondary)] placeholder-[var(--text-ghost)] focus:outline-none focus:border-indigo-500/40 focus:ring-1 focus:ring-indigo-500/20 transition-all"
+                            className="input-base w-56 h-8 pl-9 pr-3 text-sm transition-all"
                         />
                     </div>
 
@@ -103,43 +114,80 @@ export function Header({ title, description }: HeaderProps) {
                     <div className="relative" ref={dropdownRef}>
                         <button
                             onClick={() => setShowDropdown(!showDropdown)}
-                            className="relative p-2 rounded-lg text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--surface)] transition-all"
+                            className="relative p-2 rounded-md transition-all text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] hover:text-[var(--text-primary)]"
                         >
-                            <Bell className="w-4 h-4" />
+                            <Bell className="w-[18px] h-[18px]" strokeWidth={1.5} />
                             {unreadCount > 0 && (
-                                <span className="absolute top-1 right-1 min-w-[16px] h-4 bg-indigo-500 rounded-full text-[10px] font-bold text-white flex items-center justify-center px-1 shadow-lg shadow-indigo-500/30">
-                                    {unreadCount > 9 ? '9+' : unreadCount}
+                                <span className="absolute top-1 right-1 min-w-[14px] h-[14px] rounded-full text-[9px] font-bold text-white flex items-center justify-center bg-[var(--accent-base)] shadow-[0_0_8px_var(--accent-glow)] px-1">
+                                    {unreadCount > 9 ? "9+" : unreadCount}
                                 </span>
                             )}
                         </button>
 
                         {showDropdown && (
-                            <div className="absolute right-0 top-11 w-80 glass-subtle rounded-xl shadow-2xl shadow-black/50 overflow-hidden z-50 animate-fade-in">
-                                <div className="flex items-center justify-between px-4 py-2.5" style={{ borderBottom: '1px solid var(--border)' }}>
-                                    <span className="text-xs font-semibold text-[var(--text-primary)]">Notifications</span>
-                                    {unreadCount > 0 && (
-                                        <button onClick={markAllRead} className="text-[10px] font-medium text-indigo-400 hover:text-indigo-300 transition-colors">
-                                            Mark all read
+                            <div className="tooltip absolute right-0 top-11 w-[340px] z-50 animate-fade-in origin-top-right p-0">
+                                {/* Header */}
+                                <div className="flex items-center justify-between px-4 py-3 border-b border-[var(--border-subtle)] bg-[var(--bg-surface)] rounded-t-md">
+                                    <div className="flex items-center gap-2">
+                                        <span className="text-xs font-semibold text-[var(--text-primary)]">
+                                            NOTIFICATIONS
+                                        </span>
+                                        {unreadCount > 0 && (
+                                            <span className="badge badge-violet">
+                                                {unreadCount} new
+                                            </span>
+                                        )}
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                        {unreadCount > 0 && (
+                                            <button
+                                                onClick={markAllRead}
+                                                className="text-[10px] font-medium text-[var(--accent-base)] hover:text-white transition-colors"
+                                            >
+                                                Mark all read
+                                            </button>
+                                        )}
+                                        <button
+                                            onClick={() => setShowDropdown(false)}
+                                            className="p-1 rounded text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
+                                        >
+                                            <X className="w-3.5 h-3.5" />
                                         </button>
-                                    )}
+                                    </div>
                                 </div>
 
-                                <div className="max-h-72 overflow-y-auto">
+                                <div className="max-h-80 overflow-y-auto bg-[var(--bg-raised)] rounded-b-md">
                                     {notifications.length === 0 ? (
-                                        <div className="px-4 py-8 text-center">
-                                            <Bell className="w-6 h-6 mx-auto mb-2 text-[var(--text-ghost)]" />
-                                            <p className="text-xs text-[var(--text-muted)]">No notifications yet</p>
+                                        <div className="px-4 py-10 text-center">
+                                            <Bell className="w-6 h-6 mx-auto mb-3 text-[var(--text-tertiary)]" />
+                                            <p className="text-xs text-[var(--text-secondary)]">
+                                                No intelligence updates yet
+                                            </p>
                                         </div>
                                     ) : (
                                         notifications.slice(0, 10).map((n) => (
                                             <div
                                                 key={n.id}
-                                                className={`px-4 py-2.5 transition-colors ${!n.read ? 'bg-indigo-500/5' : 'hover:bg-[var(--surface)]'}`}
-                                                style={{ borderBottom: '1px solid var(--border)' }}
+                                                className={`px-4 py-3 transition-colors cursor-pointer border-b border-[var(--border-default)] last:border-0 hover:bg-[rgba(255,255,255,0.03)] ${
+                                                    !n.read ? "bg-[rgba(124,92,252,0.05)] border-l-2 border-l-[var(--accent-base)]" : ""
+                                                }`}
                                             >
-                                                <p className="text-xs font-medium text-[var(--text-primary)]">{n.title}</p>
-                                                <p className="text-[11px] text-[var(--text-muted)] mt-0.5 leading-relaxed">{n.message}</p>
-                                                <p className="text-[10px] text-[var(--text-ghost)] mt-1 font-mono">{timeAgo(n.created_at)}</p>
+                                                <div className="flex items-start gap-3">
+                                                    <span className="text-sm leading-none mt-1">
+                                                        {notifTypeIcon[n.type] || "🔔"}
+                                                    </span>
+                                                    <div className="flex-1 min-w-0">
+                                                        <p className="text-[13px] font-medium truncate text-[var(--text-primary)]">
+                                                            {n.title}
+                                                        </p>
+                                                        <p className="text-[12px] mt-1 leading-relaxed text-[var(--text-secondary)]">
+                                                            {n.message}
+                                                        </p>
+                                                        <p className="text-[10px] mt-1.5 font-mono uppercase tracking-wider text-[var(--text-tertiary)]">
+                                                            {timeAgo(n.created_at)}
+                                                        </p>
+                                                    </div>
+                                                </div>
                                             </div>
                                         ))
                                     )}
@@ -149,11 +197,11 @@ export function Header({ title, description }: HeaderProps) {
                     </div>
 
                     {/* User avatar */}
-                    <button className="flex items-center gap-2 p-1.5 rounded-lg hover:bg-[var(--surface)] transition-all">
-                        <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center text-white text-xs font-semibold shadow-lg shadow-indigo-500/20">
-                            U
+                    <button className="flex items-center gap-1.5 p-1 rounded-md transition-all hover:bg-[var(--bg-hover)] ml-1">
+                        <div className="w-7 h-7 rounded-md bg-[var(--accent-base)] flex items-center justify-center text-white text-xs font-semibold">
+                           U
                         </div>
-                        <ChevronDown className="w-3 h-3 text-[var(--text-ghost)]" />
+                        <ChevronDown className="w-3.5 h-3.5 text-[var(--text-secondary)]" />
                     </button>
                 </div>
             </div>

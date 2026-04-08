@@ -408,8 +408,16 @@ export async function getAEOHealthScore(
         score += Math.min(100, engagementRate) * 0.3;
     }
 
-    // Content score component (20% weight) - placeholder for now
-    score += 0 * 0.2; // Default 0% until content analysis is implemented
+    // Content score component (20% weight)
+    const { data: contentAnalyses } = await supabase
+        .from('content_analyses')
+        .select('aeo_score')
+        .eq('workspace_id', workspaceId);
+
+    if (contentAnalyses && contentAnalyses.length > 0) {
+        const avgContentScore = contentAnalyses.reduce((sum, a) => sum + (a.aeo_score || 0), 0) / contentAnalyses.length;
+        score += avgContentScore * 0.2;
+    }
 
     return {
         score: Math.round(score),
@@ -421,6 +429,8 @@ export async function getAEOHealthScore(
 export async function getDashboardStats(
     workspaceId: string
 ): Promise<DashboardStats> {
+    const supabase = await createAdminClient();
+
     const [healthScore, visibilityMetrics, threads] = await Promise.all([
         getAEOHealthScore(workspaceId),
         getVisibilityMetrics(workspaceId),
@@ -439,6 +449,45 @@ export async function getDashboardStats(
     // Count high priority threads (score >= 70)
     const highPriorityThreads = threads.filter(t => t.opportunity_score >= 70).length;
 
+    // ── Share of Voice: brand mentions vs competitor mentions ──
+    let shareOfVoice = 0;
+    let shareOfVoiceChange = 0;
+
+    const sevenDaysAgo = new Date();
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+
+    const { data: recentScans } = await supabase
+        .from('llm_scans')
+        .select('brand_mentioned, competitors_mentioned')
+        .eq('workspace_id', workspaceId)
+        .gte('created_at', sevenDaysAgo.toISOString());
+
+    if (recentScans && recentScans.length > 0) {
+        const myMentions = recentScans.filter(s => s.brand_mentioned).length;
+        const totalCompMentions = recentScans.reduce((sum, s) => {
+            const comps = s.competitors_mentioned || [];
+            return sum + comps.length;
+        }, 0);
+        const totalMentions = myMentions + totalCompMentions;
+        shareOfVoice = totalMentions > 0 ? Math.round((myMentions / totalMentions) * 100) : 0;
+    }
+
+    // ── Content Score: average from content_analyses ──
+    let contentScore = 0;
+    let pagesNeedingOptimization = 0;
+
+    const { data: contentAnalyses } = await supabase
+        .from('content_analyses')
+        .select('aeo_score')
+        .eq('workspace_id', workspaceId);
+
+    if (contentAnalyses && contentAnalyses.length > 0) {
+        contentScore = Math.round(
+            contentAnalyses.reduce((sum, a) => sum + (a.aeo_score || 0), 0) / contentAnalyses.length
+        );
+        pagesNeedingOptimization = contentAnalyses.filter(a => (a.aeo_score || 0) < 60).length;
+    }
+
     return {
         aeoHealthScore: healthScore.score,
         aeoScoreChange: healthScore.change,
@@ -446,10 +495,10 @@ export async function getDashboardStats(
         llmVisibilityChange: avgVisibilityChange,
         forumThreadCount: threads.length,
         highPriorityThreads,
-        shareOfVoice: 0, // Will be implemented when competitor tracking is added
-        shareOfVoiceChange: 0,
-        contentScore: 0, // Placeholder until content analysis is implemented
-        pagesNeedingOptimization: 0,
+        shareOfVoice,
+        shareOfVoiceChange,
+        contentScore,
+        pagesNeedingOptimization,
     };
 }
 

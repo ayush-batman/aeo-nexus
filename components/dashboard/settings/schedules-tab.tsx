@@ -124,7 +124,7 @@ export function SchedulesTab({ workspaceId }: SchedulesTabProps) {
                 </CardHeader>
                 <CardContent>
                     {isFormOpen && (
-                        <div className="mb-6 p-4 rounded-lg border border-[var(--border)] bg-[var(--surface-elevated)] space-y-4">
+                        <div className="mb-6 p-4 rounded-lg border border-[var(--border-default)] bg-[var(--bg-raised)] space-y-4">
                             <div className="flex justify-between items-center mb-2">
                                 <h3 className="font-medium text-[var(--text-primary)]">Create New Schedule</h3>
                                 <Button variant="ghost" size="icon" onClick={() => setIsFormOpen(false)} className="h-6 w-6">
@@ -134,7 +134,7 @@ export function SchedulesTab({ workspaceId }: SchedulesTabProps) {
 
                             <div className="space-y-3">
                                 <div>
-                                    <label className="block text-sm font-medium text-[var(--text-muted)] mb-1">Search Prompt</label>
+                                    <label className="block text-sm font-medium text-[var(--text-secondary)] mb-1">Search Prompt</label>
                                     <Input
                                         placeholder="e.g. Best CRM software for small business"
                                         value={prompt}
@@ -144,15 +144,15 @@ export function SchedulesTab({ workspaceId }: SchedulesTabProps) {
 
                                 <div className="grid grid-cols-2 gap-4">
                                     <div>
-                                        <label className="block text-sm font-medium text-[var(--text-muted)] mb-1">Frequency</label>
-                                        <div className="flex bg-[var(--surface)] rounded-md p-1 border border-[var(--border)]">
+                                        <label className="block text-sm font-medium text-[var(--text-secondary)] mb-1">Frequency</label>
+                                        <div className="flex bg-[var(--bg-surface)] rounded-md p-1 border border-[var(--border-default)]">
                                             {(['daily', 'weekly', 'monthly'] as const).map(f => (
                                                 <button
                                                     key={f}
                                                     onClick={() => setFrequency(f)}
                                                     className={cn(
                                                         "flex-1 text-xs py-1.5 rounded capitalize transition-colors",
-                                                        frequency === f ? "bg-indigo-500 text-white shadow-sm" : "text-[var(--text-muted)] hover:text-[var(--text-primary)]"
+                                                        frequency === f ? "bg-indigo-500 text-white shadow-sm" : "text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
                                                     )}
                                                 >
                                                     {f}
@@ -162,7 +162,7 @@ export function SchedulesTab({ workspaceId }: SchedulesTabProps) {
                                     </div>
 
                                     <div>
-                                        <label className="block text-sm font-medium text-[var(--text-muted)] mb-1">Platforms</label>
+                                        <label className="block text-sm font-medium text-[var(--text-secondary)] mb-1">Platforms</label>
                                         <div className="flex flex-wrap gap-2">
                                             {API_PLATFORMS.map(p => (
                                                 <button
@@ -172,7 +172,7 @@ export function SchedulesTab({ workspaceId }: SchedulesTabProps) {
                                                         "px-2 py-1 text-xs rounded border transition-colors capitalize",
                                                         platforms.includes(p)
                                                             ? "bg-violet-900/30 border-indigo-500/50 text-indigo-300"
-                                                            : "bg-[var(--surface)] border-[var(--border)] text-[var(--text-ghost)] hover:border-[var(--border-hover)]"
+                                                            : "bg-[var(--bg-surface)] border-[var(--border-default)] text-[var(--text-ghost)] hover:border-[var(--border-hover)]"
                                                     )}
                                                 >
                                                     {p}
@@ -195,7 +195,7 @@ export function SchedulesTab({ workspaceId }: SchedulesTabProps) {
 
                     <div className="space-y-4">
                         {schedules.length === 0 ? (
-                            <div className="text-center py-8 text-[var(--text-ghost)] bg-[var(--surface-elevated)]/30 rounded-lg border border-[var(--border)] border-dashed">
+                            <div className="text-center py-8 text-[var(--text-ghost)] bg-[var(--bg-raised)]/30 rounded-lg border border-[var(--border-default)] border-dashed">
                                 <Clock className="w-8 h-8 mx-auto mb-2 opacity-50" />
                                 <p>No scheduled scans found.</p>
                                 <Button variant="ghost" onClick={() => setIsFormOpen(true)} className="text-indigo-400 hover:text-indigo-300 hover:bg-transparent p-0 h-auto font-normal underline-offset-4 hover:underline">
@@ -204,11 +204,11 @@ export function SchedulesTab({ workspaceId }: SchedulesTabProps) {
                             </div>
                         ) : (
                             schedules.map(schedule => (
-                                <div key={schedule.id} className="flex items-center justify-between p-4 rounded-lg bg-[var(--surface-elevated)] border border-[var(--border)] hover:border-[var(--border-hover)] transition-colors">
+                                <div key={schedule.id} className="flex items-center justify-between p-4 rounded-lg bg-[var(--bg-raised)] border border-[var(--border-default)] hover:border-[var(--border-hover)] transition-colors">
                                     <div className="flex-1 min-w-0 mr-4">
                                         <div className="flex items-center gap-2 mb-1">
                                             <h4 className="font-medium text-[var(--text-primary)] truncate" title={schedule.prompt}>{schedule.prompt}</h4>
-                                            <Badge variant="outline" className="text-xs capitalize border-[var(--border-hover)] text-[var(--text-muted)]">
+                                            <Badge variant="outline" className="text-xs capitalize border-[var(--border-hover)] text-[var(--text-secondary)]">
                                                 {schedule.frequency}
                                             </Badge>
                                             <span className={cn(

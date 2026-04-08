@@ -18,7 +18,7 @@ export default function DashboardError({
                 <h2 className="text-xl font-bold text-[var(--text-primary)] mb-3">
                     Something went wrong
                 </h2>
-                <p className="text-sm text-[var(--text-muted)] mb-6">
+                <p className="text-sm text-[var(--text-secondary)] mb-6">
                     {error.message || "An unexpected error occurred while loading this page."}
                 </p>
                 <div className="flex gap-3 justify-center">

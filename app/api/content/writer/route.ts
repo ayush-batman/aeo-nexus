@@ -22,14 +22,14 @@ export async function POST(req: Request) {
             );
         }
 
-        const prompt = `You are an expert SEO and AEO (Answer Engine Optimization) content writer. 
+        const prompt = `You are an expert SEO and Aelo (Answer Engine Optimization) content writer. 
 Your task is to write high-quality, comprehensive content optimized for both traditional search engines (Google) and AI Overviews/LLMs (ChatGPT, Perplexity, Claude).
 
 Content Type requested: ${contentType}
 Target Keyword: ${targetKeyword || 'N/A'}
 Topic/Brief: ${topic}
 
-Guidelines for AEO Optimization:
+Guidelines for Aelo Optimization:
 1. Write in a clear, authoritative, and objective tone. Avoid fluff and marketing jargon.
 2. Structure the content logically with clear headings (H2, H3).
 3. Include bulleted or numbered lists wherever appropriate to make the content easily parsable by AI.

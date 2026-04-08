@@ -309,7 +309,7 @@ export default function SettingsPage() {
                 key: data.keyId,
                 amount: data.amount,
                 currency: data.currency,
-                name: 'Lumina',
+                name: 'Aelo',
                 description: data.plan,
                 order_id: data.orderId,
                 handler: async (response: RazorpayResponse) => {
@@ -411,8 +411,8 @@ export default function SettingsPage() {
                                 className={cn(
                                     "w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-all text-left",
                                     activeTab === tab.id
-                                        ? "bg-[var(--surface-elevated)] text-[var(--text-primary)]"
-                                        : "text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--surface-elevated)]"
+                                        ? "bg-[var(--bg-raised)] text-[var(--text-primary)]"
+                                        : "text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-raised)]"
                                 )}
                             >
                                 <tab.icon className="w-4 h-4" />
@@ -514,7 +514,7 @@ export default function SettingsPage() {
                                                 </CardTitle>
                                             </CardHeader>
                                             <CardContent className="space-y-4">
-                                                <p className="text-sm text-[var(--text-muted)]">
+                                                <p className="text-sm text-[var(--text-secondary)]">
                                                     Add competitor brands to track alongside yours in LLM scans.
                                                 </p>
                                                 <div className="flex gap-2">
@@ -534,7 +534,7 @@ export default function SettingsPage() {
                                                         {competitors.map((comp) => (
                                                             <div
                                                                 key={comp}
-                                                                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[var(--surface-elevated)] border border-[var(--border)] text-sm text-[var(--text-primary)]"
+                                                                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[var(--bg-raised)] border border-[var(--border-default)] text-sm text-[var(--text-primary)]"
                                                             >
                                                                 {comp}
                                                                 <button
@@ -576,7 +576,7 @@ export default function SettingsPage() {
                                                 {teamMembers.map((member) => (
                                                     <div
                                                         key={member.id}
-                                                        className="flex items-center justify-between p-3 rounded-lg bg-[var(--surface-elevated)]"
+                                                        className="flex items-center justify-between p-3 rounded-lg bg-[var(--bg-raised)]"
                                                     >
                                                         <div className="flex items-center gap-3">
                                                             <div className="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center text-white font-medium">
@@ -617,25 +617,25 @@ export default function SettingsPage() {
                                                         <div>
                                                             <Badge variant="default" className="mb-2 capitalize">{currentPlan} Plan</Badge>
                                                             <p className="text-2xl font-bold text-[var(--text-primary)] flex items-center gap-1">
-                                                                {PLAN_PRICES[currentPlan].display}<span className="text-sm font-normal text-[var(--text-muted)]">/month</span>
+                                                                {PLAN_PRICES[currentPlan].display}<span className="text-sm font-normal text-[var(--text-secondary)]">/month</span>
                                                             </p>
                                                         </div>
                                                     </div>
                                                     <div className="grid grid-cols-3 gap-4 text-sm">
                                                         <div>
-                                                            <p className="text-[var(--text-muted)]">LLM Scans</p>
+                                                            <p className="text-[var(--text-secondary)]">LLM Scans</p>
                                                             <p className="font-medium text-[var(--text-primary)]">
                                                                 {limits.scans === -1 ? 'Unlimited' : `${limits.scans}/mo`}
                                                             </p>
                                                         </div>
                                                         <div>
-                                                            <p className="text-[var(--text-muted)]">Forum Threads</p>
+                                                            <p className="text-[var(--text-secondary)]">Forum Threads</p>
                                                             <p className="font-medium text-[var(--text-primary)]">
                                                                 {limits.threads === -1 ? 'Unlimited' : limits.threads}
                                                             </p>
                                                         </div>
                                                         <div>
-                                                            <p className="text-[var(--text-muted)]">Team Members</p>
+                                                            <p className="text-[var(--text-secondary)]">Team Members</p>
                                                             <p className="font-medium text-[var(--text-primary)]">
                                                                 {limits.members === -1 ? 'Unlimited' : limits.members}
                                                             </p>
@@ -665,14 +665,14 @@ export default function SettingsPage() {
                                                                     "p-4 rounded-lg border transition-all",
                                                                     plan === 'pro'
                                                                         ? "border-indigo-500/50 bg-indigo-500/10"
-                                                                        : "border-[var(--border)] bg-[var(--surface-elevated)]"
+                                                                        : "border-[var(--border-default)] bg-[var(--bg-raised)]"
                                                                 )}
                                                             >
                                                                 <h3 className="font-semibold text-[var(--text-primary)] capitalize mb-1">{plan}</h3>
                                                                 <p className="text-2xl font-bold text-[var(--text-primary)] mb-3 flex items-center">
                                                                     <IndianRupee className="w-5 h-5" />
                                                                     {PLAN_PRICES[plan].display.replace('₹', '')}
-                                                                    <span className="text-sm text-[var(--text-muted)] ml-1">/mo</span>
+                                                                    <span className="text-sm text-[var(--text-secondary)] ml-1">/mo</span>
                                                                 </p>
                                                                 <Button
                                                                     onClick={() => handleUpgrade(plan)}
@@ -720,7 +720,7 @@ export default function SettingsPage() {
                                                         { key: "competitor_overtake", label: "Competitor overtake", description: "Alert when a competitor surpasses your brand in AI responses" },
                                                         { key: "zero_visibility", label: "Zero visibility warning", description: "Alert if your brand gets 0 mentions across all scans in a day" },
                                                     ].map((item) => (
-                                                        <div key={item.key} className="flex items-center justify-between p-3 rounded-lg bg-[var(--surface-elevated)]">
+                                                        <div key={item.key} className="flex items-center justify-between p-3 rounded-lg bg-[var(--bg-raised)]">
                                                             <div>
                                                                 <p className="font-medium text-[var(--text-primary)] text-sm">{item.label}</p>
                                                                 <p className="text-xs text-[var(--text-ghost)]">{item.description}</p>
@@ -748,7 +748,7 @@ export default function SettingsPage() {
                                                         { key: "citation_lost", label: "Citation lost", description: "Alert when a previously-cited page stops being cited" },
                                                         { key: "negative_sentiment", label: "Negative sentiment spike", description: "Alert when negative sentiment increases significantly" },
                                                     ].map((item) => (
-                                                        <div key={item.key} className="flex items-center justify-between p-3 rounded-lg bg-[var(--surface-elevated)]">
+                                                        <div key={item.key} className="flex items-center justify-between p-3 rounded-lg bg-[var(--bg-raised)]">
                                                             <div>
                                                                 <p className="font-medium text-[var(--text-primary)] text-sm">{item.label}</p>
                                                                 <p className="text-xs text-[var(--text-ghost)]">{item.description}</p>
@@ -775,7 +775,7 @@ export default function SettingsPage() {
                                                         { key: "hot_thread", label: "Hot forum opportunity", description: "Alert when a high-score thread is discovered in your niche" },
                                                         { key: "brand_forum_mention", label: "Brand mentioned in forums", description: "Alert when someone mentions your brand on Reddit/Quora" },
                                                     ].map((item) => (
-                                                        <div key={item.key} className="flex items-center justify-between p-3 rounded-lg bg-[var(--surface-elevated)]">
+                                                        <div key={item.key} className="flex items-center justify-between p-3 rounded-lg bg-[var(--bg-raised)]">
                                                             <div>
                                                                 <p className="font-medium text-[var(--text-primary)] text-sm">{item.label}</p>
                                                                 <p className="text-xs text-[var(--text-ghost)]">{item.description}</p>
@@ -800,9 +800,9 @@ export default function SettingsPage() {
                                                 <div className="space-y-2">
                                                     {[
                                                         { key: "daily_report", label: "Daily visibility report", description: "Morning summary of LLM visibility metrics" },
-                                                        { key: "weekly_digest", label: "Weekly AEO digest", description: "Comprehensive weekly summary of all AEO activity" },
+                                                        { key: "weekly_digest", label: "Weekly Aelo digest", description: "Comprehensive weekly summary of all Aelo activity" },
                                                     ].map((item) => (
-                                                        <div key={item.key} className="flex items-center justify-between p-3 rounded-lg bg-[var(--surface-elevated)]">
+                                                        <div key={item.key} className="flex items-center justify-between p-3 rounded-lg bg-[var(--bg-raised)]">
                                                             <div>
                                                                 <p className="font-medium text-[var(--text-primary)] text-sm">{item.label}</p>
                                                                 <p className="text-xs text-[var(--text-ghost)]">{item.description}</p>
@@ -842,13 +842,13 @@ export default function SettingsPage() {
                                             <CardTitle className="text-lg">API Keys</CardTitle>
                                         </CardHeader>
                                         <CardContent className="space-y-4">
-                                            <div className="p-4 rounded-lg bg-[var(--surface-elevated)] border border-[var(--border)]">
+                                            <div className="p-4 rounded-lg bg-[var(--bg-raised)] border border-[var(--border-default)]">
                                                 <div className="flex items-center justify-between mb-2">
                                                     <p className="font-medium text-[var(--text-primary)]">Production Key</p>
                                                     <Badge variant="success">Active</Badge>
                                                 </div>
-                                                <code className="text-sm text-[var(--text-muted)] bg-[var(--surface)] px-2 py-1 rounded">
-                                                    aeo_live_••••••••••••••••
+                                                <code className="text-sm text-[var(--text-secondary)] bg-[var(--bg-surface)] px-2 py-1 rounded">
+                                                    aelo_live_••••••••••••••••
                                                 </code>
                                             </div>
                                             <Button variant="outline">

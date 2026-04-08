@@ -18,12 +18,12 @@ export function EmptyState({ icon: Icon, title, description, action, className }
     return (
         <div className={cn("flex flex-col items-center justify-center py-16 px-4", className)}>
             <div className="relative mb-6">
-                <div className="relative rounded-xl bg-[var(--surface)] border border-[var(--border)] p-5">
+                <div className="relative rounded-xl bg-[var(--bg-surface)] border border-[var(--border-default)] p-5">
                     <Icon className="w-8 h-8 text-[var(--text-ghost)]" />
                 </div>
             </div>
             <h3 className="text-sm font-semibold text-[var(--text-secondary)] mb-1 text-center">{title}</h3>
-            <p className="text-xs text-[var(--text-muted)] max-w-sm text-center mb-6">{description}</p>
+            <p className="text-xs text-[var(--text-secondary)] max-w-sm text-center mb-6">{description}</p>
             {action && (
                 <Button
                     variant="outline"

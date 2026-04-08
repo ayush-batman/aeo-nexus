@@ -12,16 +12,16 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
             <button
                 ref={ref}
                 className={cn(
-                    "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-lg font-medium transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500/40 focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--background)] disabled:pointer-events-none disabled:opacity-40",
+                    "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md font-medium transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-base)]/40 focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--bg-base)] disabled:pointer-events-none disabled:opacity-40",
                     // Variants
                     variant === "default" &&
                     "bg-indigo-500 text-white hover:bg-indigo-400 active:scale-[0.98]",
                     variant === "secondary" &&
-                    "bg-[var(--surface-elevated)] text-[var(--text-primary)] hover:bg-[var(--surface-hover)] border border-[var(--border)]",
+                    "bg-[var(--bg-raised)] text-[var(--text-primary)] hover:bg-[var(--bg-hover)] border border-[var(--border-default)]",
                     variant === "outline" &&
-                    "border border-[var(--border)] bg-transparent text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--surface)] hover:border-[var(--border-hover)]",
+                    "border border-[var(--border-default)] bg-transparent text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-surface)] hover:border-[var(--border-active)]",
                     variant === "ghost" &&
-                    "bg-transparent text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--surface)]",
+                    "bg-transparent text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-surface)]",
                     variant === "destructive" &&
                     "bg-rose-600 text-white hover:bg-rose-500",
                     // Sizes

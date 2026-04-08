@@ -19,7 +19,7 @@ export default async function ClientsPage() {
                 <h1 className="text-3xl font-bold text-white mb-2">
                     Client Management
                 </h1>
-                <p className="text-[var(--text-muted)]">
+                <p className="text-[var(--text-secondary)]">
                     View and manage all organizations on the platform
                 </p>
             </div>
@@ -31,10 +31,10 @@ export default async function ClientsPage() {
                     <input
                         type="text"
                         placeholder="Search organizations..."
-                        className="w-full pl-10 pr-4 py-2 bg-[var(--surface)] border border-[var(--border)] rounded-lg text-white placeholder:text-[var(--text-ghost)] focus:outline-none focus:ring-2 focus:ring-violet-500/50"
+                        className="w-full pl-10 pr-4 py-2 bg-[var(--bg-surface)] border border-[var(--border-default)] rounded-lg text-white placeholder:text-[var(--text-ghost)] focus:outline-none focus:ring-2 focus:ring-violet-500/50"
                     />
                 </div>
-                <select className="px-4 py-2 bg-[var(--surface)] border border-[var(--border)] rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-violet-500/50">
+                <select className="px-4 py-2 bg-[var(--bg-surface)] border border-[var(--border-default)] rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-violet-500/50">
                     <option value="">All Plans</option>
                     <option value="free">Free</option>
                     <option value="starter">Starter</option>
@@ -45,23 +45,23 @@ export default async function ClientsPage() {
             </div>
 
             {/* Organizations Table */}
-            <div className="bg-[var(--surface)] border border-[var(--border)] rounded-xl overflow-hidden">
+            <div className="bg-[var(--bg-surface)] border border-[var(--border-default)] rounded-xl overflow-hidden">
                 <table className="w-full">
-                    <thead className="bg-[var(--surface-elevated)]">
+                    <thead className="bg-[var(--bg-raised)]">
                         <tr>
-                            <th className="text-left px-6 py-4 text-sm font-medium text-[var(--text-muted)]">
+                            <th className="text-left px-6 py-4 text-sm font-medium text-[var(--text-secondary)]">
                                 Organization
                             </th>
-                            <th className="text-left px-6 py-4 text-sm font-medium text-[var(--text-muted)]">
+                            <th className="text-left px-6 py-4 text-sm font-medium text-[var(--text-secondary)]">
                                 Plan
                             </th>
-                            <th className="text-left px-6 py-4 text-sm font-medium text-[var(--text-muted)]">
+                            <th className="text-left px-6 py-4 text-sm font-medium text-[var(--text-secondary)]">
                                 Created
                             </th>
-                            <th className="text-left px-6 py-4 text-sm font-medium text-[var(--text-muted)]">
+                            <th className="text-left px-6 py-4 text-sm font-medium text-[var(--text-secondary)]">
                                 Stripe ID
                             </th>
-                            <th className="text-right px-6 py-4 text-sm font-medium text-[var(--text-muted)]">
+                            <th className="text-right px-6 py-4 text-sm font-medium text-[var(--text-secondary)]">
                                 Actions
                             </th>
                         </tr>
@@ -76,7 +76,7 @@ export default async function ClientsPage() {
                             </tr>
                         ) : (
                             organizations.map((org) => (
-                                <tr key={org.id} className="hover:bg-[var(--surface-elevated)]/30 transition-colors">
+                                <tr key={org.id} className="hover:bg-[var(--bg-raised)]/30 transition-colors">
                                     <td className="px-6 py-4">
                                         <div className="flex items-center gap-3">
                                             <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center">
@@ -93,7 +93,7 @@ export default async function ClientsPage() {
                                             {org.plan}
                                         </span>
                                     </td>
-                                    <td className="px-6 py-4 text-[var(--text-muted)] text-sm">
+                                    <td className="px-6 py-4 text-[var(--text-secondary)] text-sm">
                                         {new Date(org.created_at).toLocaleDateString()}
                                     </td>
                                     <td className="px-6 py-4 text-[var(--text-ghost)] text-sm font-mono">
@@ -120,7 +120,7 @@ export default async function ClientsPage() {
 
             {/* Stats Summary */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
-                <div className="bg-[var(--surface)] border border-[var(--border)] rounded-lg p-4 flex items-center gap-3">
+                <div className="bg-[var(--bg-surface)] border border-[var(--border-default)] rounded-lg p-4 flex items-center gap-3">
                     <div className="p-2 rounded-lg bg-indigo-500/20 text-indigo-400">
                         <Building2 className="w-5 h-5" />
                     </div>
@@ -129,7 +129,7 @@ export default async function ClientsPage() {
                         <p className="text-[var(--text-ghost)] text-sm">Total Organizations</p>
                     </div>
                 </div>
-                <div className="bg-[var(--surface)] border border-[var(--border)] rounded-lg p-4 flex items-center gap-3">
+                <div className="bg-[var(--bg-surface)] border border-[var(--border-default)] rounded-lg p-4 flex items-center gap-3">
                     <div className="p-2 rounded-lg bg-emerald-600/20 text-emerald-400">
                         <CreditCard className="w-5 h-5" />
                     </div>
@@ -140,7 +140,7 @@ export default async function ClientsPage() {
                         <p className="text-[var(--text-ghost)] text-sm">Paid Subscriptions</p>
                     </div>
                 </div>
-                <div className="bg-[var(--surface)] border border-[var(--border)] rounded-lg p-4 flex items-center gap-3">
+                <div className="bg-[var(--bg-surface)] border border-[var(--border-default)] rounded-lg p-4 flex items-center gap-3">
                     <div className="p-2 rounded-lg bg-amber-600/20 text-amber-400">
                         <Briefcase className="w-5 h-5" />
                     </div>
@@ -158,7 +158,7 @@ export default async function ClientsPage() {
 
 function getPlanBadgeClass(plan: string): string {
     const classes: Record<string, string> = {
-        free: "bg-[var(--surface-elevated)] text-[var(--text-secondary)]",
+        free: "bg-[var(--bg-raised)] text-[var(--text-secondary)]",
         starter: "bg-emerald-900/50 text-emerald-400 border border-emerald-700",
         pro: "bg-violet-900/50 text-indigo-400 border border-violet-700",
         agency: "bg-rose-900/50 text-rose-400 border border-rose-700",

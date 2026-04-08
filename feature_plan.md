@@ -12,7 +12,7 @@
 ## Proposed Changes
 
 ### 1. Brand Enrichment
-#### [NEW] [brand-enrichment.ts](file:///Users/ayush/Desktop/projects/aeo-saas/lib/services/brand-enrichment.ts)
+#### [NEW] [brand-enrichment.ts](file:///Users/ayush/Desktop/projects/aelo-saas/lib/services/brand-enrichment.ts)
 *   Function `enrichBrandFromUrl(url: string)`
 *   Uses `read_url_content` (simulated via Gemini's browsing or fetch + Gemini analysis) to extract:
     *   `name`: Brand Name
@@ -20,21 +20,21 @@
     *   `description`: Short summary
     *   `audience`: Target audience
 
-#### [NEW] [route.ts](file:///Users/ayush/Desktop/projects/aeo-saas/app/api/brand/enrich/route.ts)
+#### [NEW] [route.ts](file:///Users/ayush/Desktop/projects/aelo-saas/app/api/brand/enrich/route.ts)
 *   API Endpoint `POST /api/brand/enrich` accepting `{ url }`.
 
-#### [MODIFY] [onboarding/page.tsx](file:///Users/ayush/Desktop/projects/aeo-saas/app/(dashboard)/onboarding/page.tsx)
+#### [MODIFY] [onboarding/page.tsx](file:///Users/ayush/Desktop/projects/aelo-saas/app/(dashboard)/onboarding/page.tsx)
 *   Add "Auto-Fill with AI" button next to Website input.
 *   Update state with returned values.
 
 ### 2. Auth QA Fix
-#### [MODIFY] [.env.local](file:///Users/ayush/Desktop/projects/aeo-saas/.env.local)
+#### [MODIFY] [.env.local](file:///Users/ayush/Desktop/projects/aelo-saas/.env.local)
 *   Add `NEXT_PUBLIC_ENABLE_DEV_AUTH_BYPASS="true"`
 
-#### [MODIFY] [middleware.ts](file:///Users/ayush/Desktop/projects/aeo-saas/middleware.ts)
+#### [MODIFY] [middleware.ts](file:///Users/ayush/Desktop/projects/aelo-saas/middleware.ts)
 *   Check for bypass cookie/header on localhost to skip Supabase session validation.
 
-#### [MODIFY] [login/page.tsx](file:///Users/ayush/Desktop/projects/aeo-saas/app/(auth)/login/page.tsx)
+#### [MODIFY] [login/page.tsx](file:///Users/ayush/Desktop/projects/aelo-saas/app/(auth)/login/page.tsx)
 *   Add "Dev Login" button (visible only in dev mode) that sets a mock session cookie.
 
 ## Verification Plan

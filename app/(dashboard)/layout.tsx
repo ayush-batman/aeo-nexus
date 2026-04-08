@@ -11,12 +11,9 @@ export default function DashboardLayout({
 }) {
     return (
         <OnboardingCheck>
-            <div className="min-h-screen" style={{ background: 'var(--background)' }}>
-                {/* Ambient background glow */}
-                <div className="fixed inset-0 pointer-events-none z-0 bg-glow" />
-
+            <div className="min-h-screen bg-[var(--bg-base)]">
                 <Sidebar />
-                <main className="pl-64 transition-all duration-300 relative z-10">
+                <main className="pl-60 transition-all duration-200 relative">
                     <ErrorBoundary>
                         {children}
                     </ErrorBoundary>

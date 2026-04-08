@@ -1,15 +1,9 @@
 import type { Metadata } from "next";
-import { Plus_Jakarta_Sans, Space_Grotesk, JetBrains_Mono } from "next/font/google";
+import { Inter, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 
-const plusJakarta = Plus_Jakarta_Sans({
+const inter = Inter({
   variable: "--font-sans",
-  subsets: ["latin"],
-  display: "swap",
-});
-
-const spaceGrotesk = Space_Grotesk({
-  variable: "--font-display",
   subsets: ["latin"],
   display: "swap",
 });
@@ -21,15 +15,16 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Lumina | AI Engine Optimization Platform",
-  description: "Gain complete visibility into what AI Search Engines echo about your brand. Track sentiment, rank higher in LLMs, and dominate the AI era.",
+  title: "Aelo | Strategic Intelligence for the AI Era",
+  description:
+    "Aelo is the command center for winning the AI answer. Track your brand across ChatGPT, Gemini, Claude, and Perplexity.",
   metadataBase: new URL("https://aeo-saas-chi.vercel.app"),
   openGraph: {
-    title: "Lumina | AI Engine Optimization Platform",
-    description: "Shedding light on the black box of LLMs.",
+    title: "Aelo | Deep Analytics for AI",
+    description: "Track, engage, and optimize your brand's presence across every major AI engine.",
     type: "website",
     url: "https://aeo-saas-chi.vercel.app",
-    siteName: "Lumina",
+    siteName: "Aelo",
   },
 };
 
@@ -41,7 +36,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${plusJakarta.variable} ${spaceGrotesk.variable} ${jetbrainsMono.variable} antialiased`}
+        className={`${inter.variable} ${jetbrainsMono.variable} antialiased dark`}
       >
         {children}
       </body>

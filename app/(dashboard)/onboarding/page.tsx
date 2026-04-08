@@ -218,7 +218,7 @@ export default function OnboardingPage() {
     }
 
     return (
-        <div className="min-h-screen bg-[var(--background)] flex items-center justify-center p-6">
+        <div className="min-h-screen bg-[var(--bg-base)] flex items-center justify-center p-6">
             <div className="w-full max-w-2xl">
                 {/* Progress */}
                 <div className="flex items-center justify-center gap-2 mb-8">
@@ -229,7 +229,7 @@ export default function OnboardingPage() {
                                     ? "bg-green-500 text-white"
                                     : currentStep === step.id
                                         ? "bg-indigo-500 text-white"
-                                        : "bg-[var(--surface-elevated)] text-[var(--text-ghost)]"
+                                        : "bg-[var(--bg-raised)] text-[var(--text-ghost)]"
                                     }`}
                             >
                                 {currentStep > step.id ? (
@@ -240,7 +240,7 @@ export default function OnboardingPage() {
                             </div>
                             {i < steps.length - 1 && (
                                 <div
-                                    className={`w-12 h-0.5 mx-1 ${currentStep > step.id ? "bg-green-500" : "bg-[var(--surface-elevated)]"
+                                    className={`w-12 h-0.5 mx-1 ${currentStep > step.id ? "bg-green-500" : "bg-[var(--bg-raised)]"
                                         }`}
                                 />
                             )}
@@ -256,28 +256,28 @@ export default function OnboardingPage() {
 
                 {/* Step 1: Welcome */}
                 {currentStep === 1 && (
-                    <Card className="border-[var(--border)] bg-[var(--surface)]">
+                    <Card className="border-[var(--border-default)] bg-[var(--bg-surface)]">
                         <CardContent className="p-8 text-center">
                             <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center mx-auto mb-6">
                                 <Zap className="w-8 h-8 text-white" />
                             </div>
                             <h1 className="text-3xl font-bold text-[var(--text-primary)] mb-4">
-                                Welcome to Lumina!
+                                Welcome to Aelo!
                             </h1>
-                            <p className="text-lg text-[var(--text-muted)] mb-8 max-w-md mx-auto">
+                            <p className="text-lg text-[var(--text-secondary)] mb-8 max-w-md mx-auto">
                                 Let&apos;s set up your brand and run your first AI visibility scan in under 2 minutes.
                             </p>
 
                             <div className="grid grid-cols-3 gap-4 mb-8">
-                                <div className="p-4 rounded-lg bg-[var(--surface-elevated)]">
+                                <div className="p-4 rounded-lg bg-[var(--bg-raised)]">
                                     <TrendingUp className="w-6 h-6 text-indigo-400 mx-auto mb-2" />
                                     <p className="text-sm text-[var(--text-secondary)]">Track AI Visibility</p>
                                 </div>
-                                <div className="p-4 rounded-lg bg-[var(--surface-elevated)]">
+                                <div className="p-4 rounded-lg bg-[var(--bg-raised)]">
                                     <MessageSquare className="w-6 h-6 text-indigo-400 mx-auto mb-2" />
                                     <p className="text-sm text-[var(--text-secondary)]">Discover Forums</p>
                                 </div>
-                                <div className="p-4 rounded-lg bg-[var(--surface-elevated)]">
+                                <div className="p-4 rounded-lg bg-[var(--bg-raised)]">
                                     <FileText className="w-6 h-6 text-indigo-400 mx-auto mb-2" />
                                     <p className="text-sm text-[var(--text-secondary)]">Optimize Content</p>
                                 </div>
@@ -293,7 +293,7 @@ export default function OnboardingPage() {
 
                 {/* Step 2: Add Brand */}
                 {currentStep === 2 && (
-                    <Card className="border-[var(--border)] bg-[var(--surface)]">
+                    <Card className="border-[var(--border-default)] bg-[var(--bg-surface)]">
                         <CardContent className="p-8">
                             <div className="flex items-center gap-3 mb-6">
                                 <div className="w-10 h-10 rounded-lg bg-indigo-500/20 flex items-center justify-center">
@@ -301,7 +301,7 @@ export default function OnboardingPage() {
                                 </div>
                                 <div>
                                     <h2 className="text-xl font-semibold text-[var(--text-primary)]">Add Your Brand</h2>
-                                    <p className="text-sm text-[var(--text-muted)]">Tell us about your brand to start tracking</p>
+                                    <p className="text-sm text-[var(--text-secondary)]">Tell us about your brand to start tracking</p>
                                 </div>
                             </div>
 
@@ -355,7 +355,7 @@ export default function OnboardingPage() {
                                         Industry
                                     </label>
                                     <select
-                                        className="w-full px-3 py-2 rounded-lg bg-[var(--surface-elevated)] border border-[var(--border)] text-[var(--text-primary)]"
+                                        className="w-full px-3 py-2 rounded-lg bg-[var(--bg-raised)] border border-[var(--border-default)] text-[var(--text-primary)]"
                                         value={industry}
                                         onChange={(e) => setIndustry(e.target.value)}
                                     >
@@ -390,7 +390,7 @@ export default function OnboardingPage() {
 
                 {/* Step 3: First Scan */}
                 {currentStep === 3 && (
-                    <Card className="border-[var(--border)] bg-[var(--surface)]">
+                    <Card className="border-[var(--border-default)] bg-[var(--bg-surface)]">
                         <CardContent className="p-8">
                             <div className="flex items-center gap-3 mb-6">
                                 <div className="w-10 h-10 rounded-lg bg-indigo-500/20 flex items-center justify-center">
@@ -398,7 +398,7 @@ export default function OnboardingPage() {
                                 </div>
                                 <div>
                                     <h2 className="text-xl font-semibold text-[var(--text-primary)]">Your First AI Scan</h2>
-                                    <p className="text-sm text-[var(--text-muted)]">See how &quot;{brandName}&quot; appears in AI answers</p>
+                                    <p className="text-sm text-[var(--text-secondary)]">See how &quot;{brandName}&quot; appears in AI answers</p>
                                 </div>
                             </div>
 
@@ -407,7 +407,7 @@ export default function OnboardingPage() {
                                     <div className="w-20 h-20 rounded-full bg-gradient-to-br from-indigo-500/20 to-violet-600/20 flex items-center justify-center mx-auto mb-6">
                                         <Sparkles className="w-10 h-10 text-indigo-400" />
                                     </div>
-                                    <p className="text-[var(--text-muted)] mb-6">
+                                    <p className="text-[var(--text-secondary)] mb-6">
                                         Ready to scan &quot;{brandName}&quot; across Gemini and Claude?
                                     </p>
                                     <Button size="lg" onClick={runFirstScan} disabled={scanning}>
@@ -430,10 +430,10 @@ export default function OnboardingPage() {
                                         {scanResults.map((result, i) => (
                                             <div
                                                 key={i}
-                                                className="flex items-center justify-between p-4 rounded-lg bg-[var(--surface-elevated)]"
+                                                className="flex items-center justify-between p-4 rounded-lg bg-[var(--bg-raised)]"
                                             >
                                                 <div className="flex items-center gap-3">
-                                                    <div className="w-10 h-10 rounded-lg bg-[var(--surface-elevated)] flex items-center justify-center">
+                                                    <div className="w-10 h-10 rounded-lg bg-[var(--bg-raised)] flex items-center justify-center">
                                                         <span className="text-sm font-medium capitalize">
                                                             {result.platform[0].toUpperCase()}
                                                         </span>
@@ -489,7 +489,7 @@ export default function OnboardingPage() {
 
                 {/* Step 4: Complete */}
                 {currentStep === 4 && (
-                    <Card className="border-[var(--border)] bg-[var(--surface)]">
+                    <Card className="border-[var(--border-default)] bg-[var(--bg-surface)]">
                         <CardContent className="p-8 text-center">
                             <div className="w-16 h-16 rounded-full bg-green-500/20 flex items-center justify-center mx-auto mb-6">
                                 <CheckCircle className="w-8 h-8 text-green-400" />
@@ -497,20 +497,20 @@ export default function OnboardingPage() {
                             <h2 className="text-2xl font-bold text-[var(--text-primary)] mb-4">
                                 You&apos;re All Set!
                             </h2>
-                            <p className="text-[var(--text-muted)] mb-8 max-w-md mx-auto">
+                            <p className="text-[var(--text-secondary)] mb-8 max-w-md mx-auto">
                                 Your brand &quot;{brandName}&quot; is now being tracked. Explore the dashboard to see more insights.
                             </p>
 
                             <div className="grid grid-cols-3 gap-4 mb-8 text-left">
-                                <div className="p-4 rounded-lg bg-[var(--surface-elevated)]">
+                                <div className="p-4 rounded-lg bg-[var(--bg-raised)]">
                                     <h3 className="font-medium text-[var(--text-primary)] mb-1">LLM Tracker</h3>
                                     <p className="text-xs text-[var(--text-ghost)]">Monitor brand mentions across AI platforms</p>
                                 </div>
-                                <div className="p-4 rounded-lg bg-[var(--surface-elevated)]">
+                                <div className="p-4 rounded-lg bg-[var(--bg-raised)]">
                                     <h3 className="font-medium text-[var(--text-primary)] mb-1">Forum Hub</h3>
                                     <p className="text-xs text-[var(--text-ghost)]">Discover and engage with relevant discussions</p>
                                 </div>
-                                <div className="p-4 rounded-lg bg-[var(--surface-elevated)]">
+                                <div className="p-4 rounded-lg bg-[var(--bg-raised)]">
                                     <h3 className="font-medium text-[var(--text-primary)] mb-1">Content Studio</h3>
                                     <p className="text-xs text-[var(--text-ghost)]">Optimize content for AI citations</p>
                                 </div>

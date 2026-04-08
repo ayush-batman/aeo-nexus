@@ -69,7 +69,7 @@ export function TryFreeSection() {
                 <h2 className="text-3xl font-bold text-[var(--text-primary)] mb-4">
                     See how AI sees your brand
                 </h2>
-                <p className="text-[var(--text-muted)] mb-8 max-w-xl mx-auto">
+                <p className="text-[var(--text-secondary)] mb-8 max-w-xl mx-auto">
                     Enter your brand name and get an instant visibility check — no signup required.
                 </p>
 
@@ -115,7 +115,7 @@ export function TryFreeSection() {
 
                 {/* Results */}
                 {result && (
-                    <div className="mt-8 p-6 rounded-xl border border-[var(--border)] bg-[var(--surface)] text-left">
+                    <div className="mt-8 p-6 rounded-xl border border-[var(--border-default)] bg-[var(--bg-surface)] text-left">
                         <div className="flex items-center justify-between mb-4">
                             <h3 className="font-semibold text-[var(--text-primary)]">
                                 Results for &quot;{brandName}&quot;
@@ -126,7 +126,7 @@ export function TryFreeSection() {
                         </div>
 
                         <div className="grid grid-cols-3 gap-4 mb-6">
-                            <div className="p-4 rounded-lg bg-[var(--surface-elevated)] text-center">
+                            <div className="p-4 rounded-lg bg-[var(--bg-raised)] text-center">
                                 <div className="flex items-center justify-center mb-2">
                                     {result.mentioned ? (
                                         <CheckCircle className="w-6 h-6 text-green-400" />
@@ -134,18 +134,18 @@ export function TryFreeSection() {
                                         <XCircle className="w-6 h-6 text-red-400" />
                                     )}
                                 </div>
-                                <p className="text-sm text-[var(--text-muted)]">Mentioned</p>
+                                <p className="text-sm text-[var(--text-secondary)]">Mentioned</p>
                                 <p className="font-semibold text-[var(--text-primary)]">
                                     {result.mentioned ? "Yes" : "No"}
                                 </p>
                             </div>
-                            <div className="p-4 rounded-lg bg-[var(--surface-elevated)] text-center">
+                            <div className="p-4 rounded-lg bg-[var(--bg-raised)] text-center">
                                 <p className="text-2xl font-bold text-[var(--text-primary)] mb-1">
                                     {result.visibilityScore}%
                                 </p>
-                                <p className="text-sm text-[var(--text-muted)]">Visibility</p>
+                                <p className="text-sm text-[var(--text-secondary)]">Visibility</p>
                             </div>
-                            <div className="p-4 rounded-lg bg-[var(--surface-elevated)] text-center">
+                            <div className="p-4 rounded-lg bg-[var(--bg-raised)] text-center">
                                 <Badge
                                     variant={
                                         result.sentiment === "positive"
@@ -158,13 +158,13 @@ export function TryFreeSection() {
                                 >
                                     {result.sentiment}
                                 </Badge>
-                                <p className="text-sm text-[var(--text-muted)]">Sentiment</p>
+                                <p className="text-sm text-[var(--text-secondary)]">Sentiment</p>
                             </div>
                         </div>
 
                         {/* Snippet with blur */}
-                        <div className="relative p-4 rounded-lg bg-[var(--surface-elevated)]/30 mb-6">
-                            <p className="text-sm text-[var(--text-muted)] line-clamp-3">
+                        <div className="relative p-4 rounded-lg bg-[var(--bg-raised)]/30 mb-6">
+                            <p className="text-sm text-[var(--text-secondary)] line-clamp-3">
                                 {result.snippet}
                             </p>
                             <div className="absolute inset-0 bg-gradient-to-t from-zinc-900 via-transparent to-transparent" />

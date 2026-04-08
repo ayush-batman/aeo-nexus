@@ -46,7 +46,7 @@ export function TechnicalAudit() {
         <div className="space-y-6">
             <Card>
                 <CardHeader>
-                    <CardTitle>Technical AEO Audit</CardTitle>
+                    <CardTitle>Technical Aelo Audit</CardTitle>
                     <CardDescription>
                         Check if your site is blocking AI crawlers (ChatGPT, Gemini, Claude, etc.) from reading your content.
                     </CardDescription>
@@ -78,7 +78,7 @@ export function TechnicalAudit() {
                             </CardTitle>
                             <CardDescription className={result.aiBotsBlocked ? "text-red-400/80" : "text-green-400/80"}>
                                 {result.aiBotsBlocked
-                                    ? "Your site configuration is preventing AI engines from reading your content. This hurts your AEO visibility."
+                                    ? "Your site configuration is preventing AI engines from reading your content. This hurts your Aelo visibility."
                                     : "Great! Your site is technically accessible to major AI engines."}
                             </CardDescription>
                         </CardHeader>
@@ -92,8 +92,8 @@ export function TechnicalAudit() {
                             </CardTitle>
                         </CardHeader>
                         <CardContent className="space-y-4">
-                            <div className="flex items-center justify-between pb-2 border-b border-[var(--border)]">
-                                <span className="text-sm text-[var(--text-muted)]">File Status</span>
+                            <div className="flex items-center justify-between pb-2 border-b border-[var(--border-default)]">
+                                <span className="text-sm text-[var(--text-secondary)]">File Status</span>
                                 <Badge variant={result.robotsStatus === 'found' ? 'success' : 'destructive'}>
                                     {result.robotsStatus === 'found' ? 'FOUND' : 'MISSING/ERROR'}
                                 </Badge>
@@ -122,7 +122,7 @@ export function TechnicalAudit() {
                                 </CardTitle>
                             </CardHeader>
                             <CardContent>
-                                <ul className="list-disc list-inside text-sm text-[var(--text-muted)]">
+                                <ul className="list-disc list-inside text-sm text-[var(--text-secondary)]">
                                     {result.sitemaps.map((map, i) => (
                                         <li key={i}>{map}</li>
                                     ))}

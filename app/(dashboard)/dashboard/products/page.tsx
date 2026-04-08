@@ -135,7 +135,7 @@ export default function ProductsPage() {
                 {/* Product Grid */}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {products.map((product) => (
-                        <Card key={product.id} className="hover:border-[var(--border)] transition-colors">
+                        <Card key={product.id} className="hover:border-[var(--border-default)] transition-colors">
                             <CardHeader className="pb-3">
                                 <div className="flex items-start justify-between">
                                     <div className="flex items-center gap-3">
@@ -172,7 +172,7 @@ export default function ProductsPage() {
                                 {/* Website */}
                                 {product.website && (
                                     <div>
-                                        <div className="flex items-center gap-2 text-xs text-[var(--text-muted)] mb-1">
+                                        <div className="flex items-center gap-2 text-xs text-[var(--text-secondary)] mb-1">
                                             <Globe className="w-3 h-3" />
                                             Website
                                         </div>
@@ -190,7 +190,7 @@ export default function ProductsPage() {
                                 {/* Keywords */}
                                 {product.keywords && product.keywords.length > 0 && (
                                     <div>
-                                        <div className="flex items-center gap-2 text-xs text-[var(--text-muted)] mb-2">
+                                        <div className="flex items-center gap-2 text-xs text-[var(--text-secondary)] mb-2">
                                             <Tag className="w-3 h-3" />
                                             Keywords
                                         </div>
@@ -210,7 +210,7 @@ export default function ProductsPage() {
                                 )}
 
                                 {/* Stats */}
-                                <div className="flex items-center justify-between pt-3 border-t border-[var(--border)]">
+                                <div className="flex items-center justify-between pt-3 border-t border-[var(--border-default)]">
                                     <div className="flex items-center gap-2">
                                         <Sparkles className="w-4 h-4 text-indigo-400" />
                                         <span className="text-sm text-[var(--text-secondary)]">

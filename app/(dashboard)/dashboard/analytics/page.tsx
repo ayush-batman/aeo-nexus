@@ -42,6 +42,7 @@ import {
     Legend,
 } from "recharts";
 import { motion } from "framer-motion";
+import { CitationMap } from "@/components/dashboard/analytics/citation-map";
 
 // Framer Motion Variants
 const containerVariants: any = {
@@ -403,8 +404,8 @@ export default function AnalyticsPage() {
     const CustomTooltip = ({ active, payload, label }: any) => {
         if (active && payload && payload.length) {
             return (
-                <div className="bg-[var(--surface)] border border-[var(--border)] rounded-lg p-3 shadow-xl">
-                    <p className="text-xs text-[var(--text-muted)] mb-1">{label}</p>
+                <div className="bg-[var(--bg-surface)] border border-[var(--border-default)] rounded-lg p-3 shadow-xl">
+                    <p className="text-xs text-[var(--text-secondary)] mb-1">{label}</p>
                     {payload.map((entry: any, i: number) => (
                         <p key={i} className="text-sm font-medium" style={{ color: entry.color }}>
                             {entry.name}: {entry.value}%
@@ -423,7 +424,7 @@ export default function AnalyticsPage() {
                 <div className="p-6 flex items-center justify-center min-h-[400px]">
                     <div className="flex flex-col items-center gap-3">
                         <Loader2 className="w-8 h-8 animate-spin text-indigo-400" />
-                        <p className="text-sm text-[var(--text-muted)]">Loading analytics...</p>
+                        <p className="text-sm text-[var(--text-secondary)]">Loading analytics...</p>
                     </div>
                 </div>
             </>
@@ -444,8 +445,8 @@ export default function AnalyticsPage() {
                 ref={reportRef}
             >
                 {/* Date Range & Export */}
-                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-[var(--background)]/40 p-3 rounded-2xl border border-[var(--border)]/80 backdrop-blur-md">
-                    <div className="flex items-center gap-1.5 bg-[var(--surface)] p-1 rounded-xl border border-[var(--border)]/50">
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-[var(--bg-base)]/40 p-3 rounded-2xl border border-[var(--border-default)]/80 backdrop-blur-md">
+                    <div className="flex items-center gap-1.5 bg-[var(--bg-surface)] p-1 rounded-xl border border-[var(--border-default)]/50">
                         {(["7d", "30d", "90d", "all"] as TimeRange[]).map(range => (
                             <Button
                                 key={range}
@@ -456,7 +457,7 @@ export default function AnalyticsPage() {
                                     "rounded-lg px-4 transition-all duration-300",
                                     timeRange === range
                                         ? "bg-indigo-500/20 text-indigo-300 hover:bg-indigo-500/30 hover:text-violet-200"
-                                        : "text-[var(--text-ghost)] hover:text-[var(--text-secondary)] hover:bg-[var(--surface-elevated)]"
+                                        : "text-[var(--text-ghost)] hover:text-[var(--text-secondary)] hover:bg-[var(--bg-raised)]"
                                 )}
                             >
                                 {range === "7d" ? "7 Days" : range === "30d" ? "30 Days" : range === "90d" ? "90 Days" : "All Time"}
@@ -464,8 +465,8 @@ export default function AnalyticsPage() {
                         ))}
                     </div>
                     <div className="flex items-center gap-2">
-                        <Button variant="outline" size="sm" onClick={exportCSV} className="bg-[var(--surface)] border-[var(--border)] hover:bg-[var(--surface-elevated)] hover:text-white rounded-xl">
-                            <FileText className="w-4 h-4 mr-2 text-[var(--text-muted)]" />
+                        <Button variant="outline" size="sm" onClick={exportCSV} className="bg-[var(--bg-surface)] border-[var(--border-default)] hover:bg-[var(--bg-raised)] hover:text-white rounded-xl">
+                            <FileText className="w-4 h-4 mr-2 text-[var(--text-secondary)]" />
                             CSV
                         </Button>
                         <Button
@@ -473,16 +474,16 @@ export default function AnalyticsPage() {
                             size="sm"
                             onClick={exportPDF}
                             disabled={exporting}
-                            className="bg-[var(--surface)] border-[var(--border)] hover:bg-[var(--surface-elevated)] hover:text-white rounded-xl"
+                            className="bg-[var(--bg-surface)] border-[var(--border-default)] hover:bg-[var(--bg-raised)] hover:text-white rounded-xl"
                         >
                             {exporting ? (
-                                <Loader2 className="w-4 h-4 mr-2 animate-spin text-[var(--text-muted)]" />
+                                <Loader2 className="w-4 h-4 mr-2 animate-spin text-[var(--text-secondary)]" />
                             ) : (
-                                <Download className="w-4 h-4 mr-2 text-[var(--text-muted)]" />
+                                <Download className="w-4 h-4 mr-2 text-[var(--text-secondary)]" />
                             )}
                             PDF Report
                         </Button>
-                        <Button variant="outline" size="sm" onClick={() => { setLoading(true); fetchData(); }} className="bg-[var(--surface)] border-[var(--border)] hover:bg-[var(--surface-elevated)] hover:text-white rounded-xl">
+                        <Button variant="outline" size="sm" onClick={() => { setLoading(true); fetchData(); }} className="bg-[var(--bg-surface)] border-[var(--border-default)] hover:bg-[var(--bg-raised)] hover:text-white rounded-xl">
                             <RefreshCw className="w-4 h-4 mr-2 text-indigo-400" />
                             Sync Data
                         </Button>
@@ -558,18 +559,18 @@ export default function AnalyticsPage() {
                                 <motion.div
                                     key={i}
                                     variants={itemVariants}
-                                    className="group relative overflow-hidden bg-[var(--background)]/40 border border-[var(--border)]/80 rounded-2xl p-5 backdrop-blur-md"
+                                    className="group relative overflow-hidden bg-[var(--bg-base)]/40 border border-[var(--border-default)]/80 rounded-2xl p-5 backdrop-blur-md"
                                 >
                                     <div className={`absolute inset-0 bg-gradient-to-br ${metric.gradient} opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none`} />
 
                                     <div className="flex items-center justify-between mb-3 relative z-10">
-                                        <div className={`p-2.5 rounded-xl bg-[var(--surface)] border border-[var(--border)] group-hover:scale-110 transition-transform duration-300`}>
+                                        <div className={`p-2.5 rounded-xl bg-[var(--bg-surface)] border border-[var(--border-default)] group-hover:scale-110 transition-transform duration-300`}>
                                             <metric.icon className={`w-4 h-4 ${metric.iconColor}`} />
                                         </div>
                                         <span className={cn(
                                             "text-xs font-medium flex items-center gap-1 px-2 py-1 rounded-md",
                                             metric.change > 0 ? "bg-green-500/10 text-green-400 border border-green-500/20" :
-                                                metric.change < 0 ? "bg-red-500/10 text-red-400 border border-red-500/20" : "bg-[var(--surface-elevated)] text-[var(--text-muted)] border border-[var(--border)]/50"
+                                                metric.change < 0 ? "bg-red-500/10 text-red-400 border border-red-500/20" : "bg-[var(--bg-raised)] text-[var(--text-secondary)] border border-[var(--border-default)]/50"
                                         )}>
                                             {metric.change > 0 ? <TrendingUp className="w-3 h-3" /> : metric.change < 0 ? <TrendingDown className="w-3 h-3" /> : null}
                                             {metric.change > 0 ? "+" : ""}{metric.change}{metric.suffix}
@@ -586,7 +587,7 @@ export default function AnalyticsPage() {
                         {/* ============================================ */}
                         {/* VISIBILITY TREND LINE CHART                   */}
                         {/* ============================================ */}
-                        <motion.div variants={itemVariants} className="relative group overflow-hidden bg-[var(--background)]/50 border border-[var(--border)]/80 rounded-3xl p-6 backdrop-blur-xl">
+                        <motion.div variants={itemVariants} className="relative group overflow-hidden bg-[var(--bg-base)]/50 border border-[var(--border-default)]/80 rounded-3xl p-6 backdrop-blur-xl">
                             <div className="absolute top-0 left-1/2 -translate-x-1/2 w-3/4 h-32 bg-indigo-500/5 rounded-full blur-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none" />
 
                             <div className="flex items-center gap-2 mb-6 relative z-10">
@@ -654,16 +655,16 @@ export default function AnalyticsPage() {
                                         </ResponsiveContainer>
                                     </div>
                                 ) : trendData.length === 1 ? (
-                                    <div className="h-[350px] flex flex-col items-center justify-center bg-[var(--surface)]/20 rounded-xl border border-dashed border-[var(--border)]">
+                                    <div className="h-[350px] flex flex-col items-center justify-center bg-[var(--bg-surface)]/20 rounded-xl border border-dashed border-[var(--border-default)]">
                                         <Eye className="w-10 h-10 mb-4 text-violet-500/50" />
-                                        <p className="text-[var(--text-muted)] font-medium">Only 1 day of data recorded</p>
+                                        <p className="text-[var(--text-secondary)] font-medium">Only 1 day of data recorded</p>
                                         <p className="text-xs text-[var(--text-ghost)] mt-2 max-w-sm text-center">Run more LLM scans over multiple days to populate this high-fidelity trend tracker.</p>
                                         <Badge variant="outline" className="mt-4 bg-indigo-500/10 text-indigo-300 border-indigo-500/20">
                                             Current visibility: {trendData[0].visibility}%
                                         </Badge>
                                     </div>
                                 ) : (
-                                    <div className="h-[350px] flex items-center justify-center bg-[var(--surface)]/20 rounded-xl border border-dashed border-[var(--border)]">
+                                    <div className="h-[350px] flex items-center justify-center bg-[var(--bg-surface)]/20 rounded-xl border border-dashed border-[var(--border-default)]">
                                         <p className="text-[var(--text-ghost)]">Run scans to visualize trends over time</p>
                                     </div>
                                 )}
@@ -674,7 +675,7 @@ export default function AnalyticsPage() {
                         {/* PER-PLATFORM VISIBILITY TREND LINES           */}
                         {/* ============================================ */}
                         {trendData.length > 1 && trendPlatforms.length > 1 && (
-                            <motion.div variants={itemVariants} className="relative group overflow-hidden bg-[var(--background)]/50 border border-[var(--border)]/80 rounded-3xl p-6 backdrop-blur-xl">
+                            <motion.div variants={itemVariants} className="relative group overflow-hidden bg-[var(--bg-base)]/50 border border-[var(--border-default)]/80 rounded-3xl p-6 backdrop-blur-xl">
                                 <div className="flex items-center gap-2 mb-6 relative z-10">
                                     <div className="p-2 bg-blue-500/10 rounded-lg border border-blue-500/20">
                                         <Activity className="w-5 h-5 text-blue-400" />
@@ -724,7 +725,7 @@ export default function AnalyticsPage() {
                                         {trendPlatforms.map((platform, i) => (
                                             <div key={platform} className="flex items-center gap-1.5">
                                                 <div className="w-3 h-3 rounded-full" style={{ backgroundColor: TREND_COLORS[i % TREND_COLORS.length] }} />
-                                                <span className="text-xs text-[var(--text-muted)] capitalize">{platform}</span>
+                                                <span className="text-xs text-[var(--text-secondary)] capitalize">{platform}</span>
                                             </div>
                                         ))}
                                     </div>
@@ -737,7 +738,7 @@ export default function AnalyticsPage() {
                         {/* ============================================ */}
                         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                             {/* Competitive Share of Voice - Donut Chart */}
-                            <motion.div variants={itemVariants} className="relative bg-[var(--background)]/50 border border-[var(--border)]/80 rounded-3xl p-6 backdrop-blur-xl">
+                            <motion.div variants={itemVariants} className="relative bg-[var(--bg-base)]/50 border border-[var(--border-default)]/80 rounded-3xl p-6 backdrop-blur-xl">
                                 <div className="flex items-center gap-2 mb-6">
                                     <div className="p-2 bg-emerald-500/10 rounded-lg border border-emerald-500/20">
                                         <Swords className="w-5 h-5 text-emerald-400" />
@@ -791,7 +792,7 @@ export default function AnalyticsPage() {
                                                 {competitiveSOV.donutData.slice(0, 4).map((entry, i) => (
                                                     <div key={entry.name} className="flex items-center gap-1.5 focus:outline-none focus:ring-2 focus:ring-violet-500 rounded px-2 py-1">
                                                         <div className="w-2.5 h-2.5 rounded-full shadow-sm" style={{ backgroundColor: i === 0 ? "#10b981" : DONUT_COLORS[(i - 1 + DONUT_COLORS.length) % DONUT_COLORS.length] }} />
-                                                        <span className={cn("text-xs", i === 0 ? "text-[var(--text-primary)] font-medium" : "text-[var(--text-muted)]")}>{entry.name}</span>
+                                                        <span className={cn("text-xs", i === 0 ? "text-[var(--text-primary)] font-medium" : "text-[var(--text-secondary)]")}>{entry.name}</span>
                                                     </div>
                                                 ))}
                                                 {competitiveSOV.donutData.length > 4 && (
@@ -800,7 +801,7 @@ export default function AnalyticsPage() {
                                             </div>
                                         </div>
                                     ) : (
-                                        <div className="h-[300px] flex items-center justify-center bg-[var(--surface)]/20 rounded-xl border border-dashed border-[var(--border)]">
+                                        <div className="h-[300px] flex items-center justify-center bg-[var(--bg-surface)]/20 rounded-xl border border-dashed border-[var(--border-default)]">
                                             <p className="text-[var(--text-ghost)]">Add competitors in scans to reveal SOV</p>
                                         </div>
                                     )}
@@ -808,7 +809,7 @@ export default function AnalyticsPage() {
                             </motion.div>
 
                             {/* Platform Visibility Scores */}
-                            <motion.div variants={itemVariants} className="bg-[var(--background)]/50 border border-[var(--border)]/80 rounded-3xl p-6 backdrop-blur-xl flex flex-col">
+                            <motion.div variants={itemVariants} className="bg-[var(--bg-base)]/50 border border-[var(--border-default)]/80 rounded-3xl p-6 backdrop-blur-xl flex flex-col">
                                 <div className="flex items-center gap-2 mb-8">
                                     <div className="p-2 bg-blue-500/10 rounded-lg border border-blue-500/20">
                                         <PieChart className="w-5 h-5 text-blue-400" />
@@ -828,7 +829,7 @@ export default function AnalyticsPage() {
                                                     style={{ transformOrigin: "bottom" }}
                                                     className="flex-1 flex flex-col items-center gap-2 group cursor-pointer"
                                                 >
-                                                    <div className="opacity-0 group-hover:opacity-100 transition-opacity bg-[var(--surface-elevated)] px-2 py-1 rounded text-xs font-bold text-white absolute -mt-10 pointer-events-none">
+                                                    <div className="opacity-0 group-hover:opacity-100 transition-opacity bg-[var(--bg-raised)] px-2 py-1 rounded text-xs font-bold text-white absolute -mt-10 pointer-events-none">
                                                         {metric.score}%
                                                     </div>
                                                     <div
@@ -838,7 +839,7 @@ export default function AnalyticsPage() {
                                                         {/* Inner glass highlight */}
                                                         <div className="absolute top-0 left-0 right-0 h-1 bg-white/30 rounded-t-xl" />
                                                     </div>
-                                                    <span className="text-xs font-medium text-[var(--text-muted)] capitalize mt-2 group-hover:text-[var(--text-primary)] transition-colors">{metric.platform}</span>
+                                                    <span className="text-xs font-medium text-[var(--text-secondary)] capitalize mt-2 group-hover:text-[var(--text-primary)] transition-colors">{metric.platform}</span>
                                                     <span className={cn(
                                                         "text-[10px] font-bold px-1.5 py-0.5 rounded-md",
                                                         metric.change > 0 ? "bg-green-500/20 text-green-400 border border-green-500/10" : metric.change < 0 ? "bg-red-500/20 text-red-400 border border-red-500/10" : "text-[var(--text-ghost)]"
@@ -859,7 +860,7 @@ export default function AnalyticsPage() {
                                                     style={{ transformOrigin: "bottom" }}
                                                     className="flex-1 flex flex-col items-center gap-2 group"
                                                 >
-                                                    <div className="opacity-0 group-hover:opacity-100 transition-opacity bg-[var(--surface-elevated)] px-2 py-1 rounded text-xs font-bold text-white absolute -mt-8 pointer-events-none">
+                                                    <div className="opacity-0 group-hover:opacity-100 transition-opacity bg-[var(--bg-raised)] px-2 py-1 rounded text-xs font-bold text-white absolute -mt-8 pointer-events-none">
                                                         {p.mentionRate}%
                                                     </div>
                                                     <div
@@ -873,7 +874,7 @@ export default function AnalyticsPage() {
                                             ))}
                                         </div>
                                     ) : (
-                                        <div className="h-[250px] flex items-center justify-center bg-[var(--surface)]/20 rounded-xl border border-dashed border-[var(--border)]">
+                                        <div className="h-[250px] flex items-center justify-center bg-[var(--bg-surface)]/20 rounded-xl border border-dashed border-[var(--border-default)]">
                                             <p className="text-[var(--text-ghost)]">Run scans to see platform visibility rankings</p>
                                         </div>
                                     )}
@@ -886,7 +887,7 @@ export default function AnalyticsPage() {
                         {/* ============================================ */}
                         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 pb-20">
                             {/* ===== CITATION SOURCE DASHBOARD ===== */}
-                            <motion.div variants={itemVariants} className="bg-[var(--background)]/50 border border-[var(--border)]/80 rounded-3xl p-6 backdrop-blur-xl lg:col-span-2">
+                            <motion.div variants={itemVariants} className="bg-[var(--bg-base)]/50 border border-[var(--border-default)]/80 rounded-3xl p-6 backdrop-blur-xl lg:col-span-2">
                                 <div className="flex items-center justify-between mb-6">
                                     <div className="flex items-center gap-2">
                                         <div className="p-2 bg-amber-500/10 rounded-lg border border-amber-500/20">
@@ -906,14 +907,14 @@ export default function AnalyticsPage() {
                                         {/* Citation Rate Overview */}
                                         <div className="space-y-4">
                                             <div className="rounded-2xl bg-gradient-to-br from-amber-600/10 to-zinc-900 border border-amber-500/20 p-5">
-                                                <p className="text-xs text-[var(--text-muted)] uppercase tracking-wider mb-2">Citation Rate</p>
+                                                <p className="text-xs text-[var(--text-secondary)] uppercase tracking-wider mb-2">Citation Rate</p>
                                                 <div className="text-4xl font-bold text-amber-300">{citationRate}%</div>
                                                 <p className="text-xs text-[var(--text-ghost)] mt-2">
                                                     {citationRate > 0 ? 'of LLM responses cite your domain' : 'LLMs are not citing your domain yet'}
                                                 </p>
                                             </div>
-                                            <div className="rounded-2xl bg-[var(--surface)] border border-[var(--border)] p-5">
-                                                <p className="text-xs text-[var(--text-muted)] uppercase tracking-wider mb-2">Total Citations Found</p>
+                                            <div className="rounded-2xl bg-[var(--bg-surface)] border border-[var(--border-default)] p-5">
+                                                <p className="text-xs text-[var(--text-secondary)] uppercase tracking-wider mb-2">Total Citations Found</p>
                                                 <div className="text-3xl font-bold text-[var(--text-primary)]">{topCitations.reduce((s, c) => s + c.count, 0)}</div>
                                                 <p className="text-xs text-[var(--text-ghost)] mt-2">
                                                     across {topCitations.length} unique sources
@@ -949,7 +950,7 @@ export default function AnalyticsPage() {
                                                     </div>
                                                 ))
                                             ) : (
-                                                <div className="p-4 rounded-lg border border-dashed border-[var(--border)] text-center">
+                                                <div className="p-4 rounded-lg border border-dashed border-[var(--border-default)] text-center">
                                                     <p className="text-xs text-[var(--text-ghost)]">No pages from your domain have been cited yet</p>
                                                     <p className="text-[10px] text-[var(--text-ghost)] mt-1">Create authoritative content to earn citations</p>
                                                 </div>
@@ -958,18 +959,18 @@ export default function AnalyticsPage() {
 
                                         {/* External Sources */}
                                         <div className="space-y-3">
-                                            <h3 className="text-sm font-semibold text-[var(--text-muted)] flex items-center gap-1.5">
+                                            <h3 className="text-sm font-semibold text-[var(--text-secondary)] flex items-center gap-1.5">
                                                 <div className="w-2 h-2 rounded-full bg-zinc-400" />
                                                 External Sources ({topCitations.filter(c => !c.isOwnDomain).length})
                                             </h3>
                                             {topCitations.filter(c => !c.isOwnDomain).slice(0, 6).map((citation) => (
                                                 <div
                                                     key={citation.domain}
-                                                    className="flex items-center justify-between p-3 rounded-lg bg-[var(--surface-elevated)]/30"
+                                                    className="flex items-center justify-between p-3 rounded-lg bg-[var(--bg-raised)]/30"
                                                 >
                                                     <div className="flex items-center gap-2 min-w-0">
                                                         <Globe className="w-4 h-4 text-[var(--text-ghost)] flex-shrink-0" />
-                                                        <span className="text-sm text-[var(--text-muted)] truncate">{citation.domain}</span>
+                                                        <span className="text-sm text-[var(--text-secondary)] truncate">{citation.domain}</span>
                                                     </div>
                                                     <Badge variant="outline" className="text-xs flex-shrink-0">
                                                         {citation.count}x
@@ -987,7 +988,7 @@ export default function AnalyticsPage() {
 
                             {/* Platform Performance Table */}
                             {platformBreakdown.length > 0 && (
-                                <motion.div variants={itemVariants} className="bg-[var(--background)]/50 border border-[var(--border)]/80 rounded-3xl p-6 backdrop-blur-xl">
+                                <motion.div variants={itemVariants} className="bg-[var(--bg-base)]/50 border border-[var(--border-default)]/80 rounded-3xl p-6 backdrop-blur-xl">
                                     <div className="flex items-center gap-2 mb-6">
                                         <div className="p-2 bg-pink-500/10 rounded-lg border border-pink-500/20">
                                             <Activity className="w-5 h-5 text-pink-400" />
@@ -997,7 +998,7 @@ export default function AnalyticsPage() {
                                     <div className="overflow-x-auto">
                                         <table className="w-full text-left">
                                             <thead>
-                                                <tr className="text-xs text-[var(--text-ghost)] border-b border-[var(--border)]/80 tracking-wide uppercase">
+                                                <tr className="text-xs text-[var(--text-ghost)] border-b border-[var(--border-default)]/80 tracking-wide uppercase">
                                                     <th className="pb-4 font-medium pl-2">Platform</th>
                                                     <th className="pb-4 font-medium">Recorded Scans</th>
                                                     <th className="pb-4 font-medium">Visibility Rate</th>
@@ -1006,11 +1007,11 @@ export default function AnalyticsPage() {
                                             </thead>
                                             <tbody>
                                                 {platformBreakdown.map((platform, i) => (
-                                                    <tr key={i} className="border-b border-[var(--border)]/30 hover:bg-[var(--surface)] transition-colors">
+                                                    <tr key={i} className="border-b border-[var(--border-default)]/30 hover:bg-[var(--bg-surface)] transition-colors">
                                                         <td className="py-4 text-sm font-semibold text-[var(--text-primary)] pl-2">
                                                             {platform.platform}
                                                         </td>
-                                                        <td className="py-4 text-sm text-[var(--text-muted)] font-medium font-mono">
+                                                        <td className="py-4 text-sm text-[var(--text-secondary)] font-medium font-mono">
                                                             {platform.totalScans}
                                                         </td>
                                                         <td className="py-4">
@@ -1019,14 +1020,14 @@ export default function AnalyticsPage() {
                                                                     "text-xs font-bold px-2 py-1 rounded-md",
                                                                     platform.mentionRate >= 50 ? "bg-green-500/10 text-green-400 border border-green-500/20" :
                                                                         platform.mentionRate >= 20 ? "bg-blue-500/10 text-blue-400 border border-blue-500/20" :
-                                                                            "bg-[var(--surface-elevated)] text-[var(--text-muted)]"
+                                                                            "bg-[var(--bg-raised)] text-[var(--text-secondary)]"
                                                                 )}>
                                                                     {platform.mentionRate}%
                                                                 </span>
                                                             </div>
                                                         </td>
                                                         <td className="py-4 pr-2">
-                                                            <div className="w-full max-w-[120px] h-2 bg-[var(--surface-elevated)] rounded-full overflow-hidden border border-[var(--border)]/50">
+                                                            <div className="w-full max-w-[120px] h-2 bg-[var(--bg-raised)] rounded-full overflow-hidden border border-[var(--border-default)]/50">
                                                                 <div
                                                                     className={cn(
                                                                         "h-full rounded-full transition-all duration-1000 ease-out",
@@ -1046,6 +1047,14 @@ export default function AnalyticsPage() {
                                 </motion.div>
                             )}
                         </div>
+
+                        {/* ============================================ */}
+                        {/* CITATION SOURCE MAP (NEW FEATURE)            */}
+                        {/* ============================================ */}
+                        <motion.div variants={itemVariants}>
+                            <CitationMap />
+                        </motion.div>
+
                     </motion.div>
                 )}
             </motion.div>

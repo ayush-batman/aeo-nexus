@@ -28,7 +28,7 @@ export async function POST(request: NextRequest) {
         try {
             const robotsRes = await fetch(robotsUrl, {
                 next: { revalidate: 3600 },
-                headers: { 'User-Agent': 'AEO-Nexus-Audit/1.0' }
+                headers: { 'User-Agent': 'Aelo-Nexus-Audit/1.0' }
             });
 
             if (robotsRes.ok) {
@@ -69,7 +69,7 @@ export async function POST(request: NextRequest) {
         let metaTags: any[] = [];
         try {
             const pageRes = await fetch(fullUrl, {
-                headers: { 'User-Agent': 'AEO-Nexus-Audit-Bot/1.0' }
+                headers: { 'User-Agent': 'Aelo-Nexus-Audit-Bot/1.0' }
             });
 
             if (pageRes.ok) {

@@ -242,7 +242,7 @@ export default function PromptResearchPage() {
 
             <div className="p-6">
                 <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-                    <TabsList className="bg-[var(--surface-elevated)] border-[var(--border)]">
+                    <TabsList className="bg-[var(--bg-raised)] border-[var(--border-default)]">
                         <TabsTrigger value="quick-check" className="data-[state=active]:bg-indigo-500 data-[state=active]:text-white">
                             <ClipboardList className="w-4 h-4 mr-2" />
                             Quick Check
@@ -251,11 +251,11 @@ export default function PromptResearchPage() {
                             <Sparkles className="w-4 h-4 mr-2" />
                             AI Generator
                         </TabsTrigger>
-                        <TabsTrigger value="library" className="data-[state=active]:bg-[var(--surface-elevated)] data-[state=active]:text-[var(--text-primary)]">
+                        <TabsTrigger value="library" className="data-[state=active]:bg-[var(--bg-raised)] data-[state=active]:text-[var(--text-primary)]">
                             <Bookmark className="w-4 h-4 mr-2" />
                             Saved Library
                             {savedPrompts.length > 0 && (
-                                <span className="ml-2 text-xs bg-[var(--background)] px-1.5 py-0.5 rounded-full text-[var(--text-muted)]">
+                                <span className="ml-2 text-xs bg-[var(--bg-base)] px-1.5 py-0.5 rounded-full text-[var(--text-secondary)]">
                                     {savedPrompts.length}
                                 </span>
                             )}
@@ -277,7 +277,7 @@ export default function PromptResearchPage() {
                                     </div>
                                     <div className="flex-1">
                                         <h3 className="font-semibold text-[var(--text-primary)] mb-1">Manual LLM Check — How It Works</h3>
-                                        <p className="text-sm text-[var(--text-muted)] mb-3">
+                                        <p className="text-sm text-[var(--text-secondary)] mb-3">
                                             Copy any prompt below and paste it into ChatGPT, Gemini, Perplexity, or Claude.
                                             Check if your brand appears in the response, at what position, and with what sentiment.
                                         </p>
@@ -288,7 +288,7 @@ export default function PromptResearchPage() {
                                                     href={llm.url}
                                                     target="_blank"
                                                     rel="noopener noreferrer"
-                                                    className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[var(--surface-elevated)]/80 hover:bg-[var(--surface-elevated)] transition-colors text-sm text-[var(--text-secondary)]"
+                                                    className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[var(--bg-raised)]/80 hover:bg-[var(--bg-raised)] transition-colors text-sm text-[var(--text-secondary)]"
                                                 >
                                                     <div className={cn("w-2 h-2 rounded-full", llm.color)} />
                                                     {llm.name}
@@ -311,7 +311,7 @@ export default function PromptResearchPage() {
                                             value={brandName}
                                             onChange={e => setBrandName(e.target.value)}
                                             placeholder="e.g. Dylect"
-                                            className="bg-[var(--background)]/50 h-9"
+                                            className="bg-[var(--bg-base)]/50 h-9"
                                         />
                                     </div>
                                     <div>
@@ -320,7 +320,7 @@ export default function PromptResearchPage() {
                                             value={industry}
                                             onChange={e => setIndustry(e.target.value)}
                                             placeholder="e.g. dashcam, CRM, SaaS"
-                                            className="bg-[var(--background)]/50 h-9"
+                                            className="bg-[var(--bg-base)]/50 h-9"
                                         />
                                     </div>
                                     <div>
@@ -329,7 +329,7 @@ export default function PromptResearchPage() {
                                             value={audience}
                                             onChange={e => setAudience(e.target.value)}
                                             placeholder="e.g. car owners, small businesses"
-                                            className="bg-[var(--background)]/50 h-9"
+                                            className="bg-[var(--bg-base)]/50 h-9"
                                         />
                                     </div>
                                 </div>
@@ -344,7 +344,7 @@ export default function PromptResearchPage() {
                                     "px-3 py-1.5 rounded-lg text-sm transition-all",
                                     selectedCategory === 'all'
                                         ? "bg-indigo-500 text-white"
-                                        : "bg-[var(--surface-elevated)] text-[var(--text-muted)] hover:bg-[var(--surface-elevated)]"
+                                        : "bg-[var(--bg-raised)] text-[var(--text-secondary)] hover:bg-[var(--bg-raised)]"
                                 )}
                             >
                                 All ({filledTemplates.length})
@@ -359,8 +359,8 @@ export default function PromptResearchPage() {
                                         className={cn(
                                             "px-3 py-1.5 rounded-lg text-sm transition-all",
                                             selectedCategory === cat
-                                                ? "bg-[var(--surface-elevated)] text-[var(--text-primary)] border border-zinc-500"
-                                                : "bg-[var(--surface-elevated)] text-[var(--text-ghost)] hover:bg-[var(--surface-elevated)] hover:text-[var(--text-secondary)]"
+                                                ? "bg-[var(--bg-raised)] text-[var(--text-primary)] border border-zinc-500"
+                                                : "bg-[var(--bg-raised)] text-[var(--text-ghost)] hover:bg-[var(--bg-raised)] hover:text-[var(--text-secondary)]"
                                         )}
                                     >
                                         {meta.icon} {meta.label} ({count})
@@ -374,12 +374,12 @@ export default function PromptResearchPage() {
                             {filteredTemplates.map(template => (
                                 <div
                                     key={template.id}
-                                    className="group p-4 rounded-xl bg-[var(--surface-elevated)]/40 border border-[var(--border)] hover:border-[var(--border-hover)] transition-all"
+                                    className="group p-4 rounded-xl bg-[var(--bg-raised)]/40 border border-[var(--border-default)] hover:border-[var(--border-hover)] transition-all"
                                 >
                                     <div className="flex items-start justify-between gap-4">
                                         <div className="flex-1 min-w-0">
                                             <div className="flex items-center gap-2 mb-1.5">
-                                                <Badge variant="outline" className={cn("text-xs border-[var(--border)]", CATEGORY_META[template.category].color)}>
+                                                <Badge variant="outline" className={cn("text-xs border-[var(--border-default)]", CATEGORY_META[template.category].color)}>
                                                     {CATEGORY_META[template.category].icon} {CATEGORY_META[template.category].label}
                                                 </Badge>
                                                 <span className="text-xs text-[var(--text-ghost)]">{template.title}</span>
@@ -404,7 +404,7 @@ export default function PromptResearchPage() {
                                                     "h-8 text-xs transition-all",
                                                     copiedId === template.id
                                                         ? "border-green-500 text-green-400"
-                                                        : "border-[var(--border)] text-[var(--text-muted)] hover:text-white"
+                                                        : "border-[var(--border-default)] text-[var(--text-secondary)] hover:text-white"
                                                 )}
                                             >
                                                 {copiedId === template.id ? (
@@ -442,30 +442,30 @@ export default function PromptResearchPage() {
                             <CardContent>
                                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
                                     <div>
-                                        <label className="block text-sm font-medium text-[var(--text-muted)] mb-1">Topic / Product Category</label>
+                                        <label className="block text-sm font-medium text-[var(--text-secondary)] mb-1">Topic / Product Category</label>
                                         <Input
                                             placeholder="e.g. CRM Software, Running Shoes, Vegan Protein"
                                             value={topic}
                                             onChange={e => setTopic(e.target.value)}
-                                            className="bg-[var(--background)]/50"
+                                            className="bg-[var(--bg-base)]/50"
                                         />
                                     </div>
                                     <div>
-                                        <label className="block text-sm font-medium text-[var(--text-muted)] mb-1">Your Brand Name</label>
+                                        <label className="block text-sm font-medium text-[var(--text-secondary)] mb-1">Your Brand Name</label>
                                         <Input
                                             placeholder="e.g. Acme Corp"
                                             value={brandName}
                                             onChange={e => setBrandName(e.target.value)}
-                                            className="bg-[var(--background)]/50"
+                                            className="bg-[var(--bg-base)]/50"
                                         />
                                     </div>
                                     <div>
-                                        <label className="block text-sm font-medium text-[var(--text-muted)] mb-1">Target Audience</label>
+                                        <label className="block text-sm font-medium text-[var(--text-secondary)] mb-1">Target Audience</label>
                                         <Input
                                             placeholder="e.g. small business owners"
                                             value={audience}
                                             onChange={e => setAudience(e.target.value)}
-                                            className="bg-[var(--background)]/50"
+                                            className="bg-[var(--bg-base)]/50"
                                         />
                                     </div>
                                 </div>
@@ -498,20 +498,20 @@ export default function PromptResearchPage() {
                                     return (
                                         <Card key={category}>
                                             <CardHeader className="py-4">
-                                                <CardTitle className="text-sm font-medium uppercase tracking-wider text-[var(--text-muted)]">
+                                                <CardTitle className="text-sm font-medium uppercase tracking-wider text-[var(--text-secondary)]">
                                                     {category} Stage
                                                 </CardTitle>
                                             </CardHeader>
                                             <CardContent className="space-y-2">
                                                 {promptsInCategory.map((p, i) => (
-                                                    <div key={i} className="flex items-center justify-between p-3 rounded-lg bg-[var(--surface-elevated)] hover:bg-[var(--surface-elevated)] transition-colors group">
+                                                    <div key={i} className="flex items-center justify-between p-3 rounded-lg bg-[var(--bg-raised)] hover:bg-[var(--bg-raised)] transition-colors group">
                                                         <p className="text-[var(--text-primary)] font-medium">{p.prompt}</p>
                                                         <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                                                             <Button
                                                                 variant="ghost"
                                                                 size="sm"
                                                                 onClick={() => handleCopy(`gen-${i}`, p.prompt)}
-                                                                className="text-[var(--text-muted)] hover:text-white"
+                                                                className="text-[var(--text-secondary)] hover:text-white"
                                                             >
                                                                 {copiedId === `gen-${i}` ? (
                                                                     <span className="flex items-center text-xs text-green-400"><Check className="w-3 h-3 mr-1" /> Copied</span>
@@ -524,7 +524,7 @@ export default function PromptResearchPage() {
                                                                 size="sm"
                                                                 onClick={() => handleSave(p)}
                                                                 disabled={isSaved(p.prompt) || savingId === p.prompt}
-                                                                className={cn(isSaved(p.prompt) ? "text-green-400" : "text-[var(--text-muted)] hover:text-white")}
+                                                                className={cn(isSaved(p.prompt) ? "text-green-400" : "text-[var(--text-secondary)] hover:text-white")}
                                                             >
                                                                 {savingId === p.prompt ? (
                                                                     <Loader2 className="w-4 h-4 animate-spin" />
@@ -562,7 +562,7 @@ export default function PromptResearchPage() {
                                 <Skeleton className="h-24 w-full" />
                             </div>
                         ) : savedPrompts.length === 0 ? (
-                            <div className="text-center py-12 text-[var(--text-ghost)] bg-[var(--surface-elevated)]/30 rounded-lg border border-[var(--border)] border-dashed">
+                            <div className="text-center py-12 text-[var(--text-ghost)] bg-[var(--bg-raised)]/30 rounded-lg border border-[var(--border-default)] border-dashed">
                                 <Bookmark className="w-12 h-12 mx-auto mb-4 opacity-20" />
                                 <h3 className="text-lg font-medium text-[var(--text-secondary)] mb-2">No saved prompts yet</h3>
                                 <p className="mb-6 max-w-sm mx-auto">Generate prompts in the AI Generator tab to build your research library.</p>
@@ -573,10 +573,10 @@ export default function PromptResearchPage() {
                         ) : (
                             <div className="grid gap-4">
                                 {savedPrompts.map(prompt => (
-                                    <div key={prompt.id} className="flex items-center justify-between p-4 rounded-lg bg-[var(--surface-elevated)] border border-[var(--border)] hover:border-zinc-500 transition-colors">
+                                    <div key={prompt.id} className="flex items-center justify-between p-4 rounded-lg bg-[var(--bg-raised)] border border-[var(--border-default)] hover:border-zinc-500 transition-colors">
                                         <div className="flex-1 min-w-0 mr-4">
                                             <div className="flex items-center gap-2 mb-1">
-                                                <Badge variant="outline" className="text-xs border-[var(--border-hover)] text-[var(--text-muted)]">
+                                                <Badge variant="outline" className="text-xs border-[var(--border-hover)] text-[var(--text-secondary)]">
                                                     {prompt.category}
                                                 </Badge>
                                                 <span className="text-xs text-[var(--text-ghost)]">
@@ -590,7 +590,7 @@ export default function PromptResearchPage() {
                                                 variant="outline"
                                                 size="sm"
                                                 onClick={() => handleCopy(`lib-${prompt.id}`, prompt.prompt)}
-                                                className="text-[var(--text-muted)] border-[var(--border)]"
+                                                className="text-[var(--text-secondary)] border-[var(--border-default)]"
                                             >
                                                 {copiedId === `lib-${prompt.id}` ? (
                                                     <><Check className="w-3 h-3 mr-1" /> Copied</>
@@ -673,7 +673,7 @@ export default function PromptResearchPage() {
                                                     {discoveryResults.autocomplete.map((suggestion, i) => (
                                                         <div
                                                             key={`ac-${i}`}
-                                                            className="flex items-center justify-between p-3 rounded-lg bg-[var(--surface-elevated)] border border-[var(--border)]"
+                                                            className="flex items-center justify-between p-3 rounded-lg bg-[var(--bg-raised)] border border-[var(--border-default)]"
                                                         >
                                                             <p className="text-sm text-[var(--text-primary)] flex-1">{suggestion}</p>
                                                             <div className="flex items-center gap-2 ml-4">
@@ -684,7 +684,7 @@ export default function PromptResearchPage() {
                                                                         variant="ghost"
                                                                         size="sm"
                                                                         onClick={() => handleSaveDiscovered(suggestion)}
-                                                                        className="text-[var(--text-muted)] hover:text-indigo-400 text-xs"
+                                                                        className="text-[var(--text-secondary)] hover:text-indigo-400 text-xs"
                                                                     >
                                                                         <Bookmark className="w-3 h-3 mr-1" />
                                                                         Save
@@ -694,7 +694,7 @@ export default function PromptResearchPage() {
                                                                     variant="ghost"
                                                                     size="sm"
                                                                     onClick={() => handleScan(suggestion)}
-                                                                    className="text-[var(--text-muted)] hover:text-blue-400 text-xs"
+                                                                    className="text-[var(--text-secondary)] hover:text-blue-400 text-xs"
                                                                 >
                                                                     <Search className="w-3 h-3 mr-1" />
                                                                     Scan
@@ -728,7 +728,7 @@ export default function PromptResearchPage() {
                                                                         variant="ghost"
                                                                         size="sm"
                                                                         onClick={() => handleSaveDiscovered(question)}
-                                                                        className="text-[var(--text-muted)] hover:text-indigo-400 text-xs"
+                                                                        className="text-[var(--text-secondary)] hover:text-indigo-400 text-xs"
                                                                     >
                                                                         <Bookmark className="w-3 h-3 mr-1" />
                                                                         Save
@@ -738,7 +738,7 @@ export default function PromptResearchPage() {
                                                                     variant="ghost"
                                                                     size="sm"
                                                                     onClick={() => handleScan(question)}
-                                                                    className="text-[var(--text-muted)] hover:text-blue-400 text-xs"
+                                                                    className="text-[var(--text-secondary)] hover:text-blue-400 text-xs"
                                                                 >
                                                                     <Search className="w-3 h-3 mr-1" />
                                                                     Scan
@@ -772,7 +772,7 @@ export default function PromptResearchPage() {
                                                                         variant="ghost"
                                                                         size="sm"
                                                                         onClick={() => handleSaveDiscovered(query)}
-                                                                        className="text-[var(--text-muted)] hover:text-indigo-400 text-xs"
+                                                                        className="text-[var(--text-secondary)] hover:text-indigo-400 text-xs"
                                                                     >
                                                                         <Bookmark className="w-3 h-3 mr-1" />
                                                                         Save
@@ -782,7 +782,7 @@ export default function PromptResearchPage() {
                                                                     variant="ghost"
                                                                     size="sm"
                                                                     onClick={() => handleScan(query)}
-                                                                    className="text-[var(--text-muted)] hover:text-blue-400 text-xs"
+                                                                    className="text-[var(--text-secondary)] hover:text-blue-400 text-xs"
                                                                 >
                                                                     <Search className="w-3 h-3 mr-1" />
                                                                     Scan

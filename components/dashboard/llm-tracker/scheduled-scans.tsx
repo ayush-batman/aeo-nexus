@@ -80,7 +80,7 @@ export function ScheduledScans({ platformsMap }: ScheduledScansProps) {
             <div className="flex items-center justify-between">
                 <div>
                     <h3 className="text-lg font-medium text-[var(--text-primary)]">Automated Tracking</h3>
-                    <p className="text-sm text-[var(--text-muted)]">Configure LLM scans to run automatically in the background.</p>
+                    <p className="text-sm text-[var(--text-secondary)]">Configure LLM scans to run automatically in the background.</p>
                 </div>
                 <Button onClick={() => setShowAddModal(true)} className="bg-indigo-500 hover:bg-violet-700 text-white">
                     <Plus className="w-4 h-4 mr-2" />
@@ -93,7 +93,7 @@ export function ScheduledScans({ platformsMap }: ScheduledScansProps) {
                     <Loader2 className="w-8 h-8 animate-spin text-violet-500" />
                 </div>
             ) : schedules.length === 0 ? (
-                <Card className="bg-[var(--surface)] border-[var(--border)] border-dashed">
+                <Card className="bg-[var(--bg-surface)] border-[var(--border-default)] border-dashed">
                     <CardContent className="flex flex-col items-center justify-center py-16 text-center">
                         <Calendar className="w-12 h-12 text-[var(--text-ghost)] mb-4" />
                         <h3 className="text-lg font-medium text-[var(--text-secondary)] mb-2">No active schedules</h3>
@@ -106,14 +106,14 @@ export function ScheduledScans({ platformsMap }: ScheduledScansProps) {
             ) : (
                 <div className="grid gap-4">
                     {schedules.map(schedule => (
-                        <Card key={schedule.id} className="bg-[var(--surface)] border-[var(--border)] transition-colors hover:border-[var(--border)]">
+                        <Card key={schedule.id} className="bg-[var(--bg-surface)] border-[var(--border-default)] transition-colors hover:border-[var(--border-default)]">
                             <CardContent className="p-5 flex items-center justify-between gap-4">
                                 <div className="flex-1 min-w-0">
                                     <div className="flex items-center gap-3 mb-2">
                                         <Badge variant={schedule.status === 'active' ? 'default' : 'outline'} className="capitalize bg-opacity-20">
                                             {schedule.status === 'active' ? 'Active' : 'Paused'}
                                         </Badge>
-                                        <Badge variant="outline" className="capitalize flex items-center gap-1 border-[var(--border)] text-[var(--text-secondary)]">
+                                        <Badge variant="outline" className="capitalize flex items-center gap-1 border-[var(--border-default)] text-[var(--text-secondary)]">
                                             <Clock className="w-3 h-3" />
                                             {schedule.frequency}
                                         </Badge>
@@ -144,7 +144,7 @@ export function ScheduledScans({ platformsMap }: ScheduledScansProps) {
                                         variant="ghost"
                                         size="icon"
                                         onClick={() => toggleStatus(schedule.id, schedule.status)}
-                                        className={schedule.status === 'active' ? 'text-[var(--text-muted)] hover:text-amber-400' : 'text-[var(--text-muted)] hover:text-green-400'}
+                                        className={schedule.status === 'active' ? 'text-[var(--text-secondary)] hover:text-amber-400' : 'text-[var(--text-secondary)] hover:text-green-400'}
                                         title={schedule.status === 'active' ? 'Pause Schedule' : 'Resume Schedule'}
                                     >
                                         {schedule.status === 'active' ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}

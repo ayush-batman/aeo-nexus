@@ -51,7 +51,7 @@ export default function AdminDashboardClient({
                         Platform Command Center
                     </h1>
                 </div>
-                <p className="text-[var(--text-muted)] ml-12 gap-2 flex items-center">
+                <p className="text-[var(--text-secondary)] ml-12 gap-2 flex items-center">
                     <span className="relative flex h-2 w-2">
                         <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
                         <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
@@ -112,7 +112,7 @@ export default function AdminDashboardClient({
                     {/* Plan Breakdown */}
                     <motion.div
                         variants={itemVariants}
-                        className="relative group overflow-hidden bg-[var(--background)]/50 border border-[var(--border)]/80 rounded-2xl p-6 backdrop-blur-xl"
+                        className="relative group overflow-hidden bg-[var(--bg-base)]/50 border border-[var(--border-default)]/80 rounded-2xl p-6 backdrop-blur-xl"
                     >
                         {/* Glow Effect */}
                         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-3/4 h-32 bg-indigo-500/10 rounded-full blur-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
@@ -136,7 +136,7 @@ export default function AdminDashboardClient({
                     {/* Recent Organizations */}
                     <motion.div
                         variants={itemVariants}
-                        className="relative group overflow-hidden bg-[var(--background)]/50 border border-[var(--border)]/80 rounded-2xl p-6 backdrop-blur-xl"
+                        className="relative group overflow-hidden bg-[var(--bg-base)]/50 border border-[var(--border-default)]/80 rounded-2xl p-6 backdrop-blur-xl"
                     >
                         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-3/4 h-32 bg-emerald-500/10 rounded-full blur-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
 
@@ -163,10 +163,10 @@ export default function AdminDashboardClient({
                                         initial={{ opacity: 0, x: 20 }}
                                         animate={{ opacity: 1, x: 0 }}
                                         transition={{ delay: 0.3 + (i * 0.1) }}
-                                        className="flex items-center justify-between p-4 bg-[var(--surface)]/40 hover:bg-[var(--surface-elevated)]/60 border border-[var(--border)]/50 hover:border-[var(--border)] transition-all rounded-xl group/item"
+                                        className="flex items-center justify-between p-4 bg-[var(--bg-surface)]/40 hover:bg-[var(--bg-raised)]/60 border border-[var(--border-default)]/50 hover:border-[var(--border-default)] transition-all rounded-xl group/item"
                                     >
                                         <div className="flex items-center gap-4">
-                                            <div className="w-10 h-10 rounded-full bg-[var(--surface-elevated)] flex items-center justify-center text-[var(--text-muted)] font-bold group-hover/item:bg-indigo-500/20 group-hover/item:text-indigo-300 transition-colors">
+                                            <div className="w-10 h-10 rounded-full bg-[var(--bg-raised)] flex items-center justify-center text-[var(--text-secondary)] font-bold group-hover/item:bg-indigo-500/20 group-hover/item:text-indigo-300 transition-colors">
                                                 {org.name.charAt(0).toUpperCase()}
                                             </div>
                                             <div>
@@ -209,17 +209,17 @@ function StatCard({
         <motion.div
             variants={itemVariants}
             whileHover={{ y: -5, transition: { duration: 0.2 } }}
-            className={`relative overflow-hidden bg-[var(--background)]/40 border border-[var(--border)]/80 rounded-2xl p-6 backdrop-blur-md group`}
+            className={`relative overflow-hidden bg-[var(--bg-base)]/40 border border-[var(--border-default)]/80 rounded-2xl p-6 backdrop-blur-md group`}
         >
             {/* Subtle border glow on hover */}
             <div className={`absolute inset-0 bg-gradient-to-br ${gradient} opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none`} />
 
             <div className="flex items-start justify-between mb-4 relative z-10">
                 <div className="space-y-1">
-                    <p className="text-[var(--text-muted)] text-sm font-medium">{title}</p>
+                    <p className="text-[var(--text-secondary)] text-sm font-medium">{title}</p>
                     <p className="text-4xl font-bold text-white tracking-tight">{value.toLocaleString()}</p>
                 </div>
-                <div className={`p-3 rounded-xl bg-[var(--surface)] border ${borderColor} group-hover:scale-110 transition-transform duration-300`}>
+                <div className={`p-3 rounded-xl bg-[var(--bg-surface)] border ${borderColor} group-hover:scale-110 transition-transform duration-300`}>
                     <Icon className={`w-5 h-5 ${iconColor}`} />
                 </div>
             </div>
@@ -251,10 +251,10 @@ function PlanBar({
                 <span className="text-sm font-medium text-[var(--text-secondary)] capitalize group-hover:text-white transition-colors">{plan}</span>
                 <div className="flex items-center gap-2">
                     <span className="text-xs text-[var(--text-ghost)]">{percentage.toFixed(1)}%</span>
-                    <span className="text-sm font-bold text-white bg-[var(--surface-elevated)] px-2 py-0.5 rounded-md">{count}</span>
+                    <span className="text-sm font-bold text-white bg-[var(--bg-raised)] px-2 py-0.5 rounded-md">{count}</span>
                 </div>
             </div>
-            <div className="h-2.5 bg-[var(--surface)] rounded-full overflow-hidden border border-[var(--border)]">
+            <div className="h-2.5 bg-[var(--bg-surface)] rounded-full overflow-hidden border border-[var(--border-default)]">
                 <motion.div
                     initial={{ width: 0 }}
                     animate={{ width: `${percentage}%` }}
@@ -268,7 +268,7 @@ function PlanBar({
 
 function getPlanBadgeClass(plan: string): string {
     const classes: Record<string, string> = {
-        free: "bg-[var(--surface-elevated)]/80 text-[var(--text-muted)] border border-[var(--border)]/50",
+        free: "bg-[var(--bg-raised)]/80 text-[var(--text-secondary)] border border-[var(--border-default)]/50",
         starter: "bg-emerald-500/10 text-emerald-400 border border-emerald-500/30",
         pro: "bg-blue-500/10 text-blue-400 border border-blue-500/30",
         agency: "bg-indigo-500/10 text-indigo-400 border border-indigo-500/30",

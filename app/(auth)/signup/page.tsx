@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Zap, AlertCircle, Loader2 } from "lucide-react";
+import { AlertCircle, Loader2 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 
 export default function SignupPage() {
@@ -67,29 +67,30 @@ export default function SignupPage() {
     };
 
     return (
-        <div className="min-h-screen bg-[var(--background)] flex items-center justify-center p-6">
+        <div className="min-h-screen bg-black flex items-center justify-center p-6">
             <div className="w-full max-w-md">
                 {/* Logo */}
-                <div className="flex items-center justify-center gap-2 mb-8">
-                    <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center">
-                        <Zap className="w-6 h-6 text-white" />
-                    </div>
-                    <span className="text-2xl font-bold bg-gradient-to-r from-violet-400 to-indigo-400 bg-clip-text text-transparent">
-                        Lumina
+                <div className="flex items-center justify-center gap-2.5 mb-8">
+                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M12 2L2 22h20L12 2z" className="fill-[var(--accent-base)]" />
+                        <path d="M12 9L7 19h10L12 9z" className="fill-black" />
+                    </svg>
+                    <span className="text-xl font-semibold tracking-tight text-[var(--text-primary)]">
+                        Aelo
                     </span>
                 </div>
 
                 {/* Card */}
-                <div className="rounded-xl border border-[var(--border)] bg-[var(--surface)] p-8">
-                    <h1 className="text-2xl font-semibold text-[var(--text-primary)] text-center mb-2">
+                <div className="rounded-lg border border-[var(--border-default)] bg-[var(--bg-surface)] p-8">
+                    <h1 className="text-xl font-semibold text-[var(--text-primary)] text-center mb-1">
                         Create your account
                     </h1>
-                    <p className="text-sm text-[var(--text-muted)] text-center mb-8">
+                    <p className="text-sm text-[var(--text-secondary)] text-center mb-8">
                         Start your 14-day free trial
                     </p>
 
                     {error && (
-                        <div className="mb-4 p-3 rounded-lg bg-red-500/10 border border-red-500/20 flex items-center gap-2 text-red-400 text-sm">
+                        <div className="mb-4 p-3 rounded-md bg-[var(--data-red-muted)] border border-red-500/20 flex items-center gap-2 text-red-400 text-sm">
                             <AlertCircle className="w-4 h-4" />
                             {error}
                         </div>
@@ -141,13 +142,13 @@ export default function SignupPage() {
                             />
                         </div>
 
-                        <div className="text-sm text-[var(--text-muted)]">
+                        <div className="text-sm text-[var(--text-secondary)]">
                             By signing up, you agree to our{" "}
-                            <Link href="/terms" className="text-indigo-400 hover:text-indigo-300">
+                            <Link href="/terms" className="text-[var(--accent-base)] hover:text-[var(--accent-hover)]">
                                 Terms of Service
                             </Link>{" "}
                             and{" "}
-                            <Link href="/privacy" className="text-indigo-400 hover:text-indigo-300">
+                            <Link href="/privacy" className="text-[var(--accent-base)] hover:text-[var(--accent-hover)]">
                                 Privacy Policy
                             </Link>
                         </div>
@@ -164,9 +165,9 @@ export default function SignupPage() {
                         </Button>
                     </form>
 
-                    <div className="mt-6 text-center text-sm text-[var(--text-muted)]">
+                    <div className="mt-6 text-center text-sm text-[var(--text-secondary)]">
                         Already have an account?{" "}
-                        <Link href="/login" className="text-indigo-400 hover:text-indigo-300">
+                        <Link href="/login" className="text-[var(--accent-base)] hover:text-[var(--text-secondary)]">
                             Sign in
                         </Link>
                     </div>
