@@ -225,6 +225,8 @@ export default function DashboardPage() {
         return '💡 Research';
     };
 
+    const hasData = (data?.visibilityMetrics?.some(m => m.scanCount > 0)) || stats.forumThreadCount > 0 || stats.contentScore > 0;
+
     return (
         <>
             <Header
@@ -233,6 +235,33 @@ export default function DashboardPage() {
             />
 
             <div className="p-6 space-y-6">
+                {/* Empty State Onboarding CTA */}
+                {!hasData && !loading && (
+                    <div className="rounded-xl border border-indigo-500/20 bg-gradient-to-r from-violet-900/30 to-indigo-900/10 p-6 flex flex-col md:flex-row items-center gap-6 justify-between overflow-hidden relative shadow-[0_0_30px_rgba(99,102,241,0.1)]">
+                        <div className="absolute -right-10 -top-10 opacity-10 hidden md:block">
+                            <Sparkles className="w-48 h-48 text-indigo-400" />
+                        </div>
+                        <div className="relative z-10 space-y-2">
+                            <h2 className="text-xl font-bold text-white flex items-center gap-2">
+                                <Sparkles className="w-5 h-5 text-yellow-400" />
+                                Welcome to your new Aelo Dashboard!
+                            </h2>
+                            <p className="text-[var(--text-secondary)] max-w-xl text-sm leading-relaxed">
+                                Your metrics are currently empty because we haven't synced any data for this brand yet. 
+                                Run your first AI scan in the LLM Tracker to populate your visibility scores, or analyze a webpage in the Content Studio.
+                            </p>
+                        </div>
+                        <div className="relative z-10 flex gap-3 w-full md:w-auto shadow-lg">
+                            <Link href="/dashboard/llm-tracker">
+                                <Button className="w-full md:w-auto bg-indigo-500 hover:bg-violet-600 text-white border border-indigo-400/50 shadow-[0_0_15px_rgba(99,102,241,0.4)]">
+                                    <MessageSquare className="w-4 h-4 mr-2" />
+                                    Run First LLM Scan
+                                </Button>
+                            </Link>
+                        </div>
+                    </div>
+                )}
+
                 {/* Live indicator */}
                 {isLive && (
                     <div className="flex items-center gap-2 text-xs text-green-400">
