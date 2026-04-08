@@ -85,19 +85,23 @@ export default function PromptResearchPage() {
                     .single();
 
                 if (profile) {
-                    const { data: workspace } = await supabase
-                        .from('workspaces')
-                        .select('id, name, settings')
-                        .eq('org_id', profile.org_id)
-                        .limit(1)
-                        .single();
+                    const [wsRes, activeRes] = await Promise.all([
+                        fetch("/api/workspaces", { cache: "no-store" }),
+                        fetch("/api/onboarding/context", { cache: "no-store" })
+                    ]);
+                    let activeId = null;
+                    if (activeRes.ok) activeId = (await activeRes.json()).workspaceId;
+                    if (wsRes.ok && activeId) {
+                        const wsData = await wsRes.json();
+                        const workspace = wsData.workspaces?.find((ws: any) => ws.id === activeId);
 
-                    if (workspace) {
-                        setBrandName(workspace.name || '');
-                        setIndustry(workspace.settings?.industry || '');
-                        setAudience(workspace.settings?.target_audience || '');
-                        if (!topic) setTopic(workspace.settings?.industry || '');
-                        fetchLibrary();
+                        if (workspace) {
+                            setBrandName(workspace.name || '');
+                            setIndustry(workspace.settings?.industry || '');
+                            setAudience(workspace.settings?.target_audience || '');
+                            if (!topic) setTopic(workspace.settings?.industry || '');
+                            fetchLibrary();
+                        }
                     }
                 }
             }

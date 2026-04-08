@@ -88,9 +88,9 @@ export default function DashboardPage() {
             setError(null);
 
             const [statsRes, threadsRes, analyticsRes] = await Promise.all([
-                fetch('/api/dashboard/stats'),
-                fetch('/api/forum/threads?limit=3&minScore=50'),
-                fetch('/api/analytics/summary'),
+                fetch('/api/dashboard/stats', { cache: 'no-store' }),
+                fetch('/api/forum/threads?limit=3&minScore=50', { cache: 'no-store' }),
+                fetch('/api/analytics/summary', { cache: 'no-store' }),
             ]);
 
             if (!statsRes.ok) {

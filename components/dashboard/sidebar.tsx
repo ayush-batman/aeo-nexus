@@ -96,10 +96,10 @@ export function Sidebar() {
     useEffect(() => {
         async function load() {
             try {
-                // Fetch workspaces and current active workspace in parallel
+                // Fetch workspaces and current active workspace in parallel with no caching
                 const [wsRes, activeRes] = await Promise.all([
-                    fetch("/api/workspaces"),
-                    fetch("/api/onboarding/context"),
+                    fetch("/api/workspaces", { cache: "no-store" }),
+                    fetch("/api/onboarding/context", { cache: "no-store" }),
                 ]);
 
                 let currentWorkspaceId: string | null = null;

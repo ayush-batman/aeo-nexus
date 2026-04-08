@@ -169,17 +169,20 @@ export default function SettingsPage() {
                     setOrganization(orgData);
                 }
 
-                const { data: workspaceData } = await supabase
-                    .from('workspaces')
-                    .select('*')
-                    .eq('org_id', userData.org_id)
-                    .limit(1)
-                    .single();
-
-                if (workspaceData) {
-                    setWorkspace(workspaceData);
-                    setWorkspaceName(workspaceData.name);
-                    setCompetitors(workspaceData.settings?.competitors || []);
+                const [wsRes, activeRes] = await Promise.all([
+                    fetch("/api/workspaces", { cache: "no-store" }),
+                    fetch("/api/onboarding/context", { cache: "no-store" })
+                ]);
+                let activeId = null;
+                if (activeRes.ok) activeId = (await activeRes.json()).workspaceId;
+                if (wsRes.ok && activeId) {
+                    const wsData = await wsRes.json();
+                    const activeWs = wsData.workspaces?.find((ws: Workspace) => ws.id === activeId);
+                    if (activeWs) {
+                        setWorkspace(activeWs);
+                        setWorkspaceName(activeWs.name);
+                        setCompetitors(activeWs.settings?.competitors || []);
+                    }
                 }
 
                 const { data: teamData } = await supabase

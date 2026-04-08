@@ -99,8 +99,8 @@ export default function LLMTrackerPage() {
             setError(null);
 
             const [scansRes, statsRes] = await Promise.all([
-                fetch('/api/llm/scans?limit=20'),
-                fetch('/api/dashboard/stats'),
+                fetch('/api/llm/scans?limit=20', { cache: 'no-store' }),
+                fetch('/api/dashboard/stats', { cache: 'no-store' }),
             ]);
 
             if (scansRes.ok) {
@@ -121,15 +121,19 @@ export default function LLMTrackerPage() {
     // Load competitors from workspace settings
     async function loadCompetitors() {
         try {
-            const supabase = createClient();
-            const { data: { user } } = await supabase.auth.getUser();
-            if (!user) return;
-            const { data: userData } = await supabase.from('users').select('org_id').eq('id', user.id).single();
-            if (!userData) return;
-            const { data: ws } = await supabase.from('workspaces').select('name, settings').eq('org_id', userData.org_id).limit(1).single();
-            if (ws) {
-                if (ws.name) setBrandName(ws.name);
-                if (ws.settings?.competitors) setCompetitors(ws.settings.competitors);
+            const [wsRes, activeRes] = await Promise.all([
+                fetch("/api/workspaces", { cache: "no-store" }),
+                fetch("/api/onboarding/context", { cache: "no-store" }),
+            ]);
+            let activeId = null;
+            if (activeRes.ok) activeId = (await activeRes.json()).workspaceId;
+            if (wsRes.ok && activeId) {
+                const data = await wsRes.json();
+                const activeWs = data.workspaces?.find((ws: any) => ws.id === activeId);
+                if (activeWs) {
+                    if (activeWs.name) setBrandName(activeWs.name);
+                    if (activeWs.settings?.competitors) setCompetitors(activeWs.settings.competitors);
+                }
             }
         } catch (err) {
             console.error('Error loading workspace settings:', err);
