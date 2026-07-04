@@ -69,6 +69,13 @@ const navGroups = [
         ],
     },
     {
+        // The closed-loop / PROOF layer. This is the class-apart page.
+        label: "Prove",
+        items: [
+            { name: "Interventions", href: "/dashboard/interventions", icon: Check },
+        ],
+    },
+    {
         label: "Workspace",
         items: [
             { name: "Products", href: "/dashboard/products", icon: Package },
