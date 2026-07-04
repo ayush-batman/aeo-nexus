@@ -30,23 +30,30 @@ export function truncate(str: string, length: number): string {
     return str.slice(0, length) + "...";
 }
 
+// Sage rule: zero is honest, not alarming. Numeric magnitude is neutral by
+// default. We only use red for a *drop* (negative delta), never for a low
+// absolute value.
 export function getScoreColor(score: number): string {
-    if (score >= 80) return "text-green-500";
-    if (score >= 60) return "text-yellow-500";
-    if (score >= 40) return "text-orange-500";
-    return "text-red-500";
+    if (score >= 80) return "text-[var(--data-green)]";
+    if (score >= 60) return "text-[var(--data-teal)]";
+    if (score >= 40) return "text-[var(--data-amber)]";
+    if (score >= 1)  return "text-[var(--text-primary)]";
+    return "text-[var(--text-tertiary)]";
 }
 
 export function getScoreBgColor(score: number): string {
-    if (score >= 80) return "bg-green-500/10 border-green-500/30";
-    if (score >= 60) return "bg-yellow-500/10 border-yellow-500/30";
-    if (score >= 40) return "bg-orange-500/10 border-orange-500/30";
-    return "bg-red-500/10 border-red-500/30";
+    if (score >= 80) return "bg-[var(--data-green-muted)] border-[var(--data-green)]/30";
+    if (score >= 60) return "bg-[var(--data-teal-muted)] border-[var(--data-teal)]/30";
+    if (score >= 40) return "bg-[var(--data-amber-muted)] border-[var(--data-amber)]/30";
+    if (score >= 1)  return "bg-[var(--bg-raised)] border-[var(--border-default)]";
+    return "bg-[var(--bg-surface)] border-[var(--border-subtle)]";
 }
 
 export function getPriorityLabel(score: number): { label: string; emoji: string } {
-    if (score >= 80) return { label: "HOT", emoji: "🔥" };
-    if (score >= 65) return { label: "HIGH", emoji: "⭐" };
-    if (score >= 50) return { label: "MEDIUM", emoji: "👍" };
-    return { label: "LOW", emoji: "📝" };
+    // emoji kept as empty string for callers that still spread it — Sage rule:
+    // no emojis in product copy. Labels are the whole story.
+    if (score >= 80) return { label: "HOT",    emoji: "" };
+    if (score >= 65) return { label: "HIGH",   emoji: "" };
+    if (score >= 50) return { label: "MEDIUM", emoji: "" };
+    return { label: "LOW", emoji: "" };
 }

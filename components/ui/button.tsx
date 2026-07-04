@@ -15,7 +15,7 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
                     "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md font-medium transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-base)]/40 focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--bg-base)] disabled:pointer-events-none disabled:opacity-40",
                     // Variants
                     variant === "default" &&
-                    "bg-indigo-500 text-white hover:bg-indigo-400 active:scale-[0.98]",
+                    "bg-[var(--accent-base)] text-[var(--text-on-accent)] hover:bg-[var(--accent-hover)] active:scale-[0.98]",
                     variant === "secondary" &&
                     "bg-[var(--bg-raised)] text-[var(--text-primary)] hover:bg-[var(--bg-hover)] border border-[var(--border-default)]",
                     variant === "outline" &&

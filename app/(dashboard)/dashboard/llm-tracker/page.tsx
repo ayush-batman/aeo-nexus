@@ -286,15 +286,15 @@ export default function LLMTrackerPage() {
                 <Tabs defaultValue="manual" className="space-y-6">
                     <div className="flex items-center justify-between">
                         <TabsList className="bg-[var(--bg-raised)] border-[var(--border-default)]">
-                            <TabsTrigger value="manual" className="data-[state=active]:bg-indigo-500 data-[state=active]:text-white">
+                            <TabsTrigger value="manual" className="data-[state=active]:bg-[var(--accent-base)] data-[state=active]:text-[var(--text-on-accent)]">
                                 <Search className="w-4 h-4 mr-2" />
                                 Manual Scan
                             </TabsTrigger>
-                            <TabsTrigger value="schedules" className="data-[state=active]:bg-indigo-500 data-[state=active]:text-white">
+                            <TabsTrigger value="schedules" className="data-[state=active]:bg-[var(--accent-base)] data-[state=active]:text-[var(--text-on-accent)]">
                                 <Bot className="w-4 h-4 mr-2" />
                                 Scheduled Scans
                             </TabsTrigger>
-                            <TabsTrigger value="variants" className="data-[state=active]:bg-indigo-500 data-[state=active]:text-white">
+                            <TabsTrigger value="variants" className="data-[state=active]:bg-[var(--accent-base)] data-[state=active]:text-[var(--text-on-accent)]">
                                 <Layers className="w-4 h-4 mr-2" />
                                 Question Variants
                             </TabsTrigger>

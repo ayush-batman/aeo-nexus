@@ -1,14 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
-import { createClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
+import { getCurrentWorkspaceContext } from '@/lib/data-access';
 
 // POST: Switch active workspace
 export async function POST(request: NextRequest) {
     try {
-        const supabase = await createClient();
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        // Route through the shared helper so dev-auth-bypass works here.
+        const context = await getCurrentWorkspaceContext();
+        if (!context) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
         const body = await request.json();
         const { workspaceId } = body;
@@ -16,26 +16,13 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ error: 'workspaceId is required' }, { status: 400 });
         }
 
-        // Verify user owns this workspace
-        let adminClient: ReturnType<typeof createAdminClient> | null = null;
-        try { adminClient = createAdminClient(); } catch {}
-        const db = adminClient ?? supabase;
-
-        const { data: profile } = await db
-            .from('users')
-            .select('org_id')
-            .eq('id', user.id)
-            .single();
-
-        if (!profile?.org_id) {
-            return NextResponse.json({ error: 'No organization found' }, { status: 400 });
-        }
+        const db = createAdminClient();
 
         const { data: workspace } = await db
             .from('workspaces')
             .select('id')
             .eq('id', workspaceId)
-            .eq('org_id', profile.org_id)
+            .eq('org_id', context.orgId)
             .single();
 
         if (!workspace) {

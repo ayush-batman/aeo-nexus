@@ -1,34 +1,24 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
+import { getCurrentWorkspaceContext } from '@/lib/data-access';
 
 export const maxDuration = 60; // Extend Vercel timeout for initial LLMs scale
 
 // GET: List all workspaces for the current user's org
 export async function GET() {
     try {
-        const supabase = await createClient();
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        // Route through the shared context helper so the dev-auth-bypass
+        // works here too (workspaces was previously calling auth.getUser()
+        // directly and returning 401 for bypass users).
+        const context = await getCurrentWorkspaceContext();
+        if (!context) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-        let adminClient: ReturnType<typeof createAdminClient> | null = null;
-        try { adminClient = createAdminClient(); } catch {}
-        const db = adminClient ?? supabase;
-
-        const { data: profile } = await db
-            .from('users')
-            .select('org_id')
-            .eq('id', user.id)
-            .single();
-
-        if (!profile?.org_id) {
-            return NextResponse.json({ workspaces: [] });
-        }
+        const db = createAdminClient();
 
         const { data: workspaces } = await db
             .from('workspaces')
             .select('id, name, settings, created_at')
-            .eq('org_id', profile.org_id)
+            .eq('org_id', context.orgId)
             .order('created_at', { ascending: true });
 
         return NextResponse.json({ workspaces: workspaces || [] });
@@ -41,23 +31,11 @@ export async function GET() {
 // POST: Create a new workspace (brand)
 export async function POST(request: NextRequest) {
     try {
-        const supabase = await createClient();
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        const context = await getCurrentWorkspaceContext();
+        if (!context) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-        let adminClient: ReturnType<typeof createAdminClient> | null = null;
-        try { adminClient = createAdminClient(); } catch {}
-        const db = adminClient ?? supabase;
-
-        const { data: profile } = await db
-            .from('users')
-            .select('org_id')
-            .eq('id', user.id)
-            .single();
-
-        if (!profile?.org_id) {
-            return NextResponse.json({ error: 'No organization found' }, { status: 400 });
-        }
+        const db = createAdminClient();
+        const profile = { org_id: context.orgId };
 
         const body = await request.json();
         const { name, website, competitors } = body;

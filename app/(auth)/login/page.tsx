@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { AlertCircle, Loader2 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
+import { AeloWordmark } from "@/components/brand/logo";
 
 function LoginForm() {
     const router = useRouter();
@@ -66,14 +67,10 @@ function LoginForm() {
         <div className="min-h-screen bg-black flex items-center justify-center p-6">
             <div className="w-full max-w-md">
                 {/* Logo */}
-                <div className="flex items-center justify-center gap-2.5 mb-8">
-                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M12 2L2 22h20L12 2z" className="fill-[var(--accent-base)]" />
-                        <path d="M12 9L7 19h10L12 9z" className="fill-black" />
-                    </svg>
-                    <span className="text-xl font-semibold tracking-tight text-[var(--text-primary)]">
-                        Aelo
-                    </span>
+                <div className="flex items-center justify-center mb-8">
+                    <Link href="/">
+                        <AeloWordmark size="lg" />
+                    </Link>
                 </div>
 
                 {/* Card */}
