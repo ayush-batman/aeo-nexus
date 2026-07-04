@@ -16,7 +16,10 @@ export interface ScanResult {
     sentimentReason: string;
     competitorsMentioned: string[];
     competitorPositions: { name: string; position: number | null; sentiment: string }[];
-    citations: { url: string; title: string; isOwnDomain: boolean }[];
+    // snake_case for is_own_domain so the shape matches how this object is
+    // persisted into llm_scans.citations (jsonb) and read by all downstream
+    // consumers (alerts, analytics, dashboard, llm-tracker).
+    citations: { url: string; title: string; is_own_domain: boolean }[];
     listItems: string[];
     confidence: number;
     timestamp: string;
@@ -47,13 +50,13 @@ function extractCitations(response: string, brandDomain?: string): ScanResult['c
             return {
                 url,
                 title: domain,
-                isOwnDomain: brandDomain ? domain.includes(brandDomain) : false,
+                is_own_domain: brandDomain ? domain.includes(brandDomain) : false,
             };
         } catch {
             return {
                 url,
                 title: url,
-                isOwnDomain: false,
+                is_own_domain: false,
             };
         }
     });
@@ -381,7 +384,7 @@ export function calculateVisibilityScore(results: ScanResult[]): number {
             else if (result.sentimentScore < -0.5) score -= 10;
 
             // Own domain citation bonus
-            if (result.citations.some(c => c.isOwnDomain)) score += 10;
+            if (result.citations.some(c => c.is_own_domain)) score += 10;
 
             // Confidence adjustment
             score = Math.round(score * result.confidence);

@@ -48,7 +48,7 @@ interface ScanData {
     sentiment: 'positive' | 'neutral' | 'negative' | null;
     competitorsMentioned: string[];
     competitorPositions: { name: string; position: number | null; sentiment: string }[];
-    citations: { url: string; title: string; isOwnDomain: boolean }[];
+    citations: { url: string; title: string; is_own_domain: boolean }[];
     platform: string;
     response: string;
 }
@@ -74,7 +74,7 @@ export function generateRecommendations(
         : null;
     const negativeScans = scans.filter(s => s.sentiment === 'negative');
     const allCompetitors = [...new Set(scans.flatMap(s => s.competitorsMentioned))];
-    const ownCitations = scans.flatMap(s => s.citations.filter(c => c.isOwnDomain));
+    const ownCitations = scans.flatMap(s => s.citations.filter(c => c.is_own_domain));
     const totalCitations = scans.flatMap(s => s.citations);
     const notMentionedScans = scans.filter(s => !s.brandMentioned);
 
