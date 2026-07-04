@@ -143,7 +143,7 @@ export async function POST(request: NextRequest) {
                 .from('llm_scans')
                 .insert({
                     workspace_id: workspaceId,
-                    platform: result.platform === 'mock' ? 'gemini' : result.platform,
+                    platform: result.platform,
                     prompt: result.prompt,
                     response: result.response,
                     brand_mentioned: result.brandMentioned,

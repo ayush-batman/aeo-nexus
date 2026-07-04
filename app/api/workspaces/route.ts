@@ -109,19 +109,14 @@ export async function POST(request: NextRequest) {
             if (results && results.length > 0) {
                 const scanInserts = results.map(r => ({
                     workspace_id: workspace.id,
-                    platform: r.platform === 'mock' ? 'gemini' : r.platform,
+                    platform: r.platform,
                     prompt: r.prompt,
                     response: r.response,
                     brand_mentioned: r.brandMentioned,
-                    brand_variants: r.brandVariants,
                     mention_position: r.mentionPosition,
                     sentiment: r.sentiment,
-                    sentiment_score: r.sentimentScore,
-                    sentiment_reason: r.sentimentReason,
                     competitors_mentioned: r.competitorsMentioned,
                     citations: r.citations,
-                    list_items: r.listItems,
-                    confidence: r.confidence,
                 }));
                 if (scanInserts.length > 0) {
                     await db.from('llm_scans').insert(scanInserts);

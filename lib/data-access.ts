@@ -4,6 +4,50 @@ import { randomUUID } from 'crypto';
 import { cookies } from 'next/headers';
 import type { LLMScan, ForumThread, VisibilityMetric } from './types';
 
+// ── Dev Auth Bypass ─────────────────────────────────────────────────────────
+// Guarded by NEXT_PUBLIC_ENABLE_DEV_AUTH_BYPASS=true AND a `dev-auth-bypass=true`
+// cookie. Both required — so it can NEVER activate in prod without the env flag
+// AND a cookie a browser has to actively set.
+//
+// Bootstraps a real Supabase auth user (dev@aelo.local) via the admin API so all
+// downstream FKs (public.users → auth.users) hold and the normal profile/org/
+// workspace autoprovision code runs unchanged.
+const DEV_BYPASS_EMAIL = 'dev@aelo.local';
+let cachedDevUser: { id: string; email: string } | null = null;
+
+async function getOrCreateDevUser(): Promise<{ id: string; email: string } | null> {
+    if (cachedDevUser) return cachedDevUser;
+    try {
+        const admin = createAdminClient();
+        // Look up first (auth.admin.listUsers is paged; email filter is exact)
+        const { data: list, error: listErr } = await admin.auth.admin.listUsers();
+        if (listErr) {
+            console.warn('[dev-bypass] listUsers failed:', listErr);
+        }
+        const existing = list?.users?.find(u => u.email === DEV_BYPASS_EMAIL);
+        if (existing?.email) {
+            cachedDevUser = { id: existing.id, email: existing.email };
+            return cachedDevUser;
+        }
+        // Create — random password, never used (we don't sign in via password)
+        const { data, error } = await admin.auth.admin.createUser({
+            email: DEV_BYPASS_EMAIL,
+            password: randomUUID(),
+            email_confirm: true,
+            user_metadata: { full_name: 'Aelo Dev', dev_bypass: true },
+        });
+        if (error || !data.user?.email) {
+            console.error('[dev-bypass] createUser failed:', error);
+            return null;
+        }
+        cachedDevUser = { id: data.user.id, email: data.user.email };
+        return cachedDevUser;
+    } catch (e) {
+        console.warn('[dev-bypass] getOrCreateDevUser failed:', e);
+        return null;
+    }
+}
+
 // Types for dashboard data
 export interface DashboardStats {
     aeoHealthScore: number;
@@ -42,26 +86,26 @@ export async function getCurrentWorkspaceContext(): Promise<{
 } | null> {
     const supabase = await createClient();
 
-    // Check for Dev Auth Bypass - DISABLED for production
-    // const isDevBypassEnabled = process.env.NEXT_PUBLIC_ENABLE_DEV_AUTH_BYPASS === 'true';
-    // if (isDevBypassEnabled) {
-    //     const cookieStore = await cookies();
-    //     const hasBypassCookie = cookieStore.get('dev-auth-bypass')?.value === 'true';
-    // 
-    //     if (hasBypassCookie) {
-    //         console.log('[getCurrentWorkspaceContext] Using Dev Auth Bypass');
-    //         // We return a fixed ID, but we will let the DB logic handle creation if needed
-    //         // effectively acting as a 'test user' in the real DB
-    //         return {
-    //             userId: 'dev-user-id',
-    //             orgId: 'dev-org-id',
-    //             workspaceId: 'dev-workspace-id',
-    //             onboardingCompleted: true,
-    //         };
-    //     }
-    // }
+    // Dev Auth Bypass (localhost / QA only — see helper at top of file)
+    let user: { id: string; email?: string | null; user_metadata?: { full_name?: string; avatar_url?: string } } | null = null;
+    if (process.env.NEXT_PUBLIC_ENABLE_DEV_AUTH_BYPASS === 'true') {
+        try {
+            const cookieStore = await cookies();
+            if (cookieStore.get('dev-auth-bypass')?.value === 'true') {
+                const dev = await getOrCreateDevUser();
+                if (dev) {
+                    user = { id: dev.id, email: dev.email, user_metadata: { full_name: 'Aelo Dev' } };
+                }
+            }
+        } catch {
+            // cookies() unavailable in this context — fall through to normal auth
+        }
+    }
 
-    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+        const { data } = await supabase.auth.getUser();
+        user = data.user;
+    }
 
     if (!user) {
         console.log('[getCurrentWorkspaceContext] No authenticated user');

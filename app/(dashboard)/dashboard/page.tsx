@@ -25,8 +25,8 @@ import { formatDistanceToNow } from "date-fns";
 import Link from "next/link";
 
 interface DashboardStats {
-    aeloHealthScore: number;
-    aeloScoreChange: number;
+    aeoHealthScore: number;
+    aeoScoreChange: number;
     llmVisibility: number;
     llmVisibilityChange: number;
     forumThreadCount: number;
@@ -200,8 +200,8 @@ export default function DashboardPage() {
     }
 
     const stats = data?.stats || {
-        aeloHealthScore: 0,
-        aeloScoreChange: 0,
+        aeoHealthScore: 0,
+        aeoScoreChange: 0,
         llmVisibility: 0,
         llmVisibilityChange: 0,
         forumThreadCount: 0,
@@ -301,19 +301,19 @@ export default function DashboardPage() {
                                         backgroundClip: "text",
                                     }}
                                 >
-                                    {stats.aeloHealthScore}
+                                    {stats.aeoHealthScore}
                                 </span>
                                 <span className="text-xl" style={{ color: "var(--text-tertiary)" }}>/100</span>
-                                {stats.aeloScoreChange !== 0 && (
-                                    <Badge variant={stats.aeloScoreChange > 0 ? "success" : "destructive"}>
-                                        {stats.aeloScoreChange > 0 ? "+" : ""}{stats.aeloScoreChange} this week
+                                {stats.aeoScoreChange !== 0 && (
+                                    <Badge variant={stats.aeoScoreChange > 0 ? "success" : "destructive"}>
+                                        {stats.aeoScoreChange > 0 ? "+" : ""}{stats.aeoScoreChange} this week
                                     </Badge>
                                 )}
                             </div>
                             <p className="text-sm mt-2" style={{ color: "var(--text-secondary)" }}>
-                                {stats.aeloHealthScore === 0
+                                {stats.aeoHealthScore === 0
                                     ? "Run your first LLM scan to start tracking visibility"
-                                    : stats.aeloScoreChange > 0
+                                    : stats.aeoScoreChange > 0
                                         ? "Your brand visibility across AI platforms is improving"
                                         : "Monitor and optimize your AI presence"
                                 }
@@ -335,7 +335,7 @@ export default function DashboardPage() {
                                         stroke="url(#ring-grad)"
                                         strokeWidth="6"
                                         strokeLinecap="round"
-                                        strokeDasharray={`${(stats.aeloHealthScore / 100) * 301.6} 301.6`}
+                                        strokeDasharray={`${(stats.aeoHealthScore / 100) * 301.6} 301.6`}
                                         transform="rotate(-90 56 56)"
                                     />
                                     <defs>
