@@ -18,8 +18,8 @@ export default function NotFound() {
                         404
                     </div>
                     <div className="absolute inset-0 flex items-center justify-center">
-                        <div className="w-16 h-16 rounded-2xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center">
-                            <Search className="w-8 h-8 text-indigo-400" />
+                        <div className="w-16 h-16 rounded-md bg-[var(--bg-raised)] border border-[var(--border-default)] flex items-center justify-center">
+                            <Search className="w-8 h-8 text-[var(--text-tertiary)]" strokeWidth={1.5} />
                         </div>
                     </div>
                 </div>
@@ -33,7 +33,7 @@ export default function NotFound() {
 
                 <div className="flex flex-col sm:flex-row gap-3 justify-center">
                     <Link href="/dashboard">
-                        <Button className="bg-indigo-500 hover:bg-violet-700">
+                        <Button className="bg-[var(--accent-base)] text-[var(--text-on-accent)] hover:bg-[var(--accent-hover)]">
                             Go to Dashboard
                         </Button>
                     </Link>

@@ -211,9 +211,9 @@ export default function BattlePage() {
                         <h2 className="text-2xl font-bold text-[var(--text-primary)] mb-2">
                             {result.winner
                                 ? result.winner.toLowerCase() === brandName.toLowerCase()
-                                    ? `🎉 ${brandName} Wins!`
-                                    : `${result.winner} Takes the Lead`
-                                : "It's a Draw!"}
+                                    ? `${brandName} wins`
+                                    : `${result.winner} takes the lead`
+                                : "Draw"}
                         </h2>
                         <p className="text-[var(--text-secondary)] max-w-xl mx-auto">
                             {result.winnerReason || "No clear winner detected."}

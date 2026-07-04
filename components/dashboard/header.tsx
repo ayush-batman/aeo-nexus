@@ -1,7 +1,11 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { Bell, Search, ChevronDown, X } from "lucide-react";
+import {
+    Bell, Search, ChevronDown, X,
+    TrendingDown, Zap, Flame, Sparkles, Link2, AlertTriangle, Bell as BellDot,
+} from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 
 interface HeaderProps {
     title: string;
@@ -75,13 +79,22 @@ export function Header({ title, description }: HeaderProps) {
         return `${Math.floor(hrs / 24)}d ago`;
     }
 
-    const notifTypeIcon: Record<string, string> = {
-        visibility_drop: "📉",
-        competitor_overtake: "⚡",
-        hot_thread: "🔥",
-        new_citation: "✨",
-        citation_lost: "🔗",
-        negative_sentiment: "⚠️",
+    // Notification type → thin-stroke icon. Sage: instruments, not emoji.
+    const notifTypeIcon: Record<string, LucideIcon> = {
+        visibility_drop:     TrendingDown,
+        competitor_overtake: Zap,
+        hot_thread:          Flame,
+        new_citation:        Sparkles,
+        citation_lost:       Link2,
+        negative_sentiment:  AlertTriangle,
+    };
+    const notifTypeColor: Record<string, string> = {
+        visibility_drop:     "text-[var(--data-red)]",
+        competitor_overtake: "text-[var(--data-amber)]",
+        hot_thread:          "text-[var(--data-amber)]",
+        new_citation:        "text-[var(--accent-base)]",
+        citation_lost:       "text-[var(--text-tertiary)]",
+        negative_sentiment:  "text-[var(--data-red)]",
     };
 
     return (
@@ -173,8 +186,11 @@ export function Header({ title, description }: HeaderProps) {
                                                 }`}
                                             >
                                                 <div className="flex items-start gap-3">
-                                                    <span className="text-sm leading-none mt-1">
-                                                        {notifTypeIcon[n.type] || "🔔"}
+                                                    <span className={`mt-0.5 ${notifTypeColor[n.type] ?? "text-[var(--text-tertiary)]"}`}>
+                                                        {(() => {
+                                                            const Ico = notifTypeIcon[n.type] ?? BellDot;
+                                                            return <Ico className="h-3.5 w-3.5" strokeWidth={1.75} />;
+                                                        })()}
                                                     </span>
                                                     <div className="flex-1 min-w-0">
                                                         <p className="text-[13px] font-medium truncate text-[var(--text-primary)]">

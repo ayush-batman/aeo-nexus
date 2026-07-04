@@ -216,13 +216,9 @@ export default function DashboardPage() {
 
     const getIntentType = (thread: ForumThread): string => {
         const title = thread.title.toLowerCase();
-        if (title.includes('vs') || title.includes('compare') || title.includes('comparison')) {
-            return '🆚 Compare';
-        }
-        if (title.includes('buy') || title.includes('recommend') || title.includes('best') || title.includes('under')) {
-            return '🛒 Buying';
-        }
-        return '💡 Research';
+        if (title.includes('vs') || title.includes('compare') || title.includes('comparison')) return 'Compare';
+        if (title.includes('buy') || title.includes('recommend') || title.includes('best') || title.includes('under')) return 'Buying';
+        return 'Research';
     };
 
     const hasData = (data?.visibilityMetrics?.some(m => m.scanCount > 0)) || stats.forumThreadCount > 0 || stats.contentScore > 0;
@@ -235,27 +231,26 @@ export default function DashboardPage() {
             />
 
             <div className="p-6 space-y-6">
-                {/* Empty State Onboarding CTA */}
+                {/* Empty state — Sage: instructive, no fanfare. */}
                 {!hasData && !loading && (
-                    <div className="rounded-xl border border-indigo-500/20 bg-gradient-to-r from-violet-900/30 to-indigo-900/10 p-6 flex flex-col md:flex-row items-center gap-6 justify-between overflow-hidden relative shadow-[0_0_30px_rgba(99,102,241,0.1)]">
-                        <div className="absolute -right-10 -top-10 opacity-10 hidden md:block">
-                            <Sparkles className="w-48 h-48 text-indigo-400" />
-                        </div>
-                        <div className="relative z-10 space-y-2">
-                            <h2 className="text-xl font-bold text-white flex items-center gap-2">
-                                <Sparkles className="w-5 h-5 text-yellow-400" />
-                                Welcome to your new Aelo Dashboard!
+                    <div className="rounded-lg border border-[var(--border-default)] bg-[var(--bg-surface)] p-6 flex flex-col md:flex-row items-start md:items-center gap-6 justify-between">
+                        <div className="space-y-1.5">
+                            <div className="text-[10px] font-mono uppercase tracking-[0.16em] text-[var(--text-tertiary)]">
+                                No data yet
+                            </div>
+                            <h2 className="text-[17px] font-medium tracking-tight text-[var(--text-primary)]">
+                                Run your first LLM scan to populate this workspace.
                             </h2>
-                            <p className="text-[var(--text-secondary)] max-w-xl text-sm leading-relaxed">
-                                Your metrics are currently empty because we haven't synced any data for this brand yet. 
-                                Run your first AI scan in the LLM Tracker to populate your visibility scores, or analyze a webpage in the Content Studio.
+                            <p className="max-w-xl text-[13px] leading-relaxed text-[var(--text-secondary)]">
+                                Every metric on this page is computed from real scans. Nothing is fabricated —
+                                so the numbers stay at zero until we have something to measure.
                             </p>
                         </div>
-                        <div className="relative z-10 flex gap-3 w-full md:w-auto shadow-lg">
+                        <div className="flex-shrink-0">
                             <Link href="/dashboard/llm-tracker">
-                                <Button className="w-full md:w-auto bg-indigo-500 hover:bg-violet-600 text-white border border-indigo-400/50 shadow-[0_0_15px_rgba(99,102,241,0.4)]">
+                                <Button className="bg-[var(--accent-base)] text-[var(--text-on-accent)] hover:bg-[var(--accent-hover)]">
                                     <MessageSquare className="w-4 h-4 mr-2" />
-                                    Run First LLM Scan
+                                    Run first scan
                                 </Button>
                             </Link>
                         </div>
@@ -406,7 +401,7 @@ export default function DashboardPage() {
                     <Card>
                         <CardHeader>
                             <CardTitle className="flex items-center gap-2">
-                                <Sparkles className="w-4 h-4 text-indigo-400" />
+                                <Sparkles className="w-4 h-4 text-[var(--text-tertiary)]" />
                                 AI Buyer Journey
                             </CardTitle>
                         </CardHeader>
@@ -420,7 +415,7 @@ export default function DashboardPage() {
                                             ? `${((analytics.aiVisits / analytics.totalVisits) * 100).toFixed(1)}% of total traffic`
                                             : "No traffic data yet"}
                                     </div>
-                                    <div className="mt-4 p-3 bg-indigo-500/5 rounded-lg border border-indigo-500/10">
+                                    <div className="mt-4 p-3 bg-[var(--bg-raised)] rounded-md border border-[var(--border-subtle)]">
                                         <p className="text-xs text-[var(--text-secondary)]">
                                             Add the <code>&lt;script&gt;</code> tag to your site to track this.
                                         </p>
@@ -436,7 +431,7 @@ export default function DashboardPage() {
                                                     <span className="text-xl font-bold text-[var(--text-primary)]">{analytics.sources[source] || 0}</span>
                                                     <div className="h-1 w-10 bg-[var(--bg-surface)] rounded-full overflow-hidden">
                                                         <div
-                                                            className="h-full bg-indigo-500"
+                                                            className="h-full bg-[var(--accent-base)]"
                                                             style={{ width: `${Math.min(100, ((analytics.sources[source] || 0) / (analytics.aiVisits || 1)) * 100)}%` }}
                                                         />
                                                     </div>
@@ -530,7 +525,7 @@ export default function DashboardPage() {
                                             </div>
                                         </div>
                                         {item.opportunity_score >= 80 && (
-                                            <Badge variant="warning">🔥 HOT</Badge>
+                                            <Badge variant="warning">Hot</Badge>
                                         )}
                                     </div>
                                 ))
