@@ -71,7 +71,7 @@ export default function AuditPage() {
         <div className="p-8 max-w-5xl mx-auto space-y-8">
             <div className="flex flex-col gap-2">
                 <h1 className="text-3xl font-bold text-[var(--text-primary)] flex items-center gap-2">
-                    <Sparkles className="w-8 h-8 text-violet-500" />
+                    <Sparkles className="w-8 h-8 text-[var(--accent-base)]" />
                     Agent-Ready Content Auditor
                 </h1>
                 <p className="text-[var(--text-secondary)]">
@@ -82,11 +82,11 @@ export default function AuditPage() {
             {/* TABS FOR AUDIT TYPES */}
             <Tabs defaultValue="single-page" className="w-full">
                 <TabsList className="mb-6 bg-[var(--bg-raised)] border border-[var(--border-default)]">
-                    <TabsTrigger value="single-page" className="data-[state=active]:bg-indigo-500 data-[state=active]:text-white">
+                    <TabsTrigger value="single-page" className="data-[state=active]:bg-[var(--accent-base)] data-[state=active]:text-white">
                         <FileText className="w-4 h-4 mr-2" />
                         Single Page Audit
                     </TabsTrigger>
-                    <TabsTrigger value="help-center" className="data-[state=active]:bg-violet-500 data-[state=active]:text-white">
+                    <TabsTrigger value="help-center" className="data-[state=active]:bg-[var(--accent-base)] data-[state=active]:text-white">
                         <BookOpen className="w-4 h-4 mr-2" />
                         Help Center Audit
                     </TabsTrigger>
@@ -168,7 +168,7 @@ export default function AuditPage() {
                                             <CardTitle>Optimization Score</CardTitle>
                                             <CardDescription>How readable this page is for AI agents</CardDescription>
                                         </div>
-                                        <span className="text-4xl font-bold text-indigo-400">{result.score}/100</span>
+                                        <span className="text-4xl font-bold text-[var(--accent-base)]">{result.score}/100</span>
                                     </div>
                                 </CardHeader>
                                 <CardContent>

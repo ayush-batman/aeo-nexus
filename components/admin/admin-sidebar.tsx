@@ -72,7 +72,7 @@ export function AdminSidebar() {
                             className={cn(
                                 "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all",
                                 isActive
-                                    ? "bg-gradient-to-r from-rose-600/20 to-orange-600/20 text-rose-400 border border-rose-500/20"
+                                    ? "bg-gradient-to-r from-rose-600/20 to-orange-600/20 text-[var(--data-red)] border border-[var(--data-red)]/25"
                                     : "text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-raised)]"
                             )}
                         >

@@ -128,7 +128,7 @@ export function AddScheduleModal({ isOpen, onClose, onSuccess, platformsMap }: A
                         <Button type="button" variant="ghost" onClick={onClose} className="hover:bg-[var(--bg-raised)] hover:text-[var(--text-primary)]">
                             Cancel
                         </Button>
-                        <Button type="submit" disabled={isSubmitting} className="bg-indigo-500 hover:bg-violet-700 text-white">
+                        <Button type="submit" disabled={isSubmitting} className="bg-[var(--accent-base)] hover:bg-[var(--accent-base)] text-white">
                             {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : "Save Schedule"}
                         </Button>
                     </div>

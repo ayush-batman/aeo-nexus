@@ -31,10 +31,10 @@ export default async function ClientsPage() {
                     <input
                         type="text"
                         placeholder="Search organizations..."
-                        className="w-full pl-10 pr-4 py-2 bg-[var(--bg-surface)] border border-[var(--border-default)] rounded-lg text-white placeholder:text-[var(--text-ghost)] focus:outline-none focus:ring-2 focus:ring-violet-500/50"
+                        className="w-full pl-10 pr-4 py-2 bg-[var(--bg-surface)] border border-[var(--border-default)] rounded-lg text-white placeholder:text-[var(--text-ghost)] focus:outline-none focus:ring-2 focus:ring-[var(--accent-base)]/50"
                     />
                 </div>
-                <select className="px-4 py-2 bg-[var(--bg-surface)] border border-[var(--border-default)] rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-violet-500/50">
+                <select className="px-4 py-2 bg-[var(--bg-surface)] border border-[var(--border-default)] rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-[var(--accent-base)]/50">
                     <option value="">All Plans</option>
                     <option value="free">Free</option>
                     <option value="starter">Starter</option>
@@ -79,7 +79,7 @@ export default async function ClientsPage() {
                                 <tr key={org.id} className="hover:bg-[var(--bg-raised)]/30 transition-colors">
                                     <td className="px-6 py-4">
                                         <div className="flex items-center gap-3">
-                                            <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center">
+                                            <div className="w-10 h-10 rounded-lg bg-[var(--accent-muted)] flex items-center justify-center">
                                                 <Building2 className="w-5 h-5 text-white" />
                                             </div>
                                             <div>
@@ -106,7 +106,7 @@ export default async function ClientsPage() {
                                     <td className="px-6 py-4 text-right">
                                         <Link
                                             href={`/admin/clients/${org.id}`}
-                                            className="text-sm text-indigo-400 hover:text-indigo-300"
+                                            className="text-sm text-[var(--accent-base)] hover:text-[var(--accent-base)]"
                                         >
                                             View Details
                                         </Link>
@@ -121,7 +121,7 @@ export default async function ClientsPage() {
             {/* Stats Summary */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
                 <div className="bg-[var(--bg-surface)] border border-[var(--border-default)] rounded-lg p-4 flex items-center gap-3">
-                    <div className="p-2 rounded-lg bg-indigo-500/20 text-indigo-400">
+                    <div className="p-2 rounded-lg bg-[var(--accent-muted)] text-[var(--accent-base)]">
                         <Building2 className="w-5 h-5" />
                     </div>
                     <div>
@@ -160,8 +160,8 @@ function getPlanBadgeClass(plan: string): string {
     const classes: Record<string, string> = {
         free: "bg-[var(--bg-raised)] text-[var(--text-secondary)]",
         starter: "bg-emerald-900/50 text-emerald-400 border border-emerald-700",
-        pro: "bg-violet-900/50 text-indigo-400 border border-violet-700",
-        agency: "bg-rose-900/50 text-rose-400 border border-rose-700",
+        pro: "bg-[var(--accent-base)]/50 text-[var(--accent-base)] border border-[var(--accent-base)]",
+        agency: "bg-[var(--data-red)]/50 text-[var(--data-red)] border border-rose-700",
         enterprise: "bg-amber-900/50 text-amber-400 border border-amber-700",
     };
     return classes[plan] || classes.free;

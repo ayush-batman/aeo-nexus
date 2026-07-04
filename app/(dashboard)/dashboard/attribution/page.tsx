@@ -28,10 +28,10 @@ interface AttributionData {
 const SOURCE_LABELS: Record<string, { label: string; emoji: string; color: string }> = {
     chatgpt: { label: "ChatGPT", emoji: "🟢", color: "bg-green-500" },
     gemini: { label: "Google Gemini", emoji: "🔵", color: "bg-blue-500" },
-    perplexity: { label: "Perplexity", emoji: "🟣", color: "bg-purple-500" },
+    perplexity: { label: "Perplexity", emoji: "🟣", color: "bg-[var(--accent-base)]" },
     claude: { label: "Claude", emoji: "🟠", color: "bg-orange-500" },
     ai_assistant: { label: "AI Assistant (Other)", emoji: "🤖", color: "bg-cyan-500" },
-    ai_search: { label: "AI Search", emoji: "🔍", color: "bg-indigo-500" },
+    ai_search: { label: "AI Search", emoji: "🔍", color: "bg-[var(--accent-base)]" },
     google_search: { label: "Google Search", emoji: "🌐", color: "bg-yellow-500" },
     social_media: { label: "Social Media", emoji: "📱", color: "bg-pink-500" },
     referral: { label: "Referral", emoji: "👥", color: "bg-teal-500" },
@@ -39,7 +39,7 @@ const SOURCE_LABELS: Record<string, { label: string; emoji: string; color: strin
     other: { label: "Other", emoji: "❓", color: "bg-gray-400" },
 };
 
-const PIE_COLORS = ["#6366F1", "#10B981", "#3B82F6", "#F59E0B", "#EF4444", "#EC4899", "#8B5CF6", "#14B8A6"];
+const PIE_COLORS = ["var(--accent-base)", "#10B981", "#3B82F6", "#F59E0B", "#EF4444", "#EC4899", "var(--accent-base)", "#14B8A6"];
 
 export default function AttributionPage() {
     const [data, setData] = useState<AttributionData | null>(null);
@@ -87,7 +87,7 @@ export default function AttributionPage() {
     var btn = document.createElement('button');
     btn.textContent = o.l;
     btn.style.cssText = 'background:#252540;color:#ccc;border:1px solid #444;border-radius:10px;padding:8px 12px;font-size:12px;cursor:pointer;text-align:left;transition:all 0.2s;';
-    btn.onmouseover = function(){this.style.borderColor='#6366F1';this.style.color='#fff';};
+    btn.onmouseover = function(){this.style.borderColor='var(--accent-base)';this.style.color='#fff';};
     btn.onmouseout = function(){this.style.borderColor='#444';this.style.color='#ccc';};
     btn.onclick = function() {
       fetch('/api/attribution/survey', {
@@ -97,7 +97,7 @@ export default function AttributionPage() {
       });
       w.innerHTML = '<div style="position:fixed;bottom:24px;right:24px;z-index:9999;font-family:system-ui;">' +
         '<div style="background:#1a1a2e;border:1px solid #333;border-radius:16px;padding:20px;box-shadow:0 8px 32px rgba(0,0,0,0.5);text-align:center;">' +
-        '<p style="color:#6366F1;font-size:24px;margin:0 0 8px;">✓</p>' +
+        '<p style="color:var(--accent-base);font-size:24px;margin:0 0 8px;">✓</p>' +
         '<p style="color:#fff;font-size:14px;margin:0;">Thanks!</p></div></div>';
       setTimeout(function(){w.remove()},2000);
     };
@@ -122,7 +122,7 @@ export default function AttributionPage() {
                     <button
                         onClick={() => setActiveTab("dashboard")}
                         className={`px-4 py-2 rounded-xl text-sm font-medium transition-all ${activeTab === "dashboard"
-                                ? "bg-indigo-500/10 text-indigo-400 border border-indigo-500/30"
+                                ? "bg-[var(--accent-muted)] text-[var(--accent-base)] border border-[var(--accent-base)]/25"
                                 : "bg-[var(--bg-surface)] text-[var(--text-secondary)] border border-[var(--border-default)]"
                             }`}
                     >
@@ -132,7 +132,7 @@ export default function AttributionPage() {
                     <button
                         onClick={() => setActiveTab("widget")}
                         className={`px-4 py-2 rounded-xl text-sm font-medium transition-all ${activeTab === "widget"
-                                ? "bg-indigo-500/10 text-indigo-400 border border-indigo-500/30"
+                                ? "bg-[var(--accent-muted)] text-[var(--accent-base)] border border-[var(--accent-base)]/25"
                                 : "bg-[var(--bg-surface)] text-[var(--text-secondary)] border border-[var(--border-default)]"
                             }`}
                     >
@@ -155,11 +155,11 @@ export default function AttributionPage() {
                                         <p className="text-xs text-[var(--text-ghost)] uppercase tracking-wider mb-1">Total Responses</p>
                                         <p className="text-3xl font-bold font-display text-[var(--text-primary)]">{data?.total || 0}</p>
                                     </div>
-                                    <div className="rounded-xl border border-indigo-500/20 bg-indigo-500/5 p-5">
-                                        <p className="text-xs text-indigo-400 uppercase tracking-wider mb-1">AI-Influenced</p>
+                                    <div className="rounded-xl border border-[var(--accent-base)]/25 bg-[var(--accent-muted)] p-5">
+                                        <p className="text-xs text-[var(--accent-base)] uppercase tracking-wider mb-1">AI-Influenced</p>
                                         <div className="flex items-baseline gap-2">
-                                            <p className="text-3xl font-bold font-display text-indigo-400">{data?.aiInfluenced || 0}</p>
-                                            <span className="text-sm text-indigo-300">{data?.aiInfluencedPercentage || 0}%</span>
+                                            <p className="text-3xl font-bold font-display text-[var(--accent-base)]">{data?.aiInfluenced || 0}</p>
+                                            <span className="text-sm text-[var(--accent-base)]">{data?.aiInfluencedPercentage || 0}%</span>
                                         </div>
                                     </div>
                                     <div className="rounded-xl border border-[var(--border-default)] bg-[var(--bg-surface)] p-5">
@@ -177,7 +177,7 @@ export default function AttributionPage() {
                                 <Card>
                                     <CardHeader>
                                         <CardTitle className="flex items-center gap-2 text-base">
-                                            <PieChart className="w-4 h-4 text-indigo-400" />
+                                            <PieChart className="w-4 h-4 text-[var(--accent-base)]" />
                                             Attribution Sources
                                         </CardTitle>
                                     </CardHeader>
@@ -224,7 +224,7 @@ export default function AttributionPage() {
                     <Card>
                         <CardHeader>
                             <CardTitle className="flex items-center gap-2 text-base">
-                                <Code className="w-4 h-4 text-indigo-400" />
+                                <Code className="w-4 h-4 text-[var(--accent-base)]" />
                                 Install Attribution Widget
                             </CardTitle>
                         </CardHeader>

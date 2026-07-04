@@ -43,7 +43,7 @@ import { generateRecommendations, CATEGORY_CONFIG, PRIORITY_CONFIG } from "@/lib
 const platforms = [
     { id: "chatgpt", name: "ChatGPT", color: "bg-green-500" },
     { id: "gemini", name: "Gemini", color: "bg-blue-500" },
-    { id: "perplexity", name: "Perplexity", color: "bg-purple-500" },
+    { id: "perplexity", name: "Perplexity", color: "bg-[var(--accent-base)]" },
     { id: "claude", name: "Claude", color: "bg-orange-500" },
     { id: "google_ai_overview", name: "AI Overview", color: "bg-cyan-500" },
 ];
@@ -375,7 +375,7 @@ export default function LLMTrackerPage() {
                         <Card>
                             <CardHeader>
                                 <CardTitle className="text-lg flex items-center gap-2">
-                                    <Sparkles className="w-5 h-5 text-indigo-400" />
+                                    <Sparkles className="w-5 h-5 text-[var(--accent-base)]" />
                                     Run a New Scan
                                 </CardTitle>
                             </CardHeader>
@@ -615,7 +615,7 @@ export default function LLMTrackerPage() {
                                                                                 href={citation.url}
                                                                                 target="_blank"
                                                                                 rel="noopener noreferrer"
-                                                                                className="text-indigo-400 hover:text-indigo-300 truncate"
+                                                                                className="text-[var(--accent-base)] hover:text-[var(--accent-base)] truncate"
                                                                             >
                                                                                 {citation.title || citation.url}
                                                                             </a>
@@ -675,7 +675,7 @@ export default function LLMTrackerPage() {
                             if (recs.length === 0) return null;
 
                             return (
-                                <Card className="border-indigo-500/20 bg-gradient-to-br from-zinc-900 to-zinc-900/50">
+                                <Card className="border-[var(--accent-base)]/25 bg-gradient-to-br from-zinc-900 to-zinc-900/50">
                                     <CardHeader className="flex flex-row items-center justify-between">
                                         <CardTitle className="text-lg flex items-center gap-2">
                                             <Lightbulb className="w-5 h-5 text-yellow-400" />
@@ -710,7 +710,7 @@ export default function LLMTrackerPage() {
                                                         <h4 className="font-semibold text-[var(--text-primary)] mb-1">{rec.title}</h4>
                                                         <p className="text-sm text-[var(--text-secondary)] mb-2">{rec.description}</p>
                                                         <div className="flex items-start gap-2 text-sm">
-                                                            <span className="text-indigo-400 font-medium flex-shrink-0">Action:</span>
+                                                            <span className="text-[var(--accent-base)] font-medium flex-shrink-0">Action:</span>
                                                             <span className="text-[var(--text-secondary)]">{rec.action}</span>
                                                         </div>
                                                     </div>

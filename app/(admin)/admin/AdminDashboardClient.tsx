@@ -44,8 +44,8 @@ export default function AdminDashboardClient({
                 className="mb-10"
             >
                 <div className="flex items-center gap-3 mb-2">
-                    <div className="p-2 bg-indigo-500/10 rounded-lg border border-indigo-500/20">
-                        <Activity className="w-6 h-6 text-indigo-400" />
+                    <div className="p-2 bg-[var(--accent-muted)] rounded-lg border border-[var(--accent-base)]/25">
+                        <Activity className="w-6 h-6 text-[var(--accent-base)]" />
                     </div>
                     <h1 className="text-3xl font-bold text-white tracking-tight">
                         Platform Command Center
@@ -72,9 +72,9 @@ export default function AdminDashboardClient({
                         title="Active Organizations"
                         value={initialStats.totalOrganizations}
                         icon={Building2}
-                        gradient="from-indigo-500/20 to-violet-600/20"
-                        iconColor="text-indigo-400"
-                        borderColor="border-indigo-500/20"
+                        gradient=" "
+                        iconColor="text-[var(--accent-base)]"
+                        borderColor="border-[var(--accent-base)]/25"
                     />
                     <StatCard
                         title="Registered Users"
@@ -115,10 +115,10 @@ export default function AdminDashboardClient({
                         className="relative group overflow-hidden bg-[var(--bg-base)]/50 border border-[var(--border-default)]/80 rounded-2xl p-6 backdrop-blur-xl"
                     >
                         {/* Glow Effect */}
-                        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-3/4 h-32 bg-indigo-500/10 rounded-full blur-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
+                        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-3/4 h-32 bg-[var(--accent-muted)] rounded-full blur-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
 
                         <h2 className="text-xl font-semibold text-white mb-6 flex items-center gap-2 relative z-10">
-                            <TrendingUp className="w-5 h-5 text-indigo-400" />
+                            <TrendingUp className="w-5 h-5 text-[var(--accent-base)]" />
                             Revenue Distribution
                         </h2>
                         <div className="space-y-5 relative z-10">
@@ -166,11 +166,11 @@ export default function AdminDashboardClient({
                                         className="flex items-center justify-between p-4 bg-[var(--bg-surface)]/40 hover:bg-[var(--bg-raised)]/60 border border-[var(--border-default)]/50 hover:border-[var(--border-default)] transition-all rounded-xl group/item"
                                     >
                                         <div className="flex items-center gap-4">
-                                            <div className="w-10 h-10 rounded-full bg-[var(--bg-raised)] flex items-center justify-center text-[var(--text-secondary)] font-bold group-hover/item:bg-indigo-500/20 group-hover/item:text-indigo-300 transition-colors">
+                                            <div className="w-10 h-10 rounded-full bg-[var(--bg-raised)] flex items-center justify-center text-[var(--text-secondary)] font-bold group-hover/item:bg-[var(--accent-muted)] group-hover/item:text-[var(--accent-base)] transition-colors">
                                                 {org.name.charAt(0).toUpperCase()}
                                             </div>
                                             <div>
-                                                <p className="text-white font-medium group-hover/item:text-violet-200 transition-colors">{org.name}</p>
+                                                <p className="text-white font-medium group-hover/item:text-[var(--accent-base)] transition-colors">{org.name}</p>
                                                 <p className="text-[var(--text-ghost)] text-xs mt-0.5">
                                                     Joined {new Date(org.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
                                                 </p>
@@ -241,7 +241,7 @@ function PlanBar({
         free: "bg-zinc-600 shadow-zinc-600/50",
         starter: "bg-emerald-500 shadow-emerald-500/50",
         pro: "bg-blue-500 shadow-blue-500/50",
-        agency: "bg-indigo-500 shadow-violet-500/50",
+        agency: "bg-[var(--accent-base)] shadow-[var(--accent-base)]/40",
         enterprise: "bg-amber-400 shadow-amber-400/50",
     };
 
@@ -271,7 +271,7 @@ function getPlanBadgeClass(plan: string): string {
         free: "bg-[var(--bg-raised)]/80 text-[var(--text-secondary)] border border-[var(--border-default)]/50",
         starter: "bg-emerald-500/10 text-emerald-400 border border-emerald-500/30",
         pro: "bg-blue-500/10 text-blue-400 border border-blue-500/30",
-        agency: "bg-indigo-500/10 text-indigo-400 border border-indigo-500/30",
+        agency: "bg-[var(--accent-muted)] text-[var(--accent-base)] border border-[var(--accent-base)]/25",
         enterprise: "bg-amber-500/10 text-amber-400 border border-amber-500/30",
     };
     return classes[plan] || classes.free;

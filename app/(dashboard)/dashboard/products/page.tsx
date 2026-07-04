@@ -110,7 +110,7 @@ export default function ProductsPage() {
                     description="Manage your products and their knowledge base"
                 />
                 <div className="flex items-center justify-center py-20">
-                    <Loader2 className="w-8 h-8 animate-spin text-indigo-400" />
+                    <Loader2 className="w-8 h-8 animate-spin text-[var(--accent-base)]" />
                 </div>
             </>
         );
@@ -139,8 +139,8 @@ export default function ProductsPage() {
                             <CardHeader className="pb-3">
                                 <div className="flex items-start justify-between">
                                     <div className="flex items-center gap-3">
-                                        <div className="w-10 h-10 rounded-lg bg-indigo-500/20 flex items-center justify-center">
-                                            <Package className="w-5 h-5 text-indigo-400" />
+                                        <div className="w-10 h-10 rounded-lg bg-[var(--accent-muted)] flex items-center justify-center">
+                                            <Package className="w-5 h-5 text-[var(--accent-base)]" />
                                         </div>
                                         <div>
                                             <CardTitle className="text-lg">{product.name}</CardTitle>
@@ -180,7 +180,7 @@ export default function ProductsPage() {
                                             href={product.website}
                                             target="_blank"
                                             rel="noopener noreferrer"
-                                            className="text-sm text-indigo-400 hover:text-indigo-300 truncate block"
+                                            className="text-sm text-[var(--accent-base)] hover:text-[var(--accent-base)] truncate block"
                                         >
                                             {product.website}
                                         </a>
@@ -212,7 +212,7 @@ export default function ProductsPage() {
                                 {/* Stats */}
                                 <div className="flex items-center justify-between pt-3 border-t border-[var(--border-default)]">
                                     <div className="flex items-center gap-2">
-                                        <Sparkles className="w-4 h-4 text-indigo-400" />
+                                        <Sparkles className="w-4 h-4 text-[var(--accent-base)]" />
                                         <span className="text-sm text-[var(--text-secondary)]">
                                             Added {new Date(product.created_at).toLocaleDateString()}
                                         </span>

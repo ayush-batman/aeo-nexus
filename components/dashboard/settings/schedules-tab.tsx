@@ -112,7 +112,7 @@ export function SchedulesTab({ workspaceId }: SchedulesTabProps) {
             <Card>
                 <CardHeader className="flex flex-row items-center justify-between pb-2">
                     <CardTitle className="text-lg flex items-center gap-2">
-                        <Calendar className="w-5 h-5 text-indigo-400" />
+                        <Calendar className="w-5 h-5 text-[var(--accent-base)]" />
                         Scheduled Scans
                     </CardTitle>
                     {!isFormOpen && (
@@ -152,7 +152,7 @@ export function SchedulesTab({ workspaceId }: SchedulesTabProps) {
                                                     onClick={() => setFrequency(f)}
                                                     className={cn(
                                                         "flex-1 text-xs py-1.5 rounded capitalize transition-colors",
-                                                        frequency === f ? "bg-indigo-500 text-white shadow-sm" : "text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
+                                                        frequency === f ? "bg-[var(--accent-base)] text-white shadow-sm" : "text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
                                                     )}
                                                 >
                                                     {f}
@@ -171,7 +171,7 @@ export function SchedulesTab({ workspaceId }: SchedulesTabProps) {
                                                     className={cn(
                                                         "px-2 py-1 text-xs rounded border transition-colors capitalize",
                                                         platforms.includes(p)
-                                                            ? "bg-violet-900/30 border-indigo-500/50 text-indigo-300"
+                                                            ? "bg-[var(--accent-muted)] border-[var(--accent-base)]/25 text-[var(--accent-base)]"
                                                             : "bg-[var(--bg-surface)] border-[var(--border-default)] text-[var(--text-ghost)] hover:border-[var(--border-hover)]"
                                                     )}
                                                 >
@@ -198,7 +198,7 @@ export function SchedulesTab({ workspaceId }: SchedulesTabProps) {
                             <div className="text-center py-8 text-[var(--text-ghost)] bg-[var(--bg-raised)]/30 rounded-lg border border-[var(--border-default)] border-dashed">
                                 <Clock className="w-8 h-8 mx-auto mb-2 opacity-50" />
                                 <p>No scheduled scans found.</p>
-                                <Button variant="ghost" onClick={() => setIsFormOpen(true)} className="text-indigo-400 hover:text-indigo-300 hover:bg-transparent p-0 h-auto font-normal underline-offset-4 hover:underline">
+                                <Button variant="ghost" onClick={() => setIsFormOpen(true)} className="text-[var(--accent-base)] hover:text-[var(--accent-base)] hover:bg-transparent p-0 h-auto font-normal underline-offset-4 hover:underline">
                                     Create your first schedule
                                 </Button>
                             </div>

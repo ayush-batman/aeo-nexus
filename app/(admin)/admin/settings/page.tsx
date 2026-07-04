@@ -32,8 +32,8 @@ export default async function AdminSettingsPage() {
                         <h2 className="text-xl font-semibold text-white">{user?.full_name || 'Admin User'}</h2>
                         <p className="text-[var(--text-secondary)]">{user?.email}</p>
                         <div className="flex items-center gap-2 mt-1">
-                            <Shield className="w-4 h-4 text-rose-400" />
-                            <span className="text-rose-400 text-sm font-medium">Super Admin</span>
+                            <Shield className="w-4 h-4 text-[var(--data-red)]" />
+                            <span className="text-[var(--data-red)] text-sm font-medium">Super Admin</span>
                         </div>
                     </div>
                 </div>
@@ -44,7 +44,7 @@ export default async function AdminSettingsPage() {
                 {/* Notifications */}
                 <div className="bg-[var(--bg-surface)] border border-[var(--border-default)] rounded-xl p-6">
                     <div className="flex items-center gap-3 mb-4">
-                        <div className="p-2 rounded-lg bg-indigo-500/20 text-indigo-400">
+                        <div className="p-2 rounded-lg bg-[var(--accent-muted)] text-[var(--accent-base)]">
                             <Bell className="w-5 h-5" />
                         </div>
                         <h3 className="text-lg font-semibold text-white">Notifications</h3>
@@ -52,15 +52,15 @@ export default async function AdminSettingsPage() {
                     <div className="space-y-4">
                         <label className="flex items-center justify-between">
                             <span className="text-[var(--text-secondary)]">New signup alerts</span>
-                            <input type="checkbox" defaultChecked className="w-5 h-5 rounded bg-[var(--bg-raised)] border-[var(--border-default)] text-violet-600 focus:ring-violet-500" />
+                            <input type="checkbox" defaultChecked className="w-5 h-5 rounded bg-[var(--bg-raised)] border-[var(--border-default)] text-[var(--accent-base)] focus:ring-[var(--accent-base)]" />
                         </label>
                         <label className="flex items-center justify-between">
                             <span className="text-[var(--text-secondary)]">Subscription changes</span>
-                            <input type="checkbox" defaultChecked className="w-5 h-5 rounded bg-[var(--bg-raised)] border-[var(--border-default)] text-violet-600 focus:ring-violet-500" />
+                            <input type="checkbox" defaultChecked className="w-5 h-5 rounded bg-[var(--bg-raised)] border-[var(--border-default)] text-[var(--accent-base)] focus:ring-[var(--accent-base)]" />
                         </label>
                         <label className="flex items-center justify-between">
                             <span className="text-[var(--text-secondary)]">Weekly reports</span>
-                            <input type="checkbox" className="w-5 h-5 rounded bg-[var(--bg-raised)] border-[var(--border-default)] text-violet-600 focus:ring-violet-500" />
+                            <input type="checkbox" className="w-5 h-5 rounded bg-[var(--bg-raised)] border-[var(--border-default)] text-[var(--accent-base)] focus:ring-[var(--accent-base)]" />
                         </label>
                     </div>
                 </div>

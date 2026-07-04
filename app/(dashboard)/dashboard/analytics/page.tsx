@@ -423,7 +423,7 @@ export default function AnalyticsPage() {
                 <Header title="Analytics" description="Track your AEO performance over time" />
                 <div className="p-6 flex items-center justify-center min-h-[400px]">
                     <div className="flex flex-col items-center gap-3">
-                        <Loader2 className="w-8 h-8 animate-spin text-indigo-400" />
+                        <Loader2 className="w-8 h-8 animate-spin text-[var(--accent-base)]" />
                         <p className="text-sm text-[var(--text-secondary)]">Loading analytics...</p>
                     </div>
                 </div>
@@ -456,7 +456,7 @@ export default function AnalyticsPage() {
                                 className={cn(
                                     "rounded-lg px-4 transition-all duration-300",
                                     timeRange === range
-                                        ? "bg-indigo-500/20 text-indigo-300 hover:bg-indigo-500/30 hover:text-violet-200"
+                                        ? "bg-[var(--accent-muted)] text-[var(--accent-base)] hover:bg-[var(--accent-muted)] hover:text-[var(--accent-base)]"
                                         : "text-[var(--text-ghost)] hover:text-[var(--text-secondary)] hover:bg-[var(--bg-raised)]"
                                 )}
                             >
@@ -484,7 +484,7 @@ export default function AnalyticsPage() {
                             PDF Report
                         </Button>
                         <Button variant="outline" size="sm" onClick={() => { setLoading(true); fetchData(); }} className="bg-[var(--bg-surface)] border-[var(--border-default)] hover:bg-[var(--bg-raised)] hover:text-white rounded-xl">
-                            <RefreshCw className="w-4 h-4 mr-2 text-indigo-400" />
+                            <RefreshCw className="w-4 h-4 mr-2 text-[var(--accent-base)]" />
                             Sync Data
                         </Button>
                     </div>
@@ -525,8 +525,8 @@ export default function AnalyticsPage() {
                                     change: stats?.aeoScoreChange ?? 0,
                                     icon: Eye,
                                     suffix: "",
-                                    gradient: "from-indigo-500/10 to-violet-600/10",
-                                    iconColor: "text-indigo-400"
+                                    gradient: " ",
+                                    iconColor: "text-[var(--accent-base)]"
                                 },
                                 {
                                     label: "LLM Visibility",
@@ -588,11 +588,11 @@ export default function AnalyticsPage() {
                         {/* VISIBILITY TREND LINE CHART                   */}
                         {/* ============================================ */}
                         <motion.div variants={itemVariants} className="relative group overflow-hidden bg-[var(--bg-base)]/50 border border-[var(--border-default)]/80 rounded-3xl p-6 backdrop-blur-xl">
-                            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-3/4 h-32 bg-indigo-500/5 rounded-full blur-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none" />
+                            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-3/4 h-32 bg-[var(--accent-muted)] rounded-full blur-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none" />
 
                             <div className="flex items-center gap-2 mb-6 relative z-10">
-                                <div className="p-2 bg-indigo-500/10 rounded-lg border border-indigo-500/20">
-                                    <TrendingUp className="w-5 h-5 text-indigo-400" />
+                                <div className="p-2 bg-[var(--accent-muted)] rounded-lg border border-[var(--accent-base)]/25">
+                                    <TrendingUp className="w-5 h-5 text-[var(--accent-base)]" />
                                 </div>
                                 <h2 className="text-xl font-semibold text-white">Visibility Over Time</h2>
                             </div>
@@ -656,10 +656,10 @@ export default function AnalyticsPage() {
                                     </div>
                                 ) : trendData.length === 1 ? (
                                     <div className="h-[350px] flex flex-col items-center justify-center bg-[var(--bg-surface)]/20 rounded-xl border border-dashed border-[var(--border-default)]">
-                                        <Eye className="w-10 h-10 mb-4 text-violet-500/50" />
+                                        <Eye className="w-10 h-10 mb-4 text-[var(--accent-base)]/50" />
                                         <p className="text-[var(--text-secondary)] font-medium">Only 1 day of data recorded</p>
                                         <p className="text-xs text-[var(--text-ghost)] mt-2 max-w-sm text-center">Run more LLM scans over multiple days to populate this high-fidelity trend tracker.</p>
-                                        <Badge variant="outline" className="mt-4 bg-indigo-500/10 text-indigo-300 border-indigo-500/20">
+                                        <Badge variant="outline" className="mt-4 bg-[var(--accent-muted)] text-[var(--accent-base)] border-[var(--accent-base)]/25">
                                             Current visibility: {trendData[0].visibility}%
                                         </Badge>
                                     </div>
@@ -790,7 +790,7 @@ export default function AnalyticsPage() {
                                             </div>
                                             <div className="flex flex-wrap items-center justify-center gap-3 mt-4">
                                                 {competitiveSOV.donutData.slice(0, 4).map((entry, i) => (
-                                                    <div key={entry.name} className="flex items-center gap-1.5 focus:outline-none focus:ring-2 focus:ring-violet-500 rounded px-2 py-1">
+                                                    <div key={entry.name} className="flex items-center gap-1.5 focus:outline-none focus:ring-2 focus:ring-[var(--accent-base)] rounded px-2 py-1">
                                                         <div className="w-2.5 h-2.5 rounded-full shadow-sm" style={{ backgroundColor: i === 0 ? "#10b981" : DONUT_COLORS[(i - 1 + DONUT_COLORS.length) % DONUT_COLORS.length] }} />
                                                         <span className={cn("text-xs", i === 0 ? "text-[var(--text-primary)] font-medium" : "text-[var(--text-secondary)]")}>{entry.name}</span>
                                                     </div>
@@ -833,7 +833,7 @@ export default function AnalyticsPage() {
                                                         {metric.score}%
                                                     </div>
                                                     <div
-                                                        className="w-full bg-gradient-to-t from-indigo-500/60 to-violet-400 rounded-t-xl group-hover:from-violet-500 group-hover:to-violet-300 transition-colors shadow-[0_0_15px_rgba(139,92,246,0.15)] group-hover:shadow-[0_0_20px_rgba(139,92,246,0.3)] relative overflow-hidden"
+                                                        className="w-full bg-[var(--accent-muted)] rounded-t-xl group-hover: group-hover: transition-colors shadow-[0_0_15px_rgba(229, 211, 166, 0.15)] group-hover:shadow-[0_0_20px_rgba(229, 211, 166, 0.3)] relative overflow-hidden"
                                                         style={{ height: `${Math.max(metric.score * 2.2, 12)}px` }}
                                                     >
                                                         {/* Inner glass highlight */}
@@ -864,7 +864,7 @@ export default function AnalyticsPage() {
                                                         {p.mentionRate}%
                                                     </div>
                                                     <div
-                                                        className="w-full bg-gradient-to-t from-indigo-500/60 to-violet-400 rounded-t-xl group-hover:from-violet-500 group-hover:to-violet-300 transition-colors shadow-[0_0_15px_rgba(139,92,246,0.1)] relative overflow-hidden"
+                                                        className="w-full bg-[var(--accent-muted)] rounded-t-xl group-hover: group-hover: transition-colors shadow-[0_0_15px_rgba(229, 211, 166, 0.1)] relative overflow-hidden"
                                                         style={{ height: `${Math.max(p.mentionRate * 2.2, 12)}px` }}
                                                     >
                                                         <div className="absolute top-0 left-0 right-0 h-1 bg-white/30 rounded-t-xl" />

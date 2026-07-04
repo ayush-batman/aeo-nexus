@@ -28,7 +28,7 @@ export function EmptyState({ icon: Icon, title, description, action, className }
                 <Button
                     variant="outline"
                     onClick={action.onClick}
-                    className="border-indigo-500/20 text-indigo-400 hover:bg-indigo-500/10"
+                    className="border-[var(--accent-base)]/25 text-[var(--accent-base)] hover:bg-[var(--accent-muted)]"
                 >
                     {action.icon && <action.icon className="w-4 h-4 mr-2" />}
                     {action.label}

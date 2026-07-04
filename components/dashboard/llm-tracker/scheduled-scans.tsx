@@ -82,7 +82,7 @@ export function ScheduledScans({ platformsMap }: ScheduledScansProps) {
                     <h3 className="text-lg font-medium text-[var(--text-primary)]">Automated Tracking</h3>
                     <p className="text-sm text-[var(--text-secondary)]">Configure LLM scans to run automatically in the background.</p>
                 </div>
-                <Button onClick={() => setShowAddModal(true)} className="bg-indigo-500 hover:bg-violet-700 text-white">
+                <Button onClick={() => setShowAddModal(true)} className="bg-[var(--accent-base)] hover:bg-[var(--accent-base)] text-white">
                     <Plus className="w-4 h-4 mr-2" />
                     New Schedule
                 </Button>
@@ -90,7 +90,7 @@ export function ScheduledScans({ platformsMap }: ScheduledScansProps) {
 
             {loading ? (
                 <div className="flex justify-center py-12">
-                    <Loader2 className="w-8 h-8 animate-spin text-violet-500" />
+                    <Loader2 className="w-8 h-8 animate-spin text-[var(--accent-base)]" />
                 </div>
             ) : schedules.length === 0 ? (
                 <Card className="bg-[var(--bg-surface)] border-[var(--border-default)] border-dashed">
@@ -135,7 +135,7 @@ export function ScheduledScans({ platformsMap }: ScheduledScansProps) {
                                             <span>Last run: {formatDistanceToNow(new Date(schedule.last_run_at), { addSuffix: true })}</span>
                                         )}
                                         {schedule.next_run_at && schedule.status === 'active' && (
-                                            <span className="text-indigo-400">Next: {new Date(schedule.next_run_at).toLocaleString()}</span>
+                                            <span className="text-[var(--accent-base)]">Next: {new Date(schedule.next_run_at).toLocaleString()}</span>
                                         )}
                                     </div>
                                 </div>

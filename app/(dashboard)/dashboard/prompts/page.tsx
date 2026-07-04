@@ -31,7 +31,7 @@ interface GeneratedPrompt {
 const LLM_LINKS = [
     { name: 'ChatGPT', url: 'https://chat.openai.com', color: 'bg-green-500' },
     { name: 'Gemini', url: 'https://gemini.google.com', color: 'bg-blue-500' },
-    { name: 'Perplexity', url: 'https://perplexity.ai', color: 'bg-purple-500' },
+    { name: 'Perplexity', url: 'https://perplexity.ai', color: 'bg-[var(--accent-base)]' },
     { name: 'Claude', url: 'https://claude.ai', color: 'bg-orange-500' },
 ];
 
@@ -247,11 +247,11 @@ export default function PromptResearchPage() {
             <div className="p-6">
                 <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
                     <TabsList className="bg-[var(--bg-raised)] border-[var(--border-default)]">
-                        <TabsTrigger value="quick-check" className="data-[state=active]:bg-indigo-500 data-[state=active]:text-white">
+                        <TabsTrigger value="quick-check" className="data-[state=active]:bg-[var(--accent-base)] data-[state=active]:text-white">
                             <ClipboardList className="w-4 h-4 mr-2" />
                             Quick Check
                         </TabsTrigger>
-                        <TabsTrigger value="discover" className="data-[state=active]:bg-indigo-500 data-[state=active]:text-white">
+                        <TabsTrigger value="discover" className="data-[state=active]:bg-[var(--accent-base)] data-[state=active]:text-white">
                             <Sparkles className="w-4 h-4 mr-2" />
                             AI Generator
                         </TabsTrigger>
@@ -264,7 +264,7 @@ export default function PromptResearchPage() {
                                 </span>
                             )}
                         </TabsTrigger>
-                        <TabsTrigger value="prompt-discovery" className="data-[state=active]:bg-indigo-500 data-[state=active]:text-white">
+                        <TabsTrigger value="prompt-discovery" className="data-[state=active]:bg-[var(--accent-base)] data-[state=active]:text-white">
                             <Compass className="w-4 h-4 mr-2" />
                             Discover
                         </TabsTrigger>
@@ -273,11 +273,11 @@ export default function PromptResearchPage() {
                     {/* ===== QUICK CHECK TAB ===== */}
                     <TabsContent value="quick-check" className="space-y-6">
                         {/* How-to Guide Card */}
-                        <Card className="border-indigo-500/20 bg-gradient-to-br from-violet-950/30 to-zinc-900">
+                        <Card className="border-[var(--accent-base)]/25 bg-[var(--accent-muted)]">
                             <CardContent className="p-5">
                                 <div className="flex items-start gap-4">
-                                    <div className="w-10 h-10 rounded-xl bg-indigo-500/20 flex items-center justify-center flex-shrink-0 mt-0.5">
-                                        <Zap className="w-5 h-5 text-indigo-400" />
+                                    <div className="w-10 h-10 rounded-xl bg-[var(--accent-muted)] flex items-center justify-center flex-shrink-0 mt-0.5">
+                                        <Zap className="w-5 h-5 text-[var(--accent-base)]" />
                                     </div>
                                     <div className="flex-1">
                                         <h3 className="font-semibold text-[var(--text-primary)] mb-1">Manual LLM Check — How It Works</h3>
@@ -337,7 +337,7 @@ export default function PromptResearchPage() {
                                         />
                                     </div>
                                     <Button 
-                                        className="h-9 bg-indigo-500 hover:bg-indigo-600 text-white w-full"
+                                        className="h-9 bg-[var(--accent-base)] hover:bg-[var(--accent-base)] text-white w-full"
                                         onClick={() => {
                                             // The list updates reactively, this just provides visual submission UX
                                             const el = document.getElementById('template-results');
@@ -358,7 +358,7 @@ export default function PromptResearchPage() {
                                 className={cn(
                                     "px-3 py-1.5 rounded-lg text-sm transition-all",
                                     selectedCategory === 'all'
-                                        ? "bg-indigo-500 text-white"
+                                        ? "bg-[var(--accent-base)] text-white"
                                         : "bg-[var(--bg-raised)] text-[var(--text-secondary)] hover:bg-[var(--bg-raised)]"
                                 )}
                             >
@@ -404,7 +404,7 @@ export default function PromptResearchPage() {
                                             </p>
                                             <p className="text-xs text-[var(--text-ghost)] mt-1.5">{template.description}</p>
                                             {template.llmTip && (
-                                                <p className="text-xs text-indigo-400/70 mt-1 flex items-center gap-1">
+                                                <p className="text-xs text-[var(--accent-base)]/70 mt-1 flex items-center gap-1">
                                                     <Info className="w-3 h-3" />
                                                     {template.llmTip}
                                                 </p>
@@ -431,7 +431,7 @@ export default function PromptResearchPage() {
                                             <Button
                                                 size="sm"
                                                 onClick={() => handleScan(template.filledPrompt)}
-                                                className="h-8 text-xs bg-indigo-500 hover:bg-violet-700 text-white"
+                                                className="h-8 text-xs bg-[var(--accent-base)] hover:bg-[var(--accent-base)] text-white"
                                             >
                                                 <Search className="w-3 h-3 mr-1" /> Test on LLM
                                             </Button>
@@ -444,7 +444,7 @@ export default function PromptResearchPage() {
 
                     {/* ===== AI GENERATOR TAB ===== */}
                     <TabsContent value="discover" className="space-y-6">
-                        <Card className="border-indigo-500/20 bg-gradient-to-br from-zinc-900 to-zinc-900/50">
+                        <Card className="border-[var(--accent-base)]/25 bg-gradient-to-br from-zinc-900 to-zinc-900/50">
                             <CardHeader>
                                 <CardTitle className="flex items-center gap-2">
                                     <Lightbulb className="w-5 h-5 text-yellow-400" />
@@ -487,7 +487,7 @@ export default function PromptResearchPage() {
                                 <Button
                                     onClick={handleGenerate}
                                     disabled={!topic || generating}
-                                    className="w-full md:w-auto bg-indigo-500 hover:bg-violet-700 text-white"
+                                    className="w-full md:w-auto bg-[var(--accent-base)] hover:bg-[var(--accent-base)] text-white"
                                 >
                                     {generating ? (
                                         <>
@@ -553,7 +553,7 @@ export default function PromptResearchPage() {
                                                                 variant="ghost"
                                                                 size="sm"
                                                                 onClick={() => handleScan(p.prompt)}
-                                                                className="text-indigo-400 hover:text-indigo-300"
+                                                                className="text-[var(--accent-base)] hover:text-[var(--accent-base)]"
                                                             >
                                                                 <Search className="w-3 h-3 mr-1" />
                                                                 Scan
@@ -615,7 +615,7 @@ export default function PromptResearchPage() {
                                             </Button>
                                             <Button
                                                 onClick={() => handleScan(prompt.prompt)}
-                                                className="bg-indigo-500 hover:bg-violet-700 text-white"
+                                                className="bg-[var(--accent-base)] hover:bg-[var(--accent-base)] text-white"
                                                 size="sm"
                                             >
                                                 <Search className="w-4 h-4 mr-2" />
@@ -641,7 +641,7 @@ export default function PromptResearchPage() {
                         <Card>
                             <CardHeader>
                                 <CardTitle className="text-lg flex items-center gap-2">
-                                    <Compass className="w-5 h-5 text-indigo-400" />
+                                    <Compass className="w-5 h-5 text-[var(--accent-base)]" />
                                     Discover Real Prompts
                                 </CardTitle>
                                 <CardDescription>
@@ -699,7 +699,7 @@ export default function PromptResearchPage() {
                                                                         variant="ghost"
                                                                         size="sm"
                                                                         onClick={() => handleSaveDiscovered(suggestion)}
-                                                                        className="text-[var(--text-secondary)] hover:text-indigo-400 text-xs"
+                                                                        className="text-[var(--text-secondary)] hover:text-[var(--accent-base)] text-xs"
                                                                     >
                                                                         <Bookmark className="w-3 h-3 mr-1" />
                                                                         Save
@@ -743,7 +743,7 @@ export default function PromptResearchPage() {
                                                                         variant="ghost"
                                                                         size="sm"
                                                                         onClick={() => handleSaveDiscovered(question)}
-                                                                        className="text-[var(--text-secondary)] hover:text-indigo-400 text-xs"
+                                                                        className="text-[var(--text-secondary)] hover:text-[var(--accent-base)] text-xs"
                                                                     >
                                                                         <Bookmark className="w-3 h-3 mr-1" />
                                                                         Save
@@ -787,7 +787,7 @@ export default function PromptResearchPage() {
                                                                         variant="ghost"
                                                                         size="sm"
                                                                         onClick={() => handleSaveDiscovered(query)}
-                                                                        className="text-[var(--text-secondary)] hover:text-indigo-400 text-xs"
+                                                                        className="text-[var(--text-secondary)] hover:text-[var(--accent-base)] text-xs"
                                                                     >
                                                                         <Bookmark className="w-3 h-3 mr-1" />
                                                                         Save

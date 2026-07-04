@@ -26,7 +26,7 @@ export default async function AdminAnalyticsPage() {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
                 <div className="bg-[var(--bg-surface)] border border-[var(--border-default)] rounded-xl p-6">
                     <div className="flex items-center gap-3 mb-4">
-                        <div className="p-3 rounded-lg bg-indigo-500/20 text-indigo-400">
+                        <div className="p-3 rounded-lg bg-[var(--accent-muted)] text-[var(--accent-base)]">
                             <Search className="w-5 h-5" />
                         </div>
                         <div>

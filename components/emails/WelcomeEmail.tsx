@@ -58,7 +58,7 @@ export const WelcomeEmail = ({ firstName = "there" }: WelcomeEmailProps) => {
 
                             <Section className="text-center mb-8">
                                 <Button
-                                    className="bg-indigo-500 hover:bg-violet-700 text-white font-medium py-3 px-6 rounded-lg text-center mx-auto block w-fit"
+                                    className="bg-[var(--accent-base)] hover:bg-[var(--accent-base)] text-white font-medium py-3 px-6 rounded-lg text-center mx-auto block w-fit"
                                     href={`${baseUrl}/dashboard`}
                                 >
                                     Go to Dashboard
@@ -68,7 +68,7 @@ export const WelcomeEmail = ({ firstName = "there" }: WelcomeEmailProps) => {
                             <Hr className="border-t border-zinc-200 my-6" />
 
                             <Text className="text-sm text-[var(--text-ghost)] mb-4 leading-relaxed">
-                                Need help getting started? Check out our <Link href={`${baseUrl}/help`} className="text-violet-600 underline">docs</Link> or just reply to this email!
+                                Need help getting started? Check out our <Link href={`${baseUrl}/help`} className="text-[var(--accent-base)] underline">docs</Link> or just reply to this email!
                             </Text>
 
                             <Text className="text-sm text-[var(--text-secondary)]">

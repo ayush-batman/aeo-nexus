@@ -175,8 +175,8 @@ export function TryFreeSection() {
                         </div>
 
                         {/* CTA */}
-                        <div className="p-4 rounded-lg bg-indigo-500/10 border border-indigo-500/30 text-center">
-                            <p className="text-sm text-indigo-300 mb-3">
+                        <div className="p-4 rounded-lg bg-[var(--accent-muted)] border border-[var(--accent-base)]/25 text-center">
+                            <p className="text-sm text-[var(--accent-base)] mb-3">
                                 {result.message}
                             </p>
                             <Link href="/signup">

@@ -348,7 +348,7 @@ export default function ForumHubPage() {
                 {activeSourceCount !== null && (
                     <div className="rounded-xl border border-[var(--border-default)]/50 bg-[var(--bg-raised)]/30 p-3 flex items-center gap-3">
                         <div className="flex items-center gap-2 text-xs text-[var(--text-secondary)]">
-                            <Radar className="w-4 h-4 text-indigo-400" />
+                            <Radar className="w-4 h-4 text-[var(--accent-base)]" />
                             <span className="font-medium text-[var(--text-secondary)]">{activeSourceCount} sources active:</span>
                             {Object.entries(sourcesStatus).map(([key, active]) => {
                                 const config = platformConfig[key];
@@ -374,7 +374,7 @@ export default function ForumHubPage() {
                             className={cn(
                                 "px-4 py-2 rounded-lg text-sm font-medium transition-all",
                                 activeTab === "discover"
-                                    ? "bg-indigo-500/20 text-indigo-400 border border-indigo-500/30"
+                                    ? "bg-[var(--accent-muted)] text-[var(--accent-base)] border border-[var(--accent-base)]/25"
                                     : "text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-raised)]"
                             )}
                         >
@@ -386,7 +386,7 @@ export default function ForumHubPage() {
                             className={cn(
                                 "px-4 py-2 rounded-lg text-sm font-medium transition-all",
                                 activeTab === "queue"
-                                    ? "bg-indigo-500/20 text-indigo-400 border border-indigo-500/30"
+                                    ? "bg-[var(--accent-muted)] text-[var(--accent-base)] border border-[var(--accent-base)]/25"
                                     : "text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-raised)]"
                             )}
                         >
@@ -423,7 +423,7 @@ export default function ForumHubPage() {
                             className={cn(
                                 "px-3 py-1 rounded-full text-xs font-medium transition-all",
                                 platformFilter === "all"
-                                    ? "bg-indigo-500/20 text-indigo-400 border border-indigo-500/30"
+                                    ? "bg-[var(--accent-muted)] text-[var(--accent-base)] border border-[var(--accent-base)]/25"
                                     : "bg-[var(--bg-raised)] text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
                             )}
                         >
@@ -439,7 +439,7 @@ export default function ForumHubPage() {
                                     className={cn(
                                         "px-3 py-1 rounded-full text-xs font-medium transition-all flex items-center gap-1",
                                         platformFilter === key
-                                            ? "bg-indigo-500/20 text-indigo-400 border border-indigo-500/30"
+                                            ? "bg-[var(--accent-muted)] text-[var(--accent-base)] border border-[var(--accent-base)]/25"
                                             : "bg-[var(--bg-raised)] text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
                                     )}
                                 >
@@ -453,18 +453,18 @@ export default function ForumHubPage() {
 
                 {/* Discovery Modal */}
                 {showDiscovery && (
-                    <Card className="border-indigo-500/30 bg-violet-950/10 backdrop-blur-md animate-in zoom-in-95 duration-300 shadow-2xl">
+                    <Card className="border-[var(--accent-base)]/25 bg-[var(--accent-muted)] backdrop-blur-md animate-in zoom-in-95 duration-300 shadow-2xl">
                         <CardHeader>
                             <CardTitle className="text-lg flex items-center gap-2">
-                                <Radar className="w-5 h-5 text-indigo-400" />
+                                <Radar className="w-5 h-5 text-[var(--accent-base)]" />
                                 Discover Forum Threads
                             </CardTitle>
                             <p className="text-xs text-[var(--text-ghost)]">Searches across Stack Overflow, Hacker News, YouTube, Reddit, Quora, and more</p>
                         </CardHeader>
                         <CardContent className="space-y-6">
                             {/* Smart Discovery Section */}
-                            <div className="bg-violet-900/10 border border-indigo-500/20 rounded-xl p-4 space-y-3">
-                                <h3 className="text-sm font-semibold text-indigo-300 flex items-center gap-2">
+                            <div className="bg-[var(--accent-muted)] border border-[var(--accent-base)]/25 rounded-xl p-4 space-y-3">
+                                <h3 className="text-sm font-semibold text-[var(--accent-base)] flex items-center gap-2">
                                     <Sparkles className="w-4 h-4" />
                                     Smart Source Finder
                                 </h3>
@@ -485,7 +485,7 @@ export default function ForumHubPage() {
                                 <Button
                                     size="sm"
                                     variant="secondary"
-                                    className="w-full h-8 text-xs bg-indigo-500/20 hover:bg-indigo-500/30 text-indigo-300 border border-indigo-500/30"
+                                    className="w-full h-8 text-xs bg-[var(--accent-muted)] hover:bg-[var(--accent-muted)] text-[var(--accent-base)] border border-[var(--accent-base)]/25"
                                     onClick={handleSuggestSources}
                                     disabled={!discoveryIndustry || isSuggesting}
                                 >
@@ -523,7 +523,7 @@ export default function ForumHubPage() {
                                                         prev.filter(s => s !== sub)
                                                     );
                                                 }}
-                                                className="px-3 py-1.5 rounded-lg text-sm bg-indigo-500/20 text-indigo-400 border border-indigo-500/30 hover:bg-red-500/20 hover:text-red-400 group flex items-center gap-1 transition-all"
+                                                className="px-3 py-1.5 rounded-lg text-sm bg-[var(--accent-muted)] text-[var(--accent-base)] border border-[var(--accent-base)]/25 hover:bg-red-500/20 hover:text-red-400 group flex items-center gap-1 transition-all"
                                             >
                                                 r/{sub}
                                                 <span className="hidden group-hover:inline ml-1">×</span>
@@ -549,7 +549,7 @@ export default function ForumHubPage() {
                                         Common: {defaultSubreddits.filter(s => !discoverySubreddits.includes(s)).slice(0, 5).map(s => (
                                             <span
                                                 key={s}
-                                                className="cursor-pointer hover:text-indigo-400 mx-1"
+                                                className="cursor-pointer hover:text-[var(--accent-base)] mx-1"
                                                 onClick={() => setDiscoverySubreddits([...discoverySubreddits, s])}
                                             >
                                                 {s}
@@ -566,7 +566,7 @@ export default function ForumHubPage() {
                                 <Button
                                     onClick={handleDiscoverThreads}
                                     disabled={isDiscovering || !discoveryQuery.trim()}
-                                    className="bg-indigo-500 hover:bg-violet-700"
+                                    className="bg-[var(--accent-base)] hover:bg-[var(--accent-base)]"
                                 >
                                     {isDiscovering ? (
                                         <>
@@ -636,7 +636,7 @@ export default function ForumHubPage() {
                                             className={cn(
                                                 "p-4 rounded-lg cursor-pointer transition-all duration-300 animate-in fade-in slide-in-from-bottom-2 fill-mode-backwards",
                                                 selectedThread?.id === thread.id
-                                                    ? "bg-violet-900/30 border-l-4 border-l-violet-500 shadow-xl"
+                                                    ? "bg-[var(--accent-muted)] border-l-4 border-l-[var(--accent-base)] shadow-xl"
                                                     : "bg-[var(--bg-raised)]/20 hover:bg-[var(--bg-raised)] border-l-4 border-l-transparent hover:border-l-zinc-600"
                                             )}
                                         >
@@ -707,7 +707,7 @@ export default function ForumHubPage() {
                     <Card>
                         <CardHeader>
                             <CardTitle className="text-lg flex items-center gap-2">
-                                <Sparkles className="w-5 h-5 text-indigo-400" />
+                                <Sparkles className="w-5 h-5 text-[var(--accent-base)]" />
                                 AI Comment Studio
                             </CardTitle>
                         </CardHeader>
@@ -721,7 +721,7 @@ export default function ForumHubPage() {
                                         <a
                                             href={selectedThread.url}
                                             target="_blank"
-                                            className="text-xs text-indigo-400 hover:underline flex items-center gap-1"
+                                            className="text-xs text-[var(--accent-base)] hover:underline flex items-center gap-1"
                                         >
                                             Open thread <ExternalLink className="w-3 h-3" />
                                         </a>
@@ -739,7 +739,7 @@ export default function ForumHubPage() {
                                                     className={cn(
                                                         "px-3 py-1.5 rounded-lg text-sm transition-all",
                                                         selectedTone === tone.id
-                                                            ? "bg-indigo-500/20 text-indigo-400 border border-indigo-500/30"
+                                                            ? "bg-[var(--accent-muted)] text-[var(--accent-base)] border border-[var(--accent-base)]/25"
                                                             : "bg-[var(--bg-raised)] text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
                                                     )}
                                                 >

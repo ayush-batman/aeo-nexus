@@ -127,14 +127,14 @@ export function TopicClustering() {
                     {/* Cluster Nodes */}
                     <div>
                         <h3 className="text-lg font-medium text-[var(--text-primary)] mb-4 flex items-center gap-2">
-                            <Layers className="w-5 h-5 text-indigo-400" />
+                            <Layers className="w-5 h-5 text-[var(--accent-base)]" />
                             Supporting Cluster Pages ({result.clusters.length})
                         </h3>
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                             {result.clusters.map((cluster, i) => (
-                                <Card key={i} className="bg-[var(--bg-surface)] border-[var(--border-default)] group hover:border-indigo-500/50 transition-colors">
+                                <Card key={i} className="bg-[var(--bg-surface)] border-[var(--border-default)] group hover:border-[var(--accent-base)]/25 transition-colors">
                                     <CardContent className="p-5 h-full flex flex-col">
-                                        <h4 className="font-semibold text-[var(--text-primary)] mb-3 group-hover:text-indigo-400 transition-colors">
+                                        <h4 className="font-semibold text-[var(--text-primary)] mb-3 group-hover:text-[var(--accent-base)] transition-colors">
                                             {cluster.keyword}
                                         </h4>
                                         <div className="mt-auto space-y-2 pt-4 border-t border-[var(--border-default)]">

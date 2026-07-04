@@ -55,7 +55,7 @@ export function CitationMap() {
         return (
             <Card>
                 <CardContent className="p-12 flex flex-col items-center justify-center text-[var(--text-ghost)]">
-                    <Loader2 className="w-8 h-8 animate-spin text-indigo-400 mb-4" />
+                    <Loader2 className="w-8 h-8 animate-spin text-[var(--accent-base)] mb-4" />
                     <p>Generating Citation Source Map...</p>
                 </CardContent>
             </Card>
@@ -104,8 +104,8 @@ export function CitationMap() {
         <Card className="overflow-hidden bg-[var(--bg-base)]/50 border border-[var(--border-default)]/80 backdrop-blur-xl">
             <CardHeader className="border-b border-[var(--border-default)]/50 pb-4">
                 <div className="flex items-center gap-2">
-                    <div className="p-2 bg-indigo-500/10 rounded-lg border border-indigo-500/20">
-                        <MapPin className="w-5 h-5 text-indigo-400" />
+                    <div className="p-2 bg-[var(--accent-muted)] rounded-lg border border-[var(--accent-base)]/25">
+                        <MapPin className="w-5 h-5 text-[var(--accent-base)]" />
                     </div>
                     <div>
                         <CardTitle className="text-xl">Citation Source Map</CardTitle>
@@ -119,7 +119,7 @@ export function CitationMap() {
                     {/* Source Classification */}
                     <div className="lg:col-span-2 space-y-6">
                         <h3 className="font-semibold text-lg flex items-center gap-2">
-                            <Globe className="w-5 h-5 text-violet-400" />
+                            <Globe className="w-5 h-5 text-[var(--accent-base)]" />
                             Source Landscape
                         </h3>
 
@@ -200,7 +200,7 @@ export function CitationMap() {
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                                     {data.topUrls.slice(0, 4).map((item, i) => (
                                         <a key={i} href={item.url} target="_blank" rel="noopener noreferrer" className="flex items-center justify-between p-3 rounded-lg bg-[var(--bg-surface)] hover:bg-[var(--bg-raised)] border border-[var(--border-default)] transition-colors group">
-                                            <span className="text-xs text-[var(--text-secondary)] group-hover:text-indigo-400 truncate pr-4">{item.url}</span>
+                                            <span className="text-xs text-[var(--text-secondary)] group-hover:text-[var(--accent-base)] truncate pr-4">{item.url}</span>
                                             <Badge variant="outline" className="text-xs">{item.count}</Badge>
                                         </a>
                                     ))}
@@ -210,7 +210,7 @@ export function CitationMap() {
                     </div>
 
                     {/* Insights & Recommendations */}
-                    <div className="bg-gradient-to-br from-indigo-500/5 to-violet-500/10 rounded-2xl p-6 border border-indigo-500/20">
+                    <div className="bg-[var(--accent-muted)] rounded-2xl p-6 border border-[var(--accent-base)]/25">
                         <h3 className="font-semibold text-lg flex items-center gap-2 mb-4">
                             <Lightbulb className="w-5 h-5 text-yellow-400" />
                             Action Plan

@@ -222,7 +222,7 @@ export default function BattlePage() {
 
                     <div className="grid md:grid-cols-2 gap-6">
                         {/* Your Stats */}
-                        <Card className="bg-[var(--bg-surface)] border-[var(--border-default)] border-l-4 border-l-violet-500">
+                        <Card className="bg-[var(--bg-surface)] border-[var(--border-default)] border-l-4 border-l-[var(--accent-base)]">
                             <CardHeader>
                                 <CardTitle>{brandName}</CardTitle>
                                 <CardDescription>Your Performance</CardDescription>

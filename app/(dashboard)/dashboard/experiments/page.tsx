@@ -38,7 +38,7 @@ const STATUS_STYLES: Record<string, { bg: string; text: string; label: string }>
     draft: { bg: "bg-gray-500/10", text: "text-gray-400", label: "Draft" },
     baseline: { bg: "bg-blue-500/10", text: "text-blue-400", label: "Collecting Baseline" },
     running: { bg: "bg-green-500/10", text: "text-green-400", label: "Running" },
-    completed: { bg: "bg-indigo-500/10", text: "text-indigo-400", label: "Completed" },
+    completed: { bg: "bg-[var(--accent-muted)]", text: "text-[var(--accent-base)]", label: "Completed" },
 };
 
 export default function ExperimentsPage() {
@@ -120,9 +120,9 @@ export default function ExperimentsPage() {
 
             <div className="p-6 space-y-6">
                 {/* Info Banner */}
-                <div className="rounded-xl border border-indigo-500/20 bg-indigo-500/5 p-5">
+                <div className="rounded-xl border border-[var(--accent-base)]/25 bg-[var(--accent-muted)] p-5">
                     <div className="flex items-start gap-3">
-                        <FlaskConical className="w-5 h-5 text-indigo-400 mt-0.5" />
+                        <FlaskConical className="w-5 h-5 text-[var(--accent-base)] mt-0.5" />
                         <div>
                             <h3 className="text-sm font-semibold text-[var(--text-primary)] mb-1">Why Experiment?</h3>
                             <p className="text-xs text-[var(--text-secondary)] leading-relaxed">
@@ -138,7 +138,7 @@ export default function ExperimentsPage() {
                     <h2 className="text-lg font-semibold text-[var(--text-primary)]">Your Experiments</h2>
                     <Button
                         onClick={() => setShowCreate(!showCreate)}
-                        className="bg-indigo-600 hover:bg-indigo-700 text-white"
+                        className="bg-[var(--accent-base)] hover:bg-[var(--accent-base)] text-white"
                     >
                         <Plus className="w-4 h-4 mr-2" /> New Experiment
                     </Button>
@@ -180,7 +180,7 @@ export default function ExperimentsPage() {
                                         🧪 Test Questions * <span className="text-[var(--text-ghost)]">(one per line)</span>
                                     </label>
                                     <textarea
-                                        className="w-full min-h-[150px] rounded-xl border border-[var(--border-default)] bg-[var(--bg-surface)] px-4 py-3 text-sm text-[var(--text-primary)] placeholder:text-[var(--text-ghost)] focus:outline-none focus:ring-1 focus:ring-indigo-500/50 resize-y"
+                                        className="w-full min-h-[150px] rounded-xl border border-[var(--border-default)] bg-[var(--bg-surface)] px-4 py-3 text-sm text-[var(--text-primary)] placeholder:text-[var(--text-ghost)] focus:outline-none focus:ring-1 focus:ring-[var(--accent-base)]/50 resize-y"
                                         placeholder={"best CRM for small business?\nwhich CRM has the best integrations?\ntop CRM software 2025"}
                                         value={testQuestionsText}
                                         onChange={(e) => setTestQuestionsText(e.target.value)}
@@ -194,7 +194,7 @@ export default function ExperimentsPage() {
                                         🔬 Control Questions * <span className="text-[var(--text-ghost)]">(one per line)</span>
                                     </label>
                                     <textarea
-                                        className="w-full min-h-[150px] rounded-xl border border-[var(--border-default)] bg-[var(--bg-surface)] px-4 py-3 text-sm text-[var(--text-primary)] placeholder:text-[var(--text-ghost)] focus:outline-none focus:ring-1 focus:ring-indigo-500/50 resize-y"
+                                        className="w-full min-h-[150px] rounded-xl border border-[var(--border-default)] bg-[var(--bg-surface)] px-4 py-3 text-sm text-[var(--text-primary)] placeholder:text-[var(--text-ghost)] focus:outline-none focus:ring-1 focus:ring-[var(--accent-base)]/50 resize-y"
                                         placeholder={"best project management tool?\nwhich PM software is most popular?\ntop project management app 2025"}
                                         value={controlQuestionsText}
                                         onChange={(e) => setControlQuestionsText(e.target.value)}
@@ -210,7 +210,7 @@ export default function ExperimentsPage() {
                                 <Button
                                     onClick={handleCreate}
                                     disabled={creating || !name.trim() || !testQuestionsText.trim() || !controlQuestionsText.trim()}
-                                    className="bg-indigo-600 hover:bg-indigo-700 text-white"
+                                    className="bg-[var(--accent-base)] hover:bg-[var(--accent-base)] text-white"
                                 >
                                     {creating ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Creating...</> : "Create Experiment"}
                                 </Button>
@@ -333,7 +333,7 @@ export default function ExperimentsPage() {
                         <p className="text-sm max-w-md mx-auto mb-4">
                             Create your first experiment to scientifically prove which AEO strategies work for your brand.
                         </p>
-                        <Button onClick={() => setShowCreate(true)} className="bg-indigo-600 hover:bg-indigo-700 text-white">
+                        <Button onClick={() => setShowCreate(true)} className="bg-[var(--accent-base)] hover:bg-[var(--accent-base)] text-white">
                             <Plus className="w-4 h-4 mr-2" /> Create First Experiment
                         </Button>
                     </div>

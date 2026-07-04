@@ -36,7 +36,7 @@ const SOURCE_TYPES = [
 ];
 
 const TYPE_COLORS: Record<string, string> = {
-    comparison: "bg-purple-500/10 text-purple-400 border-purple-500/20",
+    comparison: "bg-[var(--accent-muted)] text-[var(--accent-base)] border-[var(--accent-base)]/25",
     "how-to": "bg-blue-500/10 text-blue-400 border-blue-500/20",
     recommendation: "bg-green-500/10 text-green-400 border-green-500/20",
     troubleshooting: "bg-orange-500/10 text-orange-400 border-orange-500/20",
@@ -139,12 +139,12 @@ export default function QuestionMinePage() {
                             key={src.id}
                             onClick={() => setSourceType(src.id)}
                             className={`p-4 rounded-xl border text-left transition-all ${sourceType === src.id
-                                    ? "border-indigo-500/50 bg-indigo-500/5"
+                                    ? "border-[var(--accent-base)]/25 bg-[var(--accent-muted)]"
                                     : "border-[var(--border-default)] bg-[var(--bg-surface)] hover:border-[var(--border-hover)]"
                                 }`}
                         >
                             <div className="flex items-center gap-2 mb-1">
-                                <src.icon className={`w-4 h-4 ${sourceType === src.id ? "text-indigo-400" : "text-[var(--text-secondary)]"}`} />
+                                <src.icon className={`w-4 h-4 ${sourceType === src.id ? "text-[var(--accent-base)]" : "text-[var(--text-secondary)]"}`} />
                                 <span className={`text-sm font-medium ${sourceType === src.id ? "text-[var(--text-primary)]" : "text-[var(--text-secondary)]"}`}>
                                     {src.label}
                                 </span>
@@ -181,7 +181,7 @@ export default function QuestionMinePage() {
                                 {sourceType === "brainstorm" ? "Keywords or Product Description *" : "Paste Content *"}
                             </label>
                             <textarea
-                                className="w-full min-h-[120px] rounded-xl border border-[var(--border-default)] bg-[var(--bg-surface)] px-4 py-3 text-sm text-[var(--text-primary)] placeholder:text-[var(--text-ghost)] focus:outline-none focus:ring-1 focus:ring-indigo-500/50 resize-y"
+                                className="w-full min-h-[120px] rounded-xl border border-[var(--border-default)] bg-[var(--bg-surface)] px-4 py-3 text-sm text-[var(--text-primary)] placeholder:text-[var(--text-ghost)] focus:outline-none focus:ring-1 focus:ring-[var(--accent-base)]/50 resize-y"
                                 placeholder={
                                     sourceType === "brainstorm"
                                         ? "e.g. AI-powered payment processing, recurring billing, invoice automation..."
@@ -197,7 +197,7 @@ export default function QuestionMinePage() {
                         <Button
                             onClick={handleMine}
                             disabled={loading || !input.trim() || !brandName.trim()}
-                            className="bg-indigo-600 hover:bg-indigo-700 text-white"
+                            className="bg-[var(--accent-base)] hover:bg-[var(--accent-base)] text-white"
                         >
                             {loading ? (
                                 <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Mining Questions...</>
@@ -227,7 +227,7 @@ export default function QuestionMinePage() {
                             </div>
                             <div className="rounded-xl border border-[var(--border-default)] bg-[var(--bg-surface)] p-4">
                                 <p className="text-xs text-[var(--text-ghost)] uppercase tracking-wider">Topic Clusters</p>
-                                <p className="text-2xl font-bold font-display text-indigo-400">{stats.topics}</p>
+                                <p className="text-2xl font-bold font-display text-[var(--accent-base)]">{stats.topics}</p>
                             </div>
                         </div>
 
@@ -237,7 +237,7 @@ export default function QuestionMinePage() {
                             <button
                                 onClick={() => { setFilterTopic(null); setFilterType(null); }}
                                 className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${!filterTopic && !filterType
-                                        ? "bg-indigo-500/10 text-indigo-400 border border-indigo-500/20"
+                                        ? "bg-[var(--accent-muted)] text-[var(--accent-base)] border border-[var(--accent-base)]/25"
                                         : "bg-[var(--bg-surface)] text-[var(--text-secondary)] border border-[var(--border-default)]"
                                     }`}
                             >
@@ -248,7 +248,7 @@ export default function QuestionMinePage() {
                                     key={topic}
                                     onClick={() => { setFilterTopic(topic === filterTopic ? null : topic); setFilterType(null); }}
                                     className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${filterTopic === topic
-                                            ? "bg-indigo-500/10 text-indigo-400 border border-indigo-500/20"
+                                            ? "bg-[var(--accent-muted)] text-[var(--accent-base)] border border-[var(--accent-base)]/25"
                                             : "bg-[var(--bg-surface)] text-[var(--text-secondary)] border border-[var(--border-default)]"
                                         }`}
                                 >
@@ -308,7 +308,7 @@ export default function QuestionMinePage() {
                                                 disabled={savedQuestions.has(q.text)}
                                                 className="h-7 w-7 p-0"
                                             >
-                                                <BookmarkPlus className={`w-3.5 h-3.5 ${savedQuestions.has(q.text) ? "text-indigo-400" : "text-[var(--text-ghost)]"}`} />
+                                                <BookmarkPlus className={`w-3.5 h-3.5 ${savedQuestions.has(q.text) ? "text-[var(--accent-base)]" : "text-[var(--text-ghost)]"}`} />
                                             </Button>
                                         </div>
                                     </div>

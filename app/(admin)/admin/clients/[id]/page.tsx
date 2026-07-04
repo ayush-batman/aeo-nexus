@@ -38,7 +38,7 @@ export default async function ClientDetailPage({ params }: PageProps) {
             {/* Header */}
             <div className="flex items-start justify-between mb-8">
                 <div className="flex items-center gap-4">
-                    <div className="w-16 h-16 rounded-xl bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center">
+                    <div className="w-16 h-16 rounded-xl bg-[var(--accent-muted)] flex items-center justify-center">
                         <Building2 className="w-8 h-8 text-white" />
                     </div>
                     <div>
@@ -112,7 +112,7 @@ export default async function ClientDetailPage({ params }: PageProps) {
             <div className="bg-[var(--bg-surface)] border border-[var(--border-default)] rounded-xl overflow-hidden mb-8">
                 <div className="px-6 py-4 border-b border-[var(--border-default)]">
                     <h2 className="text-lg font-semibold text-white flex items-center gap-2">
-                        <Users className="w-5 h-5 text-indigo-400" />
+                        <Users className="w-5 h-5 text-[var(--accent-base)]" />
                         Team Members
                     </h2>
                 </div>
@@ -187,8 +187,8 @@ function getPlanBadgeClass(plan: string): string {
     const classes: Record<string, string> = {
         free: "bg-[var(--bg-raised)] text-[var(--text-secondary)]",
         starter: "bg-emerald-900/50 text-emerald-400 border border-emerald-700",
-        pro: "bg-violet-900/50 text-indigo-400 border border-violet-700",
-        agency: "bg-rose-900/50 text-rose-400 border border-rose-700",
+        pro: "bg-[var(--accent-base)]/50 text-[var(--accent-base)] border border-[var(--accent-base)]",
+        agency: "bg-[var(--data-red)]/50 text-[var(--data-red)] border border-rose-700",
         enterprise: "bg-amber-900/50 text-amber-400 border border-amber-700",
     };
     return classes[plan] || classes.free;
@@ -197,7 +197,7 @@ function getPlanBadgeClass(plan: string): string {
 function getRoleBadgeClass(role: string): string {
     const classes: Record<string, string> = {
         owner: "bg-amber-900/50 text-amber-400",
-        admin: "bg-violet-900/50 text-indigo-400",
+        admin: "bg-[var(--accent-base)]/50 text-[var(--accent-base)]",
         editor: "bg-emerald-900/50 text-emerald-400",
         viewer: "bg-[var(--bg-raised)] text-[var(--text-secondary)]",
     };

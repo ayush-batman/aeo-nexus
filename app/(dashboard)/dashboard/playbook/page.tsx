@@ -221,7 +221,7 @@ export default function PlaybookPage() {
                             <button
                                 onClick={() => s.num <= step && setStep(s.num)}
                                 className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-medium transition-all whitespace-nowrap ${step === s.num
-                                        ? "bg-indigo-500/10 text-indigo-400 border border-indigo-500/30"
+                                        ? "bg-[var(--accent-muted)] text-[var(--accent-base)] border border-[var(--accent-base)]/25"
                                         : s.num < step
                                             ? "bg-green-500/5 text-green-400 border border-green-500/20 cursor-pointer"
                                             : "bg-[var(--bg-surface)] text-[var(--text-ghost)] border border-[var(--border-default)]"
@@ -246,7 +246,7 @@ export default function PlaybookPage() {
                     <Card>
                         <CardHeader>
                             <CardTitle className="flex items-center gap-2 text-base">
-                                <Target className="w-4 h-4 text-indigo-400" />
+                                <Target className="w-4 h-4 text-[var(--accent-base)]" />
                                 Identify Your Money Terms
                             </CardTitle>
                         </CardHeader>
@@ -270,7 +270,7 @@ export default function PlaybookPage() {
                                     <Badge
                                         key={i}
                                         variant="outline"
-                                        className="bg-indigo-500/10 text-indigo-400 border-indigo-500/20 px-3 py-1.5 cursor-pointer hover:bg-red-500/10 hover:text-red-400 hover:border-red-500/20 transition-all"
+                                        className="bg-[var(--accent-muted)] text-[var(--accent-base)] border-[var(--accent-base)]/25 px-3 py-1.5 cursor-pointer hover:bg-red-500/10 hover:text-red-400 hover:border-red-500/20 transition-all"
                                         onClick={() => removeTerm(i)}
                                     >
                                         {t.term} ×
@@ -292,14 +292,14 @@ export default function PlaybookPage() {
                     <Card>
                         <CardHeader>
                             <CardTitle className="flex items-center gap-2 text-base">
-                                <HelpCircle className="w-4 h-4 text-indigo-400" />
+                                <HelpCircle className="w-4 h-4 text-[var(--accent-base)]" />
                                 Generated Questions ({questions.length})
                             </CardTitle>
                         </CardHeader>
                         <CardContent className="space-y-3">
                             {loadingQuestions ? (
                                 <div className="text-center py-12">
-                                    <Loader2 className="w-8 h-8 mx-auto mb-3 animate-spin text-indigo-400" />
+                                    <Loader2 className="w-8 h-8 mx-auto mb-3 animate-spin text-[var(--accent-base)]" />
                                     <p className="text-sm text-[var(--text-secondary)]">Generating questions for your money terms...</p>
                                 </div>
                             ) : (
@@ -323,14 +323,14 @@ export default function PlaybookPage() {
                     <Card>
                         <CardHeader>
                             <CardTitle className="flex items-center gap-2 text-base">
-                                <BarChart3 className="w-4 h-4 text-indigo-400" />
+                                <BarChart3 className="w-4 h-4 text-[var(--accent-base)]" />
                                 Content Gap Analysis
                             </CardTitle>
                         </CardHeader>
                         <CardContent className="space-y-3">
                             {loadingGaps ? (
                                 <div className="text-center py-12">
-                                    <Loader2 className="w-8 h-8 mx-auto mb-3 animate-spin text-indigo-400" />
+                                    <Loader2 className="w-8 h-8 mx-auto mb-3 animate-spin text-[var(--accent-base)]" />
                                     <p className="text-sm text-[var(--text-secondary)]">Analyzing content gaps...</p>
                                 </div>
                             ) : (
@@ -365,14 +365,14 @@ export default function PlaybookPage() {
                     <Card>
                         <CardHeader>
                             <CardTitle className="flex items-center gap-2 text-base">
-                                <Rocket className="w-4 h-4 text-indigo-400" />
+                                <Rocket className="w-4 h-4 text-[var(--accent-base)]" />
                                 Your AEO Action Plan
                             </CardTitle>
                         </CardHeader>
                         <CardContent className="space-y-3">
                             {loadingActions ? (
                                 <div className="text-center py-12">
-                                    <Loader2 className="w-8 h-8 mx-auto mb-3 animate-spin text-indigo-400" />
+                                    <Loader2 className="w-8 h-8 mx-auto mb-3 animate-spin text-[var(--accent-base)]" />
                                     <p className="text-sm text-[var(--text-secondary)]">Building your action plan...</p>
                                 </div>
                             ) : (
@@ -383,7 +383,7 @@ export default function PlaybookPage() {
                                                 <div className="flex-1">
                                                     <p className="text-sm font-medium text-[var(--text-primary)] mb-2">{a.action}</p>
                                                     <div className="flex flex-wrap gap-2">
-                                                        <Badge variant="outline" className={`text-[10px] ${a.type === "on-site" ? "bg-blue-500/10 text-blue-400 border-blue-500/20" : "bg-purple-500/10 text-purple-400 border-purple-500/20"
+                                                        <Badge variant="outline" className={`text-[10px] ${a.type === "on-site" ? "bg-blue-500/10 text-blue-400 border-blue-500/20" : "bg-[var(--accent-muted)] text-[var(--accent-base)] border-[var(--accent-base)]/25"
                                                             }`}>
                                                             {a.type}
                                                         </Badge>
@@ -425,7 +425,7 @@ export default function PlaybookPage() {
                             (step === 1 && !brandName.trim()) ||
                             loadingQuestions
                         }
-                        className="bg-indigo-600 hover:bg-indigo-700 text-white"
+                        className="bg-[var(--accent-base)] hover:bg-[var(--accent-base)] text-white"
                     >
                         {step === 3 ? "Generate Action Plan" : "Next"} <ChevronRight className="w-4 h-4 ml-2" />
                     </Button>

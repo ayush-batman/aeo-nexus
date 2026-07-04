@@ -270,7 +270,7 @@ export default function DashboardPage() {
                     className="rounded-lg p-6 relative overflow-hidden"
                     style={{
                         background: "linear-gradient(135deg, var(--accent-muted), var(--bg-base))",
-                        border: "1px solid rgba(99,102,241,0.2)",
+                        border: "1px solid rgba(229, 211, 166, 0.2)",
                     }}
                 >
                     {/* Top gradient accent */}

@@ -582,7 +582,7 @@ export default function SettingsPage() {
                                                         className="flex items-center justify-between p-3 rounded-lg bg-[var(--bg-raised)]"
                                                     >
                                                         <div className="flex items-center gap-3">
-                                                            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center text-white font-medium">
+                                                            <div className="w-10 h-10 rounded-full bg-[var(--accent-muted)] flex items-center justify-center text-white font-medium">
                                                                 {(member.full_name || member.email)[0].toUpperCase()}
                                                             </div>
                                                             <div>
@@ -615,7 +615,7 @@ export default function SettingsPage() {
                                                 <CardTitle className="text-lg">Current Plan</CardTitle>
                                             </CardHeader>
                                             <CardContent className="space-y-6">
-                                                <div className="p-4 rounded-lg bg-gradient-to-r from-indigo-500/20 to-violet-600/20 border border-indigo-500/30">
+                                                <div className="p-4 rounded-lg bg-[var(--accent-muted)] border border-[var(--accent-base)]/25">
                                                     <div className="flex items-center justify-between mb-4">
                                                         <div>
                                                             <Badge variant="default" className="mb-2 capitalize">{currentPlan} Plan</Badge>
@@ -667,7 +667,7 @@ export default function SettingsPage() {
                                                                 className={cn(
                                                                     "p-4 rounded-lg border transition-all",
                                                                     plan === 'pro'
-                                                                        ? "border-indigo-500/50 bg-indigo-500/10"
+                                                                        ? "border-[var(--accent-base)]/25 bg-[var(--accent-muted)]"
                                                                         : "border-[var(--border-default)] bg-[var(--bg-raised)]"
                                                                 )}
                                                             >
@@ -706,7 +706,7 @@ export default function SettingsPage() {
                                     <Card>
                                         <CardHeader>
                                             <CardTitle className="text-lg flex items-center gap-2">
-                                                <Bell className="w-5 h-5 text-indigo-400" />
+                                                <Bell className="w-5 h-5 text-[var(--accent-base)]" />
                                                 Smart Alerts
                                             </CardTitle>
                                         </CardHeader>
@@ -732,7 +732,7 @@ export default function SettingsPage() {
                                                                 type="checkbox"
                                                                 checked={alertPrefs[item.key] ?? true}
                                                                 onChange={(e) => setAlertPrefs(prev => ({ ...prev, [item.key]: e.target.checked }))}
-                                                                className="rounded accent-indigo-500"
+                                                                className="rounded accent-[var(--accent-base)]"
                                                             />
                                                         </div>
                                                     ))}
@@ -760,7 +760,7 @@ export default function SettingsPage() {
                                                                 type="checkbox"
                                                                 checked={alertPrefs[item.key] ?? false}
                                                                 onChange={(e) => setAlertPrefs(prev => ({ ...prev, [item.key]: e.target.checked }))}
-                                                                className="rounded accent-indigo-500"
+                                                                className="rounded accent-[var(--accent-base)]"
                                                             />
                                                         </div>
                                                     ))}
@@ -787,7 +787,7 @@ export default function SettingsPage() {
                                                                 type="checkbox"
                                                                 checked={alertPrefs[item.key] ?? false}
                                                                 onChange={(e) => setAlertPrefs(prev => ({ ...prev, [item.key]: e.target.checked }))}
-                                                                className="rounded accent-indigo-500"
+                                                                className="rounded accent-[var(--accent-base)]"
                                                             />
                                                         </div>
                                                     ))}
@@ -814,7 +814,7 @@ export default function SettingsPage() {
                                                                 type="checkbox"
                                                                 checked={alertPrefs[item.key] ?? false}
                                                                 onChange={(e) => setAlertPrefs(prev => ({ ...prev, [item.key]: e.target.checked }))}
-                                                                className="rounded accent-indigo-500"
+                                                                className="rounded accent-[var(--accent-base)]"
                                                             />
                                                         </div>
                                                     ))}

@@ -62,13 +62,13 @@ export function HelpCenterAudit() {
     return (
         <div className="space-y-6 animate-in slide-in-from-bottom-5 fade-in duration-500">
             <Card className="bg-[var(--bg-surface)] border-[var(--border-default)] overflow-hidden">
-                <div className="bg-gradient-to-r from-violet-500/10 to-transparent p-6 pb-0 border-b border-[var(--border-default)] relative">
+                <div className="bg-gradient-to-r to-transparent p-6 pb-0 border-b border-[var(--border-default)] relative">
                     <div className="absolute top-0 right-0 p-6 opacity-10">
                         <BookOpen className="w-24 h-24" />
                     </div>
                     <CardHeader className="p-0 pb-6 relative z-10">
                         <div className="flex items-center gap-2 mb-2">
-                            <Badge variant="outline" className="bg-violet-500/10 text-violet-400 border-violet-500/20">
+                            <Badge variant="outline" className="bg-[var(--accent-muted)] text-[var(--accent-base)] border-[var(--accent-base)]/25">
                                 <Sparkles className="w-3 h-3 mr-1" /> Premium Audit
                             </Badge>
                         </div>
@@ -88,7 +88,7 @@ export function HelpCenterAudit() {
                             onKeyDown={(e) => e.key === 'Enter' && handleAudit()}
                             className="bg-[var(--bg-base)] border-[var(--border-default)]"
                         />
-                        <Button onClick={handleAudit} disabled={scanning || !url} className="bg-violet-600 hover:bg-violet-700 text-white">
+                        <Button onClick={handleAudit} disabled={scanning || !url} className="bg-[var(--accent-base)] hover:bg-[var(--accent-base)] text-white">
                             {scanning ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Search className="w-4 h-4 mr-2" />}
                             Run Deep Scan
                         </Button>
@@ -107,7 +107,7 @@ export function HelpCenterAudit() {
                 <div className="grid gap-6 md:grid-cols-2 animate-pulse">
                     <Card className="bg-[var(--bg-surface)] border-[var(--border-default)] md:col-span-2 p-6">
                         <div className="flex items-center gap-4 mb-4">
-                            <Loader2 className="w-6 h-6 text-violet-500 animate-spin" />
+                            <Loader2 className="w-6 h-6 text-[var(--accent-base)] animate-spin" />
                             <div>
                                 <h3 className="text-lg font-medium text-[var(--text-primary)]">Crawling & Analyzing Help Center...</h3>
                                 <p className="text-sm text-[var(--text-secondary)]">This usually takes about 15-30 seconds depending on size.</p>
@@ -125,7 +125,7 @@ export function HelpCenterAudit() {
                             <div className="flex flex-col md:flex-row items-center gap-8">
                                 <div className="text-center md:text-left">
                                     <p className="text-sm text-[var(--text-secondary)] uppercase tracking-wider mb-2 font-semibold">Total AEO Score</p>
-                                    <div className="text-6xl font-black text-transparent bg-clip-text bg-gradient-to-br from-violet-400 to-indigo-600">
+                                    <div className="text-6xl font-black text-transparent bg-clip-text bg-[var(--accent-muted)]">
                                         {result.overallScore}
                                     </div>
                                 </div>
@@ -159,7 +159,7 @@ export function HelpCenterAudit() {
                             <ul className="space-y-4">
                                 {result.recommendations.map((rec, i) => (
                                     <li key={i} className="flex gap-3 text-sm text-[var(--text-secondary)] bg-[var(--bg-base)] p-3 rounded-lg border border-[var(--border-default)]">
-                                        <Sparkles className="w-5 h-5 text-violet-400 shrink-0 mt-0.5" />
+                                        <Sparkles className="w-5 h-5 text-[var(--accent-base)] shrink-0 mt-0.5" />
                                         <span>{rec}</span>
                                     </li>
                                 ))}
@@ -194,7 +194,7 @@ export function HelpCenterAudit() {
                         <Card className="bg-[var(--bg-surface)] border-[var(--border-default)]">
                             <CardHeader className="pb-3">
                                 <CardTitle className="text-base flex items-center gap-2">
-                                    <Search className="w-4 h-4 text-indigo-400" />
+                                    <Search className="w-4 h-4 text-[var(--accent-base)]" />
                                     Missing Topics
                                 </CardTitle>
                             </CardHeader>

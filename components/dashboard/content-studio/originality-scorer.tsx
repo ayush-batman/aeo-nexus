@@ -181,7 +181,7 @@ export function OriginalityScorer() {
                                         <span className={cn("font-medium", getScoreColor(result.metrics.perspectiveUniqueness))}>{result.metrics.perspectiveUniqueness}/100</span>
                                     </div>
                                     <div className="h-2 w-full bg-[var(--bg-base)] rounded-full overflow-hidden">
-                                        <div className="h-full bg-violet-500 transition-all duration-1000" style={{ width: `${result.metrics.perspectiveUniqueness}%` }} />
+                                        <div className="h-full bg-[var(--accent-base)] transition-all duration-1000" style={{ width: `${result.metrics.perspectiveUniqueness}%` }} />
                                     </div>
                                 </div>
                             </div>

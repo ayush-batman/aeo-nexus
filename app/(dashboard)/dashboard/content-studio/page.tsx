@@ -234,7 +234,7 @@ export default function ContentStudioPage() {
                             className={cn(
                                 "flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all",
                                 activeTab === tab.id
-                                    ? "bg-indigo-500/20 text-indigo-400 border border-indigo-500/30"
+                                    ? "bg-[var(--accent-muted)] text-[var(--accent-base)] border border-[var(--accent-base)]/25"
                                     : "text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-raised)]"
                             )}
                         >
@@ -273,8 +273,8 @@ export default function ContentStudioPage() {
                                 </div>
                                 {!hasAnalyzed && !isAnalyzing && (
                                     <div className="mt-12 text-center max-w-2xl mx-auto">
-                                        <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-indigo-500/10 mb-6">
-                                            <Search className="w-8 h-8 text-indigo-400" />
+                                        <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-[var(--accent-muted)] mb-6">
+                                            <Search className="w-8 h-8 text-[var(--accent-base)]" />
                                         </div>
                                         <h3 className="text-xl font-semibold text-[var(--text-primary)] mb-2">Ready to optimize your content?</h3>
                                         <p className="text-[var(--text-secondary)] mb-8">
@@ -287,7 +287,7 @@ export default function ContentStudioPage() {
                                                 { icon: Zap, title: "Readability", desc: "Ease of AI parsing" }
                                             ].map((item, i) => (
                                                 <div key={i} className="p-4 rounded-xl bg-[var(--bg-surface)] border border-[var(--border-default)]">
-                                                    <item.icon className="w-5 h-5 text-indigo-400 mb-2" />
+                                                    <item.icon className="w-5 h-5 text-[var(--accent-base)] mb-2" />
                                                     <div className="font-medium text-[var(--text-primary)]">{item.title}</div>
                                                     <div className="text-xs text-[var(--text-ghost)]">{item.desc}</div>
                                                 </div>
@@ -422,7 +422,7 @@ export default function ContentStudioPage() {
                                             <div className="mt-4 flex items-center gap-2">
                                                 <span className="text-xs text-[var(--text-ghost)]">Schema types found:</span>
                                                 {auditResult.structure.schemaTypes.map((type, i) => (
-                                                    <Badge key={i} variant="outline" className="text-xs text-indigo-400">
+                                                    <Badge key={i} variant="outline" className="text-xs text-[var(--accent-base)]">
                                                         {type}
                                                     </Badge>
                                                 ))}
@@ -481,7 +481,7 @@ export default function ContentStudioPage() {
                                         className={cn(
                                             "w-full flex items-center gap-3 p-3 rounded-lg text-left transition-all",
                                             selectedSchema === schema.id
-                                                ? "bg-indigo-500/20 border border-indigo-500/30"
+                                                ? "bg-[var(--accent-muted)] border border-[var(--accent-base)]/25"
                                                 : "bg-[var(--bg-raised)] hover:bg-[var(--bg-raised)] border border-transparent"
                                         )}
                                     >
@@ -560,7 +560,7 @@ export default function ContentStudioPage() {
                     <Card>
                         <CardHeader>
                             <CardTitle className="text-lg flex items-center gap-2">
-                                <Sparkles className="w-5 h-5 text-indigo-400" />
+                                <Sparkles className="w-5 h-5 text-[var(--accent-base)]" />
                                 AI Content Writer
                             </CardTitle>
                         </CardHeader>
@@ -638,7 +638,7 @@ export default function ContentStudioPage() {
                             <div className="bg-[var(--bg-surface)] border border-[var(--border-default)] rounded-lg p-4 h-[400px] overflow-y-auto w-full prose prose-invert prose-sm max-w-none">
                                 {isGeneratingWriter ? (
                                     <div className="flex flex-col items-center justify-center h-full text-[var(--text-ghost)]">
-                                        <Sparkles className="w-8 h-8 mb-4 animate-pulse text-indigo-400" />
+                                        <Sparkles className="w-8 h-8 mb-4 animate-pulse text-[var(--accent-base)]" />
                                         <p>Our AI is drafting Aelo-optimized content...</p>
                                     </div>
                                 ) : generatedContent ? (

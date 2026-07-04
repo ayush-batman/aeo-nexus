@@ -221,7 +221,7 @@ export default function OnboardingPage() {
                                 className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium transition-all ${currentStep > step.id
                                     ? "bg-green-500 text-white"
                                     : currentStep === step.id
-                                        ? "bg-indigo-500 text-white"
+                                        ? "bg-[var(--accent-base)] text-white"
                                         : "bg-[var(--bg-raised)] text-[var(--text-ghost)]"
                                     }`}
                             >
@@ -251,7 +251,7 @@ export default function OnboardingPage() {
                 {currentStep === 1 && (
                     <Card className="border-[var(--border-default)] bg-[var(--bg-surface)]">
                         <CardContent className="p-8 text-center">
-                            <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center mx-auto mb-6">
+                            <div className="w-16 h-16 rounded-2xl bg-[var(--accent-muted)] flex items-center justify-center mx-auto mb-6">
                                 <Zap className="w-8 h-8 text-white" />
                             </div>
                             <h1 className="text-3xl font-bold text-[var(--text-primary)] mb-4">
@@ -263,15 +263,15 @@ export default function OnboardingPage() {
 
                             <div className="grid grid-cols-3 gap-4 mb-8">
                                 <div className="p-4 rounded-lg bg-[var(--bg-raised)]">
-                                    <TrendingUp className="w-6 h-6 text-indigo-400 mx-auto mb-2" />
+                                    <TrendingUp className="w-6 h-6 text-[var(--accent-base)] mx-auto mb-2" />
                                     <p className="text-sm text-[var(--text-secondary)]">Track AI Visibility</p>
                                 </div>
                                 <div className="p-4 rounded-lg bg-[var(--bg-raised)]">
-                                    <MessageSquare className="w-6 h-6 text-indigo-400 mx-auto mb-2" />
+                                    <MessageSquare className="w-6 h-6 text-[var(--accent-base)] mx-auto mb-2" />
                                     <p className="text-sm text-[var(--text-secondary)]">Discover Forums</p>
                                 </div>
                                 <div className="p-4 rounded-lg bg-[var(--bg-raised)]">
-                                    <FileText className="w-6 h-6 text-indigo-400 mx-auto mb-2" />
+                                    <FileText className="w-6 h-6 text-[var(--accent-base)] mx-auto mb-2" />
                                     <p className="text-sm text-[var(--text-secondary)]">Optimize Content</p>
                                 </div>
                             </div>
@@ -289,8 +289,8 @@ export default function OnboardingPage() {
                     <Card className="border-[var(--border-default)] bg-[var(--bg-surface)]">
                         <CardContent className="p-8">
                             <div className="flex items-center gap-3 mb-6">
-                                <div className="w-10 h-10 rounded-lg bg-indigo-500/20 flex items-center justify-center">
-                                    <Building className="w-5 h-5 text-indigo-400" />
+                                <div className="w-10 h-10 rounded-lg bg-[var(--accent-muted)] flex items-center justify-center">
+                                    <Building className="w-5 h-5 text-[var(--accent-base)]" />
                                 </div>
                                 <div>
                                     <h2 className="text-xl font-semibold text-[var(--text-primary)]">Add Your Brand</h2>
@@ -328,7 +328,7 @@ export default function OnboardingPage() {
                                             variant="secondary"
                                             onClick={handleAutoFill}
                                             disabled={!website || enriching}
-                                            className="bg-indigo-500/20 text-indigo-300 hover:bg-indigo-500/30 border border-indigo-500/30 whitespace-nowrap"
+                                            className="bg-[var(--accent-muted)] text-[var(--accent-base)] hover:bg-[var(--accent-muted)] border border-[var(--accent-base)]/25 whitespace-nowrap"
                                         >
                                             {enriching ? (
                                                 <Loader2 className="w-4 h-4 mr-2 animate-spin" />
@@ -386,8 +386,8 @@ export default function OnboardingPage() {
                     <Card className="border-[var(--border-default)] bg-[var(--bg-surface)]">
                         <CardContent className="p-8">
                             <div className="flex items-center gap-3 mb-6">
-                                <div className="w-10 h-10 rounded-lg bg-indigo-500/20 flex items-center justify-center">
-                                    <Search className="w-5 h-5 text-indigo-400" />
+                                <div className="w-10 h-10 rounded-lg bg-[var(--accent-muted)] flex items-center justify-center">
+                                    <Search className="w-5 h-5 text-[var(--accent-base)]" />
                                 </div>
                                 <div>
                                     <h2 className="text-xl font-semibold text-[var(--text-primary)]">Your First AI Scan</h2>
@@ -397,8 +397,8 @@ export default function OnboardingPage() {
 
                             {scanResults.length === 0 ? (
                                 <div className="text-center py-8">
-                                    <div className="w-20 h-20 rounded-full bg-gradient-to-br from-indigo-500/20 to-violet-600/20 flex items-center justify-center mx-auto mb-6">
-                                        <Sparkles className="w-10 h-10 text-indigo-400" />
+                                    <div className="w-20 h-20 rounded-full bg-[var(--accent-muted)] flex items-center justify-center mx-auto mb-6">
+                                        <Sparkles className="w-10 h-10 text-[var(--accent-base)]" />
                                     </div>
                                     <p className="text-[var(--text-secondary)] mb-6">
                                         Ready to scan &quot;{brandName}&quot; across Gemini and Claude?

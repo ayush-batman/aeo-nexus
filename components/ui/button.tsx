@@ -23,7 +23,7 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
                     variant === "ghost" &&
                     "bg-transparent text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-surface)]",
                     variant === "destructive" &&
-                    "bg-rose-600 text-white hover:bg-rose-500",
+                    "bg-[var(--data-red)] text-white hover:bg-[var(--data-red)]",
                     // Sizes
                     size === "default" && "h-9 px-4 py-2 text-sm",
                     size === "sm" && "h-7 px-3 text-xs",
