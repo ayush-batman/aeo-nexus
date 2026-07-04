@@ -1,6 +1,7 @@
 "use client";
 import Link from "next/link";
 import { ArrowRight, BarChart2, Shield, Zap } from "lucide-react";
+import { AeloWordmark } from "@/components/brand/logo";
 
 export default function LandingPage() {
   return (
@@ -9,13 +10,8 @@ export default function LandingPage() {
       {/* ── NAV ── */}
       <header className="sticky top-0 z-50 border-b border-white/5 bg-black/80 backdrop-blur-xl">
         <div className="mx-auto max-w-6xl px-6 h-16 flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-2 group">
-            {/* Geometric Sharp Logo */}
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M12 2L2 22h20L12 2z" className="fill-white" />
-              <path d="M12 8L6 20h12L12 8z" className="fill-black" />
-            </svg>
-            <span className="text-base font-medium tracking-tight text-white group-hover:text-zinc-300 transition-colors">Aelo</span>
+          <Link href="/" className="group transition-opacity hover:opacity-90">
+            <AeloWordmark size="md" />
           </Link>
 
           <nav className="hidden md:flex items-center gap-8">

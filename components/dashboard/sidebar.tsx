@@ -26,6 +26,7 @@ import {
 } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { AeloMark, AeloWordmark } from "@/components/brand/logo";
 
 interface Workspace {
     id: string;
@@ -221,23 +222,14 @@ export function Sidebar() {
             {/* Logo */}
             <div className="flex h-14 items-center justify-between px-4 flex-shrink-0 border-b border-[var(--border-subtle)]">
                 {!collapsed && (
-                    <Link href="/dashboard" className="flex items-center gap-2.5 group">
-                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M12 2L2 22h20L12 2z" className="fill-[var(--accent-base)]" />
-                            <path d="M12 9L7 19h10L12 9z" className="fill-[var(--bg-base)]" />
-                        </svg>
-                        <span className="text-[15px] font-semibold tracking-tight text-[var(--text-primary)]">
-                            Aelo
-                        </span>
+                    <Link href="/dashboard" className="group">
+                        <AeloWordmark size="md" />
                     </Link>
                 )}
 
                 {collapsed && (
-                    <div className="flex items-center justify-center mx-auto">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M12 2L2 22h20L12 2z" className="fill-[var(--accent-base)]" />
-                            <path d="M12 9L7 19h10L12 9z" className="fill-[var(--bg-base)]" />
-                        </svg>
+                    <div className="flex items-center justify-center mx-auto text-[var(--text-primary)]">
+                        <AeloMark size={20} />
                     </div>
                 )}
 

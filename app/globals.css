@@ -1,8 +1,9 @@
 @import "tailwindcss";
 
 /* ========================================
-   AELO — TRUE NOIR DESIGN SYSTEM
-   Premium Monochrome + Subtle Accent
+   AELO — DESIGN SYSTEM
+   Archetype: Sage (primary) + Magician (shading)
+   See BRAND_ARCHETYPE.md — every token below inherits from that doc.
    ======================================== */
 
 :root {
@@ -10,30 +11,33 @@
   --font-sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
 
-  /* ── BACKGROUNDS (Layered Depth) ── */
-  --bg-base:          #000000;
-  --bg-surface:       #0A0A0B;
-  --bg-raised:        #141415;
+  /* ── BACKGROUNDS (Layered Depth — Sage keeps depth minimal) ── */
+  --bg-base:          #000000;   /* absolute noir */
+  --bg-surface:       #0A0A0B;   /* card fill */
+  --bg-raised:        #141415;   /* hover fills, inputs */
   --bg-hover:         #1A1A1C;
   --bg-active:        #222224;
 
   /* ── BORDERS ── */
   --border-default:   rgba(255, 255, 255, 0.07);
   --border-subtle:    rgba(255, 255, 255, 0.04);
-  --border-active:    rgba(255, 255, 255, 0.2);
+  --border-active:    rgba(255, 255, 255, 0.18);
 
   /* ── TEXT ── */
   --text-primary:     #FAFAFA;
   --text-secondary:   #A1A1AA;
   --text-tertiary:    #52525B;
   --text-ghost:       #3F3F46;
-  --text-on-accent:   #FFFFFF;
+  --text-on-accent:   #08080A;   /* dark ink on the accent, Sage/Palantir-style */
 
-  /* ── ACCENT (Subtle Indigo for Dashboard) ── */
-  --accent-base:      #6366F1;
-  --accent-muted:     rgba(99, 102, 241, 0.12);
-  --accent-glow:      rgba(99, 102, 241, 0.2);
-  --accent-hover:     #818CF8;
+  /* ── ACCENT: single high-signal color (Sage discipline)
+        A cool amber-ivory ("beacon") — reads as truth/measurement,
+        distinct from the indigo everyone else uses in this category. ── */
+  --accent-base:      #E5D3A6;   /* beacon ivory */
+  --accent-muted:     rgba(229, 211, 166, 0.08);
+  --accent-glow:      rgba(229, 211, 166, 0.14);
+  --accent-hover:     #F1E3BC;
+  --accent-strong:    #F7EBC8;
 
   /* ── SEMANTIC COLORS ── */
   --data-green:       #22C55E;
@@ -56,11 +60,11 @@
   --radius-xl:        12px;
   --radius-full:      9999px;
 
-  /* ── SHADOWS ── */
-  --shadow-sm:        0 1px 2px rgba(0, 0, 0, 0.5);
-  --shadow-md:        0 4px 12px rgba(0, 0, 0, 0.4);
-  --shadow-lg:        0 8px 32px rgba(0, 0, 0, 0.5);
-  --shadow-glow:      0 0 20px rgba(99, 102, 241, 0.15);
+  /* ── SHADOWS (Sage: shadows earn their place) ── */
+  --shadow-sm:        0 1px 2px rgba(0, 0, 0, 0.6);
+  --shadow-md:        0 4px 14px rgba(0, 0, 0, 0.5);
+  --shadow-lg:        0 12px 40px rgba(0, 0, 0, 0.65);
+  --shadow-glow:      0 0 24px rgba(229, 211, 166, 0.12);
 }
 
 @theme inline {
@@ -101,7 +105,13 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   letter-spacing: -0.011em;
+  /* Sage: data speaks first. Numbers align in tables and cards by default. */
+  font-feature-settings: "cv11", "ss01", "tnum" 1;
+  font-variant-numeric: tabular-nums;
 }
+
+/* Data-authority numerals for anything numeric */
+.tnum, td, th, .metric-number { font-variant-numeric: tabular-nums; }
 
 h1, h2, h3, h4, h5, h6, .font-display {
   font-family: var(--font-sans), system-ui, -apple-system, sans-serif;
@@ -311,12 +321,35 @@ tr:hover td { background: var(--bg-hover); }
   background-clip: text;
 }
 
-.brand-gradient {
-  background: linear-gradient(135deg, #6366F1, #14B8A6);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+/* Retired: brand-gradient (indigo→teal) — off-archetype. Sage keeps color
+   restrained. If you need to distinguish a headline, use text-gradient. */
+.brand-gradient { color: var(--text-primary); }
+
+/* ── SPECTRUM RULE ─────────────────────────────────────────────────────────
+   The one flourish. Used ONLY on the receipt moment (a measured delta,
+   a proof card). A very thin horizontal beam that refracts. Magician
+   shading applied surgically — never decorative. */
+.spectrum-rule {
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    var(--data-red) 20%,
+    var(--data-amber) 40%,
+    var(--accent-base) 60%,
+    var(--data-teal) 80%,
+    transparent 100%
+  );
+  opacity: 0.55;
 }
+
+/* Reveal animation for the receipt moment (Magician: number appears from nothing) */
+@keyframes receipt-reveal {
+  0%   { opacity: 0; transform: translateY(4px); letter-spacing: 0.05em; }
+  60%  { opacity: 1; }
+  100% { opacity: 1; transform: translateY(0); letter-spacing: -0.02em; }
+}
+.receipt-reveal { animation: receipt-reveal 480ms cubic-bezier(0.2, 0.7, 0.2, 1) forwards; }
 
 /* ========================================
    ANIMATIONS & TEXTURES
@@ -401,7 +434,7 @@ tr:hover td { background: var(--bg-hover); }
   inset: 0;
   border-radius: inherit;
   padding: 1px;
-  background: linear-gradient(145deg, rgba(139, 92, 246, 0.6), transparent 40%, transparent 60%, rgba(139, 92, 246, 0.1));
+  background: linear-gradient(145deg, rgba(229, 211, 166, 0.35), transparent 40%, transparent 60%, rgba(229, 211, 166, 0.06));
   -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
   -webkit-mask-composite: xor;
   mask-composite: exclude;
@@ -409,5 +442,5 @@ tr:hover td { background: var(--bg-hover); }
 }
 
 .glow-violet {
-  background: radial-gradient(circle, rgba(139, 92, 246, 0.15) 0%, transparent 70%);
+  background: radial-gradient(circle, rgba(229, 211, 166, 0.10) 0%, transparent 70%);
 }

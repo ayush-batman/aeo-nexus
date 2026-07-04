@@ -1,19 +1,15 @@
 import Link from "next/link";
-import { Zap, ArrowLeft, Search } from "lucide-react";
+import { ArrowLeft, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { AeloWordmark } from "@/components/brand/logo";
 
 export default function NotFound() {
     return (
         <div className="min-h-screen bg-[var(--bg-base)] flex items-center justify-center p-6">
             <div className="text-center max-w-md">
                 {/* Logo */}
-                <Link href="/" className="inline-flex items-center gap-2 mb-12">
-                    <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center">
-                        <Zap className="w-5 h-5 text-white" />
-                    </div>
-                    <span className="text-lg font-bold bg-gradient-to-r from-violet-400 to-indigo-400 bg-clip-text text-transparent">
-                        Aelo
-                    </span>
+                <Link href="/" className="inline-flex mb-12">
+                    <AeloWordmark size="lg" />
                 </Link>
 
                 {/* 404 */}
