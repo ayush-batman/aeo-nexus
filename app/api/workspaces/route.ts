@@ -113,10 +113,15 @@ export async function POST(request: NextRequest) {
                     prompt: r.prompt,
                     response: r.response,
                     brand_mentioned: r.brandMentioned,
+                    brand_variants: r.brandVariants,
                     mention_position: r.mentionPosition,
                     sentiment: r.sentiment,
+                    sentiment_score: r.sentimentScore,
+                    sentiment_reason: r.sentimentReason,
                     competitors_mentioned: r.competitorsMentioned,
                     citations: r.citations,
+                    list_items: r.listItems,
+                    confidence: r.confidence,
                 }));
                 if (scanInserts.length > 0) {
                     await db.from('llm_scans').insert(scanInserts);

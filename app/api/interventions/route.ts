@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getCurrentWorkspaceContext } from '@/lib/data-access';
 import { createAdminClient } from '@/lib/supabase/admin';
+import { snapshotVisibility } from '@/lib/interventions';
 
 // ── Types ───────────────────────────────────────────────────────────────────
 // Kept intentionally minimal for v1. See migration 015 for the full schema.
@@ -90,44 +91,3 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ intervention: data }, { status: 201 });
 }
 
-// ── Helpers ─────────────────────────────────────────────────────────────────
-
-// For each target prompt, find the most recent scans per platform in this
-// workspace and record their visibility signals. Older scans (>30d) ignored.
-async function snapshotVisibility(
-    db: ReturnType<typeof createAdminClient>,
-    workspaceId: string,
-    prompts: string[],
-): Promise<Record<string, Record<string, { mentioned: boolean; position: number | null; sentiment: string | null }>>> {
-    const cutoff = new Date();
-    cutoff.setDate(cutoff.getDate() - 30);
-
-    const { data: scans, error } = await db
-        .from('llm_scans')
-        .select('platform, prompt, brand_mentioned, mention_position, sentiment, created_at')
-        .eq('workspace_id', workspaceId)
-        .in('prompt', prompts)
-        .gte('created_at', cutoff.toISOString())
-        .order('created_at', { ascending: false });
-
-    if (error || !scans) {
-        console.warn('[interventions/snapshot] no scans found:', error);
-        return {};
-    }
-
-    const out: Record<string, Record<string, { mentioned: boolean; position: number | null; sentiment: string | null }>> = {};
-    for (const prompt of prompts) {
-        out[prompt] = {};
-    }
-    // Take the most recent per (prompt, platform)
-    for (const s of scans) {
-        const bucket = out[s.prompt] ?? (out[s.prompt] = {});
-        if (bucket[s.platform]) continue; // already have newer one (results are DESC)
-        bucket[s.platform] = {
-            mentioned: !!s.brand_mentioned,
-            position: s.mention_position,
-            sentiment: s.sentiment,
-        };
-    }
-    return out;
-}

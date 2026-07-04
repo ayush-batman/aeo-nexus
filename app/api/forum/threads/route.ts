@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { getForumThreads, getCurrentWorkspaceId } from '@/lib/data-access';
+import { createAdminClient } from '@/lib/supabase/admin';
+import { snapshotVisibility } from '@/lib/interventions';
 
 // GET: Fetch forum threads
 export async function GET(request: NextRequest) {
@@ -59,13 +61,15 @@ export async function PATCH(request: NextRequest) {
             );
         }
 
-        const supabase = await createClient();
+        // Admin client so this works for both authenticated users and the
+        // dev-auth-bypass workspace (which has no JWT for RLS to trust).
+        const admin = createAdminClient();
 
         const updates: Record<string, unknown> = {};
         if (status) updates.status = status;
         if (commentDraft !== undefined) updates.comment_draft = commentDraft;
 
-        const { data, error } = await supabase
+        const { data, error } = await admin
             .from('forum_threads')
             .update(updates)
             .eq('id', threadId)
@@ -81,7 +85,40 @@ export async function PATCH(request: NextRequest) {
             );
         }
 
-        return NextResponse.json({ thread: data });
+        // Loop-closer: when a thread flips to 'posted', log an intervention.
+        // This is the DIAGNOSE→PRESCRIBE→ACT→PROVE loop. The intervention
+        // captures a baseline snapshot of visibility for the thread's implied
+        // prompt so the user can later /measure and see the receipt.
+        let intervention: unknown = null;
+        if (status === 'posted' && data) {
+            try {
+                const targetPrompts = data.title ? [data.title] : [];
+                const baseline = await snapshotVisibility(admin, workspaceId, targetPrompts);
+                const platformLabel = data.subreddit ? `r/${data.subreddit}` : (data.platform ?? 'forum');
+                const { data: iv, error: ivErr } = await admin
+                    .from('interventions')
+                    .insert({
+                        workspace_id: workspaceId,
+                        action_type: 'forum_reply',
+                        title: `Replied on ${platformLabel}: ${(data.title ?? '').slice(0, 120)}`,
+                        description: 'Auto-created from Forum Hub when thread was marked as posted.',
+                        action_url: data.url ?? null,
+                        forum_thread_id: data.id,
+                        target_prompts: targetPrompts,
+                        status: 'completed',
+                        action_taken_at: new Date().toISOString(),
+                        baseline_snapshot: baseline,
+                    })
+                    .select()
+                    .single();
+                if (ivErr) console.warn('[forum→intervention] insert failed:', ivErr);
+                else intervention = iv;
+            } catch (e) {
+                console.warn('[forum→intervention] unexpected:', e);
+            }
+        }
+
+        return NextResponse.json({ thread: data, intervention });
     } catch (error) {
         console.error('Error updating forum thread:', error);
         return NextResponse.json(

@@ -70,20 +70,21 @@ export async function POST(request: NextRequest) {
         
         const db = adminClient ?? (await createClient());
 
-        // Fields limited to the live `llm_scans` schema. Richer analyzer output
-        // (sentiment_score, sentiment_reason, brand_variants, list_items,
-        // confidence) will start persisting once migration 015 is applied.
         const scanInserts = results.map(r => ({
             workspace_id: context.workspaceId,
             platform: r.platform,
             prompt: r.prompt,
             response: r.response,
             brand_mentioned: r.brandMentioned,
+            brand_variants: r.brandVariants,
             mention_position: r.mentionPosition,
             sentiment: r.sentiment,
+            sentiment_score: r.sentimentScore,
+            sentiment_reason: r.sentimentReason,
             competitors_mentioned: r.competitorsMentioned,
             citations: r.citations,
-            // created_at is default
+            list_items: r.listItems,
+            confidence: r.confidence,
         }));
 
         const { error: insertError } = await db

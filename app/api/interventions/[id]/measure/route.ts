@@ -83,10 +83,15 @@ export async function POST(
                 prompt: r.prompt,
                 response: r.response,
                 brand_mentioned: r.brandMentioned,
+                brand_variants: r.brandVariants,
                 mention_position: r.mentionPosition,
                 sentiment: r.sentiment,
+                sentiment_score: r.sentimentScore,
+                sentiment_reason: r.sentimentReason,
                 competitors_mentioned: r.competitorsMentioned,
                 citations: r.citations,
+                list_items: r.listItems,
+                confidence: r.confidence,
             }));
             const { error: insertErr } = await db.from('llm_scans').insert(scanInserts);
             if (insertErr) console.error('[interventions/measure] scan insert failed:', insertErr);
