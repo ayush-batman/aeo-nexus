@@ -1,7 +1,7 @@
 import { type NextRequest, NextResponse } from 'next/server'
 import { updateSession } from '@/lib/supabase/middleware'
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
     // Dev Auth Bypass: If enabled in env and cookie set, skip Supabase auth
     const isDevBypassEnabled = process.env.NEXT_PUBLIC_ENABLE_DEV_AUTH_BYPASS === 'true';
     const hasBypassCookie = request.cookies.get('dev-auth-bypass')?.value === 'true';

@@ -1,18 +1,10 @@
 import type { Metadata } from "next";
-import { Inter, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 
-const inter = Inter({
-  variable: "--font-sans",
-  subsets: ["latin"],
-  display: "swap",
-});
-
-const jetbrainsMono = JetBrains_Mono({
-  variable: "--font-mono",
-  subsets: ["latin"],
-  display: "swap",
-});
+// NOTE: We intentionally do NOT use next/font/google here.
+// Fetching fonts from Google at compile time blocks the dev server in
+// sandboxed/offline environments. Font families are defined as CSS
+// variables (--font-sans / --font-mono) in globals.css instead.
 
 export const metadata: Metadata = {
   title: "Aelo | Strategic Intelligence for the AI Era",
@@ -36,7 +28,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${inter.variable} ${jetbrainsMono.variable} antialiased dark`}
+        className={`antialiased dark`}
       >
         {children}
       </body>

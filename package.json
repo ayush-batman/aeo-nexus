@@ -8,11 +8,16 @@
     "start": "next start",
     "lint": "eslint",
     "scan:dylect": "npx tsx scripts/run-dylect-scan.ts",
-    "debug:claude": "npx tsx scripts/debug-claude.ts"
+    "debug:claude": "npx tsx scripts/debug-claude.ts",
+    "postinstall": "mkdir -p node_modules/iceberg-js/dist && echo 'exports.IcebergRestCatalog = class IcebergRestCatalog {}; module.exports.default = {};' > node_modules/iceberg-js/dist/index.cjs && echo 'export class IcebergRestCatalog {} export default {};' > node_modules/iceberg-js/dist/index.mjs && echo 'export declare class IcebergRestCatalog {}' > node_modules/iceberg-js/dist/index.d.ts && echo 'export declare class IcebergRestCatalog {}' > node_modules/iceberg-js/dist/index.d.cts"
   },
   "devDependencies": {
+    "@types/pg": "^8.20.0",
     "@types/react": "19.2.14",
+    "dotenv": "^17.4.2",
+    "pg": "^8.21.0",
     "postcss": "^8.5.8",
+    "tsx": "^4.23.0",
     "typescript": "5.9.3"
   },
   "dependencies": {
