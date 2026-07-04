@@ -341,91 +341,13 @@ export async function scanLLM(options: ScanOptions): Promise<ScanOutput> {
         }
     }
 
-    // If all real platforms failed, log the error and inject mock data so UI doesn't crash on demo
+    // HONEST DATA POLICY: if every requested platform failed, we return empty
+    // results with the real errors intact. We do NOT fabricate a "mock" scan and
+    // pass it off as real — an analytics product must never show an invented number.
+    // Callers are responsible for surfacing an honest "provider unavailable" state.
+    // (Explicit mock is still available by requesting the 'mock' platform directly.)
     if (results.length === 0 && platforms.length > 0) {
-        console.error('[scanLLM] All platforms failed. Injecting mock data as fallback.');
-        try {
-            const mockResponse = await scanWithMock(prompt);
-            const analysis = await analyzeWithAI({
-                response: mockResponse,
-                brandName,
-                competitors,
-                brandDomain,
-            });
-            const citations = extractCitations(mockResponse, brandDomain);
-            const mockScanResult: ScanResult = {
-                platform: 'mock',
-                prompt,
-                response: mockResponse,
-                brandMentioned: analysis.brandMentioned,
-                brandVariants: analysis.brandVariants,
-                mentionPosition: analysis.mentionPosition,
-                sentiment: analysis.sentiment,
-                sentimentScore: analysis.sentimentScore,
-                sentimentReason: analysis.sentimentReason,
-                competitorsMentioned: analysis.competitorPositions
-                    .filter(c => c.position !== null)
-                    .map(c => c.name),
-                competitorPositions: analysis.competitorPositions,
-                citations,
-                listItems: analysis.listItems,
-                confidence: analysis.confidence,
-                timestamp: new Date().toISOString(),
-            };
-
-            if (mode === 'battle') {
-                let winner = null;
-                let winnerReason = "No clear winner detected in the response.";
-
-                const bestCompetitor = mockScanResult.competitorPositions[0];
-                const compName = bestCompetitor?.name || '';
-                
-                let myPos = mockScanResult.mentionPosition || 999;
-                let compPos = bestCompetitor?.position || 999;
-
-                if (myPos === 999 && compPos === 999 && compName) {
-                    const myIndex = mockResponse.toLowerCase().indexOf(brandName.toLowerCase());
-                    const compIndex = mockResponse.toLowerCase().indexOf(compName.toLowerCase());
-                    if (myIndex !== -1) myPos = myIndex;
-                    if (compIndex !== -1) compPos = compIndex;
-                }
-
-                if (myPos !== 999 && compPos === 999) {
-                    winner = brandName;
-                    winnerReason = `${brandName} was mentioned, but ${compName} was ignored entirely.`;
-                } else if (compPos !== 999 && myPos === 999) {
-                    winner = compName;
-                    winnerReason = `${compName} was mentioned, but ${brandName} was ignored entirely.`;
-                } else if (myPos !== 999 && compPos !== 999 && myPos !== compPos) {
-                    if (myPos < compPos) {
-                        winner = brandName;
-                        winnerReason = `${brandName} was prioritized earlier in the response.`;
-                    } else {
-                        winner = compName;
-                        winnerReason = `${compName} was prioritized earlier in the response.`;
-                    }
-                } else if (myPos !== 999 && compPos !== 999 && myPos === compPos) {
-                    if (mockScanResult.sentimentScore > 0.2) {
-                        winner = brandName;
-                        winnerReason = `${brandName} was favored slightly in sentiment.`;
-                    } else if (mockScanResult.sentimentScore < -0.2) {
-                        winner = compName;
-                        winnerReason = `${compName} received more positive sentiment.`;
-                    }
-                } else {
-                    winnerReason = `Neither brand was mentioned by the AI.`;
-                }
-
-                (mockScanResult as BattleResult).winner = winner;
-                (mockScanResult as BattleResult).winnerReason = winnerReason;
-            }
-
-            results.push(mockScanResult);
-            // Clear errors so the API doesn't return 500 when returning a mock
-            errors.length = 0;
-        } catch (mockError) {
-            console.error('Failed to generate mock result:', mockError);
-        }
+        console.error('[scanLLM] All requested platforms failed:', errors.map(e => `${e.platform}: ${e.error}`).join('; '));
     }
 
     return { results, errors };
