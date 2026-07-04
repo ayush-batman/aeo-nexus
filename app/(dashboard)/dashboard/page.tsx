@@ -405,34 +405,35 @@ export default function DashboardPage() {
                                 AI Buyer Journey
                             </CardTitle>
                         </CardHeader>
-                        <CardContent>
-                            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-                                <div className="md:col-span-1 border-r border-[var(--border-default)] pr-6">
-                                    <p className="text-xs font-medium text-[var(--text-secondary)] uppercase tracking-wider mb-1">AI-Driven Visits</p>
-                                    <p className="text-3xl font-bold text-[var(--text-primary)] tracking-tight">{analytics.aiVisits}</p>
+                        <CardContent className="space-y-6">
+                            {/* Top row: total AI visits + traffic by source */}
+                            <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+                                <div className="lg:col-span-1 lg:border-r border-[var(--border-default)] lg:pr-6">
+                                    <p className="text-[10px] font-mono uppercase tracking-[0.14em] text-[var(--text-tertiary)] mb-1">AI-Driven Visits</p>
+                                    <p className="text-3xl font-medium tabular-nums text-[var(--text-primary)] tracking-tight">{analytics.aiVisits}</p>
                                     <div className="mt-2 text-xs text-[var(--text-tertiary)]">
-                                        Last 30 days • {analytics.totalVisits > 0
+                                        Last 30 days · {analytics.totalVisits > 0
                                             ? `${((analytics.aiVisits / analytics.totalVisits) * 100).toFixed(1)}% of total traffic`
                                             : "No traffic data yet"}
                                     </div>
-                                    <div className="mt-4 p-3 bg-[var(--bg-raised)] rounded-md border border-[var(--border-subtle)]">
-                                        <p className="text-xs text-[var(--text-secondary)]">
-                                            Add the <code>&lt;script&gt;</code> tag to your site to track this.
-                                        </p>
-                                    </div>
                                 </div>
-                                <div className="md:col-span-3">
-                                    <p className="text-xs font-medium text-[var(--text-secondary)] uppercase tracking-wider mb-4">Traffic by AI Source</p>
+                                <div className="lg:col-span-3">
+                                    <p className="text-[10px] font-mono uppercase tracking-[0.14em] text-[var(--text-tertiary)] mb-3">Traffic by AI Source</p>
                                     <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                                        {['chatgpt', 'gemini', 'perplexity', 'claude'].map(source => (
-                                            <div key={source} className="bg-[var(--bg-raised)] rounded-lg p-4 border border-[var(--border-default)]">
-                                                <p className="text-xs text-[var(--text-secondary)] capitalize mb-2">{source}</p>
-                                                <div className="flex items-end justify-between">
-                                                    <span className="text-xl font-bold text-[var(--text-primary)]">{analytics.sources[source] || 0}</span>
-                                                    <div className="h-1 w-10 bg-[var(--bg-surface)] rounded-full overflow-hidden">
+                                        {[
+                                            { key: 'chatgpt',    label: 'ChatGPT' },
+                                            { key: 'gemini',     label: 'Gemini' },
+                                            { key: 'perplexity', label: 'Perplexity' },
+                                            { key: 'claude',     label: 'Claude' },
+                                        ].map(source => (
+                                            <div key={source.key} className="bg-[var(--bg-raised)] rounded-md p-3 border border-[var(--border-default)]">
+                                                <p className="text-[11px] text-[var(--text-secondary)] mb-2">{source.label}</p>
+                                                <div className="flex items-end justify-between gap-2">
+                                                    <span className="text-lg font-medium tabular-nums text-[var(--text-primary)]">{analytics.sources[source.key] || 0}</span>
+                                                    <div className="h-1 w-10 bg-[var(--bg-surface)] rounded-full overflow-hidden flex-shrink-0">
                                                         <div
                                                             className="h-full bg-[var(--accent-base)]"
-                                                            style={{ width: `${Math.min(100, ((analytics.sources[source] || 0) / (analytics.aiVisits || 1)) * 100)}%` }}
+                                                            style={{ width: `${Math.min(100, ((analytics.sources[source.key] || 0) / (analytics.aiVisits || 1)) * 100)}%` }}
                                                         />
                                                     </div>
                                                 </div>
@@ -441,6 +442,21 @@ export default function DashboardPage() {
                                     </div>
                                 </div>
                             </div>
+
+                            {/* Install hint — full-width row (not squeezed into narrow column) */}
+                            {analytics.aiVisits === 0 && (
+                                <div className="flex items-center gap-3 rounded-md border border-[var(--border-subtle)] bg-[var(--bg-raised)] p-3">
+                                    <span className="text-[10px] font-mono uppercase tracking-[0.14em] text-[var(--text-tertiary)] flex-shrink-0">
+                                        Install
+                                    </span>
+                                    <p className="text-[13px] text-[var(--text-secondary)] leading-snug flex-1 min-w-0">
+                                        Add the Aelo tracking snippet to your site to see which AI referrers drive real visits.
+                                    </p>
+                                    <Link href="/dashboard/settings" className="text-[12px] font-medium text-[var(--accent-base)] hover:underline flex-shrink-0">
+                                        Get snippet →
+                                    </Link>
+                                </div>
+                            )}
                         </CardContent>
                     </Card>
                 )}
