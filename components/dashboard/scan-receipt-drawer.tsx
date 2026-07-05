@@ -45,6 +45,10 @@ interface Props {
     subtitle?:     string;
     platform?:     string;       // filter to a single platform, or omit for all
     limit?:        number;
+    // Override the data source. When omitted, uses /api/llm/scans (auth-only,
+    // dashboard use). When provided, the drawer POSTs no headers and fetches
+    // this URL — used by the public India Index for anonymized public receipts.
+    dataSourceUrl?: string;
 }
 
 /**
@@ -55,7 +59,7 @@ interface Props {
  * platform's UI so the client can verify with their own eyes.
  */
 export function ScanReceiptDrawer({
-    open, onOpenChange, title, subtitle, platform, limit = 30,
+    open, onOpenChange, title, subtitle, platform, limit = 30, dataSourceUrl,
 }: Props) {
     const [scans, setScans]         = useState<Scan[]>([]);
     const [loading, setLoading]     = useState(true);
@@ -69,9 +73,15 @@ export function ScanReceiptDrawer({
             setLoading(true);
             setError(null);
             try {
-                const qs = new URLSearchParams({ limit: String(limit) });
-                if (platform) qs.set('platform', platform);
-                const res = await fetch(`/api/llm/scans?${qs}`, { cache: 'no-store' });
+                let url: string;
+                if (dataSourceUrl) {
+                    url = dataSourceUrl;
+                } else {
+                    const qs = new URLSearchParams({ limit: String(limit) });
+                    if (platform) qs.set('platform', platform);
+                    url = `/api/llm/scans?${qs}`;
+                }
+                const res = await fetch(url, { cache: 'no-store' });
                 if (!res.ok) throw new Error('Failed to load');
                 const data = await res.json();
                 if (!cancelled) setScans(data.scans || []);
@@ -82,7 +92,7 @@ export function ScanReceiptDrawer({
             }
         })();
         return () => { cancelled = true; };
-    }, [open, platform, limit]);
+    }, [open, platform, limit, dataSourceUrl]);
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
