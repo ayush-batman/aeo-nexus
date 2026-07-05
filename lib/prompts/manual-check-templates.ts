@@ -28,35 +28,38 @@ export type PromptCategory =
     | 'reviews_reputation'
     | 'category_leaders';
 
+// Sage archetype: no emojis in the product surface. `icon` retained as a
+// string field for backwards-compat with call sites; downstream renders
+// treat empty strings as no-icon.
 export const CATEGORY_META: Record<PromptCategory, { label: string; icon: string; color: string; description: string }> = {
     brand_awareness: {
         label: 'Brand Awareness',
-        icon: '🔍',
-        color: 'text-blue-400',
+        icon: '',
+        color: 'text-[var(--data-teal)]',
         description: 'Check if LLMs know your brand exists',
     },
     competitor_comparison: {
         label: 'Competitor Comparison',
-        icon: '⚔️',
-        color: 'text-red-400',
+        icon: '',
+        color: 'text-[var(--data-red)]',
         description: 'See how you stack up against competitors',
     },
     problem_solution: {
         label: 'Problem → Solution',
-        icon: '🎯',
-        color: 'text-green-400',
+        icon: '',
+        color: 'text-[var(--data-green)]',
         description: 'Check if LLMs recommend you for solving problems',
     },
     reviews_reputation: {
         label: 'Reviews & Reputation',
-        icon: '⭐',
-        color: 'text-yellow-400',
+        icon: '',
+        color: 'text-[var(--data-amber)]',
         description: 'Monitor what LLMs say about your reputation',
     },
     category_leaders: {
         label: 'Category Leaders',
-        icon: '🏆',
-        color: 'text-purple-400',
+        icon: '',
+        color: 'text-[var(--accent-base)]',
         description: 'See if you appear in "best of" and "top" lists',
     },
 };

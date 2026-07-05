@@ -30,11 +30,11 @@ import { TopicClustering } from "@/components/dashboard/content-studio/topic-clu
 import { OriginalityScorer } from "@/components/dashboard/content-studio/originality-scorer";
 
 const schemaTypes = [
-    { id: "faq", name: "FAQ", icon: "❓", description: "Frequently Asked Questions" },
-    { id: "product", name: "Product", icon: "📦", description: "Product information" },
-    { id: "howto", name: "HowTo", icon: "📝", description: "Step-by-step guides" },
-    { id: "article", name: "Article", icon: "📰", description: "News/Blog articles" },
-    { id: "localbusiness", name: "Local Business", icon: "🏪", description: "Business info" },
+    { id: "faq",           name: "FAQ",             icon: "", description: "Frequently Asked Questions" },
+    { id: "product",       name: "Product",         icon: "", description: "Product information" },
+    { id: "howto",         name: "HowTo",           icon: "", description: "Step-by-step guides" },
+    { id: "article",       name: "Article",         icon: "", description: "News/Blog articles" },
+    { id: "localbusiness", name: "Local Business",  icon: "", description: "Business info" },
 ];
 
 interface AuditResult {

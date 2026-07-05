@@ -88,12 +88,12 @@ export default function LLMTrackerPage() {
     const [receiptPlatform, setReceiptPlatform] = useState<{ id: string; name: string; score: number } | null>(null);
 
     const REGIONS = [
-        { id: "global", label: "🌐 Global", context: "" },
-        { id: "us", label: "🇺🇸 US", context: "Respond as if answering from the United States in English. " },
-        { id: "in", label: "🇮🇳 India", context: "Respond as if answering from India in English. " },
-        { id: "uk", label: "🇬🇧 UK", context: "Respond as if answering from the United Kingdom in English. " },
-        { id: "de", label: "🇩🇪 Germany", context: "Respond as if answering from Germany in German (Deutsch). " },
-        { id: "es", label: "🇪🇸 Spain", context: "Respond as if answering from Spain in Spanish (Español). " },
+        { id: "global", label: "Global",  context: "" },
+        { id: "us",     label: "US",      context: "Respond as if answering from the United States in English. " },
+        { id: "in",     label: "India",   context: "Respond as if answering from India in English. " },
+        { id: "uk",     label: "UK",      context: "Respond as if answering from the United Kingdom in English. " },
+        { id: "de",     label: "Germany", context: "Respond as if answering from Germany in German (Deutsch). " },
+        { id: "es",     label: "Spain",   context: "Respond as if answering from Spain in Spanish (Español). " },
     ];
 
     // Fetch data function

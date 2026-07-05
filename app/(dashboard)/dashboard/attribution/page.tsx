@@ -25,18 +25,20 @@ interface AttributionData {
     recentResponses: { source: string; timestamp: string }[];
 }
 
+// Sage rule: no emoji glyphs. Colored dots do the identification job
+// via the `color` field (still available on the returned meta object).
 const SOURCE_LABELS: Record<string, { label: string; emoji: string; color: string }> = {
-    chatgpt: { label: "ChatGPT", emoji: "🟢", color: "bg-green-500" },
-    gemini: { label: "Google Gemini", emoji: "🔵", color: "bg-blue-500" },
-    perplexity: { label: "Perplexity", emoji: "🟣", color: "bg-[var(--accent-base)]" },
-    claude: { label: "Claude", emoji: "🟠", color: "bg-orange-500" },
-    ai_assistant: { label: "AI Assistant (Other)", emoji: "🤖", color: "bg-cyan-500" },
-    ai_search: { label: "AI Search", emoji: "🔍", color: "bg-[var(--accent-base)]" },
-    google_search: { label: "Google Search", emoji: "🌐", color: "bg-yellow-500" },
-    social_media: { label: "Social Media", emoji: "📱", color: "bg-pink-500" },
-    referral: { label: "Referral", emoji: "👥", color: "bg-teal-500" },
-    direct: { label: "Direct", emoji: "🔗", color: "bg-gray-500" },
-    other: { label: "Other", emoji: "❓", color: "bg-gray-400" },
+    chatgpt:       { label: "ChatGPT",              emoji: "", color: "bg-[var(--data-green)]" },
+    gemini:        { label: "Google Gemini",        emoji: "", color: "bg-[var(--data-teal)]" },
+    perplexity:    { label: "Perplexity",           emoji: "", color: "bg-[var(--accent-base)]" },
+    claude:        { label: "Claude",               emoji: "", color: "bg-[var(--data-amber)]" },
+    ai_assistant:  { label: "AI Assistant (Other)", emoji: "", color: "bg-[var(--data-cyan)]" },
+    ai_search:     { label: "AI Search",            emoji: "", color: "bg-[var(--accent-base)]" },
+    google_search: { label: "Google Search",        emoji: "", color: "bg-[var(--data-amber)]" },
+    social_media:  { label: "Social Media",         emoji: "", color: "bg-[var(--data-red)]" },
+    referral:      { label: "Referral",             emoji: "", color: "bg-[var(--data-teal)]" },
+    direct:        { label: "Direct",               emoji: "", color: "bg-[var(--text-tertiary)]" },
+    other:         { label: "Other",                emoji: "", color: "bg-[var(--text-tertiary)]" },
 };
 
 const PIE_COLORS = ["var(--accent-base)", "#10B981", "#3B82F6", "#F59E0B", "#EF4444", "#EC4899", "var(--accent-base)", "#14B8A6"];
@@ -77,10 +79,10 @@ export default function AttributionPage() {
     '</div></div>';
   document.body.appendChild(w);
   var options = [
-    {v:'chatgpt',l:'🟢 ChatGPT'},{v:'gemini',l:'🔵 Google Gemini'},
-    {v:'perplexity',l:'🟣 Perplexity'},{v:'ai_assistant',l:'🤖 Other AI'},
-    {v:'google_search',l:'🌐 Google Search'},{v:'social_media',l:'📱 Social Media'},
-    {v:'referral',l:'👥 Friend/Colleague'},{v:'other',l:'❓ Other'}
+    {v:'chatgpt',l:'ChatGPT'},{v:'gemini',l:'Google Gemini'},
+    {v:'perplexity',l:'Perplexity'},{v:'ai_assistant',l:'Other AI'},
+    {v:'google_search',l:'Google Search'},{v:'social_media',l:'Social Media'},
+    {v:'referral',l:'Friend or Colleague'},{v:'other',l:'Other'}
   ];
   var container = document.getElementById('aelo-options');
   options.forEach(function(o) {
@@ -166,7 +168,7 @@ export default function AttributionPage() {
                                         <p className="text-xs text-[var(--text-ghost)] uppercase tracking-wider mb-1">Top Source</p>
                                         <p className="text-lg font-bold font-display text-[var(--text-primary)]">
                                             {data?.sources?.[0]
-                                                ? `${SOURCE_LABELS[data.sources[0].source]?.emoji || "❓"} ${SOURCE_LABELS[data.sources[0].source]?.label || data.sources[0].source}`
+                                                ? `${SOURCE_LABELS[data.sources[0].source]?.label || data.sources[0].source}`
                                                 : "No data yet"
                                             }
                                         </p>
@@ -185,7 +187,7 @@ export default function AttributionPage() {
                                         {data?.sources && data.sources.length > 0 ? (
                                             <div className="space-y-3">
                                                 {data.sources.map((s, i) => {
-                                                    const meta = SOURCE_LABELS[s.source] || { label: s.source, emoji: "❓", color: "bg-gray-500" };
+                                                    const meta = SOURCE_LABELS[s.source] || { label: s.source, emoji: "", color: "bg-[var(--text-tertiary)]" };
                                                     return (
                                                         <div key={s.source} className="flex items-center gap-3">
                                                             <span className="text-sm w-5 text-center">{meta.emoji}</span>

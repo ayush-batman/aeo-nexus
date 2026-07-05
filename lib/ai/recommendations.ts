@@ -25,12 +25,15 @@ export type RecommendationCategory =
     | 'technical'
     | 'competitor';
 
+// Sage archetype: no emoji icons. Labels + design-token colors carry the
+// full story. Keeping `icon` as a string field for backwards-compat with
+// call sites that spread these objects.
 export const CATEGORY_CONFIG: Record<RecommendationCategory, { icon: string; label: string; color: string }> = {
-    visibility: { icon: '👁️', label: 'Visibility', color: 'text-violet-400' },
-    content: { icon: '📝', label: 'Content', color: 'text-blue-400' },
-    community: { icon: '💬', label: 'Community', color: 'text-green-400' },
-    technical: { icon: '⚙️', label: 'Technical', color: 'text-orange-400' },
-    competitor: { icon: '⚔️', label: 'Competitive', color: 'text-red-400' },
+    visibility: { icon: '', label: 'Visibility',  color: 'text-[var(--accent-base)]' },
+    content:    { icon: '', label: 'Content',     color: 'text-[var(--data-teal)]' },
+    community:  { icon: '', label: 'Community',   color: 'text-[var(--data-green)]' },
+    technical:  { icon: '', label: 'Technical',   color: 'text-[var(--data-amber)]' },
+    competitor: { icon: '', label: 'Competitive', color: 'text-[var(--data-red)]' },
 };
 
 export const PRIORITY_CONFIG: Record<string, { label: string; color: string; bgColor: string }> = {

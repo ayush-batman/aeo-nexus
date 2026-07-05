@@ -40,20 +40,20 @@ export const WelcomeEmail = ({ firstName = "there" }: WelcomeEmailProps) => {
                                 className="mx-auto mb-6"
                             />
 
-                            <Heading className="text-2xl font-bold text-center text-zinc-900 mb-6">
-                                Welcome to Aelo 🚀
+                            <Heading className="text-2xl font-medium text-center text-zinc-900 mb-6 tracking-tight">
+                                Welcome to Aelo.
                             </Heading>
 
-                            <Text className="text-base text-[var(--text-ghost)] mb-4">
+                            <Text className="text-base text-zinc-700 mb-4">
                                 Hi {firstName},
                             </Text>
 
-                            <Text className="text-base text-[var(--text-ghost)] mb-6 leading-relaxed">
-                                We're thrilled to have you! Aelo helps you track, analyze, and optimize your brand's visibility across modern AI models like ChatGPT, Gemini, Claude, and Perplexity.
+                            <Text className="text-base text-zinc-700 mb-6 leading-relaxed">
+                                Aelo measures how ChatGPT, Gemini, Claude, and Perplexity actually answer questions in your category — with the raw receipts, not a black-box score. Your first workspace is ready.
                             </Text>
 
-                            <Text className="text-base text-[var(--text-ghost)] mb-8 leading-relaxed">
-                                With the rise of Answer Engine Optimization (Aelo), being the #1 cited brand is more important than ever. Ready to see how AI sees you?
+                            <Text className="text-base text-zinc-700 mb-8 leading-relaxed">
+                                Head to your dashboard, add your top 3 competitors, and run your first scan. You&apos;ll have your first honest receipt in under 10 minutes.
                             </Text>
 
                             <Section className="text-center mb-8">

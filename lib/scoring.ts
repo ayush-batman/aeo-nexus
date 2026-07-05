@@ -252,8 +252,8 @@ export function getPriorityFromScore(score: number): {
     emoji: string;
     level: 'critical' | 'high' | 'medium' | 'low';
 } {
-    if (score >= 80) return { label: 'Critical', emoji: '🔥', level: 'critical' };
-    if (score >= 60) return { label: 'High', emoji: '⚡', level: 'high' };
-    if (score >= 40) return { label: 'Medium', emoji: '📊', level: 'medium' };
-    return { label: 'Low', emoji: '📋', level: 'low' };
+    if (score >= 80) return { label: 'Critical', emoji: '', level: 'critical' };
+    if (score >= 60) return { label: 'High',     emoji: '', level: 'high' };
+    if (score >= 40) return { label: 'Medium',   emoji: '', level: 'medium' };
+    return { label: 'Low', emoji: '', level: 'low' };
 }
