@@ -43,7 +43,23 @@ export function CitationMap() {
             const res = await fetch("/api/analytics/citations");
             const json = await res.json();
             if (!res.ok) throw new Error(json.error || "Failed to load citation data");
-            setData(json);
+
+            // API returns a flat shape { sources, totalCitations, ownDomainCitations, gaps }
+            // The component was authored against a richer, categorized shape.
+            // Normalize here so the component keeps its structure and the page
+            // stops crashing with 'Cannot read properties of undefined (reading owned)'.
+            const sources: Array<CitationSource & { isCompetitor?: boolean }> = json.sources ?? [];
+            const owned      = sources.filter(s => s.isOwnDomain);
+            const competitor = sources.filter(s => (s as { isCompetitor?: boolean }).isCompetitor);
+            const thirdParty = sources.filter(s => !s.isOwnDomain && !(s as { isCompetitor?: boolean }).isCompetitor);
+
+            const normalized: CitationAnalysis = {
+                classification: { owned, thirdParty, competitor },
+                gapAnalysis:    { missingTypes: json.gaps ?? [] },
+                recommendations: json.recommendations ?? [],
+                topUrls:        json.topUrls ?? [],
+            };
+            setData(normalized);
         } catch (err) {
             setError(err instanceof Error ? err.message : "Something went wrong");
         } finally {
