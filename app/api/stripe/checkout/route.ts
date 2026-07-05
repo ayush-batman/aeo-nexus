@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import Stripe from 'stripe';
-import { createClient } from '@/lib/supabase/server';
+import { createAdminClient } from '@/lib/supabase/admin';
+import { getCurrentWorkspaceContext } from '@/lib/data-access';
 
 function getStripe() {
     if (!process.env.STRIPE_SECRET_KEY) {
@@ -20,77 +21,56 @@ const PRICE_IDS: Record<string, string> = {
 
 export async function POST(request: NextRequest) {
     try {
-        const supabase = await createClient();
-        const { data: { user }, error: authError } = await supabase.auth.getUser();
-
-        if (authError || !user) {
-            return NextResponse.json(
-                { error: 'Unauthorized' },
-                { status: 401 }
-            );
+        // Route through the shared context helper so dev-auth-bypass works
+        // here — same fix pattern as the /api/workspaces endpoints.
+        const context = await getCurrentWorkspaceContext();
+        if (!context) {
+            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
         const { plan } = await request.json();
-
         if (!plan || !PRICE_IDS[plan]) {
-            return NextResponse.json(
-                { error: 'Invalid plan' },
-                { status: 400 }
-            );
+            return NextResponse.json({ error: 'Invalid plan' }, { status: 400 });
         }
 
-        // Get user's organization
-        const { data: userData } = await supabase
-            .from('users')
-            .select('org_id')
-            .eq('id', user.id)
-            .single();
+        const db = createAdminClient();
 
-        // Get organization's stripe customer ID
-        const { data: orgData } = userData?.org_id ? await supabase
-            .from('organizations')
-            .select('stripe_customer_id')
-            .eq('id', userData.org_id)
-            .single() : { data: null };
+        // Look up the user's email + org's saved stripe customer id.
+        const [{ data: userRow }, { data: orgRow }] = await Promise.all([
+            db.from('users').select('email').eq('id', context.userId).single(),
+            db.from('organizations').select('stripe_customer_id').eq('id', context.orgId).single(),
+        ]);
 
-        let customerId = orgData?.stripe_customer_id;
+        let customerId = orgRow?.stripe_customer_id;
         const stripe = getStripe();
 
         // Create Stripe customer if doesn't exist
         if (!customerId) {
             const customer = await stripe.customers.create({
-                email: user.email,
+                email: userRow?.email ?? undefined,
                 metadata: {
-                    org_id: userData?.org_id || '',
-                    user_id: user.id,
+                    org_id: context.orgId,
+                    user_id: context.userId,
                 },
             });
             customerId = customer.id;
 
-            // Save customer ID to organization
-            if (userData?.org_id) {
-                await supabase
-                    .from('organizations')
-                    .update({ stripe_customer_id: customerId })
-                    .eq('id', userData.org_id);
-            }
+            await db
+                .from('organizations')
+                .update({ stripe_customer_id: customerId })
+                .eq('id', context.orgId);
         }
 
         // Create checkout session
         const session = await stripe.checkout.sessions.create({
             customer: customerId,
             payment_method_types: ['card'],
-            line_items: [
-                {
-                    price: PRICE_IDS[plan],
-                    quantity: 1,
-                },
-            ],
+            line_items: [{ price: PRICE_IDS[plan], quantity: 1 }],
             mode: 'subscription',
             success_url: `${request.nextUrl.origin}/dashboard/settings?success=true`,
-            cancel_url: `${request.nextUrl.origin}/dashboard/settings?canceled=true`,
+            cancel_url:  `${request.nextUrl.origin}/dashboard/settings?canceled=true`,
             metadata: {
-                org_id: userData?.org_id || '',
+                org_id: context.orgId,
                 plan,
             },
         });

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import Razorpay from 'razorpay';
-import { createClient } from '@/lib/supabase/server';
+import { getCurrentWorkspaceContext } from '@/lib/data-access';
 
 // Plan prices in paise (INR)
 const PLAN_PRICES: Record<string, { amount: number; name: string }> = {
@@ -21,23 +21,17 @@ function getRazorpay() {
 
 export async function POST(request: NextRequest) {
     try {
-        const supabase = await createClient();
-        const { data: { user }, error: authError } = await supabase.auth.getUser();
-
-        if (authError || !user) {
-            return NextResponse.json(
-                { error: 'Unauthorized' },
-                { status: 401 }
-            );
+        // Route through the shared context helper so dev-auth-bypass works
+        // here — same fix pattern as the /api/workspaces endpoints.
+        const context = await getCurrentWorkspaceContext();
+        if (!context) {
+            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
         const { plan } = await request.json();
 
         if (!plan || !PLAN_PRICES[plan]) {
-            return NextResponse.json(
-                { error: 'Invalid plan' },
-                { status: 400 }
-            );
+            return NextResponse.json({ error: 'Invalid plan' }, { status: 400 });
         }
 
         const planDetails = PLAN_PRICES[plan];
@@ -51,23 +45,15 @@ export async function POST(request: NextRequest) {
             );
         }
 
-        // Get user's organization
-        const { data: userData } = await supabase
-            .from('users')
-            .select('org_id')
-            .eq('id', user.id)
-            .single();
-
         // Create Razorpay order
         const order = await razorpay.orders.create({
             amount: planDetails.amount,
             currency: 'INR',
             receipt: `order_${Date.now()}`,
             notes: {
-                org_id: userData?.org_id || '',
+                org_id: context.orgId,
                 plan,
-                user_id: user.id,
-                user_email: user.email || '',
+                user_id: context.userId,
             },
         });
 
