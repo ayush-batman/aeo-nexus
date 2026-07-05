@@ -228,12 +228,19 @@ export default function AnalyticsPage() {
             ? Math.round(((lastWeek.filter(s => s.sentiment === "positive").length + lastWeek.filter(s => s.sentiment === "neutral").length * 0.5) / lastWeek.length) * 100)
             : 0;
 
+        // Sage rule: a delta only makes sense when both weeks have real data.
+        // Otherwise 'from 0 scans to 5 scans' becomes '+5 vs last week' which
+        // is technically true but misleading — it implies a baseline. Show
+        // null (rendered as '—' in the UI) instead of a fake comparison.
+        const hasBaseline = lastWeek.length > 0;
+        const hasThisWeek = thisWeek.length > 0;
+
         return {
             thisWeek: { scans: thisWeek.length, visibility: thisWeekVis, sentiment: thisWeekSentiment },
             lastWeek: { scans: lastWeek.length, visibility: lastWeekVis, sentiment: lastWeekSentiment },
-            visChange: thisWeekVis - lastWeekVis,
-            sentimentChange: thisWeekSentiment - lastWeekSentiment,
-            scanChange: thisWeek.length - lastWeek.length,
+            visChange:       hasBaseline && hasThisWeek ? thisWeekVis - lastWeekVis           : null,
+            sentimentChange: hasBaseline && hasThisWeek ? thisWeekSentiment - lastWeekSentiment : null,
+            scanChange:      hasBaseline && hasThisWeek ? thisWeek.length - lastWeek.length   : null,
         };
     })();
 
@@ -569,11 +576,19 @@ export default function AnalyticsPage() {
                                         </div>
                                         <span className={cn(
                                             "text-xs font-medium flex items-center gap-1 px-2 py-1 rounded-md",
-                                            metric.change > 0 ? "bg-green-500/10 text-green-400 border border-green-500/20" :
-                                                metric.change < 0 ? "bg-red-500/10 text-red-400 border border-red-500/20" : "bg-[var(--bg-raised)] text-[var(--text-secondary)] border border-[var(--border-default)]/50"
+                                            metric.change === null
+                                                ? "bg-[var(--bg-raised)] text-[var(--text-tertiary)] border border-[var(--border-default)]/50"
+                                                : metric.change > 0 ? "bg-[var(--data-green-muted)] text-[var(--data-green)] border border-[var(--data-green)]/20"
+                                                : metric.change < 0 ? "bg-[var(--data-red-muted)] text-[var(--data-red)] border border-[var(--data-red)]/20"
+                                                : "bg-[var(--bg-raised)] text-[var(--text-secondary)] border border-[var(--border-default)]/50"
                                         )}>
-                                            {metric.change > 0 ? <TrendingUp className="w-3 h-3" /> : metric.change < 0 ? <TrendingDown className="w-3 h-3" /> : null}
-                                            {metric.change > 0 ? "+" : ""}{metric.change}{metric.suffix}
+                                            {metric.change === null
+                                                ? <>—&nbsp;need baseline</>
+                                                : <>
+                                                    {metric.change > 0 ? <TrendingUp className="w-3 h-3" /> : metric.change < 0 ? <TrendingDown className="w-3 h-3" /> : null}
+                                                    {metric.change > 0 ? "+" : ""}{metric.change}{metric.suffix}
+                                                </>
+                                            }
                                         </span>
                                     </div>
                                     <div className="relative z-10 space-y-1">
