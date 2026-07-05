@@ -12,6 +12,7 @@ import { cn, getScoreColor, getScoreBgColor } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/client";
 import { ScheduledScans } from "@/components/dashboard/llm-tracker/scheduled-scans";
 import { QuestionVariants } from "@/components/dashboard/llm-tracker/question-variants";
+import { ScanReceiptDrawer } from "@/components/dashboard/scan-receipt-drawer";
 import {
     Search,
     Sparkles,
@@ -83,6 +84,8 @@ export default function LLMTrackerPage() {
     const [newCompetitor, setNewCompetitor] = useState("");
     const [expandedScan, setExpandedScan] = useState<number | null>(null);
     const [scanRegion, setScanRegion] = useState<string>("global");
+    const [receiptOpen, setReceiptOpen] = useState(false);
+    const [receiptPlatform, setReceiptPlatform] = useState<{ id: string; name: string; score: number } | null>(null);
 
     const REGIONS = [
         { id: "global", label: "🌐 Global", context: "" },
@@ -332,7 +335,14 @@ export default function LLMTrackerPage() {
                                     const change = metrics?.change || 0;
 
                                     return (
-                                        <Card key={platform.id}>
+                                        <Card
+                                            key={platform.id}
+                                            className="cursor-pointer hover:border-[var(--border-active)] transition-colors group"
+                                            onClick={() => {
+                                                setReceiptPlatform({ id: platform.id, name: platform.name, score });
+                                                setReceiptOpen(true);
+                                            }}
+                                        >
                                             <CardContent className="p-4">
                                                 <div className="flex items-center justify-between mb-2">
                                                     <span className="text-sm text-[var(--text-secondary)]">{platform.name}</span>
@@ -363,6 +373,9 @@ export default function LLMTrackerPage() {
                                                         )}
                                                         style={{ width: `${score}%` }}
                                                     />
+                                                </div>
+                                                <div className="mt-2 text-[10px] font-mono uppercase tracking-[0.12em] text-[var(--text-ghost)] opacity-0 group-hover:opacity-100 transition-opacity">
+                                                    See the receipt →
                                                 </div>
                                             </CardContent>
                                         </Card>
@@ -790,6 +803,14 @@ export default function LLMTrackerPage() {
                     </TabsContent>
                 </Tabs>
             </div>
+
+            <ScanReceiptDrawer
+                open={receiptOpen}
+                onOpenChange={setReceiptOpen}
+                title={receiptPlatform ? `${receiptPlatform.name} visibility · ${receiptPlatform.score}/100` : "Scans"}
+                subtitle={receiptPlatform ? `Every scan that produced this ${receiptPlatform.name} score, most recent first. Verify any of them yourself.` : undefined}
+                platform={receiptPlatform?.id}
+            />
         </>
     );
 }

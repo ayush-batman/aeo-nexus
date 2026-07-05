@@ -304,16 +304,21 @@ export async function getCurrentWorkspaceId(): Promise<string | null> {
 // Fetch recent LLM scans
 export async function getLLMScans(
     workspaceId: string,
-    limit: number = 10
+    limit: number = 10,
+    opts?: { platform?: string }
 ): Promise<LLMScan[]> {
     const supabase = await createAdminClient();
 
-    const { data, error } = await supabase
+    let query = supabase
         .from('llm_scans')
         .select('*')
         .eq('workspace_id', workspaceId)
         .order('created_at', { ascending: false })
         .limit(limit);
+
+    if (opts?.platform) query = query.eq('platform', opts.platform);
+
+    const { data, error } = await query;
 
     if (error) {
         console.error('Error fetching LLM scans:', error);

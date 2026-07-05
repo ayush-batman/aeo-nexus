@@ -23,9 +23,10 @@ export async function GET(request: NextRequest) {
         }
 
         const searchParams = request.nextUrl.searchParams;
-        const limit = parseInt(searchParams.get('limit') || '20', 10);
+        const limit    = parseInt(searchParams.get('limit') || '20', 10);
+        const platform = searchParams.get('platform') || undefined;
 
-        const scans = await getLLMScans(workspaceId, limit);
+        const scans = await getLLMScans(workspaceId, limit, { platform });
 
         return NextResponse.json({ scans });
     } catch (error) {
