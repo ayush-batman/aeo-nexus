@@ -8,6 +8,10 @@ interface MetricCardProps {
     changeType?: "positive" | "negative" | "neutral";
     icon: LucideIcon;
     accentColor?: "violet" | "teal" | "emerald" | "danger" | "amber" | "cyan";
+    // Sage trust affordance: when set, the whole card becomes clickable and
+    // the caller can pop a receipt drawer showing the scans behind this number.
+    onClick?: () => void;
+    receiptHint?: string; // e.g. "See the receipt →"
 }
 
 const accentMap = {
@@ -50,11 +54,20 @@ export function MetricCard({
     changeType = "neutral",
     icon: Icon,
     accentColor = "violet",
+    onClick,
+    receiptHint = "See the receipt →",
 }: MetricCardProps) {
     const accent = accentMap[accentColor];
+    const clickable = Boolean(onClick);
 
     return (
-        <div className="card-base relative overflow-hidden flex flex-col justify-between min-h-[140px]">
+        <div
+            onClick={onClick}
+            className={cn(
+                "card-base relative overflow-hidden flex flex-col justify-between min-h-[140px]",
+                clickable && "cursor-pointer hover:border-[var(--border-active)] transition-colors group",
+            )}
+        >
             {/* Top border glow line per spec */}
             <div
                 className="absolute top-0 left-0 right-0 h-[2px] opacity-80"
@@ -90,6 +103,11 @@ export function MetricCard({
                         >
                             {change}
                         </span>
+                    </div>
+                )}
+                {clickable && (
+                    <div className="mt-2 text-[10px] font-mono uppercase tracking-[0.12em] text-[var(--text-ghost)] opacity-0 group-hover:opacity-100 transition-opacity">
+                        {receiptHint}
                     </div>
                 )}
             </div>

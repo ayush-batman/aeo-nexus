@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { Header } from "@/components/dashboard/header";
 import { MetricCard } from "@/components/dashboard/metric-card";
+import { ScanReceiptDrawer } from "@/components/dashboard/scan-receipt-drawer";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -79,6 +80,7 @@ export default function DashboardPage() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [isLive, setIsLive] = useState(false);
+    const [receipt, setReceipt] = useState<{ title: string; subtitle: string } | null>(null);
 
     // Derived state for easy access in UI
     const analytics = data?.analytics;
@@ -363,6 +365,10 @@ export default function DashboardPage() {
                         changeType={stats.llmVisibilityChange > 0 ? "positive" : stats.llmVisibilityChange < 0 ? "negative" : "neutral"}
                         icon={Eye}
                         accentColor="violet"
+                        onClick={() => setReceipt({
+                            title: `LLM Visibility · ${stats.llmVisibility}%`,
+                            subtitle: `Every scan across every platform that produced this number, most recent first. Verify any of them yourself.`,
+                        })}
                     />
                     <MetricCard
                         title="Forum Threads"
@@ -382,6 +388,10 @@ export default function DashboardPage() {
                         changeType={stats.shareOfVoiceChange > 0 ? "positive" : "neutral"}
                         icon={TrendingUp}
                         accentColor="emerald"
+                        onClick={() => setReceipt({
+                            title: `Share of Voice · ${stats.shareOfVoice}%`,
+                            subtitle: `The scans behind this SoV number — who was named alongside your brand, and how often.`,
+                        })}
                     />
                     <MetricCard
                         title="Content Score"
@@ -589,6 +599,13 @@ export default function DashboardPage() {
                     </CardContent>
                 </Card>
             </div>
+
+            <ScanReceiptDrawer
+                open={Boolean(receipt)}
+                onOpenChange={(v) => { if (!v) setReceipt(null); }}
+                title={receipt?.title ?? "Scans"}
+                subtitle={receipt?.subtitle}
+            />
         </>
     );
 }
