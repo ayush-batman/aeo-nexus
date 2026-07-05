@@ -1,0 +1,232 @@
+import Link from "next/link";
+import { ArrowRight, ExternalLink, Info } from "lucide-react";
+import type { Metadata } from "next";
+import { loadCurrentEdition, type IndiaBrandEntry, type IndiaCategory } from "@/lib/india-index";
+import { cn } from "@/lib/utils";
+
+export const metadata: Metadata = {
+    title: "India AI Visibility Index · Aelo",
+    description: "How ChatGPT, Gemini, Claude and Perplexity actually answer India's top intent queries. Real scans. Refreshed monthly.",
+};
+
+// Server component — pulls the current edition at request time.
+// Every number below comes from a live llm_scans row. Honest data policy.
+export const revalidate = 900; // 15 minutes; edition doesn't change often
+
+const CATEGORY_LABEL: Record<IndiaCategory, string> = {
+    SaaS:     'SaaS',
+    D2C:      'D2C',
+    Fintech:  'Fintech',
+    EdTech:   'EdTech',
+    Consumer: 'Consumer',
+};
+
+const VERDICT_STYLE: Record<IndiaBrandEntry['verdict'], { label: string; className: string }> = {
+    dominant:  { label: 'Dominant',  className: 'text-[var(--accent-base)] border-[var(--accent-base)]/30 bg-[var(--accent-muted)]' },
+    strong:    { label: 'Strong',    className: 'text-[var(--data-green)] border-[var(--data-green)]/30 bg-[var(--data-green-muted)]' },
+    contested: { label: 'Contested', className: 'text-[var(--data-amber)] border-[var(--data-amber)]/30 bg-[var(--data-amber-muted)]' },
+    invisible: { label: 'Invisible', className: 'text-[var(--data-red)] border-[var(--data-red)]/30 bg-[var(--data-red-muted)]' },
+};
+
+export default async function IndiaIndexPage() {
+    const edition = await loadCurrentEdition();
+
+    return (
+        <>
+            {/* Hero */}
+            <section className="pt-20 pb-14 md:pt-28 md:pb-16 px-6">
+                <div className="mx-auto max-w-4xl text-center">
+                    <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-white/10 bg-white/[0.03] mb-6">
+                        <span className="text-[10px] font-mono text-zinc-500 tracking-[0.16em] uppercase">
+                            {edition.label} {edition.isPreview ? '· Preview Edition' : '· Edition'}
+                        </span>
+                    </div>
+                    <h1 className="text-4xl md:text-6xl font-medium tracking-tighter leading-[1.02] text-white text-balance mb-5">
+                        The India AI Visibility Index
+                    </h1>
+                    <p className="text-[16px] md:text-[18px] text-zinc-400 max-w-2xl mx-auto leading-relaxed">
+                        How ChatGPT, Gemini, Claude and Perplexity actually answer India&apos;s top
+                        intent queries. Every number below is from a live scan. Zero fabricated.
+                    </p>
+                    <div className="mt-6 flex items-center justify-center gap-4 text-[11px] font-mono text-zinc-600">
+                        <span>{edition.brandCount} brands · {edition.categoriesTracked.length} categories</span>
+                        <span>·</span>
+                        <span>Refreshed {new Date(edition.publishedAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}</span>
+                    </div>
+                </div>
+            </section>
+
+            {/* Ranking table */}
+            <section className="pb-16 px-6">
+                <div className="mx-auto max-w-5xl rounded-lg border border-white/[0.06] bg-black overflow-hidden">
+                    <div className="grid grid-cols-[48px_1.5fr_0.9fr_0.9fr_0.9fr_1fr] items-center gap-3 px-4 py-3 border-b border-white/[0.06] text-[10px] font-mono uppercase tracking-[0.14em] text-zinc-500">
+                        <div>Rank</div>
+                        <div>Brand</div>
+                        <div>Category</div>
+                        <div className="text-right">Mention rate</div>
+                        <div className="text-right">Avg position</div>
+                        <div>Verdict</div>
+                    </div>
+
+                    {edition.entries.length === 0 ? (
+                        <EmptyEdition />
+                    ) : (
+                        edition.entries.map(entry => <BrandRow key={entry.brand} entry={entry} />)
+                    )}
+                </div>
+
+                <p className="text-center text-[11px] font-mono text-zinc-600 mt-4">
+                    Position 1.0 = named first in the AI&apos;s answer · Higher mention rate = more of the tested prompts named the brand
+                </p>
+            </section>
+
+            {/* Methodology + trust */}
+            <section className="py-16 border-t border-white/5 bg-[#050506]">
+                <div className="mx-auto max-w-4xl px-6">
+                    <div className="mb-10">
+                        <p className="text-[10px] font-mono uppercase tracking-[0.18em] text-zinc-500 mb-3">
+                            Methodology
+                        </p>
+                        <h2 className="text-2xl md:text-3xl font-medium tracking-tight text-white max-w-2xl">
+                            Every number is one query away from the raw scan.
+                        </h2>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        {[
+                            {
+                                t: "Real scans, no averages of averages",
+                                b: "Each brand is measured against 2–3 category-representative Indian intent prompts (\"best CRM for Indian SMBs\", \"lowest brokerage intraday India\"). We run them live on Gemini, capture the response, and analyze it. Prompts are public.",
+                            },
+                            {
+                                t: "Honest data policy",
+                                b: "When a scan provider fails, we surface an honest empty state. When a brand isn't named, we say invisible — not \"low visibility\". Zero fabricated metrics ever ship.",
+                            },
+                            {
+                                t: "Verdict rules (Sage: strict thresholds)",
+                                b: "Dominant = ≥90% mention rate AND avg position ≤2. Strong = ≥60%. Contested = 1–59%. Invisible = 0%. No smoothing.",
+                            },
+                            {
+                                t: "How brands are picked",
+                                b: "For the Preview Edition, category leaders across SaaS, D2C, Fintech and EdTech. Future editions expand from applications and reader nominations.",
+                            },
+                        ].map(c => (
+                            <div key={c.t} className="rounded-md border border-white/[0.06] bg-black p-5">
+                                <div className="text-[14px] font-medium text-white mb-1.5">{c.t}</div>
+                                <div className="text-[13px] text-zinc-500 leading-relaxed">{c.b}</div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            </section>
+
+            {/* Get featured CTA */}
+            <section className="py-20 border-t border-white/5">
+                <div className="mx-auto max-w-3xl px-6">
+                    <div className="rounded-lg border border-[var(--accent-base)]/40 bg-black p-8 md:p-10">
+                        <p className="text-[10px] font-mono uppercase tracking-[0.18em] text-[var(--accent-base)] mb-3">
+                            Next edition · August 2026
+                        </p>
+                        <h2 className="text-2xl md:text-3xl font-medium tracking-tight text-white mb-3">
+                            Want your brand measured?
+                        </h2>
+                        <p className="text-[15px] text-zinc-400 leading-relaxed mb-6">
+                            Apply to be included in the next edition. If your brand fits a category we track,
+                            we&apos;ll run the scans and publish the receipt. Featured brands get a free
+                            month of Command to see their per-prompt gaps.
+                        </p>
+                        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
+                            <Link
+                                href="/contact?interest=india-index"
+                                className="text-[14px] bg-[var(--accent-base)] text-[var(--text-on-accent)] px-5 py-2.5 rounded-md hover:bg-[var(--accent-hover)] transition-colors font-medium inline-flex items-center gap-2"
+                            >
+                                Apply to be measured <ArrowRight className="w-3.5 h-3.5" />
+                            </Link>
+                            <Link
+                                href="/manifesto"
+                                className="text-[13px] text-zinc-400 hover:text-white transition-colors"
+                            >
+                                Read our honest-data manifesto →
+                            </Link>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            {/* Fine print */}
+            <section className="py-12 border-t border-white/5">
+                <div className="mx-auto max-w-4xl px-6">
+                    <div className="flex items-start gap-2.5 text-[12px] text-zinc-500 leading-relaxed">
+                        <Info className="w-3.5 h-3.5 mt-0.5 flex-shrink-0 text-zinc-600" strokeWidth={1.5} />
+                        <p>
+                            LLM answers are non-deterministic — a single scan is a sample, not a truth. The Index
+                            aggregates multiple prompts per brand to reduce noise, but any single number can drift
+                            ±10 pts between measurements. See the raw responses in your own Aelo workspace to audit
+                            any entry.
+                        </p>
+                    </div>
+                </div>
+            </section>
+        </>
+    );
+}
+
+function BrandRow({ entry }: { entry: IndiaBrandEntry }) {
+    const verdictStyle = VERDICT_STYLE[entry.verdict];
+    return (
+        <div className="grid grid-cols-[48px_1.5fr_0.9fr_0.9fr_0.9fr_1fr] items-center gap-3 px-4 py-4 border-b border-white/[0.04] last:border-b-0 hover:bg-white/[0.02] transition-colors">
+            <div className="text-[13px] font-mono text-zinc-500 tabular-nums">
+                {String(entry.rank).padStart(2, '0')}
+            </div>
+            <div className="min-w-0">
+                <div className="text-[14px] font-medium text-white truncate">{entry.brand}</div>
+                {entry.website && (
+                    <a
+                        href={`https://${entry.website}`}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="mt-0.5 text-[11px] font-mono text-zinc-600 hover:text-zinc-400 inline-flex items-center gap-1"
+                    >
+                        {entry.website} <ExternalLink className="w-2.5 h-2.5" />
+                    </a>
+                )}
+            </div>
+            <div className="text-[12px] text-zinc-400">
+                {CATEGORY_LABEL[entry.category]}
+            </div>
+            <div className="text-right text-[14px] font-medium text-white tabular-nums">
+                {entry.mentionRatePct}%
+                <div className="mt-1 h-0.5 w-full bg-white/5 rounded-full overflow-hidden">
+                    <div
+                        className="h-full bg-[var(--accent-base)]"
+                        style={{ width: `${entry.mentionRatePct}%` }}
+                    />
+                </div>
+            </div>
+            <div className="text-right text-[13px] tabular-nums text-zinc-300">
+                {entry.avgPosition !== null ? `#${entry.avgPosition}` : <span className="text-zinc-600">—</span>}
+            </div>
+            <div>
+                <span className={cn(
+                    "inline-flex items-center gap-1 rounded-sm border px-2 py-0.5 font-mono text-[10px] uppercase tracking-[0.12em]",
+                    verdictStyle.className,
+                )}>
+                    {verdictStyle.label}
+                </span>
+            </div>
+        </div>
+    );
+}
+
+function EmptyEdition() {
+    return (
+        <div className="p-10 text-center">
+            <p className="text-[10px] font-mono uppercase tracking-[0.18em] text-zinc-500 mb-2">
+                No data yet
+            </p>
+            <p className="text-[14px] text-zinc-400">
+                This edition is being compiled. Check back once the scan pass finishes, or read
+                the <Link href="/manifesto" className="text-[var(--accent-base)] hover:underline">manifesto</Link> in the meantime.
+            </p>
+        </div>
+    );
+}

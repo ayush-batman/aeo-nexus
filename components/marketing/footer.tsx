@@ -8,10 +8,11 @@ const COLS: { title: string; links: { href: string; label: string; external?: bo
     {
         title: "Product",
         links: [
-            { href: "/product",   label: "How Aelo works" },
-            { href: "/pricing",   label: "Pricing" },
-            { href: "/changelog", label: "Changelog" },
-            { href: "/docs",      label: "Docs" },
+            { href: "/product",     label: "How Aelo works" },
+            { href: "/pricing",     label: "Pricing" },
+            { href: "/india-index", label: "India AI Visibility Index" },
+            { href: "/changelog",   label: "Changelog" },
+            { href: "/docs",        label: "Docs" },
         ],
     },
     {

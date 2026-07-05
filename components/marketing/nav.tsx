@@ -17,10 +17,11 @@ const SOLUTIONS = [
 ];
 
 const NAV_LINKS = [
-    { href: "/product",    label: "Product" },
-    { href: "/pricing",    label: "Pricing" },
-    { href: "/manifesto",  label: "Manifesto" },
-    { href: "/about",      label: "About" },
+    { href: "/product",     label: "Product" },
+    { href: "/pricing",     label: "Pricing" },
+    { href: "/india-index", label: "India Index" },
+    { href: "/manifesto",   label: "Manifesto" },
+    { href: "/about",       label: "About" },
 ];
 
 export function MarketingNav() {
