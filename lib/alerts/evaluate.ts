@@ -26,11 +26,27 @@ interface ScanData {
     platform: string;
 }
 
-const supabaseAdmin = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
-    { auth: { autoRefreshToken: false, persistSession: false } }
-);
+// Lazy singleton — instantiating at module load breaks Next 16 page-data
+// collection on projects that don't have env vars set yet.
+let _supabaseAdmin: ReturnType<typeof createClient> | null = null;
+function getSupabaseAdmin() {
+    if (_supabaseAdmin) return _supabaseAdmin;
+    const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    if (!url || !key) {
+        throw new Error('Supabase env vars missing at runtime (NEXT_PUBLIC_SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY)');
+    }
+    _supabaseAdmin = createClient(url, key, {
+        auth: { autoRefreshToken: false, persistSession: false },
+    });
+    return _supabaseAdmin;
+}
+// Proxy so existing `supabaseAdmin.from(…)` call sites keep working.
+const supabaseAdmin = new Proxy({} as ReturnType<typeof createClient>, {
+    get(_target, prop) {
+        return (getSupabaseAdmin() as unknown as Record<string | symbol, unknown>)[prop];
+    },
+});
 
 /**
  * Check if an alert type is enabled for a workspace

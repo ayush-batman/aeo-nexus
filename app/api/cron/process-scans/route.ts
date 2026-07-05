@@ -4,18 +4,19 @@ import { scanLLM } from '@/lib/ai/llm-scanner';
 import type { LLMPlatform } from '@/lib/ai/llm-scanner';
 import { PLAN_LIMITS } from '@/lib/config';
 
-// Initialize Supabase Admin Client
-// We need admin access to fetch all schedules across workspaces and bypass RLS
-const supabaseAdmin = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
-    {
-        auth: {
-            autoRefreshToken: false,
-            persistSession: false
-        }
+// Lazy init: build-time page-data collection can evaluate module scope
+// before env vars are set (e.g. new Vercel projects). Instantiating the
+// client at request time keeps Next build safe.
+function getSupabaseAdmin() {
+    const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    if (!url || !key) {
+        throw new Error('Supabase env vars missing at runtime (NEXT_PUBLIC_SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY)');
     }
-);
+    return createClient(url, key, {
+        auth: { autoRefreshToken: false, persistSession: false },
+    });
+}
 
 export async function GET(request: NextRequest) {
     // Verify Cron Secret
@@ -27,6 +28,8 @@ export async function GET(request: NextRequest) {
         // For simplicity, we enforce CRON_SECRET which user must configure in Vercel Cron job.
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
+
+    const supabaseAdmin = getSupabaseAdmin();
 
     try {
         // 1. Fetch due schedules
