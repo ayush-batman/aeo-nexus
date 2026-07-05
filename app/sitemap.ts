@@ -1,26 +1,60 @@
 import { MetadataRoute } from 'next';
 
-export default function sitemap(): MetadataRoute.Sitemap {
-    const baseUrl = 'https://aelo-saas-chi.vercel.app';
+// Sitemap for search + AI-crawler discovery. Priorities are set to reflect
+// the marketing intent hierarchy (India Index + methodology + product are
+// top-of-funnel high-signal pages; legal + auth are low-priority).
+//
+// baseUrl is env-overridable so production deploys don't leak the
+// preview domain into indexed sitemaps.
 
-    return [
-        {
-            url: baseUrl,
-            lastModified: new Date(),
-            changeFrequency: 'weekly',
-            priority: 1,
-        },
-        {
-            url: `${baseUrl}/login`,
-            lastModified: new Date(),
-            changeFrequency: 'yearly',
-            priority: 0.8,
-        },
-        {
-            url: `${baseUrl}/signup`,
-            lastModified: new Date(),
-            changeFrequency: 'yearly',
-            priority: 0.8,
-        },
-    ];
+const DEFAULT_BASE = 'https://aelo.sh';
+
+const routes: {
+    path:     string;
+    priority: number;
+    changeFrequency: MetadataRoute.Sitemap[number]['changeFrequency'];
+}[] = [
+    // Landing + primary product surface
+    { path: '',              priority: 1.0, changeFrequency: 'weekly'  },
+    { path: '/product',      priority: 0.9, changeFrequency: 'weekly'  },
+    { path: '/pricing',      priority: 0.9, changeFrequency: 'weekly'  },
+
+    // PR + trust pages (Sage bets)
+    { path: '/india-index',  priority: 0.95, changeFrequency: 'weekly' },
+    { path: '/methodology',  priority: 0.9,  changeFrequency: 'monthly'},
+    { path: '/manifesto',    priority: 0.85, changeFrequency: 'monthly'},
+
+    // Solutions (targeted landing pages)
+    { path: '/solutions/founders',  priority: 0.8, changeFrequency: 'monthly' },
+    { path: '/solutions/marketing', priority: 0.8, changeFrequency: 'monthly' },
+    { path: '/solutions/agencies',  priority: 0.8, changeFrequency: 'monthly' },
+    { path: '/solutions/india',     priority: 0.85, changeFrequency: 'monthly'},
+
+    // Reference
+    { path: '/docs',         priority: 0.85, changeFrequency: 'weekly'  },
+    { path: '/changelog',    priority: 0.7,  changeFrequency: 'weekly'  },
+    { path: '/customers',    priority: 0.7,  changeFrequency: 'monthly' },
+    { path: '/about',        priority: 0.7,  changeFrequency: 'monthly' },
+    { path: '/contact',      priority: 0.7,  changeFrequency: 'yearly'  },
+
+    // Legal
+    { path: '/privacy',      priority: 0.4,  changeFrequency: 'yearly'  },
+    { path: '/terms',        priority: 0.4,  changeFrequency: 'yearly'  },
+    { path: '/security',     priority: 0.4,  changeFrequency: 'yearly'  },
+
+    // Auth (indexable but low priority)
+    { path: '/login',        priority: 0.5,  changeFrequency: 'yearly'  },
+    { path: '/signup',       priority: 0.6,  changeFrequency: 'yearly'  },
+];
+
+export default function sitemap(): MetadataRoute.Sitemap {
+    const baseUrl = (process.env.NEXT_PUBLIC_APP_URL ?? DEFAULT_BASE).replace(/\/$/, '');
+    const now = new Date();
+
+    return routes.map(r => ({
+        url:            `${baseUrl}${r.path}`,
+        lastModified:   now,
+        changeFrequency: r.changeFrequency,
+        priority:       r.priority,
+    }));
 }

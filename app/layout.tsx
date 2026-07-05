@@ -6,17 +6,42 @@ import "./globals.css";
 // sandboxed/offline environments. Font families are defined as CSS
 // variables (--font-sans / --font-mono) in globals.css instead.
 
+const SITE_URL = (process.env.NEXT_PUBLIC_APP_URL ?? "https://aelo.sh").replace(/\/$/, "");
+
 export const metadata: Metadata = {
-  title: "Aelo | Strategic Intelligence for the AI Era",
+  title: {
+    default:  "Aelo — See how ChatGPT, Gemini, Claude and Perplexity actually answer",
+    template: "%s · Aelo",
+  },
   description:
-    "Aelo is the command center for winning the AI answer. Track your brand across ChatGPT, Gemini, Claude, and Perplexity.",
-  metadataBase: new URL("https://aeo-saas-chi.vercel.app"),
+    "Track your brand's visibility across every major AI engine, with the raw receipts to prove every number. No black-box scores. Sage-honest data.",
+  metadataBase: new URL(SITE_URL),
+  alternates: {
+    canonical: SITE_URL,
+  },
   openGraph: {
-    title: "Aelo | Deep Analytics for AI",
-    description: "Track, engage, and optimize your brand's presence across every major AI engine.",
-    type: "website",
-    url: "https://aeo-saas-chi.vercel.app",
-    siteName: "Aelo",
+    title:       "Aelo — See how AI actually answers questions in your category",
+    description: "Track your brand's visibility across ChatGPT, Gemini, Claude, and Perplexity, with the raw scans behind every number. The receipt is the product.",
+    type:        "website",
+    url:         SITE_URL,
+    siteName:    "Aelo",
+    images: ["/opengraph-image"],
+  },
+  twitter: {
+    card:        "summary_large_image",
+    title:       "Aelo — See how AI actually answers questions in your category",
+    description: "Track your brand's visibility across ChatGPT, Gemini, Claude, and Perplexity. Every number links to the raw scan.",
+    images:      ["/opengraph-image"],
+  },
+  robots: {
+    index:   true,
+    follow:  true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-image-preview": "large",
+      "max-snippet":       -1,
+    },
   },
 };
 
