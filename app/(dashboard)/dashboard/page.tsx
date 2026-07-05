@@ -452,7 +452,7 @@ export default function DashboardPage() {
                                     <p className="text-[13px] text-[var(--text-secondary)] leading-snug flex-1 min-w-0">
                                         Add the Aelo tracking snippet to your site to see which AI referrers drive real visits.
                                     </p>
-                                    <Link href="/dashboard/settings" className="text-[12px] font-medium text-[var(--accent-base)] hover:underline flex-shrink-0">
+                                    <Link href="/dashboard/settings?tab=install" className="text-[12px] font-medium text-[var(--accent-base)] hover:underline flex-shrink-0">
                                         Get snippet →
                                     </Link>
                                 </div>

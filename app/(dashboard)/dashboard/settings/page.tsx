@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import Script from "next/script";
 import { Header } from "@/components/dashboard/header";
 import { SchedulesTab } from "@/components/dashboard/settings/schedules-tab";
+import { InstallTab } from "@/components/dashboard/settings/install-tab";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -31,6 +32,9 @@ import {
     X,
     Calendar,
     AlertCircle,
+    Zap,
+    Copy,
+    ExternalLink,
 } from "lucide-react";
 import { PLAN_LIMITS, PLAN_PRICES } from "@/lib/config";
 
@@ -64,12 +68,13 @@ interface RazorpayResponse {
 }
 
 const tabs = [
-    { id: "general", label: "General", icon: Settings },
-    { id: "team", label: "Team", icon: Users },
-    { id: "billing", label: "Billing", icon: CreditCard },
-    { id: "notifications", label: "Notifications", icon: Bell },
-    { id: "schedules", label: "Scheduled Scans", icon: Calendar },
-    { id: "api", label: "API Keys", icon: Key },
+    { id: "general",       label: "General",         icon: Settings },
+    { id: "install",       label: "Install",         icon: Zap },
+    { id: "team",          label: "Team",            icon: Users },
+    { id: "billing",       label: "Billing",         icon: CreditCard },
+    { id: "notifications", label: "Notifications",   icon: Bell },
+    { id: "schedules",     label: "Scheduled Scans", icon: Calendar },
+    { id: "api",           label: "API Keys",        icon: Key },
 ];
 
 interface UserProfile {
@@ -131,7 +136,7 @@ export default function SettingsPage() {
     const [savingAlerts, setSavingAlerts] = useState(false);
     const [alertsSaved, setAlertsSaved] = useState(false);
 
-    // Check for payment redirect status
+    // Check for payment redirect status + deep-link tab.
     useEffect(() => {
         const success = searchParams.get("success");
         if (success) {
@@ -139,11 +144,34 @@ export default function SettingsPage() {
             fetchData();
             setTimeout(() => setPaymentSuccess(false), 5000);
         }
+        const tab = searchParams.get("tab");
+        if (tab && tabs.some(t => t.id === tab)) {
+            setActiveTab(tab);
+        }
     }, [searchParams]);
 
     async function fetchData() {
         try {
             const supabase = createClient();
+
+            // Workspace fetch first — uses server-side context helpers that
+            // honor the dev-auth-bypass, so the Install tab always renders
+            // even when the client-side Supabase SDK can't see a session.
+            const [wsRes, activeRes] = await Promise.all([
+                fetch("/api/workspaces", { cache: "no-store" }),
+                fetch("/api/onboarding/context", { cache: "no-store" }),
+            ]);
+            let activeId: string | null = null;
+            if (activeRes.ok) activeId = (await activeRes.json()).workspaceId;
+            if (wsRes.ok && activeId) {
+                const wsData = await wsRes.json();
+                const activeWs = wsData.workspaces?.find((ws: Workspace) => ws.id === activeId);
+                if (activeWs) {
+                    setWorkspace(activeWs);
+                    setWorkspaceName(activeWs.name);
+                    setCompetitors(activeWs.settings?.competitors || []);
+                }
+            }
 
             const { data: { user: authUser } } = await supabase.auth.getUser();
             if (!authUser) return;
@@ -167,22 +195,6 @@ export default function SettingsPage() {
 
                 if (orgData) {
                     setOrganization(orgData);
-                }
-
-                const [wsRes, activeRes] = await Promise.all([
-                    fetch("/api/workspaces", { cache: "no-store" }),
-                    fetch("/api/onboarding/context", { cache: "no-store" })
-                ]);
-                let activeId = null;
-                if (activeRes.ok) activeId = (await activeRes.json()).workspaceId;
-                if (wsRes.ok && activeId) {
-                    const wsData = await wsRes.json();
-                    const activeWs = wsData.workspaces?.find((ws: Workspace) => ws.id === activeId);
-                    if (activeWs) {
-                        setWorkspace(activeWs);
-                        setWorkspaceName(activeWs.name);
-                        setCompetitors(activeWs.settings?.competitors || []);
-                    }
                 }
 
                 const { data: teamData } = await supabase
@@ -563,6 +575,10 @@ export default function SettingsPage() {
                                             </CardContent>
                                         </Card>
                                     </>
+                                )}
+
+                                {activeTab === "install" && workspace && (
+                                    <InstallTab workspaceId={workspace.id} workspaceName={workspace.name || ""} />
                                 )}
 
                                 {activeTab === "team" && (
