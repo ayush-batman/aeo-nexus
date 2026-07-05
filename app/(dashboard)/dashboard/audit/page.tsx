@@ -69,14 +69,20 @@ export default function AuditPage() {
 
     return (
         <div className="p-8 max-w-5xl mx-auto space-y-8">
-            <div className="flex flex-col gap-2">
-                <h1 className="text-3xl font-bold text-[var(--text-primary)] flex items-center gap-2">
-                    <Sparkles className="w-8 h-8 text-[var(--accent-base)]" />
-                    Agent-Ready Content Auditor
-                </h1>
-                <p className="text-[var(--text-secondary)]">
-                    Analyze your content to see if it's optimized for AI agents and RAG systems.
-                </p>
+            <div className="flex items-start gap-3">
+                <div className="flex-shrink-0 mt-1 w-10 h-10 rounded-md border border-[var(--border-default)] bg-[var(--bg-surface)] flex items-center justify-center">
+                    <Sparkles className="w-4 h-4 text-[var(--accent-base)]" />
+                </div>
+                <div>
+                    <h1 className="text-2xl font-medium tracking-tight text-[var(--text-primary)] mb-1">
+                        Agent Auditor
+                    </h1>
+                    <p className="text-sm text-[var(--text-secondary)] leading-relaxed max-w-xl">
+                        Analyze any page on your site to see if it&apos;s optimized for AI agents
+                        and RAG systems — heading structure, schema markup, chunkable content,
+                        citation-ready facts.
+                    </p>
+                </div>
             </div>
 
             {/* TABS FOR AUDIT TYPES */}
