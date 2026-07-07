@@ -30,14 +30,41 @@ export interface IndiaEdition {
     entries: IndiaBrandEntry[];
 }
 
-// ─── Category assignment (extend as we add more workspaces) ────────────────
+// ─── Category assignment. Extend as new workspaces get onboarded. Every
+//    brand named here must have a workspace with the exact same name
+//    (see /api/india-index compiler in this file). Names that don't
+//    resolve to a workspace are silently skipped.
 const CATEGORY: Record<string, IndiaCategory> = {
-    'Zoho':      'SaaS',
-    'Razorpay':  'Fintech',
-    'Zerodha':   'Fintech',
-    'BoAt':      'D2C',
-    'Mamaearth': 'D2C',
-    "Byju's":    'EdTech',
+    // ─── SaaS ──────────────────────────────────────────────────────
+    'Zoho':            'SaaS',
+    'Freshworks':      'SaaS',
+    'Postman':         'SaaS',
+    'Chargebee':       'SaaS',
+    'Zomato':          'Consumer',
+    'Whatfix':         'SaaS',
+    // ─── Fintech ───────────────────────────────────────────────────
+    'Razorpay':        'Fintech',
+    'Zerodha':         'Fintech',
+    'PhonePe':         'Fintech',
+    'Cred':            'Fintech',
+    'Paytm':           'Fintech',
+    'Groww':           'Fintech',
+    'Upstox':          'Fintech',
+    // ─── D2C ───────────────────────────────────────────────────────
+    'BoAt':            'D2C',
+    'Mamaearth':       'D2C',
+    'Wakefit':         'D2C',
+    'Nykaa':           'D2C',
+    'Sugar Cosmetics': 'D2C',
+    'Lenskart':        'D2C',
+    'Meesho':          'Consumer',
+    // ─── EdTech ────────────────────────────────────────────────────
+    "Byju's":          'EdTech',
+    'Unacademy':       'EdTech',
+    'PhysicsWallah':   'EdTech',
+    'upGrad':          'EdTech',
+    'Great Learning':  'EdTech',
+    'Vedantu':         'EdTech',
 };
 
 const INDIA_BRAND_NAMES = Object.keys(CATEGORY);

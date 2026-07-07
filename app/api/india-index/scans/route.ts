@@ -7,8 +7,17 @@ import { createAdminClient } from '@/lib/supabase/admin';
 // the LLM responses are public. This is the Sage trust bet.
 
 // Allowlist by brand name to avoid arbitrary workspace enumeration.
+// Kept in sync with lib/india-index.ts CATEGORY map. Any brand added
+// there without adding here won't be able to serve public receipts.
 const INDIA_BRAND_NAMES = new Set([
-    'Zoho', 'Razorpay', 'Zerodha', 'BoAt', 'Mamaearth', "Byju's",
+    // SaaS
+    'Zoho', 'Freshworks', 'Postman', 'Chargebee', 'Zomato', 'Whatfix',
+    // Fintech
+    'Razorpay', 'Zerodha', 'PhonePe', 'Cred', 'Paytm', 'Groww', 'Upstox',
+    // D2C
+    'BoAt', 'Mamaearth', 'Wakefit', 'Nykaa', 'Sugar Cosmetics', 'Lenskart', 'Meesho',
+    // EdTech
+    "Byju's", 'Unacademy', 'PhysicsWallah', 'upGrad', 'Great Learning', 'Vedantu',
 ]);
 
 export const revalidate = 900; // 15 min — same as the Index page
