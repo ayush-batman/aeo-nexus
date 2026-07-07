@@ -312,7 +312,9 @@ function Receipt({ summary }: { summary: ImpactSummary }) {
             <div className="flex flex-wrap items-baseline justify-between gap-4">
                 <div className="min-w-0">
                     <div className="font-mono text-[10px] uppercase tracking-[0.18em] text-[var(--text-tertiary)]">
-                        Receipt · Verdict {summary.verdict}
+                        Receipt · Verdict {
+                            summary.verdict === "no_change" ? "no change" : summary.verdict
+                        }
                     </div>
                     <div className="mt-1 flex items-baseline gap-2">
                         <span
