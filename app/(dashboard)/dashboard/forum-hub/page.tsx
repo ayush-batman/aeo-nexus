@@ -31,6 +31,8 @@ import {
     HelpCircle,
 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
+import { CitationMapView } from "@/components/dashboard/forum-hub/citation-map-view";
+import { MapPin as MapPinIcon } from "lucide-react";
 
 interface ForumThread {
     id: string;
@@ -65,7 +67,7 @@ const platformConfig: Record<string, { label: string; icon: React.ReactNode; col
 };
 
 export default function ForumHubPage() {
-    const [activeTab, setActiveTab] = useState<"discover" | "queue">("discover");
+    const [activeTab, setActiveTab] = useState<"citations" | "discover" | "queue">("citations");
     const [selectedThread, setSelectedThread] = useState<ForumThread | null>(null);
     const [selectedTone, setSelectedTone] = useState("helpful");
     const [generatedComment, setGeneratedComment] = useState("");
@@ -370,6 +372,18 @@ export default function ForumHubPage() {
                 <div className="flex flex-col md:flex-row gap-4 justify-between">
                     <div className="flex gap-2">
                         <button
+                            onClick={() => setActiveTab("citations")}
+                            className={cn(
+                                "px-4 py-2 rounded-lg text-sm font-medium transition-all",
+                                activeTab === "citations"
+                                    ? "bg-[var(--accent-muted)] text-[var(--accent-base)] border border-[var(--accent-base)]/25"
+                                    : "text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-raised)]"
+                            )}
+                        >
+                            <MapPinIcon className="w-4 h-4 inline mr-2" />
+                            Citation Map
+                        </button>
+                        <button
                             onClick={() => setActiveTab("discover")}
                             className={cn(
                                 "px-4 py-2 rounded-lg text-sm font-medium transition-all",
@@ -606,6 +620,9 @@ export default function ForumHubPage() {
                     </div>
                 )}
 
+                {activeTab === "citations" ? (
+                    <CitationMapView />
+                ) : (
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                     {/* Thread List */}
                     <Card>
@@ -819,6 +836,7 @@ export default function ForumHubPage() {
                         </CardContent>
                     </Card>
                 </div>
+                )}
             </div>
         </>
     );
