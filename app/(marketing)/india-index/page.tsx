@@ -3,6 +3,7 @@ import { ArrowRight, Info } from "lucide-react";
 import type { Metadata } from "next";
 import { loadCurrentEdition } from "@/lib/india-index";
 import { RankingTable } from "./ranking-table";
+import { IndiaIndexDatasetJsonLd, BreadcrumbJsonLd } from "@/components/seo/structured-data";
 
 export const metadata: Metadata = {
     title: "India AI Visibility Index · Aelo",
@@ -18,6 +19,12 @@ export default async function IndiaIndexPage() {
 
     return (
         <>
+            <IndiaIndexDatasetJsonLd
+                label={edition.label}
+                brandCount={edition.brandCount}
+                categoriesTracked={edition.categoriesTracked.length}
+            />
+            <BreadcrumbJsonLd items={[{ label: 'India AI Visibility Index', path: '/india-index' }]} />
             {/* Hero */}
             <section className="pt-20 pb-14 md:pt-28 md:pb-16 px-6">
                 <div className="mx-auto max-w-4xl text-center">

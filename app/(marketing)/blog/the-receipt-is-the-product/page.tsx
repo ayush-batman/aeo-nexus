@@ -1,6 +1,7 @@
 import Link from "next/link";
 import type { Metadata } from "next";
 import { getPostBySlug } from "@/lib/blog";
+import { ArticleJsonLd } from "@/components/seo/structured-data";
 
 const post = getPostBySlug('the-receipt-is-the-product')!;
 
@@ -19,6 +20,7 @@ export const metadata: Metadata = {
 export default function ReceiptIsTheProductPost() {
     return (
         <article className="pt-20 pb-20 md:pt-28 md:pb-28 px-6">
+            <ArticleJsonLd post={post} />
             <div className="mx-auto max-w-2xl">
                 <div className="mb-8">
                     <div className="flex items-center gap-3 mb-4 text-[10px] font-mono uppercase tracking-[0.14em] text-zinc-500">

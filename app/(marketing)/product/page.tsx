@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { ArrowRight, Search, Layers, ClipboardList, Zap, CheckCircle2 } from "lucide-react";
 import type { Metadata } from "next";
+import { SoftwareApplicationJsonLd, BreadcrumbJsonLd } from "@/components/seo/structured-data";
 
 export const metadata: Metadata = {
     title: "Product · Aelo",
@@ -95,6 +96,8 @@ const STEPS: Step[] = [
 export default function ProductPage() {
     return (
         <>
+            <SoftwareApplicationJsonLd />
+            <BreadcrumbJsonLd items={[{ label: 'Product', path: '/product' }]} />
             {/* Hero */}
             <section className="pt-20 pb-14 md:pt-28 md:pb-20 px-6">
                 <div className="mx-auto max-w-4xl text-center">

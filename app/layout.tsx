@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import { OrganizationJsonLd, WebSiteJsonLd } from "@/components/seo/structured-data";
 
 // NOTE: We intentionally do NOT use next/font/google here.
 // Fetching fonts from Google at compile time blocks the dev server in
@@ -55,6 +56,8 @@ export default function RootLayout({
       <body
         className={`antialiased dark`}
       >
+        <OrganizationJsonLd />
+        <WebSiteJsonLd />
         {children}
       </body>
     </html>

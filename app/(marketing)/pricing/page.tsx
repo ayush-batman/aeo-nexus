@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Check, ArrowRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { Metadata } from "next";
+import { SoftwareApplicationJsonLd, BreadcrumbJsonLd } from "@/components/seo/structured-data";
 
 export const metadata: Metadata = {
     title: "Pricing · Aelo",
@@ -111,6 +112,8 @@ const FAQ: { q: string; a: string }[] = [
 export default function PricingPage() {
     return (
         <>
+            <SoftwareApplicationJsonLd />
+            <BreadcrumbJsonLd items={[{ label: 'Pricing', path: '/pricing' }]} />
             {/* Hero */}
             <section className="pt-20 pb-16 md:pt-28 md:pb-20 px-6">
                 <div className="mx-auto max-w-4xl text-center">
