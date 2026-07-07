@@ -77,24 +77,37 @@ export async function POST(request: NextRequest) {
             }
         }
 
-        if (industry || targetAudience) {
-            const { error: wsError } = await db
-                .from('workspaces')
-                .update({
-                    settings: {
-                        industry: industry || null,
-                        target_audience: targetAudience || null,
-                    },
-                })
-                .eq('id', context.workspaceId);
+        // Rename the workspace to match the real brand + fold in
+        // industry/audience settings. The default workspace name is
+        // 'My Brand' (from the auth trigger); onboarding must overwrite
+        // it so the sidebar switcher reflects the actual brand.
+        const { data: currentWs } = await db
+            .from('workspaces')
+            .select('name, settings')
+            .eq('id', context.workspaceId)
+            .single();
 
-            if (wsError) {
-                console.error('Error updating workspace:', wsError);
-                return NextResponse.json(
-                    { error: 'Failed to update workspace' },
-                    { status: 500 }
-                );
-            }
+        const nextSettings = {
+            ...(currentWs?.settings || {}),
+            ...(industry ? { industry }         : {}),
+            ...(targetAudience ? { target_audience: targetAudience } : {}),
+            ...(website ? { website }           : {}),
+        };
+
+        const { error: wsError } = await db
+            .from('workspaces')
+            .update({
+                name:     brandName.trim(),
+                settings: nextSettings,
+            })
+            .eq('id', context.workspaceId);
+
+        if (wsError) {
+            console.error('Error updating workspace:', wsError);
+            return NextResponse.json(
+                { error: 'Failed to update workspace' },
+                { status: 500 }
+            );
         }
 
         return NextResponse.json({ success: true });
