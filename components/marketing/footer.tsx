@@ -11,6 +11,7 @@ const COLS: { title: string; links: { href: string; label: string; external?: bo
             { href: "/product",     label: "How Aelo works" },
             { href: "/pricing",     label: "Pricing" },
             { href: "/india-index", label: "India AI Visibility Index" },
+            { href: "/blog",        label: "Blog" },
             { href: "/changelog",   label: "Changelog" },
             { href: "/docs",        label: "Docs" },
         ],

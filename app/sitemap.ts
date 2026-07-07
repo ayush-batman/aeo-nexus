@@ -30,8 +30,12 @@ const routes: {
     { path: '/solutions/agencies',  priority: 0.8, changeFrequency: 'monthly' },
     { path: '/solutions/india',     priority: 0.85, changeFrequency: 'monthly'},
 
-    // Reference
+    // Reference + editorial
     { path: '/docs',         priority: 0.85, changeFrequency: 'weekly'  },
+    { path: '/blog',                                                priority: 0.85, changeFrequency: 'weekly' },
+    { path: '/blog/india-ai-visibility-index-july-2026',            priority: 0.9,  changeFrequency: 'yearly' },
+    { path: '/blog/why-zero-is-honest',                             priority: 0.7,  changeFrequency: 'yearly' },
+    { path: '/blog/the-receipt-is-the-product',                     priority: 0.7,  changeFrequency: 'yearly' },
     { path: '/changelog',    priority: 0.7,  changeFrequency: 'weekly'  },
     { path: '/customers',    priority: 0.7,  changeFrequency: 'monthly' },
     { path: '/about',        priority: 0.7,  changeFrequency: 'monthly' },

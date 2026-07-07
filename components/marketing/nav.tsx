@@ -21,8 +21,8 @@ const NAV_LINKS = [
     { href: "/pricing",     label: "Pricing" },
     { href: "/india-index", label: "India Index" },
     { href: "/methodology", label: "Methodology" },
+    { href: "/blog",        label: "Blog" },
     { href: "/manifesto",   label: "Manifesto" },
-    { href: "/about",       label: "About" },
 ];
 
 export function MarketingNav() {
