@@ -9,6 +9,7 @@ import {
     Zap,
     CheckCircle2,
 } from "lucide-react";
+import { NewsletterSubscribe } from "@/components/marketing/newsletter-subscribe";
 
 // ============================================================================
 // Landing — Aelo
@@ -234,6 +235,11 @@ export default function LandingPage() {
                         >
                             See pricing
                         </Link>
+                    </div>
+
+                    {/* Not ready to sign up? Newsletter is the softer entry point. */}
+                    <div className="mt-14 max-w-lg mx-auto text-left">
+                        <NewsletterSubscribe source="landing-closing" variant="hero" />
                     </div>
                 </div>
             </section>
