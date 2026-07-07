@@ -89,14 +89,19 @@ export default function BattlePage() {
 
     return (
         <div className="p-8 max-w-5xl mx-auto space-y-8">
-            <div className="flex flex-col gap-2">
-                <h1 className="text-3xl font-bold text-[var(--text-primary)] flex items-center gap-2">
-                    <Swords className="w-8 h-8 text-orange-500" />
-                    Competitor Battle Arena
-                </h1>
-                <p className="text-[var(--text-secondary)]">
-                    Go head-to-head with your competitors in AI responses.
-                </p>
+            <div className="flex items-start gap-3">
+                <div className="flex-shrink-0 mt-1 w-10 h-10 rounded-md border border-[var(--border-default)] bg-[var(--bg-surface)] flex items-center justify-center">
+                    <Swords className="w-4 h-4 text-[var(--accent-base)]" />
+                </div>
+                <div>
+                    <h1 className="text-2xl font-medium tracking-tight text-[var(--text-primary)] mb-1">
+                        Battle Arena
+                    </h1>
+                    <p className="text-sm text-[var(--text-secondary)] leading-relaxed max-w-xl">
+                        Run one head-to-head prompt against a specific competitor. See exactly
+                        which brand the AI names first and why — receipts attached.
+                    </p>
+                </div>
             </div>
 
             {/* Input Section */}
@@ -117,8 +122,8 @@ export default function BattlePage() {
                             />
                         </div>
                         <div className="flex items-center justify-center pt-6">
-                            <div className="w-12 h-12 rounded-full bg-[var(--bg-surface)] border border-[var(--border-default)] flex items-center justify-center shadow-lg shadow-orange-900/10 transform hover:scale-110 transition-transform">
-                                <span className="text-orange-500 font-black text-lg italic">VS</span>
+                            <div className="w-12 h-12 rounded-full bg-[var(--bg-raised)] border border-[var(--border-default)] flex items-center justify-center">
+                                <span className="text-[var(--text-tertiary)] font-mono text-[11px] uppercase tracking-[0.14em]">vs</span>
                             </div>
                         </div>
                         <div className="space-y-2">
@@ -145,7 +150,7 @@ export default function BattlePage() {
                     <Button
                         onClick={handleBattle}
                         disabled={scanning || !brandName || !competitorName || !productCategory}
-                        className="w-full bg-orange-600 hover:bg-orange-700 text-white font-bold h-12"
+                        className="w-full h-11"
                     >
                         {scanning ? (
                             <>
@@ -172,7 +177,7 @@ export default function BattlePage() {
                     ].map((tip, i) => (
                         <div key={i} className="p-6 rounded-xl border border-[var(--border-default)] bg-[var(--bg-surface)]">
                             <h3 className="font-semibold text-[var(--text-primary)] mb-2 flex items-center gap-2">
-                                <span className="flex items-center justify-center w-6 h-6 rounded-full bg-orange-500/10 text-orange-500 text-xs border border-orange-500/20">{i + 1}</span>
+                                <span className="flex items-center justify-center w-6 h-6 rounded-full bg-[var(--accent-muted)] text-[var(--accent-base)] text-xs font-mono border border-[var(--accent-base)]/25">{i + 1}</span>
                                 {tip.title}
                             </h3>
                             <p className="text-sm text-[var(--text-secondary)]">{tip.desc}</p>
@@ -183,7 +188,7 @@ export default function BattlePage() {
 
             {/* Error */}
             {error && (
-                <div className="p-4 rounded-lg bg-red-500/10 border border-red-500/30 text-red-400">
+                <div className="p-4 rounded-lg bg-[var(--data-red-muted)] border border-[var(--data-red)]/30 text-[var(--data-red)]">
                     {error}
                 </div>
             )}
