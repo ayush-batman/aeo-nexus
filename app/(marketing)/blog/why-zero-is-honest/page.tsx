@@ -2,6 +2,7 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import { getPostBySlug } from "@/lib/blog";
 import { ArticleJsonLd } from "@/components/seo/structured-data";
+import { NewsletterSubscribe } from "@/components/marketing/newsletter-subscribe";
 
 const post = getPostBySlug('why-zero-is-honest')!;
 
@@ -93,6 +94,10 @@ export default function WhyZeroIsHonestPost() {
                     <p>
                         Zero isn&apos;t a threat. It&apos;s a starting line.
                     </p>
+
+                    <div className="mt-10 pt-8 border-t border-white/5 space-y-6">
+                        <NewsletterSubscribe source="post-why-zero-honest" variant="footer" />
+                    </div>
 
                     <div className="mt-8 pt-6 border-t border-white/5 flex items-center justify-between">
                         <Link href="/blog" className="text-[13px] font-mono text-zinc-500 hover:text-white transition-colors">

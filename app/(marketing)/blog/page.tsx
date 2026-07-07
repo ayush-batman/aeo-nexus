@@ -2,6 +2,7 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import { ArrowRight, Rss } from "lucide-react";
 import { POSTS } from "@/lib/blog";
+import { NewsletterSubscribe } from "@/components/marketing/newsletter-subscribe";
 
 export const metadata: Metadata = {
     title: "Blog · Aelo",
@@ -39,10 +40,13 @@ export default function BlogIndexPage() {
                     <h1 className="text-4xl md:text-5xl font-medium tracking-tighter leading-[1.05] text-white mb-4 text-balance">
                         Analysis, methodology, and field notes from the AI-answer front.
                     </h1>
-                    <p className="text-[15px] md:text-[17px] text-zinc-400 max-w-2xl leading-relaxed">
+                    <p className="text-[15px] md:text-[17px] text-zinc-400 max-w-2xl leading-relaxed mb-6">
                         No thought-leadership. No listicles. Real numbers with the receipts
                         attached, and the reasoning behind how we measure them.
                     </p>
+                    <div className="max-w-lg">
+                        <NewsletterSubscribe source="blog-index" variant="hero" />
+                    </div>
                 </div>
             </section>
 

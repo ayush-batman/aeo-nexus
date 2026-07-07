@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import { ArrowRight } from "lucide-react";
 import { getPostBySlug } from "@/lib/blog";
 import { ArticleJsonLd, BreadcrumbJsonLd } from "@/components/seo/structured-data";
+import { NewsletterSubscribe } from "@/components/marketing/newsletter-subscribe";
 
 const post = getPostBySlug('the-16-sources-llms-actually-cite')!;
 
@@ -195,6 +196,9 @@ export default function LLMSourcesRankingPost() {
                     </ol>
 
                     <div className="mt-10 pt-8 border-t border-white/5">
+                        <div className="mb-8">
+                            <NewsletterSubscribe source="post-16-sources" variant="footer" />
+                        </div>
                         <p className="text-[13px] text-zinc-500 mb-4 font-mono uppercase tracking-[0.14em]">
                             Read next
                         </p>

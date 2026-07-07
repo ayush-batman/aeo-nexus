@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import { ArrowRight, ExternalLink } from "lucide-react";
 import { getPostBySlug } from "@/lib/blog";
 import { ArticleJsonLd, BreadcrumbJsonLd } from "@/components/seo/structured-data";
+import { NewsletterSubscribe } from "@/components/marketing/newsletter-subscribe";
 
 const post = getPostBySlug('india-ai-visibility-index-july-2026')!;
 
@@ -179,6 +180,9 @@ export default function IndiaIndexJuly2026Post() {
                     </ul>
 
                     <div className="mt-10 pt-8 border-t border-white/5">
+                        <div className="mb-8">
+                            <NewsletterSubscribe source="post-india-index-2026-07" variant="footer" />
+                        </div>
                         <p className="text-[13px] text-zinc-500 mb-4 font-mono uppercase tracking-[0.14em]">
                             Read next
                         </p>
