@@ -1,11 +1,16 @@
 import Link from "next/link";
 import type { Metadata } from "next";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, Rss } from "lucide-react";
 import { POSTS } from "@/lib/blog";
 
 export const metadata: Metadata = {
     title: "Blog · Aelo",
     description: "Analysis, methodology, and field notes from Aelo — building the honest measurement layer for AI answer visibility.",
+    alternates: {
+        types: {
+            "application/rss+xml": "/rss.xml",
+        },
+    },
 };
 
 // Sage index. Featured post gets full-bleed hero treatment; the rest render
@@ -19,9 +24,18 @@ export default function BlogIndexPage() {
             {/* Hero */}
             <section className="pt-20 pb-8 md:pt-28 md:pb-10 px-6">
                 <div className="mx-auto max-w-3xl">
-                    <p className="text-[10px] font-mono uppercase tracking-[0.18em] text-zinc-500 mb-3">
-                        Blog
-                    </p>
+                    <div className="flex items-baseline justify-between mb-3">
+                        <p className="text-[10px] font-mono uppercase tracking-[0.18em] text-zinc-500">
+                            Blog
+                        </p>
+                        <a
+                            href="/rss.xml"
+                            className="text-[10px] font-mono uppercase tracking-[0.14em] text-zinc-500 hover:text-[var(--accent-base)] transition-colors inline-flex items-center gap-1.5"
+                        >
+                            <Rss className="w-3 h-3" />
+                            RSS
+                        </a>
+                    </div>
                     <h1 className="text-4xl md:text-5xl font-medium tracking-tighter leading-[1.05] text-white mb-4 text-balance">
                         Analysis, methodology, and field notes from the AI-answer front.
                     </h1>
