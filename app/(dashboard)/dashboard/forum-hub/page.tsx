@@ -29,6 +29,13 @@ import {
     Flame,
     Youtube,
     HelpCircle,
+    Star,
+    ThumbsUp as ThumbsUpIcon,
+    Package,
+    Layers,
+    PenLine,
+    Github,
+    ClipboardList as Board,
 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { CitationMapView } from "@/components/dashboard/forum-hub/citation-map-view";
@@ -57,13 +64,32 @@ const tones = [
 
 const defaultSubreddits = ["IndianGaming", "india", "indiasocial", "bangalore", "mumbai"];
 
+// Sage rule: informational glyphs (small Lucide icons) rather than emojis;
+// consistent tinting via design tokens so no source stands out unfairly.
 const platformConfig: Record<string, { label: string; icon: React.ReactNode; color: string }> = {
-    reddit: { label: "Reddit", icon: <Globe className="w-3 h-3" />, color: "text-orange-400" },
-    youtube: { label: "YouTube", icon: <Youtube className="w-3 h-3" />, color: "text-red-400" },
-    stackoverflow: { label: "Stack Overflow", icon: <Code className="w-3 h-3" />, color: "text-amber-400" },
-    hackernews: { label: "Hacker News", icon: <Flame className="w-3 h-3" />, color: "text-orange-300" },
-    quora: { label: "Quora", icon: <HelpCircle className="w-3 h-3" />, color: "text-red-300" },
-    web: { label: "Web", icon: <Globe className="w-3 h-3" />, color: "text-blue-400" },
+    // Community forums
+    reddit:        { label: "Reddit",         icon: <Globe className="w-3 h-3" />,        color: "text-[var(--accent-base)]" },
+    youtube:       { label: "YouTube",        icon: <Youtube className="w-3 h-3" />,      color: "text-[var(--data-red)]" },
+    stackoverflow: { label: "Stack Overflow", icon: <Code className="w-3 h-3" />,         color: "text-[var(--data-amber)]" },
+    hackernews:    { label: "Hacker News",    icon: <Flame className="w-3 h-3" />,        color: "text-[var(--data-amber)]" },
+    quora:         { label: "Quora",          icon: <HelpCircle className="w-3 h-3" />,   color: "text-[var(--data-teal)]" },
+    // B2B review
+    g2:             { label: "G2",             icon: <Star className="w-3 h-3" />,        color: "text-[var(--accent-base)]" },
+    capterra:       { label: "Capterra",       icon: <Star className="w-3 h-3" />,        color: "text-[var(--data-teal)]" },
+    trustradius:    { label: "TrustRadius",    icon: <Star className="w-3 h-3" />,        color: "text-[var(--data-green)]" },
+    trustpilot:     { label: "Trustpilot",     icon: <ThumbsUpIcon className="w-3 h-3" />,color: "text-[var(--data-green)]" },
+    softwareadvice: { label: "SoftwareAdvice", icon: <Star className="w-3 h-3" />,        color: "text-[var(--data-teal)]" },
+    // Long-form
+    medium:        { label: "Medium",         icon: <PenLine className="w-3 h-3" />,      color: "text-[var(--text-primary)]" },
+    devto:         { label: "DEV",            icon: <Code className="w-3 h-3" />,         color: "text-[var(--data-teal)]" },
+    substack:      { label: "Substack",       icon: <PenLine className="w-3 h-3" />,      color: "text-[var(--data-amber)]" },
+    // Discovery
+    producthunt:   { label: "Product Hunt",   icon: <Package className="w-3 h-3" />,      color: "text-[var(--data-red)]" },
+    alternativeto: { label: "AlternativeTo",  icon: <Layers className="w-3 h-3" />,       color: "text-[var(--accent-base)]" },
+    // Dev-adjacent
+    github:        { label: "GitHub",         icon: <Github className="w-3 h-3" />,       color: "text-[var(--text-primary)]" },
+    // Fallback
+    web:           { label: "Web",            icon: <Board className="w-3 h-3" />,        color: "text-[var(--text-secondary)]" },
 };
 
 export default function ForumHubPage() {

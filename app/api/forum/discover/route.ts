@@ -275,14 +275,33 @@ export async function POST(request: NextRequest) {
     }
 }
 
-// GET endpoint to check source configuration status
+// GET endpoint to check source configuration status.
+// All the site:-based sources ride on Google Custom Search, so they all
+// flip on/off together with GOOGLE_CSE_ID + GEMINI_API_KEY (or GOOGLE_API_KEY).
 export async function GET() {
+    const google = isGoogleSearchConfigured();
+
     const sources = {
-        reddit: isRedditConfigured(),
-        youtube: !!process.env.YOUTUBE_API_KEY,
-        stackoverflow: true,  // always available
-        hackernews: true,     // always available
-        google: isGoogleSearchConfigured(),
+        // Native-API sources
+        reddit:        isRedditConfigured(),
+        youtube:       !!process.env.YOUTUBE_API_KEY,
+        stackoverflow: true,  // always available (Stack Exchange public API)
+        hackernews:    true,  // always available (Algolia HN public API)
+
+        // Google Custom Search-backed sources — B2B review + long-form +
+        // discovery. All ride on the same CSE credentials.
+        quora:          google,
+        g2:             google,
+        capterra:       google,
+        trustradius:    google,
+        trustpilot:     google,
+        softwareadvice: google,
+        medium:         google,
+        devto:          google,
+        substack:       google,
+        producthunt:    google,
+        alternativeto:  google,
+        github:         google,
     };
 
     const activeCount = Object.values(sources).filter(Boolean).length;

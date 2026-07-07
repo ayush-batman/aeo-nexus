@@ -19,23 +19,54 @@ interface SearchResponse {
     totalResults: number;
 }
 
+// Expanded source list — includes tier-1 B2B review sites, long-form
+// content platforms, and product-discovery hubs that LLMs actually cite.
+// See docs/citation-sources.md for the ranking rationale.
 const FORUM_SITES = [
+    // Community forums
     'reddit.com',
     'quora.com',
     'stackoverflow.com',
     'stackexchange.com',
     'news.ycombinator.com',
+    // B2B software review (crucial for SaaS AEO)
+    'g2.com',
+    'capterra.com',
+    'trustradius.com',
+    'trustpilot.com',
+    'softwareadvice.com',
+    // Long-form / thought leadership
+    'medium.com',
+    'dev.to',
+    'substack.com',
+    // Product discovery
+    'producthunt.com',
+    'alternativeto.net',
+    // Dev-adjacent
+    'github.com',
 ];
 
 /**
- * Detect platform from URL
+ * Detect platform from URL. Returns a stable identifier used for
+ * per-platform grouping in the UI + citation map.
  */
 function detectPlatform(url: string): string {
     const u = url.toLowerCase();
-    if (u.includes('reddit.com')) return 'reddit';
-    if (u.includes('quora.com')) return 'quora';
+    if (u.includes('reddit.com'))                                     return 'reddit';
+    if (u.includes('quora.com'))                                      return 'quora';
     if (u.includes('stackoverflow.com') || u.includes('stackexchange.com')) return 'stackoverflow';
-    if (u.includes('ycombinator.com') || u.includes('news.ycombinator')) return 'hackernews';
+    if (u.includes('ycombinator.com') || u.includes('news.ycombinator'))    return 'hackernews';
+    if (u.includes('g2.com'))                                         return 'g2';
+    if (u.includes('capterra.com'))                                   return 'capterra';
+    if (u.includes('trustradius.com'))                                return 'trustradius';
+    if (u.includes('trustpilot.com'))                                 return 'trustpilot';
+    if (u.includes('softwareadvice.com'))                             return 'softwareadvice';
+    if (u.includes('medium.com'))                                     return 'medium';
+    if (u.includes('dev.to'))                                         return 'devto';
+    if (u.includes('substack.com'))                                   return 'substack';
+    if (u.includes('producthunt.com'))                                return 'producthunt';
+    if (u.includes('alternativeto.net'))                              return 'alternativeto';
+    if (u.includes('github.com'))                                     return 'github';
     return 'web';
 }
 
