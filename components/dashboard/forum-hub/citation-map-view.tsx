@@ -15,6 +15,7 @@ interface SourceRow {
     platformCounts:  Record<string, number>;
     subSources:      { sub: string; count: number }[];
     exampleUrls:     string[];
+    strategyNote:    string | null;
 }
 
 interface Payload {
@@ -184,6 +185,18 @@ function SourceRow({
 
             {expanded && (
                 <div className="border-b border-[var(--border-default)]/50 bg-[var(--bg-raised)]/30 px-4 py-4 space-y-3">
+                    {/* Strategy note — the actionable Sage layer */}
+                    {src.strategyNote && (
+                        <div className="rounded-md border-l-2 border-[var(--accent-base)] bg-[var(--accent-muted)]/50 pl-3 pr-3 py-2.5">
+                            <div className="text-[10px] font-mono uppercase tracking-[0.14em] text-[var(--accent-base)] mb-1">
+                                What to do
+                            </div>
+                            <div className="text-[12.5px] text-[var(--text-primary)] leading-relaxed">
+                                {src.strategyNote}
+                            </div>
+                        </div>
+                    )}
+
                     {/* Per-platform breakdown */}
                     <div>
                         <div className="text-[10px] font-mono uppercase tracking-[0.14em] text-[var(--text-tertiary)] mb-1.5">

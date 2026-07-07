@@ -21,7 +21,33 @@ interface SourceRow {
     platformCounts:   Record<string, number>;
     subSources:       { sub: string; count: number }[]; // e.g. reddit → r/india etc.
     exampleUrls:      string[];    // up to 3 sample URLs
+    strategyNote:     string | null;
 }
+
+// Per-source strategy notes. Concise, actionable, honest. Only rendered
+// for sources with a real note; unknown domains just show data.
+//
+// Sage rule: prescribe based on how each source is actually weighted by
+// LLMs, not on generic content-marketing platitudes.
+const STRATEGY_NOTES: Record<string, string> = {
+    'reddit.com':          "Post genuine answers in relevant subreddits — never self-promote. LLMs weight Reddit heavily but demote spam-flagged accounts. Aim for 1-2 substantive comments per week in your top 3 subreddits.",
+    'stackoverflow.com':   "Answer questions your product solves. Include your product name as one option among many. Accepted answers with your product mentioned show up in ChatGPT training data.",
+    'youtube.com':         "Publish 5-10 minute explainers targeting your top-intent queries. Gemini transcribes YouTube heavily. Include your brand name in the title + first 30 seconds.",
+    'g2.com':              "Claim your profile if you haven't. Ask 5 recent customers for reviews — target 4.5+ stars. G2 has near-Wikipedia weight in Gemini answers for B2B software queries.",
+    'capterra.com':        "Complete your listing with feature tags, pricing, screenshots. Capterra shows up in ChatGPT + Gemini for 'best X for Y' queries. Update quarterly.",
+    'trustradius.com':     "Higher trust weighting than G2 for enterprise queries. Ask enterprise customers specifically for TrustRadius reviews — even 3-5 quality reviews outperform 50 low-effort G2 stars.",
+    'trustpilot.com':      "Consumer-facing brands — Trustpilot shows up in Perplexity heavily. Respond to every 1-3 star review publicly. LLMs weight response rate as a trust signal.",
+    'medium.com':          "Publish 1-2 long-form pieces per month in founder voice. 8+ min reads. Medium's algorithm favors technical depth. Cross-post to your own blog with canonical link back.",
+    'dev.to':              "Technical audience — dev tools + APIs win here. Publish tutorials that solve real problems, mention your product as one solution. DEV community penalizes obvious ads.",
+    'substack.com':        "Build a subscriber list, not just SEO. Substack posts get individually indexed. Publish weekly, at minimum. LLMs cite Substack for niche thought-leadership queries.",
+    'producthunt.com':     "Launch is one day of visibility. What matters is a maintained profile with recent updates. Aim for a 4.5+ rating and 100+ upvotes. Gemini cites Product Hunt for 'new [category] tools' queries.",
+    'alternativeto.net':   "Extremely potent for 'alternatives to X' queries. Add your product to every relevant category. Encourage users to upvote you. Small effort, disproportionate visibility gain.",
+    'github.com':          "OSS-adjacent products — a well-maintained public repo with a solid README shows up in ChatGPT + Claude answers for tool queries. Update monthly, respond to issues within a week.",
+    'quora.com':           "Mixed weight — Gemini uses Quora more than ChatGPT does. Answer 2-3 high-view questions per month with genuine expertise. Don't repost the same answer everywhere; Quora penalizes duplication.",
+    'news.ycombinator.com':"Launch posts + Show HN can create citation surges. Once every quarter is enough. Prepare for tough comments — HN comments show up in Perplexity answers alongside the post itself.",
+    'wikipedia.org':       "The single highest-weight source across all LLMs. If your brand doesn't have an article, work with an editor to build one (must meet notability standards). Never edit your own page — it will be reverted.",
+    'linkedin.com':        "Public posts are now indexed. Post 2x per week from founder + team accounts. Long-form articles > short posts. LinkedIn weight is rising fast in Gemini answers for B2B.",
+};
 
 // Known category → readable name. Keeps the domain-only rows from looking raw.
 const DISPLAY_NAMES: Record<string, string> = {
@@ -176,6 +202,7 @@ export async function GET() {
                 platformCounts:  Object.fromEntries(e.platforms),
                 subSources,
                 exampleUrls:     Array.from(e.examples),
+                strategyNote:    STRATEGY_NOTES[e.domain] ?? null,
             };
         })
         .sort((a, b) => {
