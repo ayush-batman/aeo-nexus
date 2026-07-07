@@ -16,6 +16,15 @@ export interface BlogPost {
 // Newest first.
 export const POSTS: BlogPost[] = [
     {
+        slug:        'the-16-sources-llms-actually-cite',
+        title:       'The 16 sources LLMs actually cite',
+        excerpt:     'Reddit at #1 for consumer + prosumer queries. G2 dominates B2B software. YouTube transcripts feed Gemini heavily. A ranked, per-LLM breakdown of where AI answers actually source their information.',
+        publishedAt: '2026-07-06',
+        readingTime: '9 min read',
+        category:    'Analysis',
+        author:      'Aelo Research',
+    },
+    {
         slug:        'india-ai-visibility-index-july-2026',
         title:       'The India AI Visibility Index — July 2026 Preview',
         excerpt:     'Zoho holds a 100% mention rate for Indian CRM queries. Byju\'s doesn\'t appear once for EdTech intent. Six brands, six categories, one Gemini pass — the receipts behind the first India AI Visibility Index.',
