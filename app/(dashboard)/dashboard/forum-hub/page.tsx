@@ -647,7 +647,15 @@ export default function ForumHubPage() {
                 )}
 
                 {activeTab === "citations" ? (
-                    <CitationMapView />
+                    <CitationMapView
+                        onJumpToDiscover={(platform) => {
+                            setActiveTab("discover");
+                            setPlatformFilter(platform);
+                            // Give the tab-switch a beat, then open the
+                            // discovery modal for a fresh search.
+                            setTimeout(() => setShowDiscovery(true), 100);
+                        }}
+                    />
                 ) : (
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                     {/* Thread List */}

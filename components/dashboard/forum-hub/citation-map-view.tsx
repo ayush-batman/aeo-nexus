@@ -1,8 +1,15 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Loader2, ExternalLink, MapPin, AlertCircle } from "lucide-react";
+import { Loader2, ExternalLink, MapPin, AlertCircle, ArrowRight } from "lucide-react";
 import { cn } from "@/lib/utils";
+
+interface CitationMapViewProps {
+    // Optional callback wired by the parent Forum Hub — clicking
+    // 'Find threads on this source' jumps to Discover with the platform
+    // pre-filtered. Closes the loop from insight to action.
+    onJumpToDiscover?: (platform: string) => void;
+}
 
 interface SourceRow {
     domain:          string;
@@ -31,7 +38,7 @@ interface Payload {
 //
 // Sage rule: numbers come from the customer's own scans, not our opinions
 // about where they should be posting.
-export function CitationMapView() {
+export function CitationMapView({ onJumpToDiscover }: CitationMapViewProps = {}) {
     const [data, setData]     = useState<Payload | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError]   = useState<string | null>(null);
@@ -116,6 +123,7 @@ export function CitationMapView() {
                                 return next;
                             });
                         }}
+                        onJumpToDiscover={onJumpToDiscover}
                     />
                 ))}
             </div>
@@ -127,9 +135,38 @@ export function CitationMapView() {
     );
 }
 
+// Maps domain → discover platform key so the "Find threads" link jumps to
+// the right filter in Discover. Only sources with a valid platform filter
+// in Discover show the action button; the rest just show the strategy note.
+const DISCOVER_PLATFORM_MAP: Record<string, string> = {
+    'reddit.com':          'reddit',
+    'youtube.com':         'youtube',
+    'stackoverflow.com':   'stackoverflow',
+    'stackexchange.com':   'stackoverflow',
+    'news.ycombinator.com':'hackernews',
+    'quora.com':           'quora',
+    'g2.com':              'g2',
+    'capterra.com':        'capterra',
+    'trustradius.com':     'trustradius',
+    'trustpilot.com':      'trustpilot',
+    'softwareadvice.com':  'softwareadvice',
+    'medium.com':          'medium',
+    'dev.to':              'devto',
+    'substack.com':        'substack',
+    'producthunt.com':     'producthunt',
+    'alternativeto.net':   'alternativeto',
+    'github.com':          'github',
+};
+
 function SourceRow({
-    src, rank, expanded, onToggle,
-}: { src: SourceRow; rank: number; expanded: boolean; onToggle: () => void }) {
+    src, rank, expanded, onToggle, onJumpToDiscover,
+}: {
+    src: SourceRow;
+    rank: number;
+    expanded: boolean;
+    onToggle: () => void;
+    onJumpToDiscover?: (platform: string) => void;
+}) {
     const tierStyle: Record<1 | 2 | 3, string> = {
         1: 'text-[var(--accent-base)] border-[var(--accent-base)]/30 bg-[var(--accent-muted)]',
         2: 'text-[var(--data-teal)] border-[var(--data-teal)]/30 bg-[var(--data-teal-muted)]',
@@ -255,6 +292,22 @@ function SourceRow({
                             ))}
                         </div>
                     </div>
+
+                    {/* Jump to Discover — closes insight → action loop */}
+                    {onJumpToDiscover && DISCOVER_PLATFORM_MAP[src.domain] && (
+                        <div className="pt-2 border-t border-[var(--border-default)]/50">
+                            <button
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    onJumpToDiscover(DISCOVER_PLATFORM_MAP[src.domain]);
+                                }}
+                                className="inline-flex items-center gap-1.5 text-[12px] font-medium text-[var(--accent-base)] hover:text-[var(--accent-hover)] transition-colors"
+                            >
+                                Find recent threads on {src.displayName}
+                                <ArrowRight className="w-3 h-3" />
+                            </button>
+                        </div>
+                    )}
                 </div>
             )}
         </>
