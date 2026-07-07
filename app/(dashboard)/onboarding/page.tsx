@@ -401,7 +401,7 @@ export default function OnboardingPage() {
                                         <Sparkles className="w-10 h-10 text-[var(--accent-base)]" />
                                     </div>
                                     <p className="text-[var(--text-secondary)] mb-6">
-                                        Ready to scan &quot;{brandName}&quot; across Gemini and Claude?
+                                        Ready to scan &quot;{brandName}&quot; on the LLMs Aelo has configured?
                                     </p>
                                     <Button size="lg" onClick={runFirstScan} disabled={scanning}>
                                         {scanning ? (
@@ -416,6 +416,14 @@ export default function OnboardingPage() {
                                             </>
                                         )}
                                     </Button>
+                                    <div className="mt-4">
+                                        <button
+                                            onClick={() => setCurrentStep(4)}
+                                            className="text-[12px] text-[var(--text-tertiary)] hover:text-[var(--text-secondary)] transition-colors underline underline-offset-4 decoration-dotted"
+                                        >
+                                            Skip for now — I&apos;ll run scans from the dashboard
+                                        </button>
+                                    </div>
                                 </div>
                             ) : (
                                 <>
@@ -461,10 +469,10 @@ export default function OnboardingPage() {
                                         ))}
                                     </div>
 
-                                    <div className="p-4 rounded-lg bg-green-500/10 border border-green-500/30 text-center mb-6">
-                                        <CheckCircle className="w-6 h-6 text-green-400 mx-auto mb-2" />
-                                        <p className="text-green-300">
-                                            Your first scan is complete! You can now track your visibility over time.
+                                    <div className="p-4 rounded-lg bg-[var(--data-green-muted)] border border-[var(--data-green)]/30 text-center mb-6">
+                                        <CheckCircle className="w-6 h-6 text-[var(--data-green)] mx-auto mb-2" />
+                                        <p className="text-[var(--data-green)]">
+                                            First scan complete. Every number is now one click away from its receipt.
                                         </p>
                                     </div>
 
@@ -484,8 +492,8 @@ export default function OnboardingPage() {
                 {currentStep === 4 && (
                     <Card className="border-[var(--border-default)] bg-[var(--bg-surface)]">
                         <CardContent className="p-8 text-center">
-                            <div className="w-16 h-16 rounded-full bg-green-500/20 flex items-center justify-center mx-auto mb-6">
-                                <CheckCircle className="w-8 h-8 text-green-400" />
+                            <div className="w-16 h-16 rounded-full bg-[var(--data-green-muted)] flex items-center justify-center mx-auto mb-6">
+                                <CheckCircle className="w-8 h-8 text-[var(--data-green)]" />
                             </div>
                             <h2 className="text-2xl font-bold text-[var(--text-primary)] mb-4">
                                 You&apos;re All Set!
