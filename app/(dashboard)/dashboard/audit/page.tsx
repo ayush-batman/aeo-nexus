@@ -158,7 +158,7 @@ export default function AuditPage() {
 
                     {/* Error */}
                     {error && (
-                        <div className="p-4 rounded-lg bg-red-500/10 border border-red-500/30 text-red-400">
+                        <div className="p-4 rounded-lg bg-[var(--data-red-muted)] border border-[var(--data-red)]/30 text-[var(--data-red)]">
                             {error}
                         </div>
                     )}
@@ -194,7 +194,7 @@ export default function AuditPage() {
                                     <div className="flex items-center justify-between">
                                         <span className="text-[var(--text-secondary)]">H1 Tag</span>
                                         {result.structure.h1Count === 1 ? (
-                                            <Badge variant="outline" className="text-green-400 border-green-400/30">Perfect</Badge>
+                                            <Badge variant="outline" className="text-[var(--data-green)] border-green-400/30">Perfect</Badge>
                                         ) : (
                                             <Badge variant="destructive">Found {result.structure.h1Count}</Badge>
                                         )}
@@ -224,7 +224,7 @@ export default function AuditPage() {
                                 </CardHeader>
                                 <CardContent className="space-y-4">
                                     {result.readability.issues.length === 0 ? (
-                                        <div className="flex items-center text-green-400 gap-2">
+                                        <div className="flex items-center text-[var(--data-green)] gap-2">
                                             <CheckCircle className="w-5 h-5" />
                                             <span>No critical issues found!</span>
                                         </div>

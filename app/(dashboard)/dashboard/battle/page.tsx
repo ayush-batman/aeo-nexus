@@ -209,9 +209,9 @@ export default function BattlePage() {
                 <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
                     {/* Winner Banner */}
                     <div className="relative overflow-hidden rounded-xl border border-orange-500/20 bg-gradient-to-br from-zinc-900 via-zinc-900 to-orange-950/20 p-8 text-center shadow-2xl shadow-orange-900/10">
-                        <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-orange-500 to-transparent opacity-50" />
+                        <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-[var(--accent-base)] to-transparent opacity-50" />
 
-                        <Trophy className="w-12 h-12 text-yellow-500 mx-auto mb-4" />
+                        <Trophy className="w-12 h-12 text-[var(--accent-base)] mx-auto mb-4" />
 
                         <h2 className="text-2xl font-bold text-[var(--text-primary)] mb-2">
                             {result.winner
@@ -242,8 +242,8 @@ export default function BattlePage() {
                                 <div className="flex justify-between items-center">
                                     <span className="text-[var(--text-secondary)]">Sentiment</span>
                                     <div className="flex items-center gap-2">
-                                        {result.sentiment === 'positive' && <TrendingUp className="w-4 h-4 text-green-400" />}
-                                        {result.sentiment === 'negative' && <TrendingDown className="w-4 h-4 text-red-400" />}
+                                        {result.sentiment === 'positive' && <TrendingUp className="w-4 h-4 text-[var(--data-green)]" />}
+                                        {result.sentiment === 'negative' && <TrendingDown className="w-4 h-4 text-[var(--data-red)]" />}
                                         {result.sentiment === 'neutral' && <Minus className="w-4 h-4 text-[var(--text-secondary)]" />}
                                         <span className="capitalize text-[var(--text-primary)]">{result.sentiment || "N/A"}</span>
                                     </div>

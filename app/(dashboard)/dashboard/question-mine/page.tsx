@@ -38,17 +38,17 @@ const SOURCE_TYPES = [
 const TYPE_COLORS: Record<string, string> = {
     comparison: "bg-[var(--accent-muted)] text-[var(--accent-base)] border-[var(--accent-base)]/25",
     "how-to": "bg-blue-500/10 text-blue-400 border-blue-500/20",
-    recommendation: "bg-green-500/10 text-green-400 border-green-500/20",
+    recommendation: "bg-[var(--data-green-muted)] text-[var(--data-green)] border-[var(--data-green)]/25",
     troubleshooting: "bg-orange-500/10 text-orange-400 border-orange-500/20",
     feature: "bg-cyan-500/10 text-cyan-400 border-cyan-500/20",
-    pricing: "bg-yellow-500/10 text-yellow-400 border-yellow-500/20",
+    pricing: "bg-[var(--data-amber-muted)] text-[var(--data-amber)] border-[var(--data-amber)]/25",
     integration: "bg-pink-500/10 text-pink-400 border-pink-500/20",
     general: "bg-gray-500/10 text-gray-400 border-gray-500/20",
 };
 
 const PRIORITY_STYLES: Record<string, string> = {
-    high: "bg-red-500/10 text-red-400 border-red-500/20",
-    medium: "bg-yellow-500/10 text-yellow-400 border-yellow-500/20",
+    high: "bg-[var(--data-red-muted)] text-[var(--data-red)] border-[var(--data-red)]/25",
+    medium: "bg-[var(--data-amber-muted)] text-[var(--data-amber)] border-[var(--data-amber)]/25",
     low: "bg-gray-500/10 text-gray-400 border-gray-500/20",
 };
 
@@ -219,7 +219,7 @@ export default function QuestionMinePage() {
                             </div>
                             <div className="rounded-xl border border-[var(--border-default)] bg-[var(--bg-surface)] p-4">
                                 <p className="text-xs text-[var(--text-ghost)] uppercase tracking-wider">High Priority</p>
-                                <p className="text-2xl font-bold font-display text-red-400">{stats.highPriority}</p>
+                                <p className="text-2xl font-bold font-display text-[var(--data-red)]">{stats.highPriority}</p>
                             </div>
                             <div className="rounded-xl border border-[var(--border-default)] bg-[var(--bg-surface)] p-4">
                                 <p className="text-xs text-[var(--text-ghost)] uppercase tracking-wider">Content Gaps</p>
@@ -270,7 +270,7 @@ export default function QuestionMinePage() {
                                     <div className="flex items-start justify-between gap-4">
                                         <div className="flex-1">
                                             <div className="flex items-center gap-2 mb-2">
-                                                <Lightbulb className={`w-3.5 h-3.5 flex-shrink-0 ${q.hasExistingContent ? "text-green-400" : "text-orange-400"}`} />
+                                                <Lightbulb className={`w-3.5 h-3.5 flex-shrink-0 ${q.hasExistingContent ? "text-[var(--data-green)]" : "text-orange-400"}`} />
                                                 <p className="text-sm font-medium text-[var(--text-primary)]">{q.text}</p>
                                             </div>
                                             <div className="flex items-center gap-2 flex-wrap">
@@ -296,7 +296,7 @@ export default function QuestionMinePage() {
                                                 className="h-7 w-7 p-0"
                                             >
                                                 {copiedId === q.text ? (
-                                                    <Check className="w-3.5 h-3.5 text-green-400" />
+                                                    <Check className="w-3.5 h-3.5 text-[var(--data-green)]" />
                                                 ) : (
                                                     <Copy className="w-3.5 h-3.5 text-[var(--text-ghost)]" />
                                                 )}

@@ -159,7 +159,7 @@ export default function ProductsPage() {
                                         <Button
                                             variant="ghost"
                                             size="icon"
-                                            className="h-8 w-8 text-red-400 hover:text-red-300"
+                                            className="h-8 w-8 text-[var(--data-red)] hover:text-[var(--data-red)]"
                                             onClick={() => handleDelete(product.id)}
                                             disabled={isDeleting === product.id}
                                         >

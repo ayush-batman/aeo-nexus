@@ -223,7 +223,7 @@ export default function PlaybookPage() {
                                 className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-medium transition-all whitespace-nowrap ${step === s.num
                                         ? "bg-[var(--accent-muted)] text-[var(--accent-base)] border border-[var(--accent-base)]/25"
                                         : s.num < step
-                                            ? "bg-green-500/5 text-green-400 border border-green-500/20 cursor-pointer"
+                                            ? "bg-[var(--data-green-muted)] text-[var(--data-green)] border border-[var(--data-green)]/25 cursor-pointer"
                                             : "bg-[var(--bg-surface)] text-[var(--text-ghost)] border border-[var(--border-default)]"
                                     }`}
                             >
@@ -270,7 +270,7 @@ export default function PlaybookPage() {
                                     <Badge
                                         key={i}
                                         variant="outline"
-                                        className="bg-[var(--accent-muted)] text-[var(--accent-base)] border-[var(--accent-base)]/25 px-3 py-1.5 cursor-pointer hover:bg-red-500/10 hover:text-red-400 hover:border-red-500/20 transition-all"
+                                        className="bg-[var(--accent-muted)] text-[var(--accent-base)] border-[var(--accent-base)]/25 px-3 py-1.5 cursor-pointer hover:bg-[var(--data-red-muted)] hover:text-[var(--data-red)] hover:border-[var(--data-red)]/25 transition-all"
                                         onClick={() => removeTerm(i)}
                                     >
                                         {t.term} ×
@@ -339,7 +339,7 @@ export default function PlaybookPage() {
                                         <div
                                             key={i}
                                             className={`p-3 rounded-lg border ${g.hasContent
-                                                    ? "border-green-500/20 bg-green-500/5"
+                                                    ? "border-[var(--data-green)]/25 bg-[var(--data-green-muted)]"
                                                     : "border-orange-500/20 bg-orange-500/5"
                                                 }`}
                                         >
@@ -348,7 +348,7 @@ export default function PlaybookPage() {
                                                     <p className="text-sm text-[var(--text-primary)]">{g.question}</p>
                                                     <p className="text-xs text-[var(--text-ghost)] mt-1">{g.recommendation}</p>
                                                 </div>
-                                                <Badge variant="outline" className={`text-[10px] whitespace-nowrap ${g.hasContent ? "text-green-400" : "text-orange-400"
+                                                <Badge variant="outline" className={`text-[10px] whitespace-nowrap ${g.hasContent ? "text-[var(--data-green)]" : "text-orange-400"
                                                     }`}>
                                                     {g.hasContent ? "✓ Covered" : "Gap"}
                                                 </Badge>
@@ -390,7 +390,7 @@ export default function PlaybookPage() {
                                                         <Badge variant="outline" className="text-[10px]">
                                                             Effort: {a.effort}
                                                         </Badge>
-                                                        <Badge variant="outline" className={`text-[10px] ${a.impact === "high" ? "text-green-400" : "text-yellow-400"
+                                                        <Badge variant="outline" className={`text-[10px] ${a.impact === "high" ? "text-[var(--data-green)]" : "text-[var(--data-amber)]"
                                                             }`}>
                                                             Impact: {a.impact}
                                                         </Badge>

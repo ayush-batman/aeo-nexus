@@ -182,10 +182,10 @@ export default function DashboardPage() {
                     description="Your Aelo performance at a glance"
                 />
                 <div className="p-6">
-                    <div className="rounded-xl border border-red-500/20 bg-red-500/10 p-6 flex items-center gap-4">
-                        <AlertCircle className="w-8 h-8 text-red-400" />
+                    <div className="rounded-xl border border-[var(--data-red)]/25 bg-[var(--data-red-muted)] p-6 flex items-center gap-4">
+                        <AlertCircle className="w-8 h-8 text-[var(--data-red)]" />
                         <div>
-                            <h3 className="text-lg font-semibold text-red-400">Error Loading Dashboard</h3>
+                            <h3 className="text-lg font-semibold text-[var(--data-red)]">Error Loading Dashboard</h3>
                             <p className="text-[var(--text-secondary)]">{error}</p>
                             <Button
                                 variant="outline"
@@ -261,7 +261,7 @@ export default function DashboardPage() {
 
                 {/* Live indicator */}
                 {isLive && (
-                    <div className="flex items-center gap-2 text-xs text-green-400">
+                    <div className="flex items-center gap-2 text-xs text-[var(--data-green)]">
                         <Radio className="w-3 h-3 animate-pulse" />
                         <span>Live updates enabled</span>
                     </div>

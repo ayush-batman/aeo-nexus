@@ -13,8 +13,8 @@ export default function DashboardError({
 }) {
     return (
         <div className="flex flex-col items-center justify-center min-h-[60vh] p-8">
-            <div className="rounded-2xl border border-red-500/20 bg-red-500/5 p-10 max-w-lg text-center">
-                <AlertCircle className="w-14 h-14 text-red-400 mx-auto mb-5" />
+            <div className="rounded-2xl border border-[var(--data-red)]/25 bg-[var(--data-red-muted)] p-10 max-w-lg text-center">
+                <AlertCircle className="w-14 h-14 text-[var(--data-red)] mx-auto mb-5" />
                 <h2 className="text-xl font-bold text-[var(--text-primary)] mb-3">
                     Something went wrong
                 </h2>

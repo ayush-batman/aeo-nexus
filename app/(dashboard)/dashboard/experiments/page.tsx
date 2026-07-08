@@ -37,7 +37,7 @@ interface Experiment {
 const STATUS_STYLES: Record<string, { bg: string; text: string; label: string }> = {
     draft: { bg: "bg-gray-500/10", text: "text-gray-400", label: "Draft" },
     baseline: { bg: "bg-blue-500/10", text: "text-blue-400", label: "Collecting Baseline" },
-    running: { bg: "bg-green-500/10", text: "text-green-400", label: "Running" },
+    running: { bg: "bg-[var(--data-green-muted)]", text: "text-[var(--data-green)]", label: "Running" },
     completed: { bg: "bg-[var(--accent-muted)]", text: "text-[var(--accent-base)]", label: "Completed" },
 };
 
@@ -265,7 +265,7 @@ export default function ExperimentsPage() {
                                                                 {exp.result_data?.testSov != null ? `${exp.result_data.testSov}%` : "—"}
                                                             </p>
                                                             {exp.result_data?.testLift != null && (
-                                                                <span className={`text-xs ${(exp.result_data.testLift as number) > 0 ? "text-green-400" : "text-red-400"}`}>
+                                                                <span className={`text-xs ${(exp.result_data.testLift as number) > 0 ? "text-[var(--data-green)]" : "text-[var(--data-red)]"}`}>
                                                                     {(exp.result_data.testLift as number) > 0 ? <ArrowUpRight className="w-3 h-3 inline" /> : <ArrowDownRight className="w-3 h-3 inline" />}
                                                                     {Math.abs(exp.result_data.testLift as number)}%
                                                                 </span>
@@ -290,12 +290,12 @@ export default function ExperimentsPage() {
                                                 {/* Result Verdict */}
                                                 {exp.status === "completed" && exp.result_data && (
                                                     <div className={`mt-3 p-3 rounded-lg border ${(exp.result_data.testLift as number) > 5
-                                                            ? "border-green-500/20 bg-green-500/5"
+                                                            ? "border-[var(--data-green)]/25 bg-[var(--data-green-muted)]"
                                                             : "border-gray-500/20 bg-gray-500/5"
                                                         }`}>
                                                         <div className="flex items-center gap-2">
                                                             {(exp.result_data.testLift as number) > 5 ? (
-                                                                <CheckCircle className="w-4 h-4 text-green-400" />
+                                                                <CheckCircle className="w-4 h-4 text-[var(--data-green)]" />
                                                             ) : (
                                                                 <AlertCircle className="w-4 h-4 text-gray-400" />
                                                             )}
@@ -315,7 +315,7 @@ export default function ExperimentsPage() {
                                                     variant="ghost"
                                                     size="sm"
                                                     onClick={() => handleDelete(exp.id)}
-                                                    className="h-8 w-8 p-0 text-[var(--text-ghost)] hover:text-red-400"
+                                                    className="h-8 w-8 p-0 text-[var(--text-ghost)] hover:text-[var(--data-red)]"
                                                 >
                                                     <Trash2 className="w-4 h-4" />
                                                 </Button>

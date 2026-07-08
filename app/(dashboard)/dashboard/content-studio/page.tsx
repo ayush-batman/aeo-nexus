@@ -120,9 +120,9 @@ export default function ContentStudioPage() {
     };
 
     const getScoreColor = (score: number) => {
-        if (score >= 80) return "text-green-400";
-        if (score >= 60) return "text-yellow-400";
-        return "text-red-400";
+        if (score >= 80) return "text-[var(--data-green)]";
+        if (score >= 60) return "text-[var(--data-amber)]";
+        return "text-[var(--data-red)]";
     };
 
     const getScoreLabel = (score: number) => {
@@ -300,11 +300,11 @@ export default function ContentStudioPage() {
 
                         {/* Error */}
                         {auditError && (
-                            <div className="flex items-center gap-3 p-4 rounded-lg bg-red-500/10 border border-red-500/20">
-                                <AlertCircle className="w-5 h-5 text-red-400 flex-shrink-0" />
+                            <div className="flex items-center gap-3 p-4 rounded-lg bg-[var(--data-red-muted)] border border-[var(--data-red)]/25">
+                                <AlertCircle className="w-5 h-5 text-[var(--data-red)] flex-shrink-0" />
                                 <div>
-                                    <p className="text-sm font-medium text-red-300">Analysis Failed</p>
-                                    <p className="text-xs text-red-400/80">{auditError}</p>
+                                    <p className="text-sm font-medium text-[var(--data-red)]">Analysis Failed</p>
+                                    <p className="text-xs text-[var(--data-red)]/80">{auditError}</p>
                                 </div>
                             </div>
                         )}
@@ -346,8 +346,8 @@ export default function ContentStudioPage() {
                                             <p className="text-sm text-[var(--text-secondary)]">Word Count</p>
                                             <Badge variant="outline" className={cn(
                                                 "mt-2 text-xs",
-                                                auditResult.content.wordCount > 1000 ? "text-green-400" :
-                                                    auditResult.content.wordCount > 300 ? "text-yellow-400" : "text-red-400"
+                                                auditResult.content.wordCount > 1000 ? "text-[var(--data-green)]" :
+                                                    auditResult.content.wordCount > 300 ? "text-[var(--data-amber)]" : "text-[var(--data-red)]"
                                             )}>
                                                 {auditResult.content.wordCount > 1000 ? "Comprehensive" :
                                                     auditResult.content.wordCount > 300 ? "Adequate" : "Thin Content"}
@@ -362,7 +362,7 @@ export default function ContentStudioPage() {
                                             <p className="text-sm text-[var(--text-secondary)]">Q&A Pairs Found</p>
                                             <Badge variant="outline" className={cn(
                                                 "mt-2 text-xs",
-                                                auditResult.content.qnaCount > 2 ? "text-green-400" : "text-yellow-400"
+                                                auditResult.content.qnaCount > 2 ? "text-[var(--data-green)]" : "text-[var(--data-amber)]"
                                             )}>
                                                 {auditResult.content.qnaCount > 2 ? "Good" : "Add FAQ Section"}
                                             </Badge>
@@ -381,18 +381,18 @@ export default function ContentStudioPage() {
                                                 <p className="text-2xl font-bold text-[var(--text-primary)]">{auditResult.structure.h1Count}</p>
                                                 <p className="text-xs text-[var(--text-ghost)]">H1 Tags</p>
                                                 {auditResult.structure.h1Count === 1 ? (
-                                                    <CheckCircle className="w-4 h-4 text-green-400 mx-auto mt-1" />
+                                                    <CheckCircle className="w-4 h-4 text-[var(--data-green)] mx-auto mt-1" />
                                                 ) : (
-                                                    <AlertTriangle className="w-4 h-4 text-yellow-400 mx-auto mt-1" />
+                                                    <AlertTriangle className="w-4 h-4 text-[var(--data-amber)] mx-auto mt-1" />
                                                 )}
                                             </div>
                                             <div className="bg-[var(--bg-raised)] rounded-lg p-3 text-center">
                                                 <p className="text-2xl font-bold text-[var(--text-primary)]">{auditResult.structure.h2Count}</p>
                                                 <p className="text-xs text-[var(--text-ghost)]">H2 Tags</p>
                                                 {auditResult.structure.h2Count >= 2 ? (
-                                                    <CheckCircle className="w-4 h-4 text-green-400 mx-auto mt-1" />
+                                                    <CheckCircle className="w-4 h-4 text-[var(--data-green)] mx-auto mt-1" />
                                                 ) : (
-                                                    <AlertTriangle className="w-4 h-4 text-yellow-400 mx-auto mt-1" />
+                                                    <AlertTriangle className="w-4 h-4 text-[var(--data-amber)] mx-auto mt-1" />
                                                 )}
                                             </div>
                                             <div className="bg-[var(--bg-raised)] rounded-lg p-3 text-center">
@@ -401,9 +401,9 @@ export default function ContentStudioPage() {
                                                 </p>
                                                 <p className="text-xs text-[var(--text-ghost)]">Schema Markup</p>
                                                 {auditResult.structure.hasSchema ? (
-                                                    <CheckCircle className="w-4 h-4 text-green-400 mx-auto mt-1" />
+                                                    <CheckCircle className="w-4 h-4 text-[var(--data-green)] mx-auto mt-1" />
                                                 ) : (
-                                                    <AlertCircle className="w-4 h-4 text-red-400 mx-auto mt-1" />
+                                                    <AlertCircle className="w-4 h-4 text-[var(--data-red)] mx-auto mt-1" />
                                                 )}
                                             </div>
                                             <div className="bg-[var(--bg-raised)] rounded-lg p-3 text-center">
@@ -412,9 +412,9 @@ export default function ContentStudioPage() {
                                                 </p>
                                                 <p className="text-xs text-[var(--text-ghost)]">Meta Description</p>
                                                 {auditResult.structure.metaDescription ? (
-                                                    <CheckCircle className="w-4 h-4 text-green-400 mx-auto mt-1" />
+                                                    <CheckCircle className="w-4 h-4 text-[var(--data-green)] mx-auto mt-1" />
                                                 ) : (
-                                                    <AlertCircle className="w-4 h-4 text-red-400 mx-auto mt-1" />
+                                                    <AlertCircle className="w-4 h-4 text-[var(--data-red)] mx-auto mt-1" />
                                                 )}
                                             </div>
                                         </div>
@@ -441,15 +441,15 @@ export default function ContentStudioPage() {
                                             auditResult.readability.issues.map((issue, i) => (
                                                 <div
                                                     key={i}
-                                                    className="flex items-start gap-3 p-3 rounded-lg bg-yellow-500/10 border border-yellow-500/20"
+                                                    className="flex items-start gap-3 p-3 rounded-lg bg-[var(--data-amber-muted)] border border-[var(--data-amber)]/25"
                                                 >
-                                                    <AlertTriangle className="w-5 h-5 flex-shrink-0 text-yellow-400 mt-0.5" />
+                                                    <AlertTriangle className="w-5 h-5 flex-shrink-0 text-[var(--data-amber)] mt-0.5" />
                                                     <p className="text-sm text-[var(--text-secondary)]">{issue}</p>
                                                 </div>
                                             ))
                                         ) : (
-                                            <div className="flex items-center gap-3 p-3 rounded-lg bg-green-500/10 border border-green-500/20">
-                                                <CheckCircle className="w-5 h-5 text-green-400" />
+                                            <div className="flex items-center gap-3 p-3 rounded-lg bg-[var(--data-green-muted)] border border-[var(--data-green)]/25">
+                                                <CheckCircle className="w-5 h-5 text-[var(--data-green)]" />
                                                 <p className="text-sm text-[var(--text-secondary)]">
                                                     Great job! No major issues found — your page is well-optimized for AI.
                                                 </p>
@@ -512,7 +512,7 @@ export default function ContentStudioPage() {
                                         />
                                     </div>
                                     {schemaError && (
-                                        <p className="text-xs text-red-400 mt-2">{schemaError}</p>
+                                        <p className="text-xs text-[var(--data-red)] mt-2">{schemaError}</p>
                                     )}
                                 </div>
 
@@ -535,19 +535,19 @@ export default function ContentStudioPage() {
                                 <CardTitle className="text-lg">Generated Schema</CardTitle>
                                 <Button variant="ghost" size="sm" onClick={copySchema} disabled={!generatedSchema}>
                                     {schemaCopied ? (
-                                        <><Check className="w-4 h-4 mr-1 text-green-400" /> Copied</>
+                                        <><Check className="w-4 h-4 mr-1 text-[var(--data-green)]" /> Copied</>
                                     ) : (
                                         <><Copy className="w-4 h-4 mr-1" /> Copy</>
                                     )}
                                 </Button>
                             </CardHeader>
                             <CardContent>
-                                <pre className="bg-[var(--bg-surface)] p-4 rounded-lg text-sm text-green-400 overflow-x-auto max-h-[500px] overflow-y-auto whitespace-pre-wrap">
+                                <pre className="bg-[var(--bg-surface)] p-4 rounded-lg text-sm text-[var(--data-green)] overflow-x-auto max-h-[500px] overflow-y-auto whitespace-pre-wrap">
                                     {isGeneratingSchema ? "Generating custom JSON-LD schema..." : (generatedSchema || "Select a schema type and fill out the form to generate dynamic JSON-LD data")}
                                 </pre>
                                 {generatedSchema && (
                                     <p className="text-xs text-[var(--text-ghost)] mt-3">
-                                        💡 Paste this into a {"<script type=\"application/ld+json\">"} tag on your page
+                                        Paste this inside a <span className="font-mono">{"<script type=\"application/ld+json\">"}</span> tag on your page.
                                     </p>
                                 )}
                             </CardContent>
@@ -602,7 +602,7 @@ export default function ContentStudioPage() {
                                     value={writerTopic}
                                     onChange={(e) => setWriterTopic(e.target.value)}
                                 />
-                                {writerError && <p className="text-xs text-red-400 mt-2">{writerError}</p>}
+                                {writerError && <p className="text-xs text-[var(--data-red)] mt-2">{writerError}</p>}
                             </div>
                             <Button
                                 onClick={handleGenerateContent}

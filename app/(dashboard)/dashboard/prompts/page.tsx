@@ -418,7 +418,7 @@ export default function PromptResearchPage() {
                                                 className={cn(
                                                     "h-8 text-xs transition-all",
                                                     copiedId === template.id
-                                                        ? "border-green-500 text-green-400"
+                                                        ? "border-green-500 text-[var(--data-green)]"
                                                         : "border-[var(--border-default)] text-[var(--text-secondary)] hover:text-white"
                                                 )}
                                             >
@@ -447,7 +447,7 @@ export default function PromptResearchPage() {
                         <Card className="border-[var(--accent-base)]/25 bg-gradient-to-br from-zinc-900 to-zinc-900/50">
                             <CardHeader>
                                 <CardTitle className="flex items-center gap-2">
-                                    <Lightbulb className="w-5 h-5 text-yellow-400" />
+                                    <Lightbulb className="w-5 h-5 text-[var(--data-amber)]" />
                                     Generate Research Prompts
                                 </CardTitle>
                                 <CardDescription>
@@ -529,7 +529,7 @@ export default function PromptResearchPage() {
                                                                 className="text-[var(--text-secondary)] hover:text-white"
                                                             >
                                                                 {copiedId === `gen-${i}` ? (
-                                                                    <span className="flex items-center text-xs text-green-400"><Check className="w-3 h-3 mr-1" /> Copied</span>
+                                                                    <span className="flex items-center text-xs text-[var(--data-green)]"><Check className="w-3 h-3 mr-1" /> Copied</span>
                                                                 ) : (
                                                                     <span className="flex items-center text-xs"><Copy className="w-3 h-3 mr-1" /> Copy</span>
                                                                 )}
@@ -539,7 +539,7 @@ export default function PromptResearchPage() {
                                                                 size="sm"
                                                                 onClick={() => handleSave(p)}
                                                                 disabled={isSaved(p.prompt) || savingId === p.prompt}
-                                                                className={cn(isSaved(p.prompt) ? "text-green-400" : "text-[var(--text-secondary)] hover:text-white")}
+                                                                className={cn(isSaved(p.prompt) ? "text-[var(--data-green)]" : "text-[var(--text-secondary)] hover:text-white")}
                                                             >
                                                                 {savingId === p.prompt ? (
                                                                     <Loader2 className="w-4 h-4 animate-spin" />
@@ -625,7 +625,7 @@ export default function PromptResearchPage() {
                                                 variant="ghost"
                                                 size="icon"
                                                 onClick={() => handleDelete(prompt.id)}
-                                                className="text-[var(--text-ghost)] hover:text-red-400"
+                                                className="text-[var(--text-ghost)] hover:text-[var(--data-red)]"
                                             >
                                                 <Trash2 className="w-4 h-4" />
                                             </Button>
@@ -693,7 +693,7 @@ export default function PromptResearchPage() {
                                                             <p className="text-sm text-[var(--text-primary)] flex-1">{suggestion}</p>
                                                             <div className="flex items-center gap-2 ml-4">
                                                                 {isSaved(suggestion) ? (
-                                                                    <Badge variant="outline" className="text-xs text-green-400 border-green-500/30">Saved</Badge>
+                                                                    <Badge variant="outline" className="text-xs text-[var(--data-green)] border-[var(--data-green)]/30">Saved</Badge>
                                                                 ) : (
                                                                     <Button
                                                                         variant="ghost"
@@ -737,7 +737,7 @@ export default function PromptResearchPage() {
                                                             <p className="text-sm text-[var(--text-primary)] flex-1">{question}</p>
                                                             <div className="flex items-center gap-2 ml-4">
                                                                 {isSaved(question) ? (
-                                                                    <Badge variant="outline" className="text-xs text-green-400 border-green-500/30">Saved</Badge>
+                                                                    <Badge variant="outline" className="text-xs text-[var(--data-green)] border-[var(--data-green)]/30">Saved</Badge>
                                                                 ) : (
                                                                     <Button
                                                                         variant="ghost"
@@ -769,19 +769,19 @@ export default function PromptResearchPage() {
                                         {discoveryResults.relatedQueries.length > 0 && (
                                             <div>
                                                 <h3 className="text-sm font-semibold text-[var(--text-secondary)] mb-3 flex items-center gap-2">
-                                                    <TrendingUp className="w-4 h-4 text-green-400" />
+                                                    <TrendingUp className="w-4 h-4 text-[var(--data-green)]" />
                                                     Related Comparisons ({discoveryResults.relatedQueries.length})
                                                 </h3>
                                                 <div className="space-y-2">
                                                     {discoveryResults.relatedQueries.map((query, i) => (
                                                         <div
                                                             key={`rq-${i}`}
-                                                            className="flex items-center justify-between p-3 rounded-lg bg-green-500/5 border border-green-500/10"
+                                                            className="flex items-center justify-between p-3 rounded-lg bg-[var(--data-green-muted)] border border-green-500/10"
                                                         >
                                                             <p className="text-sm text-[var(--text-primary)] flex-1">{query}</p>
                                                             <div className="flex items-center gap-2 ml-4">
                                                                 {isSaved(query) ? (
-                                                                    <Badge variant="outline" className="text-xs text-green-400 border-green-500/30">Saved</Badge>
+                                                                    <Badge variant="outline" className="text-xs text-[var(--data-green)] border-[var(--data-green)]/30">Saved</Badge>
                                                                 ) : (
                                                                     <Button
                                                                         variant="ghost"

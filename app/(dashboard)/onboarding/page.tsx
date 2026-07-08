@@ -219,7 +219,7 @@ export default function OnboardingPage() {
                         <div key={step.id} className="flex items-center">
                             <div
                                 className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium transition-all ${currentStep > step.id
-                                    ? "bg-green-500 text-white"
+                                    ? "bg-[var(--data-green)] text-white"
                                     : currentStep === step.id
                                         ? "bg-[var(--accent-base)] text-white"
                                         : "bg-[var(--bg-raised)] text-[var(--text-ghost)]"
@@ -233,7 +233,7 @@ export default function OnboardingPage() {
                             </div>
                             {i < steps.length - 1 && (
                                 <div
-                                    className={`w-12 h-0.5 mx-1 ${currentStep > step.id ? "bg-green-500" : "bg-[var(--bg-raised)]"
+                                    className={`w-12 h-0.5 mx-1 ${currentStep > step.id ? "bg-[var(--data-green)]" : "bg-[var(--bg-raised)]"
                                         }`}
                                 />
                             )}
@@ -242,7 +242,7 @@ export default function OnboardingPage() {
                 </div>
 
                 {error && (
-                    <div className="mb-6 p-3 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 text-sm text-center">
+                    <div className="mb-6 p-3 rounded-lg bg-[var(--data-red-muted)] border border-[var(--data-red)]/25 text-[var(--data-red)] text-sm text-center">
                         {error}
                     </div>
                 )}

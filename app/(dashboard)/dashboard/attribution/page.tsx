@@ -246,13 +246,13 @@ export default function AttributionPage() {
                                     onClick={handleCopyWidget}
                                     className="absolute top-3 right-3"
                                 >
-                                    {copied ? <Check className="w-3.5 h-3.5 mr-1 text-green-400" /> : <Copy className="w-3.5 h-3.5 mr-1" />}
+                                    {copied ? <Check className="w-3.5 h-3.5 mr-1 text-[var(--data-green)]" /> : <Copy className="w-3.5 h-3.5 mr-1" />}
                                     {copied ? "Copied!" : "Copy"}
                                 </Button>
                             </div>
 
-                            <div className="rounded-xl border border-yellow-500/20 bg-yellow-500/5 p-4">
-                                <p className="text-xs text-yellow-400 font-medium mb-1">⚠️ Don&apos;t forget</p>
+                            <div className="rounded-xl border border-[var(--data-amber)]/25 bg-[var(--data-amber-muted)] p-4">
+                                <p className="text-[10px] font-mono uppercase tracking-[0.14em] text-[var(--data-amber)] mb-1">Before you paste</p>
                                 <p className="text-xs text-[var(--text-secondary)]">
                                     Replace <code>YOUR_WORKSPACE_ID</code> in the script with your actual workspace ID from Settings.
                                 </p>

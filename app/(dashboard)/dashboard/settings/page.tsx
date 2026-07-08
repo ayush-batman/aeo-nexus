@@ -410,9 +410,9 @@ export default function SettingsPage() {
 
             <div className="p-6">
                 {paymentSuccess && (
-                    <div className="mb-6 p-4 rounded-lg bg-green-500/10 border border-green-500/30 flex items-center gap-3">
-                        <CheckCircle className="w-5 h-5 text-green-400" />
-                        <p className="text-green-300">Payment successful! Your plan has been upgraded.</p>
+                    <div className="mb-6 p-4 rounded-lg bg-[var(--data-green-muted)] border border-[var(--data-green)]/30 flex items-center gap-3">
+                        <CheckCircle className="w-5 h-5 text-[var(--data-green)]" />
+                        <p className="text-[var(--data-green)]">Payment successful! Your plan has been upgraded.</p>
                     </div>
                 )}
 
@@ -471,7 +471,7 @@ export default function SettingsPage() {
                                                     {saving ? (
                                                         <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                                                     ) : saveSuccess ? (
-                                                        <CheckCircle className="w-4 h-4 mr-2 text-green-400" />
+                                                        <CheckCircle className="w-4 h-4 mr-2 text-[var(--data-green)]" />
                                                     ) : (
                                                         <Save className="w-4 h-4 mr-2" />
                                                     )}
@@ -554,7 +554,7 @@ export default function SettingsPage() {
                                                                 {comp}
                                                                 <button
                                                                     onClick={() => removeCompetitor(comp)}
-                                                                    className="text-[var(--text-ghost)] hover:text-red-400 transition-colors"
+                                                                    className="text-[var(--text-ghost)] hover:text-[var(--data-red)] transition-colors"
                                                                 >
                                                                     <X className="w-3.5 h-3.5" />
                                                                 </button>
@@ -612,7 +612,7 @@ export default function SettingsPage() {
                                                                 {member.role}
                                                             </Badge>
                                                             {member.role !== "owner" && member.id !== user?.id && (
-                                                                <Button variant="ghost" size="icon" className="h-8 w-8 text-red-400">
+                                                                <Button variant="ghost" size="icon" className="h-8 w-8 text-[var(--data-red)]">
                                                                     <Trash2 className="w-4 h-4" />
                                                                 </Button>
                                                             )}
@@ -671,9 +671,9 @@ export default function SettingsPage() {
                                                 </CardHeader>
                                                 <CardContent>
                                                     {upgradeError && (
-                                                        <div className="mb-4 p-3 rounded-lg bg-red-500/10 border border-red-500/30 flex items-center gap-3">
-                                                            <AlertCircle className="w-5 h-5 text-red-400" />
-                                                            <p className="text-sm text-red-300">{upgradeError}</p>
+                                                        <div className="mb-4 p-3 rounded-lg bg-[var(--data-red-muted)] border border-[var(--data-red)]/30 flex items-center gap-3">
+                                                            <AlertCircle className="w-5 h-5 text-[var(--data-red)]" />
+                                                            <p className="text-sm text-[var(--data-red)]">{upgradeError}</p>
                                                         </div>
                                                     )}
                                                     <div className="grid grid-cols-3 gap-4">
@@ -730,7 +730,7 @@ export default function SettingsPage() {
                                             {/* Visibility Alerts */}
                                             <div>
                                                 <h3 className="text-sm font-semibold text-[var(--text-secondary)] mb-3 flex items-center gap-2">
-                                                    <div className="w-2 h-2 rounded-full bg-red-400" />
+                                                    <div className="w-2 h-2 rounded-full bg-[var(--data-red)]" />
                                                     Visibility Alerts
                                                 </h3>
                                                 <div className="space-y-2">

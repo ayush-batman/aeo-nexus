@@ -333,12 +333,12 @@ export default function ForumHubPage() {
         const title = thread.title.toLowerCase();
 
         if (title.includes('vs') || title.includes('compare') || title.includes('comparison')) {
-            return { label: "🆚 Compare", variant: "warning" as const };
+            return { label: "Compare", variant: "warning" as const };
         }
         if (title.includes('buy') || title.includes('recommend') || title.includes('best') || title.includes('under')) {
-            return { label: "🛒 Buying", variant: "success" as const };
+            return { label: "Buying", variant: "success" as const };
         }
-        return { label: "💡 Research", variant: "default" as const };
+        return { label: "Research", variant: "default" as const };
     };
 
     const filteredThreads = threads.filter(thread => {
@@ -366,7 +366,7 @@ export default function ForumHubPage() {
             <div className="p-6 space-y-6">
                 {/* Live indicator */}
                 {isLive && (
-                    <div className="flex items-center gap-2 text-xs text-green-400">
+                    <div className="flex items-center gap-2 text-xs text-[var(--data-green)]">
                         <Radio className="w-3 h-3 animate-pulse" />
                         <span>Live updates enabled</span>
                     </div>
@@ -563,7 +563,7 @@ export default function ForumHubPage() {
                                                         prev.filter(s => s !== sub)
                                                     );
                                                 }}
-                                                className="px-3 py-1.5 rounded-lg text-sm bg-[var(--accent-muted)] text-[var(--accent-base)] border border-[var(--accent-base)]/25 hover:bg-red-500/20 hover:text-red-400 group flex items-center gap-1 transition-all"
+                                                className="px-3 py-1.5 rounded-lg text-sm bg-[var(--accent-muted)] text-[var(--accent-base)] border border-[var(--accent-base)]/25 hover:bg-[var(--data-red)]/20 hover:text-[var(--data-red)] group flex items-center gap-1 transition-all"
                                             >
                                                 r/{sub}
                                                 <span className="hidden group-hover:inline ml-1">×</span>
@@ -626,17 +626,17 @@ export default function ForumHubPage() {
                 )}
 
                 {error && (
-                    <div className="rounded-xl border border-red-500/20 bg-red-500/10 p-4 flex items-center gap-3">
-                        <AlertCircle className="w-5 h-5 text-red-400" />
-                        <p className="text-red-400">{error}</p>
+                    <div className="rounded-xl border border-[var(--data-red)]/25 bg-[var(--data-red-muted)] p-4 flex items-center gap-3">
+                        <AlertCircle className="w-5 h-5 text-[var(--data-red)]" />
+                        <p className="text-[var(--data-red)]">{error}</p>
                     </div>
                 )}
 
                 {warnings.length > 0 && (
-                    <div className="rounded-xl border border-yellow-500/20 bg-yellow-500/10 p-4 flex flex-col gap-2">
+                    <div className="rounded-xl border border-[var(--data-amber)]/25 bg-[var(--data-amber-muted)] p-4 flex flex-col gap-2">
                         <div className="flex items-center gap-3">
-                            <AlertCircle className="w-5 h-5 text-yellow-400" />
-                            <p className="text-yellow-400 font-medium">Warning</p>
+                            <AlertCircle className="w-5 h-5 text-[var(--data-amber)]" />
+                            <p className="text-[var(--data-amber)] font-medium">Warning</p>
                         </div>
                         <ul className="list-disc list-inside text-sm text-yellow-300/80 ml-8">
                             {warnings.map((w, i) => (

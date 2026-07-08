@@ -42,7 +42,7 @@ import { generateRecommendations, CATEGORY_CONFIG, PRIORITY_CONFIG } from "@/lib
 
 // Platform icons/colors
 const platforms = [
-    { id: "chatgpt", name: "ChatGPT", color: "bg-green-500" },
+    { id: "chatgpt", name: "ChatGPT", color: "bg-[var(--data-green)]" },
     { id: "gemini", name: "Gemini", color: "bg-blue-500" },
     { id: "perplexity", name: "Perplexity", color: "bg-[var(--accent-base)]" },
     { id: "claude", name: "Claude", color: "bg-orange-500" },
@@ -208,7 +208,7 @@ export default function LLMTrackerPage() {
 
             // Show partial failures as warnings
             if (data.platformErrors && data.platformErrors.length > 0) {
-                setScanError(`⚠️ Partial success: ${data.platformErrors.map((e: any) => `${e.platform} failed`).join(', ')}`);
+                setScanError(`Partial success — ${data.platformErrors.map((e: any) => `${e.platform} failed`).join(', ')}`);
             }
 
             setNewPrompt("");
@@ -305,7 +305,7 @@ export default function LLMTrackerPage() {
 
                         {/* Live indicator */}
                         {isLive && (
-                            <div className="flex items-center gap-2 text-xs text-green-400 mt-2 sm:mt-0">
+                            <div className="flex items-center gap-2 text-xs text-[var(--data-green)] mt-2 sm:mt-0">
                                 <Radio className="w-3 h-3 animate-pulse" />
                                 <span>Live updates enabled</span>
                             </div>
@@ -348,8 +348,8 @@ export default function LLMTrackerPage() {
                                                     <span className="text-sm text-[var(--text-secondary)]">{platform.name}</span>
                                                     <div className={cn(
                                                         "flex items-center gap-1 text-xs",
-                                                        change > 0 && "text-green-400",
-                                                        change < 0 && "text-red-400",
+                                                        change > 0 && "text-[var(--data-green)]",
+                                                        change < 0 && "text-[var(--data-red)]",
                                                         change === 0 && "text-[var(--text-ghost)]"
                                                     )}>
                                                         {change > 0 ? <TrendingUp className="w-3 h-3" /> :
@@ -367,9 +367,9 @@ export default function LLMTrackerPage() {
                                                 <div className="mt-2 h-1.5 bg-[var(--bg-raised)] rounded-full overflow-hidden">
                                                     <div
                                                         className={cn("h-full rounded-full transition-all",
-                                                            score >= 70 ? "bg-green-500" :
-                                                                score >= 50 ? "bg-yellow-500" :
-                                                                    "bg-red-500"
+                                                            score >= 70 ? "bg-[var(--data-green)]" :
+                                                                score >= 50 ? "bg-[var(--data-amber)]" :
+                                                                    "bg-[var(--data-red)]"
                                                         )}
                                                         style={{ width: `${score}%` }}
                                                     />
@@ -425,7 +425,7 @@ export default function LLMTrackerPage() {
                                 </div>
 
                                 {scanError && (
-                                    <div className="flex items-center gap-2 text-red-400 text-sm">
+                                    <div className="flex items-center gap-2 text-[var(--data-red)] text-sm">
                                         <AlertCircle className="w-4 h-4" />
                                         {scanError}
                                     </div>
@@ -480,7 +480,7 @@ export default function LLMTrackerPage() {
                                         competitors.map(c => (
                                             <div key={c} className="flex items-center gap-1 px-2 py-1 rounded bg-[var(--bg-raised)] border border-[var(--border-default)] text-xs text-[var(--text-secondary)]">
                                                 {c}
-                                                <button onClick={() => setCompetitors(prev => prev.filter(x => x !== c))} className="text-[var(--text-ghost)] hover:text-red-400">
+                                                <button onClick={() => setCompetitors(prev => prev.filter(x => x !== c))} className="text-[var(--text-ghost)] hover:text-[var(--data-red)]">
                                                     <X className="w-3 h-3" />
                                                 </button>
                                             </div>
@@ -557,12 +557,12 @@ export default function LLMTrackerPage() {
                                                             </div>
 
                                                             {scan.brandMentioned ? (
-                                                                <div className="flex items-center gap-1 text-green-400">
+                                                                <div className="flex items-center gap-1 text-[var(--data-green)]">
                                                                     <Eye className="w-3 h-3" />
                                                                     Position #{scan.mentionPosition || '?'}
                                                                 </div>
                                                             ) : (
-                                                                <div className="flex items-center gap-1 text-red-400">
+                                                                <div className="flex items-center gap-1 text-[var(--data-red)]">
                                                                     <Eye className="w-3 h-3" />
                                                                     Not mentioned
                                                                 </div>
@@ -691,7 +691,7 @@ export default function LLMTrackerPage() {
                                 <Card className="border-[var(--accent-base)]/25 bg-gradient-to-br from-zinc-900 to-zinc-900/50">
                                     <CardHeader className="flex flex-row items-center justify-between">
                                         <CardTitle className="text-lg flex items-center gap-2">
-                                            <Lightbulb className="w-5 h-5 text-yellow-400" />
+                                            <Lightbulb className="w-5 h-5 text-[var(--data-amber)]" />
                                             Recommendations
                                             <Badge variant="outline" className="text-xs ml-2">
                                                 {recs.length} action{recs.length > 1 ? 's' : ''}

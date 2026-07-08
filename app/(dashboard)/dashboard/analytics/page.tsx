@@ -498,9 +498,9 @@ export default function AnalyticsPage() {
                 </div>
 
                 {error && (
-                    <div className="flex items-center gap-3 p-4 rounded-lg bg-red-500/10 border border-red-500/20">
-                        <AlertCircle className="w-5 h-5 text-red-400" />
-                        <p className="text-sm text-red-300">{error}</p>
+                    <div className="flex items-center gap-3 p-4 rounded-lg bg-[var(--data-red-muted)] border border-[var(--data-red)]/25">
+                        <AlertCircle className="w-5 h-5 text-[var(--data-red)]" />
+                        <p className="text-sm text-[var(--data-red)]">{error}</p>
                     </div>
                 )}
 
@@ -857,7 +857,7 @@ export default function AnalyticsPage() {
                                                     <span className="text-xs font-medium text-[var(--text-secondary)] capitalize mt-2 group-hover:text-[var(--text-primary)] transition-colors">{metric.platform}</span>
                                                     <span className={cn(
                                                         "text-[10px] font-bold px-1.5 py-0.5 rounded-md",
-                                                        metric.change > 0 ? "bg-green-500/20 text-green-400 border border-green-500/10" : metric.change < 0 ? "bg-red-500/20 text-red-400 border border-red-500/10" : "text-[var(--text-ghost)]"
+                                                        metric.change > 0 ? "bg-[var(--data-green)]/20 text-[var(--data-green)] border border-[var(--data-green)]/25" : metric.change < 0 ? "bg-[var(--data-red)]/20 text-[var(--data-red)] border border-[var(--data-red)]/25" : "text-[var(--text-ghost)]"
                                                     )}>
                                                         {metric.change > 0 ? "+" : ""}{metric.change}
                                                     </span>
@@ -936,16 +936,16 @@ export default function AnalyticsPage() {
                                                 </p>
                                             </div>
                                             {citationRate === 0 && (
-                                                <div className="rounded-2xl bg-red-500/5 border border-red-500/20 p-4">
-                                                    <p className="text-xs font-medium text-red-400 mb-1">⚠️ Not being cited</p>
-                                                    <p className="text-[11px] text-[var(--text-ghost)]">Create FAQ and original research content to become citeable.</p>
+                                                <div className="rounded-2xl bg-[var(--data-red-muted)] border border-[var(--data-red)]/25 p-4">
+                                                    <p className="text-[10px] font-mono uppercase tracking-[0.14em] text-[var(--data-red)] mb-1">Not being cited</p>
+                                                    <p className="text-[11px] text-[var(--text-ghost)]">Ship FAQ blocks and original research so LLMs have something worth citing.</p>
                                                 </div>
                                             )}
                                         </div>
 
                                         {/* Your Domain Citations */}
                                         <div className="space-y-3">
-                                            <h3 className="text-sm font-semibold text-green-400 flex items-center gap-1.5">
+                                            <h3 className="text-sm font-semibold text-[var(--data-green)] flex items-center gap-1.5">
                                                 <div className="w-2 h-2 rounded-full bg-green-400" />
                                                 Your Domain ({topCitations.filter(c => c.isOwnDomain).length})
                                             </h3>
@@ -953,13 +953,13 @@ export default function AnalyticsPage() {
                                                 topCitations.filter(c => c.isOwnDomain).map((citation) => (
                                                     <div
                                                         key={citation.domain}
-                                                        className="flex items-center justify-between p-3 rounded-lg bg-green-500/5 border border-green-500/10"
+                                                        className="flex items-center justify-between p-3 rounded-lg bg-[var(--data-green-muted)] border border-[var(--data-green)]/25"
                                                     >
                                                         <div className="flex items-center gap-2 min-w-0">
-                                                            <Globe className="w-4 h-4 text-green-400 flex-shrink-0" />
-                                                            <span className="text-sm text-green-300 truncate">{citation.domain}</span>
+                                                            <Globe className="w-4 h-4 text-[var(--data-green)] flex-shrink-0" />
+                                                            <span className="text-sm text-[var(--data-green)] truncate">{citation.domain}</span>
                                                         </div>
-                                                        <Badge variant="outline" className="text-xs bg-green-500/10 text-green-300 border-green-500/20 flex-shrink-0">
+                                                        <Badge variant="outline" className="text-xs bg-[var(--data-green-muted)] text-[var(--data-green)] border-[var(--data-green)]/25 flex-shrink-0">
                                                             {citation.count}x cited
                                                         </Badge>
                                                     </div>
@@ -1033,7 +1033,7 @@ export default function AnalyticsPage() {
                                                             <div className="flex items-center gap-2">
                                                                 <span className={cn(
                                                                     "text-xs font-bold px-2 py-1 rounded-md",
-                                                                    platform.mentionRate >= 50 ? "bg-green-500/10 text-green-400 border border-green-500/20" :
+                                                                    platform.mentionRate >= 50 ? "bg-[var(--data-green-muted)] text-[var(--data-green)] border border-[var(--data-green)]/25" :
                                                                         platform.mentionRate >= 20 ? "bg-blue-500/10 text-blue-400 border border-blue-500/20" :
                                                                             "bg-[var(--bg-raised)] text-[var(--text-secondary)]"
                                                                 )}>
@@ -1046,9 +1046,9 @@ export default function AnalyticsPage() {
                                                                 <div
                                                                     className={cn(
                                                                         "h-full rounded-full transition-all duration-1000 ease-out",
-                                                                        platform.sentiment >= 60 ? "bg-green-500 shadow-[0_0_10px_rgba(34,197,94,0.5)]" :
-                                                                            platform.sentiment >= 40 ? "bg-yellow-500 shadow-[0_0_10px_rgba(234,179,8,0.5)]" :
-                                                                                "bg-red-500 shadow-[0_0_10px_rgba(239,68,68,0.5)]"
+                                                                        platform.sentiment >= 60 ? "bg-[var(--data-green)] shadow-[0_0_10px_rgba(94,192,140,0.4)]" :
+                                                                            platform.sentiment >= 40 ? "bg-[var(--data-amber)] shadow-[0_0_10px_rgba(212,151,54,0.4)]" :
+                                                                                "bg-[var(--data-red)] shadow-[0_0_10px_rgba(212,54,54,0.4)]"
                                                                     )}
                                                                     style={{ width: `${platform.sentiment}%` }}
                                                                 />
