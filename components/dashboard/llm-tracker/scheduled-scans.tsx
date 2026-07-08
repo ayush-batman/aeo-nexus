@@ -144,7 +144,7 @@ export function ScheduledScans({ platformsMap }: ScheduledScansProps) {
                                         variant="ghost"
                                         size="icon"
                                         onClick={() => toggleStatus(schedule.id, schedule.status)}
-                                        className={schedule.status === 'active' ? 'text-[var(--text-secondary)] hover:text-amber-400' : 'text-[var(--text-secondary)] hover:text-green-400'}
+                                        className={schedule.status === 'active' ? 'text-[var(--text-secondary)] hover:text-amber-400' : 'text-[var(--text-secondary)] hover:text-[var(--data-green)]'}
                                         title={schedule.status === 'active' ? 'Pause Schedule' : 'Resume Schedule'}
                                     >
                                         {schedule.status === 'active' ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
@@ -153,7 +153,7 @@ export function ScheduledScans({ platformsMap }: ScheduledScansProps) {
                                         variant="ghost"
                                         size="icon"
                                         onClick={() => deleteSchedule(schedule.id)}
-                                        className="text-[var(--text-ghost)] hover:text-red-400"
+                                        className="text-[var(--text-ghost)] hover:text-[var(--data-red)]"
                                         title="Delete Schedule"
                                     >
                                         <Trash2 className="w-4 h-4" />

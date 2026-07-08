@@ -120,13 +120,13 @@ export function AddProductModal({ isOpen, onClose, onSuccess, productToEdit, wor
 
                 <form onSubmit={handleSubmit} className="p-4 space-y-4">
                     {error && (
-                        <div className="p-3 rounded-lg bg-red-500/10 border border-red-500/20 text-red-500 text-sm">
+                        <div className="p-3 rounded-lg bg-[var(--data-red)]/10 border border-[var(--data-red)]/25 text-[var(--data-red)] text-sm">
                             {error}
                         </div>
                     )}
 
                     <div className="space-y-2">
-                        <Label htmlFor="name" className="text-[var(--text-secondary)]">Product Name <span className="text-red-400">*</span></Label>
+                        <Label htmlFor="name" className="text-[var(--text-secondary)]">Product Name <span className="text-[var(--data-red)]">*</span></Label>
                         <Input
                             id="name"
                             placeholder="e.g. Aelo"

@@ -90,7 +90,7 @@ export function TopicClustering() {
                     </div>
 
                     {error && (
-                        <div className="mt-4 p-3 rounded-lg bg-red-500/10 border border-red-500/30 text-red-400 text-sm">
+                        <div className="mt-4 p-3 rounded-lg bg-[var(--data-red)]/10 border border-[var(--data-red)]/30 text-[var(--data-red)] text-sm">
                             {error}
                         </div>
                     )}

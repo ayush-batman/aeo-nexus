@@ -122,7 +122,7 @@ export function AddScheduleModal({ isOpen, onClose, onSuccess, platformsMap }: A
                         </Select>
                     </div>
 
-                    {error && <p className="text-red-400 text-sm">{error}</p>}
+                    {error && <p className="text-[var(--data-red)] text-sm">{error}</p>}
 
                     <div className="flex justify-end gap-3 pb-2 pt-4">
                         <Button type="button" variant="ghost" onClick={onClose} className="hover:bg-[var(--bg-raised)] hover:text-[var(--text-primary)]">

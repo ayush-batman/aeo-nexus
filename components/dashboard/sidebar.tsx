@@ -298,7 +298,7 @@ export function Sidebar() {
                                 {showNewBrand ? (
                                     <div className="p-2 space-y-2">
                                         {createError && (
-                                            <div className="p-2 text-xs text-red-500 bg-red-500/10 rounded border border-red-500/20">
+                                            <div className="p-2 text-xs text-[var(--data-red)] bg-[var(--data-red)]/10 rounded border border-[var(--data-red)]/25">
                                                 {createError}
                                             </div>
                                         )}

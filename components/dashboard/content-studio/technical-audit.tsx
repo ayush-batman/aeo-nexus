@@ -70,13 +70,13 @@ export function TechnicalAudit() {
             {result && (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
                     {/* Overall Status */}
-                    <Card className={result.aiBotsBlocked ? "border-red-500/50 bg-red-500/5" : "border-green-500/50 bg-green-500/5"}>
+                    <Card className={result.aiBotsBlocked ? "border-[var(--data-red)]/40 bg-[var(--data-red)]/5" : "border-[var(--data-green)]/40 bg-[var(--data-green)]/5"}>
                         <CardHeader>
                             <CardTitle className="flex items-center gap-2">
-                                {result.aiBotsBlocked ? <ShieldAlert className="w-6 h-6 text-red-500" /> : <ShieldCheck className="w-6 h-6 text-green-500" />}
+                                {result.aiBotsBlocked ? <ShieldAlert className="w-6 h-6 text-[var(--data-red)]" /> : <ShieldCheck className="w-6 h-6 text-[var(--data-green)]" />}
                                 {result.aiBotsBlocked ? "AI Crawlers Blocked!" : "AI Crawlers Allowed"}
                             </CardTitle>
-                            <CardDescription className={result.aiBotsBlocked ? "text-red-400/80" : "text-green-400/80"}>
+                            <CardDescription className={result.aiBotsBlocked ? "text-[var(--data-red)]/80" : "text-[var(--data-green)]/80"}>
                                 {result.aiBotsBlocked
                                     ? "Your site configuration is preventing AI engines from reading your content. This hurts your Aelo visibility."
                                     : "Great! Your site is technically accessible to major AI engines."}
@@ -103,9 +103,9 @@ export function TechnicalAudit() {
                                     <div key={bot.bot} className="flex items-center justify-between text-sm py-1">
                                         <span className="text-[var(--text-secondary)]">{bot.bot}</span>
                                         {bot.allowed ? (
-                                            <span className="flex items-center text-green-400 text-xs font-medium"><CheckCircle className="w-3 h-3 mr-1" /> Allowed</span>
+                                            <span className="flex items-center text-[var(--data-green)] text-xs font-medium"><CheckCircle className="w-3 h-3 mr-1" /> Allowed</span>
                                         ) : (
-                                            <span className="flex items-center text-red-400 text-xs font-medium"><XCircle className="w-3 h-3 mr-1" /> Blocked</span>
+                                            <span className="flex items-center text-[var(--data-red)] text-xs font-medium"><XCircle className="w-3 h-3 mr-1" /> Blocked</span>
                                         )}
                                     </div>
                                 ))}

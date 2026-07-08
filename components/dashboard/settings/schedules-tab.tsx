@@ -213,7 +213,7 @@ export function SchedulesTab({ workspaceId }: SchedulesTabProps) {
                                             </Badge>
                                             <span className={cn(
                                                 "w-2 h-2 rounded-full",
-                                                schedule.status === 'active' ? "bg-green-500" : "bg-yellow-500"
+                                                schedule.status === 'active' ? "bg-[var(--data-green)]" : "bg-[var(--data-amber)]"
                                             )} title={`Status: ${schedule.status}`} />
                                         </div>
                                         <div className="flex items-center gap-4 text-xs text-[var(--text-ghost)]">
@@ -232,7 +232,7 @@ export function SchedulesTab({ workspaceId }: SchedulesTabProps) {
                                         <Button
                                             variant="ghost"
                                             size="icon"
-                                            className="h-8 w-8 text-[var(--text-ghost)] hover:text-red-400"
+                                            className="h-8 w-8 text-[var(--text-ghost)] hover:text-[var(--data-red)]"
                                             onClick={() => handleDelete(schedule.id)}
                                         >
                                             <Trash2 className="w-4 h-4" />

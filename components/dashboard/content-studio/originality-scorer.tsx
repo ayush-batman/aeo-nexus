@@ -58,8 +58,8 @@ export function OriginalityScorer() {
 
     const getScoreColor = (score: number) => {
         if (score >= 80) return "text-emerald-400";
-        if (score >= 50) return "text-yellow-400";
-        return "text-red-400";
+        if (score >= 50) return "text-[var(--data-amber)]";
+        return "text-[var(--data-red)]";
     };
 
     return (
@@ -125,7 +125,7 @@ export function OriginalityScorer() {
                     </Button>
 
                     {error && (
-                        <div className="p-3 text-sm rounded-lg bg-red-500/10 border border-red-500/20 text-red-400">
+                        <div className="p-3 text-sm rounded-lg bg-[var(--data-red)]/10 border border-[var(--data-red)]/25 text-[var(--data-red)]">
                             {error}
                         </div>
                     )}

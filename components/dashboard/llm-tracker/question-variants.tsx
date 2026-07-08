@@ -78,7 +78,7 @@ export function QuestionVariants() {
                     </div>
 
                     {error && (
-                        <div className="flex items-center gap-2 text-red-400 text-sm mt-2 p-3 bg-red-500/10 rounded-lg">
+                        <div className="flex items-center gap-2 text-[var(--data-red)] text-sm mt-2 p-3 bg-[var(--data-red)]/10 rounded-lg">
                             <AlertCircle className="w-4 h-4" />
                             {error}
                         </div>

@@ -80,13 +80,13 @@ export function CitationMap() {
 
     if (error) {
         return (
-            <Card className="border-red-500/20 bg-red-500/5">
-                <CardContent className="p-6 flex items-center justify-between text-red-400">
+            <Card className="border-[var(--data-red)]/25 bg-[var(--data-red)]/5">
+                <CardContent className="p-6 flex items-center justify-between text-[var(--data-red)]">
                     <div className="flex items-center gap-3">
                         <AlertCircle className="w-5 h-5" />
                         <p>{error}</p>
                     </div>
-                    <Button variant="outline" size="sm" onClick={fetchData} className="border-red-500/30 hover:bg-red-500/10">
+                    <Button variant="outline" size="sm" onClick={fetchData} className="border-[var(--data-red)]/30 hover:bg-[var(--data-red)]/10">
                         Retry
                     </Button>
                 </CardContent>
@@ -144,7 +144,7 @@ export function CitationMap() {
                             <div className="bg-[var(--bg-raised)] p-4 rounded-xl border border-[var(--border-default)]">
                                 <h4 className="text-sm font-medium text-[var(--text-secondary)] mb-3 flex items-center justify-between">
                                     Owned Assets
-                                    <Badge variant="outline" className="bg-green-500/10 text-green-400 border-green-500/20">{data.classification.owned.length}</Badge>
+                                    <Badge variant="outline" className="bg-[var(--data-green)]/10 text-[var(--data-green)] border-[var(--data-green)]/25">{data.classification.owned.length}</Badge>
                                 </h4>
                                 <div className="space-y-2">
                                     {data.classification.owned.length > 0 ? (
@@ -228,7 +228,7 @@ export function CitationMap() {
                     {/* Insights & Recommendations */}
                     <div className="bg-[var(--accent-muted)] rounded-2xl p-6 border border-[var(--accent-base)]/25">
                         <h3 className="font-semibold text-lg flex items-center gap-2 mb-4">
-                            <Lightbulb className="w-5 h-5 text-yellow-400" />
+                            <Lightbulb className="w-5 h-5 text-[var(--data-amber)]" />
                             Action Plan
                         </h3>
 
@@ -237,7 +237,7 @@ export function CitationMap() {
                                 <h4 className="text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wider mb-2">Missing Content Types</h4>
                                 <div className="flex flex-wrap gap-2">
                                     {data.gapAnalysis.missingTypes.map((type, i) => (
-                                        <Badge key={i} variant="outline" className="border-red-500/30 text-red-400 bg-red-500/5">
+                                        <Badge key={i} variant="outline" className="border-[var(--data-red)]/30 text-[var(--data-red)] bg-[var(--data-red)]/5">
                                             {type}
                                         </Badge>
                                     ))}

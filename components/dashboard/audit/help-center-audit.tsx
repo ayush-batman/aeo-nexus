@@ -95,7 +95,7 @@ export function HelpCenterAudit() {
                     </div>
 
                     {error && (
-                        <div className="mt-4 p-4 rounded-lg bg-red-500/10 border border-red-500/30 text-red-400 flex items-start gap-3">
+                        <div className="mt-4 p-4 rounded-lg bg-[var(--data-red)]/10 border border-[var(--data-red)]/30 text-[var(--data-red)] flex items-start gap-3">
                             <AlertCircle className="w-5 h-5 shrink-0" />
                             <p className="text-sm">{error}</p>
                         </div>
@@ -186,7 +186,7 @@ export function HelpCenterAudit() {
                                         ))}
                                     </ul>
                                 ) : (
-                                    <p className="text-xs text-green-400">No critical issues detected.</p>
+                                    <p className="text-xs text-[var(--data-green)]">No critical issues detected.</p>
                                 )}
                             </CardContent>
                         </Card>
@@ -204,7 +204,7 @@ export function HelpCenterAudit() {
                                         <Badge key={i} variant="outline" className="text-xs bg-[var(--bg-base)]">{topic}</Badge>
                                     ))}
                                     {result.findings.missingTopics.length === 0 && (
-                                        <p className="text-xs text-green-400">Content coverage looks comprehensive.</p>
+                                        <p className="text-xs text-[var(--data-green)]">Content coverage looks comprehensive.</p>
                                     )}
                                 </div>
                             </CardContent>
