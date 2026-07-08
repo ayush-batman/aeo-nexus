@@ -81,11 +81,11 @@ export default function SignupPage() {
                         Create your account
                     </h1>
                     <p className="text-sm text-[var(--text-secondary)] text-center mb-8">
-                        Start your 14-day free trial
+                        No card. First scan in under a minute.
                     </p>
 
                     {error && (
-                        <div className="mb-4 p-3 rounded-md bg-[var(--data-red-muted)] border border-red-500/20 flex items-center gap-2 text-red-400 text-sm">
+                        <div className="mb-4 p-3 rounded-md bg-[var(--data-red-muted)] border border-[var(--data-red)]/25 flex items-center gap-2 text-[var(--data-red)] text-sm">
                             <AlertCircle className="w-4 h-4" />
                             {error}
                         </div>
