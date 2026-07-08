@@ -154,7 +154,7 @@ export default function ChangelogPage() {
                                 <span className="text-[11px] font-mono text-zinc-500">v{e.version}</span>
                                 <span className={`ml-auto text-[10px] font-mono uppercase tracking-[0.14em] px-1.5 py-0.5 rounded-sm border ${
                                     e.kind === "feature" ? "border-[var(--accent-base)]/30 text-[var(--accent-base)]" :
-                                    e.kind === "fix"     ? "border-red-500/30 text-red-400" :
+                                    e.kind === "fix"     ? "border-[var(--data-red)]/30 text-[var(--data-red)]" :
                                     e.kind === "polish"  ? "border-cyan-500/30 text-cyan-400" :
                                                            "border-zinc-500/30 text-zinc-400"
                                 }`}>

@@ -107,7 +107,7 @@ export async function evaluateAlerts(
             await createNotification(
                 workspaceId,
                 'zero_visibility',
-                '⚠️ Zero Visibility Alert',
+                'Zero Visibility Alert',
                 `Your brand was not mentioned in any of the ${currentScans.length} scans just completed.`,
                 { scanCount: currentScans.length }
             );

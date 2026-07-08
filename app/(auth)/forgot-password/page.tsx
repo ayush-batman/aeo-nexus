@@ -56,8 +56,8 @@ export default function ForgotPasswordPage() {
                 <div className="rounded-xl border border-[var(--border-default)] bg-[var(--bg-surface)] p-8">
                     {success ? (
                         <div className="text-center">
-                            <div className="w-16 h-16 rounded-full bg-green-500/10 flex items-center justify-center mx-auto mb-4">
-                                <CheckCircle className="w-8 h-8 text-green-400" />
+                            <div className="w-16 h-16 rounded-full bg-[var(--data-green-muted)] flex items-center justify-center mx-auto mb-4">
+                                <CheckCircle className="w-8 h-8 text-[var(--data-green)]" />
                             </div>
                             <h1 className="text-2xl font-semibold text-[var(--text-primary)] mb-2">
                                 Check your email
@@ -82,7 +82,7 @@ export default function ForgotPasswordPage() {
                             </p>
 
                             {error && (
-                                <div className="mb-4 p-3 rounded-lg bg-red-500/10 border border-red-500/20 flex items-center gap-2 text-red-400 text-sm">
+                                <div className="mb-4 p-3 rounded-lg bg-[var(--data-red-muted)] border border-[var(--data-red)]/25 flex items-center gap-2 text-[var(--data-red)] text-sm">
                                     <AlertCircle className="w-4 h-4" />
                                     {error}
                                 </div>

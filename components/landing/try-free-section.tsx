@@ -108,7 +108,7 @@ export function TryFreeSection() {
 
                 {/* Error State */}
                 {error && (
-                    <div className="p-4 rounded-lg bg-red-500/10 border border-red-500/30 text-red-400 mb-6">
+                    <div className="p-4 rounded-lg bg-[var(--data-red-muted)] border border-[var(--data-red)]/30 text-[var(--data-red)] mb-6">
                         {error}
                     </div>
                 )}
@@ -129,9 +129,9 @@ export function TryFreeSection() {
                             <div className="p-4 rounded-lg bg-[var(--bg-raised)] text-center">
                                 <div className="flex items-center justify-center mb-2">
                                     {result.mentioned ? (
-                                        <CheckCircle className="w-6 h-6 text-green-400" />
+                                        <CheckCircle className="w-6 h-6 text-[var(--data-green)]" />
                                     ) : (
-                                        <XCircle className="w-6 h-6 text-red-400" />
+                                        <XCircle className="w-6 h-6 text-[var(--data-red)]" />
                                     )}
                                 </div>
                                 <p className="text-sm text-[var(--text-secondary)]">Mentioned</p>

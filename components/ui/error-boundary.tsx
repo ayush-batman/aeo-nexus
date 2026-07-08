@@ -34,8 +34,8 @@ export class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoun
 
             return (
                 <div className="flex flex-col items-center justify-center min-h-[400px] p-8">
-                    <div className="rounded-2xl border border-red-500/20 bg-red-500/5 p-8 max-w-md text-center">
-                        <AlertCircle className="w-12 h-12 text-red-400 mx-auto mb-4" />
+                    <div className="rounded-2xl border border-[var(--data-red)]/25 bg-[var(--data-red-muted)] p-8 max-w-md text-center">
+                        <AlertCircle className="w-12 h-12 text-[var(--data-red)] mx-auto mb-4" />
                         <h3 className="text-lg font-semibold text-[var(--text-primary)] mb-2">
                             Something went wrong
                         </h3>

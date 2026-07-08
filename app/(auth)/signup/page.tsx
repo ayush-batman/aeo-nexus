@@ -91,7 +91,7 @@ export default function SignupPage() {
                         </div>
                     )}
                     {success && (
-                        <div className="mb-4 p-3 rounded-lg bg-green-500/10 border border-green-500/20 text-green-400 text-sm">
+                        <div className="mb-4 p-3 rounded-lg bg-[var(--data-green-muted)] border border-[var(--data-green)]/25 text-[var(--data-green)] text-sm">
                             {success}
                         </div>
                     )}

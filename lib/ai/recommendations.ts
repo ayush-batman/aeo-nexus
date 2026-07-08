@@ -136,7 +136,7 @@ export function generateRecommendations(
             action: 'Keep your content fresh and updated. Monitor competitors entering these queries. Set up scheduled scans to track changes.',
             link: '/dashboard/llm-tracker',
             linkLabel: 'Schedule Scans',
-            metric: `Position #${Math.round(avgPosition)} ✅`,
+            metric: `Position #${Math.round(avgPosition)}`,
         });
     }
 
@@ -202,7 +202,7 @@ export function generateRecommendations(
             title: `Your site is being cited (${ownCitations.length} citation${ownCitations.length > 1 ? 's' : ''})`,
             description: `LLMs are citing your website as a source — this is a strong signal of authority. Keep building on this.`,
             action: 'Double down on the content types that are getting cited. Create more content in similar formats and topics.',
-            metric: `${ownCitations.length} citation(s) ✅`,
+            metric: `${ownCitations.length} citation(s)`,
         });
     }
 
