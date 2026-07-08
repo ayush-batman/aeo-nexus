@@ -29,7 +29,7 @@ const TIERS: Tier[] = [
         tagline: "Know where you stand.",
         price: "₹4,999",
         periodNote: "/mo · billed monthly",
-        ctaLabel: "Start free · 7 days",
+        ctaLabel: "Start free · no card",
         ctaHref: "/signup?plan=radar",
         features: [
             "Weekly scans across ChatGPT, Gemini, Claude, Perplexity",
@@ -47,7 +47,7 @@ const TIERS: Tier[] = [
         tagline: "Move the numbers.",
         price: "₹14,999",
         periodNote: "/mo · billed monthly",
-        ctaLabel: "Start free · 7 days",
+        ctaLabel: "Start free · no card",
         ctaHref: "/signup?plan=command",
         highlight: true,
         features: [
@@ -105,7 +105,7 @@ const FAQ: { q: string; a: string }[] = [
     },
     {
         q: "Can I try before I pay?",
-        a: "Yes. Radar and Command have a 7-day free trial. No card required. Your first scan runs in under a minute.",
+        a: "Yes. Sign up with no credit card, add your brand, and run your first scan — Aelo shows you what you'd measure and where the gaps are. Upgrade only when you're ready to run scheduled scans, receive alerts, or unlock the intervention receipts.",
     },
 ];
 
@@ -203,7 +203,7 @@ export default function PricingPage() {
                         Try the loop. See the receipt.
                     </h2>
                     <p className="text-zinc-400 mb-8">
-                        Radar and Command include a 7-day free trial. No card, no commitment.
+                        Start with no card. Your first scan runs in under a minute. Upgrade when you&apos;re ready.
                     </p>
                     <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
                         <Link
