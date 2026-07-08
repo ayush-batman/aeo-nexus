@@ -152,14 +152,14 @@ function LoginForm() {
                         <div className="mt-6 pt-6 border-t border-[var(--border-default)]">
                             <Button
                                 variant="outline"
-                                className="w-full border-amber-500/50 text-amber-500 hover:bg-amber-500/10 hover:text-amber-400"
+                                className="w-full border-[var(--data-amber)]/40 text-[var(--data-amber)] hover:bg-[var(--data-amber-muted)] hover:text-[var(--data-amber)] font-mono text-[11px] uppercase tracking-[0.14em]"
                                 onClick={() => {
                                     document.cookie = "dev-auth-bypass=true; path=/; max-age=86400";
                                     router.push("/dashboard");
                                 }}
                                 type="button"
                             >
-                                ⚠️ Dev Bypass Login
+                                Dev bypass · localhost only
                             </Button>
                         </div>
                     )}
