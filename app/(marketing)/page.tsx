@@ -10,6 +10,7 @@ import {
     CheckCircle2,
 } from "lucide-react";
 import { NewsletterSubscribe } from "@/components/marketing/newsletter-subscribe";
+import { FreeScanWidget } from "@/components/marketing/free-scan-widget";
 
 // ============================================================================
 // Landing — Aelo
@@ -41,24 +42,29 @@ export default function LandingPage() {
                         computed from a real scan. Nothing is fabricated.
                     </p>
 
-                    <div className="flex flex-col sm:flex-row items-center gap-3 w-full sm:w-auto">
+                    {/* Live free scan — the demo IS the pitch */}
+                    <div className="w-full mb-6">
+                        <FreeScanWidget />
+                    </div>
+
+                    <div className="flex flex-col sm:flex-row items-center gap-3">
                         <Link
                             href="/signup"
-                            className="w-full sm:w-auto text-[15px] bg-[var(--accent-base)] text-[var(--text-on-accent)] px-6 py-3 rounded-md hover:bg-[var(--accent-hover)] transition-colors font-medium flex items-center justify-center gap-2"
+                            className="text-[13px] text-zinc-400 hover:text-white transition-colors"
                         >
-                            Start free
-                            <ArrowRight className="w-4 h-4" />
+                            Skip demo · sign up →
                         </Link>
+                        <span className="text-zinc-700 hidden sm:inline">·</span>
                         <Link
                             href="/product"
-                            className="w-full sm:w-auto text-[15px] bg-transparent text-white border border-white/15 px-6 py-3 rounded-md hover:bg-white/[0.04] transition-colors font-medium flex items-center justify-center"
+                            className="text-[13px] text-zinc-400 hover:text-white transition-colors"
                         >
-                            See how it works
+                            See how the loop works
                         </Link>
                     </div>
 
                     <p className="text-[12px] text-zinc-600 mt-6 font-mono">
-                        No credit card · Priced in ₹ from ₹4,999/mo · Razorpay + Stripe
+                        Free tier is real. 3 scans per week, no card required.
                     </p>
                 </div>
             </section>
