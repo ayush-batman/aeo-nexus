@@ -1,0 +1,8 @@
+<svg width="512" height="512" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-label="Aelo mark">
+  <title>Aelo</title>
+  <!-- Aperture prism: Sage apex + Magician answer line -->
+  <path d="M12 2.75 L21.5 20.75 L2.5 20.75 Z"
+        stroke="#FFFFFF" stroke-width="1.5" stroke-linejoin="round" fill="none"/>
+  <line x1="6.65" y1="15.75" x2="17.35" y2="15.75"
+        stroke="#E5D3A6" stroke-width="1.6" stroke-linecap="round"/>
+</svg>

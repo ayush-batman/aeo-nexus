@@ -44,6 +44,14 @@ export const metadata: Metadata = {
       "max-snippet":       -1,
     },
   },
+  icons: {
+    icon: [
+      { url: "/brand/favicon.svg", type: "image/svg+xml" },
+    ],
+    apple: [
+      { url: "/brand/social-square.svg", sizes: "1024x1024", type: "image/svg+xml" },
+    ],
+  },
 };
 
 export default function RootLayout({

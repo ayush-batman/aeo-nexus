@@ -1,0 +1,15 @@
+<svg width="360" height="120" viewBox="0 0 360 120" fill="none" xmlns="http://www.w3.org/2000/svg" aria-label="Aelo wordmark (mono white)">
+  <title>Aelo</title>
+  <g transform="translate(30, 32) scale(2.4)">
+    <path d="M12 2.75 L21.5 20.75 L2.5 20.75 Z"
+          stroke="#FFFFFF" stroke-width="1.5" stroke-linejoin="round" fill="none"/>
+    <line x1="6.65" y1="15.75" x2="17.35" y2="15.75"
+          stroke="#FFFFFF" stroke-width="1.6" stroke-linecap="round"/>
+  </g>
+  <text x="115" y="76"
+        font-family="Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif"
+        font-size="60"
+        font-weight="500"
+        letter-spacing="-1.2"
+        fill="#FFFFFF">aelo</text>
+</svg>

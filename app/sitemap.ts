@@ -40,6 +40,7 @@ const routes: {
     { path: '/changelog',    priority: 0.7,  changeFrequency: 'weekly'  },
     { path: '/customers',    priority: 0.7,  changeFrequency: 'monthly' },
     { path: '/about',        priority: 0.7,  changeFrequency: 'monthly' },
+    { path: '/brand',        priority: 0.6,  changeFrequency: 'yearly' },
     { path: '/contact',      priority: 0.7,  changeFrequency: 'yearly'  },
 
     // Legal

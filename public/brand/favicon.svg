@@ -1,0 +1,8 @@
+<svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Favicon — tuned for small sizes: slightly thicker strokes so it stays legible at 16px -->
+  <rect width="24" height="24" fill="#0A0A0B" rx="4"/>
+  <path d="M12 4 L20.5 20 L3.5 20 Z"
+        stroke="#FFFFFF" stroke-width="1.75" stroke-linejoin="round" fill="none"/>
+  <line x1="7.2" y1="15.5" x2="16.8" y2="15.5"
+        stroke="#E5D3A6" stroke-width="1.9" stroke-linecap="round"/>
+</svg>

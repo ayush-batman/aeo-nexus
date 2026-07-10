@@ -31,6 +31,7 @@ const COLS: { title: string; links: { href: string; label: string; external?: bo
             { href: "/about",       label: "About" },
             { href: "/manifesto",   label: "Manifesto" },
             { href: "/methodology", label: "Methodology" },
+            { href: "/brand",       label: "Brand · Press" },
             { href: "/customers",   label: "Customers" },
             { href: "/contact",     label: "Contact" },
         ],

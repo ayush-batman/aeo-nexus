@@ -1,0 +1,12 @@
+<svg width="1024" height="1024" viewBox="0 0 1024 1024" fill="none" xmlns="http://www.w3.org/2000/svg" aria-label="Aelo social square">
+  <rect width="1024" height="1024" fill="#0A0A0B"/>
+  <g transform="translate(342, 342)">
+    <path d="M170 20 L320 300 L20 300 Z"
+          stroke="#FFFFFF" stroke-width="18" stroke-linejoin="round" fill="none"/>
+    <line x1="87" y1="223" x2="253" y2="223"
+          stroke="#E5D3A6" stroke-width="20" stroke-linecap="round"/>
+  </g>
+  <text x="512" y="800" text-anchor="middle"
+        font-family="Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif"
+        font-size="110" font-weight="500" letter-spacing="-2.4" fill="#FFFFFF">aelo</text>
+</svg>
