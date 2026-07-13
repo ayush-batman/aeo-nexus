@@ -24,6 +24,7 @@ import {
     Plus,
     Check,
     TrendingDown,
+    Grid3x3,
 } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 import { createClient } from "@/lib/supabase/client";
@@ -49,6 +50,7 @@ const navGroups = [
             { name: "LLM Tracker", href: "/dashboard/llm-tracker", icon: Search },
             { name: "Agent Auditor", href: "/dashboard/audit", icon: Sparkles },
             { name: "Battle Arena", href: "/dashboard/battle", icon: Swords },
+            { name: "Positioning", href: "/dashboard/positioning", icon: Grid3x3 },
             { name: "Question Mine", href: "/dashboard/question-mine", icon: HelpCircle },
             { name: "Prompt Research", href: "/dashboard/prompts", icon: Lightbulb },
         ],
