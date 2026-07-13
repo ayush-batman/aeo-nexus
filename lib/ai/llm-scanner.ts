@@ -82,13 +82,19 @@ async function scanWithOpenAI(prompt: string): Promise<string> {
     const { client, model } = getOpenAIClient('default');
 
     const isReasoning = /^gpt-5|^o[0-9]/.test(model);
-    const completion = await client.chat.completions.create({
+    const params: Record<string, unknown> = {
         model,
         messages: [{ role: 'user', content: prompt }],
-        ...(isReasoning
-            ? { max_completion_tokens: 4000, reasoning_effort: 'minimal' }
-            : { max_tokens: 1024 }),
-    } as Parameters<typeof client.chat.completions.create>[0]);
+    };
+    if (isReasoning) {
+        params.max_completion_tokens = 4000;
+        params.reasoning_effort = 'minimal';
+    } else {
+        params.max_tokens = 1024;
+    }
+    const completion = await client.chat.completions.create(
+        params as Parameters<typeof client.chat.completions.create>[0] & { stream?: false }
+    );
 
     return completion.choices[0]?.message?.content || '';
 }

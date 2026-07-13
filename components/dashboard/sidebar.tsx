@@ -23,6 +23,7 @@ import {
     ChevronDown,
     Plus,
     Check,
+    TrendingDown,
 } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 import { createClient } from "@/lib/supabase/client";
@@ -65,6 +66,7 @@ const navGroups = [
         label: "Measure",
         items: [
             { name: "Analytics", href: "/dashboard/analytics", icon: BarChart3 },
+            { name: "Sentiment Drift", href: "/dashboard/drift", icon: TrendingDown },
             { name: "Attribution", href: "/dashboard/attribution", icon: Users },
         ],
     },
