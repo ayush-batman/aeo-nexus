@@ -1,6 +1,7 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import OpenAI from 'openai';
 import { analyzeWithAI, findBrandMentions, findListPosition, parseListItems } from './ai-analyzer';
+import { getOpenAIClient, isOpenAIProviderAvailable } from './openai-client';
 
 export type LLMPlatform = 'chatgpt' | 'perplexity' | 'claude' | 'gemini' | 'google_ai' | 'google_ai_overview' | 'bing_copilot' | 'mock';
 
@@ -74,17 +75,20 @@ async function scanWithGemini(prompt: string): Promise<string> {
     return result.response.text();
 }
 
-// Scan with OpenAI (ChatGPT)
+// Scan with OpenAI (ChatGPT) — routes through Azure OpenAI when
+// AZURE_OPENAI_API_KEY + AZURE_OPENAI_ENDPOINT are set (Founders Hub),
+// falls back to direct OpenAI when only OPENAI_API_KEY is set.
 async function scanWithOpenAI(prompt: string): Promise<string> {
-    const apiKey = process.env.OPENAI_API_KEY;
-    if (!apiKey) throw new Error('OPENAI_API_KEY not configured');
+    const { client, model } = getOpenAIClient('default');
 
-    const openai = new OpenAI({ apiKey });
-
-    const completion = await openai.chat.completions.create({
-        model: 'gpt-4o-mini',
+    const isReasoning = /^gpt-5|^o[0-9]/.test(model);
+    const completion = await client.chat.completions.create({
+        model,
         messages: [{ role: 'user', content: prompt }],
-    });
+        ...(isReasoning
+            ? { max_completion_tokens: 4000, reasoning_effort: 'minimal' }
+            : { max_tokens: 1024 }),
+    } as Parameters<typeof client.chat.completions.create>[0]);
 
     return completion.choices[0]?.message?.content || '';
 }
@@ -407,8 +411,8 @@ export function getAvailablePlatforms(): { platform: LLMPlatform; available: boo
         },
         {
             platform: 'chatgpt',
-            available: !!process.env.OPENAI_API_KEY,
-            reason: !process.env.OPENAI_API_KEY ? 'OPENAI_API_KEY not set' : undefined,
+            available: isOpenAIProviderAvailable(),
+            reason: !isOpenAIProviderAvailable() ? 'No OpenAI provider configured (Azure OpenAI or direct OpenAI)' : undefined,
         },
         {
             platform: 'claude',
@@ -464,12 +468,11 @@ export async function generatePrompts(
             return JSON.parse(text);
         }
 
-        // Fallback to OpenAI if Gemini not available
-        const openAiKey = process.env.OPENAI_API_KEY;
-        if (openAiKey) {
-            const openai = new OpenAI({ apiKey: openAiKey });
-            const completion = await openai.chat.completions.create({
-                model: 'gpt-4o-mini',
+        // Fallback to OpenAI (via Azure or direct) if Gemini isn't set.
+        if (isOpenAIProviderAvailable()) {
+            const { client, model } = getOpenAIClient('default');
+            const completion = await client.chat.completions.create({
+                model,
                 messages: [{ role: 'user', content: prompt }],
                 response_format: { type: "json_object" }
             });
