@@ -114,6 +114,19 @@ export default function OnboardingPage() {
         getContext();
     }, []);
 
+    // Auto-fire the first scan the moment step 3 opens — activation is
+    // higher when the receipt is already there when the user arrives.
+    // The manual "Run First Scan" button stays as a fallback if the
+    // auto-scan errors out (e.g. no LLM keys), so we only trigger once.
+    const [autoScanTried, setAutoScanTried] = useState(false);
+    useEffect(() => {
+        if (currentStep === 3 && brandName && workspaceId && scanResults.length === 0 && !scanning && !autoScanTried) {
+            setAutoScanTried(true);
+            runFirstScan();
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [currentStep, brandName, workspaceId]);
+
     async function handleSaveBrand() {
         if (!brandName || !workspaceId) return;
         setLoading(true);
@@ -398,24 +411,25 @@ export default function OnboardingPage() {
                             {scanResults.length === 0 ? (
                                 <div className="text-center py-8">
                                     <div className="w-20 h-20 rounded-full bg-[var(--accent-muted)] flex items-center justify-center mx-auto mb-6">
-                                        <Sparkles className="w-10 h-10 text-[var(--accent-base)]" />
+                                        {scanning ? (
+                                            <Loader2 className="w-10 h-10 text-[var(--accent-base)] animate-spin" />
+                                        ) : (
+                                            <Sparkles className="w-10 h-10 text-[var(--accent-base)]" />
+                                        )}
                                     </div>
                                     <p className="text-[var(--text-secondary)] mb-6">
-                                        Ready to scan &quot;{brandName}&quot; on the LLMs Aelo has configured?
+                                        {scanning
+                                            ? <>Scanning ChatGPT, Gemini, Claude and Perplexity for &ldquo;{brandName}&rdquo;… this takes ~15 seconds.</>
+                                            : error
+                                                ? <>The auto-scan hit a snag. Try again — the receipt&apos;s worth the wait.</>
+                                                : <>Getting your first receipt ready…</>}
                                     </p>
-                                    <Button size="lg" onClick={runFirstScan} disabled={scanning}>
-                                        {scanning ? (
-                                            <>
-                                                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                                                Scanning AI platforms...
-                                            </>
-                                        ) : (
-                                            <>
-                                                <Search className="w-4 h-4 mr-2" />
-                                                Run First Scan
-                                            </>
-                                        )}
-                                    </Button>
+                                    {!scanning && (
+                                        <Button size="lg" onClick={runFirstScan} disabled={scanning}>
+                                            <Search className="w-4 h-4 mr-2" />
+                                            {error ? 'Retry scan' : 'Run scan'}
+                                        </Button>
+                                    )}
                                     <div className="mt-4">
                                         <button
                                             onClick={() => setCurrentStep(4)}
