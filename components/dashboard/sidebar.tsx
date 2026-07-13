@@ -25,6 +25,7 @@ import {
     Check,
     TrendingDown,
     Grid3x3,
+    ShieldCheck,
 } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 import { createClient } from "@/lib/supabase/client";
@@ -76,6 +77,7 @@ const navGroups = [
         // The closed-loop / PROOF layer. This is the class-apart page.
         label: "Prove",
         items: [
+            { name: "Accuracy Verdict", href: "/dashboard/accuracy", icon: ShieldCheck },
             { name: "Interventions", href: "/dashboard/interventions", icon: Check },
         ],
     },
