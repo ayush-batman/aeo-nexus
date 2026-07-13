@@ -4,8 +4,10 @@ import { useState, useEffect, useRef } from "react";
 import {
     Bell, Search, ChevronDown, X,
     TrendingDown, Zap, Flame, Sparkles, Link2, AlertTriangle, Bell as BellDot,
+    ShieldAlert,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 interface HeaderProps {
     title: string;
@@ -87,6 +89,8 @@ export function Header({ title, description }: HeaderProps) {
         new_citation:        Sparkles,
         citation_lost:       Link2,
         negative_sentiment:  AlertTriangle,
+        sentiment_drift:     TrendingDown,
+        accuracy_alert:      ShieldAlert,
     };
     const notifTypeColor: Record<string, string> = {
         visibility_drop:     "text-[var(--data-red)]",
@@ -95,7 +99,36 @@ export function Header({ title, description }: HeaderProps) {
         new_citation:        "text-[var(--accent-base)]",
         citation_lost:       "text-[var(--text-tertiary)]",
         negative_sentiment:  "text-[var(--data-red)]",
+        sentiment_drift:     "text-[var(--data-amber)]",
+        accuracy_alert:      "text-[var(--data-red)]",
     };
+    const notifTypeHref: Record<string, string> = {
+        sentiment_drift:     "/dashboard/drift",
+        accuracy_alert:      "/dashboard/accuracy",
+        visibility_drop:     "/dashboard/llm-tracker",
+        competitor_overtake: "/dashboard/battle",
+        hot_thread:          "/dashboard/forum-hub",
+        new_citation:        "/dashboard/attribution",
+        citation_lost:       "/dashboard/attribution",
+        negative_sentiment:  "/dashboard/drift",
+    };
+    const router = useRouter();
+    async function openNotification(n: Notification) {
+        if (!n.read) {
+            await fetch("/api/alerts/notifications", {
+                method: "PATCH",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ ids: [n.id] }),
+            }).catch(() => {});
+            setNotifications(prev => prev.map(x => x.id === n.id ? { ...x, read: true } : x));
+            setUnreadCount(prev => Math.max(0, prev - 1));
+        }
+        const href = notifTypeHref[n.type];
+        if (href) {
+            setShowDropdown(false);
+            router.push(href);
+        }
+    }
 
     return (
         <header className="h-14 sticky top-0 z-30 bg-[rgba(0,0,0,0.8)] border-b border-[var(--border-subtle)] backdrop-blur-xl">
@@ -181,9 +214,11 @@ export function Header({ title, description }: HeaderProps) {
                                         notifications.slice(0, 10).map((n) => (
                                             <div
                                                 key={n.id}
+                                                onClick={() => openNotification(n)}
                                                 className={`px-4 py-3 transition-colors cursor-pointer border-b border-[var(--border-default)] last:border-0 hover:bg-[rgba(255,255,255,0.03)] ${
-                                                    !n.read ? "bg-[rgba(124,92,252,0.05)] border-l-2 border-l-[var(--accent-base)]" : ""
+                                                    !n.read ? "border-l-2 border-l-[var(--accent-base)]" : ""
                                                 }`}
+                                                style={!n.read ? { backgroundColor: 'color-mix(in srgb, var(--accent-base) 6%, transparent)' } : undefined}
                                             >
                                                 <div className="flex items-start gap-3">
                                                     <span className={`mt-0.5 ${notifTypeColor[n.type] ?? "text-[var(--text-tertiary)]"}`}>

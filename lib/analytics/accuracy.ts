@@ -76,6 +76,32 @@ export async function regenerateAccuracy(params: {
         claimCount += rows.length;
     }
 
+    // Fan out an accuracy_alert notification if the batch surfaced any
+    // 'false' verdicts. Opt-out via alert_preferences.alert_type = 'accuracy_alert'.
+    const { count: falseCount } = await db
+        .from('accuracy_claims')
+        .select('id', { count: 'exact', head: true })
+        .eq('workspace_id', params.workspaceId)
+        .eq('verdict', 'false');
+
+    if (falseCount && falseCount > 0) {
+        const { data: pref } = await db
+            .from('alert_preferences')
+            .select('enabled')
+            .eq('workspace_id', params.workspaceId)
+            .eq('alert_type', 'accuracy_alert')
+            .maybeSingle();
+        if (!pref || pref.enabled !== false) {
+            await db.from('notifications').insert({
+                workspace_id: params.workspaceId,
+                type:  'accuracy_alert',
+                title: `${falseCount} false claim${falseCount === 1 ? '' : 's'} detected`,
+                message: `LLMs are stating claims about you that your own site contradicts. See the receipts.`,
+                metadata: { false_count: falseCount },
+            });
+        }
+    }
+
     return { processed, claims: claimCount };
 }
 
