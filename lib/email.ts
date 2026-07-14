@@ -4,12 +4,21 @@ import SentimentDriftEmail from '@/components/emails/SentimentDriftEmail';
 import type { DriftAlert } from '@/lib/analytics/sentiment-drift';
 import * as React from 'react';
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+// Lazy init: constructing Resend without an API key throws, and Next's
+// build-time page-data collection evaluates this module before env vars
+// exist on fresh deploys. Never instantiate at module scope.
+let _resend: Resend | null = null;
+function getResend(): Resend | null {
+    if (!process.env.RESEND_API_KEY) return null;
+    if (!_resend) _resend = new Resend(process.env.RESEND_API_KEY);
+    return _resend;
+}
 
 const FROM_EMAIL = 'Aelo <welcome@aeonexus.com>'; // Replace with your verified domain when going to production
 
 export async function sendWelcomeEmail(to: string, name?: string) {
-    if (!process.env.RESEND_API_KEY) {
+    const resend = getResend();
+    if (!resend) {
         console.warn('RESEND_API_KEY is not set. Skipping welcome email to:', to);
         return;
     }
@@ -36,7 +45,8 @@ export async function sendWelcomeEmail(to: string, name?: string) {
 }
 
 export async function sendDriftAlertEmail(to: string, alert: DriftAlert) {
-    if (!process.env.RESEND_API_KEY) {
+    const resend = getResend();
+    if (!resend) {
         console.warn('RESEND_API_KEY not set. Skipping drift alert to:', to);
         return { success: false, skipped: true };
     }
