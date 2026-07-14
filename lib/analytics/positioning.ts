@@ -75,6 +75,9 @@ export type PositioningMatrix = {
 };
 
 export async function loadPositioningMatrix(workspaceId: string): Promise<PositioningMatrix> {
+    const { DEMO_SEED_ACTIVE, demoPositioningMatrix } = await import('./demo-seed');
+    if (DEMO_SEED_ACTIVE()) return demoPositioningMatrix();
+
     const db = createAdminClient();
     const { data, error } = await db
         .from('competitor_attributes')

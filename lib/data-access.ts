@@ -307,6 +307,14 @@ export async function getLLMScans(
     limit: number = 10,
     opts?: { platform?: string }
 ): Promise<LLMScan[]> {
+    {
+        const { DEMO_SEED_ACTIVE, demoScanRows } = await import('./analytics/demo-seed');
+        if (DEMO_SEED_ACTIVE()) {
+            let rows = demoScanRows() as unknown as LLMScan[];
+            if (opts?.platform) rows = rows.filter(r => r.platform === opts.platform);
+            return rows.slice(0, limit);
+        }
+    }
     const supabase = await createAdminClient();
 
     let query = supabase
@@ -344,6 +352,10 @@ export async function getLLMScans(
 export async function getVisibilityMetrics(
     workspaceId: string
 ): Promise<PlatformVisibility[]> {
+    {
+        const { DEMO_SEED_ACTIVE, demoVisibilityMetrics } = await import('./analytics/demo-seed');
+        if (DEMO_SEED_ACTIVE()) return demoVisibilityMetrics();
+    }
     const supabase = await createAdminClient();
 
     // Get scans from last 7 days
@@ -508,6 +520,10 @@ export async function getAEOHealthScore(
 export async function getDashboardStats(
     workspaceId: string
 ): Promise<DashboardStats> {
+    {
+        const { DEMO_SEED_ACTIVE, demoDashboardStats } = await import('./analytics/demo-seed');
+        if (DEMO_SEED_ACTIVE()) return demoDashboardStats();
+    }
     const supabase = await createAdminClient();
 
     const [healthScore, visibilityMetrics, threads] = await Promise.all([

@@ -106,6 +106,9 @@ export async function regenerateAccuracy(params: {
 }
 
 export async function loadAccuracySummary(workspaceId: string): Promise<AccuracySummary> {
+    const { DEMO_SEED_ACTIVE, demoAccuracySummary } = await import('./demo-seed');
+    if (DEMO_SEED_ACTIVE()) return demoAccuracySummary() as AccuracySummary;
+
     const db = createAdminClient();
     const { data, error } = await db
         .from('accuracy_claims')

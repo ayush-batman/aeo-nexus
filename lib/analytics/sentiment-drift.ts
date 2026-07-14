@@ -146,6 +146,9 @@ export async function detectDrift(currentWeekStart: Date): Promise<DriftAlert[]>
 // Fetch the last 12 weeks of drift snapshots for a workspace, grouped by
 // (prompt, platform). Powers the /dashboard/drift page.
 export async function loadDriftHistory(workspaceId: string) {
+    const { DEMO_SEED_ACTIVE, demoDriftHistory } = await import('./demo-seed');
+    if (DEMO_SEED_ACTIVE()) return demoDriftHistory();
+
     const db = createAdminClient();
     const twelveWeeksAgo = new Date();
     twelveWeeksAgo.setUTCDate(twelveWeeksAgo.getUTCDate() - 12 * 7);

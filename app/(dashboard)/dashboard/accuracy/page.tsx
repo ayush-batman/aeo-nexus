@@ -13,10 +13,11 @@ export default async function AccuracyPage() {
     const ctx = await getCurrentWorkspaceContext();
     if (!ctx?.workspaceId) redirect('/login');
 
+    const demoSeed = process.env.AELO_DEMO_SEED === '1';
     const db = createAdminClient();
     const { data: org } = await db.from('organizations').select('plan').eq('id', ctx.orgId).single();
-    const plan = org?.plan ?? 'free';
-    const paidTier = PAID_PLANS.has(plan);
+    const plan = demoSeed ? 'command' : (org?.plan ?? 'free');
+    const paidTier = demoSeed || PAID_PLANS.has(plan);
 
     let summary: AccuracySummary = {
         total: 0,
