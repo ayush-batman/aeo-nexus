@@ -22,13 +22,13 @@ interface Asset {
 }
 
 const MARKS: Asset[] = [
-    { id: 'mark',              label: 'Mark',              filename: 'mark.svg',              format: 'SVG', intendedUse: 'Default — beacon accent line', dimensions: '512 × 512', bg: 'dark' },
+    { id: 'mark',              label: 'Mark',              filename: 'mark.svg',              format: 'SVG', intendedUse: 'Default — a wearing its halo', dimensions: '512 × 512', bg: 'dark' },
     { id: 'mark-mono-white',   label: 'Mark · mono white', filename: 'mark-mono-white.svg',   format: 'SVG', intendedUse: 'Dark backgrounds',           dimensions: '512 × 512', bg: 'dark' },
     { id: 'mark-mono-black',   label: 'Mark · mono black', filename: 'mark-mono-black.svg',   format: 'SVG', intendedUse: 'Light backgrounds',          dimensions: '512 × 512', bg: 'light' },
 ];
 
 const WORDMARKS: Asset[] = [
-    { id: 'wordmark',              label: 'Wordmark',              filename: 'wordmark.svg',              format: 'SVG', intendedUse: 'Default — beacon accent line', dimensions: '360 × 120', bg: 'dark' },
+    { id: 'wordmark',              label: 'Wordmark',              filename: 'wordmark.svg',              format: 'SVG', intendedUse: 'Default — halo over the a', dimensions: '360 × 120', bg: 'dark' },
     { id: 'wordmark-mono-white',   label: 'Wordmark · mono white', filename: 'wordmark-mono-white.svg',   format: 'SVG', intendedUse: 'Dark backgrounds',           dimensions: '360 × 120', bg: 'dark' },
     { id: 'wordmark-mono-black',   label: 'Wordmark · mono black', filename: 'wordmark-mono-black.svg',   format: 'SVG', intendedUse: 'Light backgrounds',          dimensions: '360 × 120', bg: 'light' },
 ];
@@ -114,12 +114,12 @@ export default function BrandPage() {
                         A short list. No 40-page PDF.
                     </h2>
                     <div className="space-y-2">
-                        <Rule ok body="Use the beacon-accent mark on dark backgrounds. Default." />
-                        <Rule ok body="Mono variants on backgrounds that fight the beacon color." />
+                        <Rule ok body="Use the ivory-halo mark on dark backgrounds. Default." />
+                        <Rule ok body="Mono variants on backgrounds that fight the ivory halo." />
                         <Rule ok body="Give the mark at least the height of the mark itself as clear space around it." />
                         <Rule ok body="Wordmark reads 'aelo' — always lowercase, always." />
-                        <Rule    body="Don't rotate or skew the mark. The apex points up." />
-                        <Rule    body="Don't recolor either half — the beacon line is the point." />
+                        <Rule    body="Don't detach the halo or change its tilt. It sits over the a." />
+                        <Rule    body="Don't recolor the halo — the ivory ring of light is the point." />
                         <Rule    body="Don't add drop-shadows, glows, or gradients. Sage archetype." />
                         <Rule    body="Don't lock the mark inside another shape (circle, square) unless it's the favicon variant." />
                     </div>

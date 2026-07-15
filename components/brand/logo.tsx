@@ -5,24 +5,24 @@ import { cn } from '@/lib/utils';
  *
  * ARCHETYPE: Sage + Magician (see BRAND_ARCHETYPE.md).
  *
- * The mark is an *aperture-prism*: an apex triangle (Sage — standard,
- * measurement, apex) intersected by a thin horizontal "answer line" (the
- * revealed truth — the moment the AI's opaque response becomes legible).
+ * The name is AEO + halo → aelo. The mark draws it literally: the letter
+ * "a" wearing a halo — a ring of light. The halo is the glow a brand casts
+ * inside AI answers: invisible, but measurable. One shape carries the whole
+ * story, so the name and the mark say the same thing.
  *
- * At small sizes it reads as a clean apex glyph. On hover / at large scale
- * the horizontal beam becomes the story.
- *
- * DO NOT change color inline. The mark inherits `currentColor` for the
- * silhouette so it always sits correctly on any surface, and uses the
- * `--accent-base` CSS variable for the answer line (Magician moment).
+ * The "a" inherits `currentColor` so it sits on any surface. The halo uses
+ * the `--accent-base` (beacon-ivory) variable — the Magician accent — unless
+ * `monochrome` is set (e.g. all-white favicon).
  */
 
 type MarkProps = {
     size?: number;
     className?: string;
-    /** hide the accent-color answer line (e.g. all-white favicon) */
+    /** render the halo in currentColor instead of the ivory accent */
     monochrome?: boolean;
 };
+
+const SANS = 'var(--font-sans), "Helvetica Neue", Arial, sans-serif';
 
 export function AeloMark({ size = 24, className, monochrome = false }: MarkProps) {
     return (
@@ -35,80 +35,82 @@ export function AeloMark({ size = 24, className, monochrome = false }: MarkProps
             className={cn('shrink-0', className)}
             aria-hidden="true"
         >
-            {/* Outer apex — the measurement instrument (Sage). Thin stroke reads
-                more "instrument" than "logo blob". Rounded joins keep it precise
-                without feeling brittle at small sizes. */}
-            <path
-                d="M12 2.75 L21.5 20.75 L2.5 20.75 Z"
-                stroke="currentColor"
-                strokeWidth="1.5"
-                strokeLinejoin="round"
+            {/* Halo — the ring of light (Magician moment). Tilted ~8° so it
+                reads as a halo in perspective, not a flat ring. */}
+            <ellipse
+                cx="12"
+                cy="4.6"
+                rx="6.6"
+                ry="1.9"
                 fill="none"
+                stroke={monochrome ? 'currentColor' : 'var(--accent-base, #E5D3A6)'}
+                strokeWidth="0.85"
+                transform="rotate(-8 12 4.6)"
             />
-            {/* Answer line — the revealed truth (Magician).
-                Sits at ~65% height, spans the interior width at that y. */}
-            {!monochrome && (
-                <line
-                    x1="6.65"
-                    y1="15.75"
-                    x2="17.35"
-                    y2="15.75"
-                    stroke="var(--accent-base, #E5D3A6)"
-                    strokeWidth="1.6"
-                    strokeLinecap="round"
-                />
-            )}
-            {monochrome && (
-                <line
-                    x1="6.65"
-                    y1="15.75"
-                    x2="17.35"
-                    y2="15.75"
-                    stroke="currentColor"
-                    strokeWidth="1.6"
-                    strokeLinecap="round"
-                />
-            )}
+            {/* The letter — the name, drawn (Sage). Inherits currentColor and
+                the app's sans so it matches the wordmark. */}
+            <text
+                x="12"
+                y="20.4"
+                textAnchor="middle"
+                fontSize="17.2"
+                fontWeight={600}
+                fill="currentColor"
+                style={{ fontFamily: SANS }}
+            >
+                a
+            </text>
         </svg>
     );
 }
 
 /**
- * Wordmark: mark + "aelo" lowercase.
- * Lowercase is Sage territory (Google, Palantir, Stripe) — feels like a proper
- * noun spoken by someone who knows what it is, not shouted from a billboard.
+ * Wordmark: "aelo" with the halo over its own first "a". Lowercase is Sage
+ * territory (Stripe, Palantir) — a proper noun spoken by someone who knows
+ * what it is, not shouted from a billboard. Self-contained SVG so it renders
+ * identically everywhere and never needs a second, redundant icon beside it.
  */
 type WordmarkProps = {
     size?: 'sm' | 'md' | 'lg';
     className?: string;
 };
 
-const WORDMARK_SIZES = {
-    sm: { icon: 18, text: 'text-[14px]', gap: 'gap-1.5' },
-    md: { icon: 22, text: 'text-[15px]', gap: 'gap-2' },
-    lg: { icon: 28, text: 'text-[18px]', gap: 'gap-2.5' },
-} as const;
+// display height (px) of the wordmark
+const WORDMARK_H = { sm: 18, md: 24, lg: 32 } as const;
 
 export function AeloWordmark({ size = 'md', className }: WordmarkProps) {
-    const s = WORDMARK_SIZES[size];
+    const h = WORDMARK_H[size];
     return (
-        <span
-            className={cn(
-                'inline-flex items-center text-[var(--text-primary)]',
-                s.gap,
-                className,
-            )}
+        <svg
+            height={h}
+            viewBox="0 0 220 130"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+            className={cn('shrink-0 text-[var(--text-primary)]', className)}
+            role="img"
+            aria-label="aelo"
         >
-            <AeloMark size={s.icon} />
-            <span
-                className={cn(
-                    s.text,
-                    'font-medium tracking-[-0.015em] leading-none',
-                )}
-                style={{ fontFeatureSettings: '"ss01" 1' }}
+            <text
+                x="6"
+                y="104"
+                fontSize="96"
+                fontWeight={600}
+                letterSpacing="-4"
+                fill="currentColor"
+                style={{ fontFamily: SANS }}
             >
                 aelo
-            </span>
-        </span>
+            </text>
+            <ellipse
+                cx="34"
+                cy="16"
+                rx="28"
+                ry="8"
+                fill="none"
+                stroke="var(--accent-base, #E5D3A6)"
+                strokeWidth="3.4"
+                transform="rotate(-8 34 16)"
+            />
+        </svg>
     );
 }
