@@ -21,7 +21,7 @@ export async function GET() {
             .order('created_at', { ascending: false });
 
         if (error) {
-            // Table might not exist yet — return empty gracefully
+            // Table might not exist yet, return empty gracefully
             if (error.code === '42P01' || error.message?.includes('does not exist')) {
                 return NextResponse.json({ experiments: [], needsMigration: true });
             }

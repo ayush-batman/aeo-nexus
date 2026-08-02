@@ -142,7 +142,7 @@ export function PositioningView({ data, missingTable }: Props) {
 
 function Cell({ freq, intensity, platforms }: { freq: number; intensity: number; platforms: string[] }) {
     if (freq === 0) {
-        return <span className="text-[var(--text-ghost)] text-xs">—</span>;
+        return <span className="text-[var(--text-ghost)] text-xs">, </span>;
     }
     const opacity = Math.max(0.15, Math.min(1, intensity));
     return (

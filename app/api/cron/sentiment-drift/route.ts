@@ -26,7 +26,7 @@ export async function GET(request: NextRequest) {
         priorWeek.setUTCDate(priorWeek.getUTCDate() - 7);
 
         // Snapshot the two weeks we compare so cold-start workspaces still get
-        // a baseline. computeAndStoreSnapshots is upsert — safe to re-run.
+        // a baseline. computeAndStoreSnapshots is upsert, safe to re-run.
         const priorPrior = new Date(priorWeek);
         priorPrior.setUTCDate(priorPrior.getUTCDate() - 7);
         await computeAndStoreSnapshots(priorPrior);

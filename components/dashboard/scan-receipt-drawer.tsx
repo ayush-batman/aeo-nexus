@@ -20,7 +20,7 @@ interface Scan {
     created_at:            string;
 }
 
-// Which platform to open in for "reproduce this" — deep-links you to the
+// Which platform to open in for "reproduce this", deep-links you to the
 // native chat UI so the client can paste the prompt and see the answer live.
 const REPRODUCE_URLS: Record<string, string> = {
     chatgpt:            'https://chatgpt.com/',
@@ -47,15 +47,15 @@ interface Props {
     limit?:        number;
     // Override the data source. When omitted, uses /api/llm/scans (auth-only,
     // dashboard use). When provided, the drawer POSTs no headers and fetches
-    // this URL — used by the public India Index for anonymized public receipts.
+    // this URL, used by the public India Index for anonymized public receipts.
     dataSourceUrl?: string;
 }
 
 /**
- * "See the receipt" drawer — Sage-archetype trust affordance.
+ * "See the receipt" drawer, Sage-archetype trust affordance.
  * Every derived metric in Aelo should be one click from THIS view: the
  * raw prompt sent, the exact platform response received, timestamp,
- * position, and — critically — a Reproduce button that opens the same
+ * position, and, critically, a Reproduce button that opens the same
  * platform's UI so the client can verify with their own eyes.
  */
 export function ScanReceiptDrawer({
@@ -127,7 +127,7 @@ export function ScanReceiptDrawer({
                         <div className="text-center py-16 text-[var(--text-secondary)]">
                             <p className="text-sm">No scans yet for this metric.</p>
                             <p className="text-xs text-[var(--text-tertiary)] mt-1">
-                                Every number here is computed from real scans. When there aren&apos;t any, we show nothing — not a guess.
+                                Every number here is computed from real scans. When there aren&apos;t any, we show nothing, not a guess.
                             </p>
                         </div>
                     )}
@@ -150,7 +150,7 @@ export function ScanReceiptDrawer({
                 </div>
 
                 <div className="px-6 py-3 border-t border-[var(--border-default)] bg-[var(--bg-raised)]/40 text-[11px] text-[var(--text-tertiary)] leading-relaxed">
-                    LLM answers are non-deterministic — a single scan is a sample, not a truth. Aelo aggregates multiple prompts to reduce noise, but any single number can drift ±10 points between measurements. That&apos;s why the receipts are here: verify any claim yourself.
+                    LLM answers are non-deterministic, a single scan is a sample, not a truth. Aelo aggregates multiple prompts to reduce noise, but any single number can drift ±10 points between measurements. That&apos;s why the receipts are here: verify any claim yourself.
                 </div>
             </DialogContent>
         </Dialog>

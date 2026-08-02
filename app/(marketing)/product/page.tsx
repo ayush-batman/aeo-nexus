@@ -26,11 +26,11 @@ const STEPS: Step[] = [
         icon: Search,
         title: "Scan",
         lede: "Every AI, every prompt that matters, on a schedule.",
-        body: "The scanner runs your target prompts across ChatGPT (GPT-4o), Gemini 2.5, Claude 3.5 Sonnet, Perplexity's Llama 3.1 Sonar, and Google's AI Overview. Every run is analyzed by an in-loop model that extracts the structured signals — mentioned, position, sentiment, competitors, citations. Nothing is fabricated. When a provider fails, we surface an honest empty state.",
+        body: "The scanner runs your target prompts across ChatGPT (GPT-4o), Gemini 2.5, Claude 3.5 Sonnet, Perplexity's Llama 3.1 Sonar, and Google's AI Overview. Every run is analyzed by an in-loop model that extracts the structured signals, mentioned, position, sentiment, competitors, citations. Nothing is fabricated. When a provider fails, we surface an honest empty state.",
         bullets: [
             "Multi-LLM parallel scans (5 providers today; more on request)",
             "Analyzer-in-loop: sentiment score, reasons, brand aliases",
-            "Weekly (Radar) or daily (Command) cadence — Vercel Cron",
+            "Weekly (Radar) or daily (Command) cadence, Vercel Cron",
             "Schedules survive limit hits; overage is prevented, not billed",
         ],
     },
@@ -40,7 +40,7 @@ const STEPS: Step[] = [
         icon: Layers,
         title: "Diagnose",
         lede: "The exact URLs the AI leans on when it answers.",
-        body: "For every mention (and every miss), Aelo attributes the citation graph — the specific Reddit threads, Wikipedia articles, G2 pages, and technical documentation the LLM pulled from. We compare your citation footprint to competitors and highlight Citation Gaps — the pages that produce answers but never mention you.",
+        body: "For every mention (and every miss), Aelo attributes the citation graph, the specific Reddit threads, Wikipedia articles, G2 pages, and technical documentation the LLM pulled from. We compare your citation footprint to competitors and highlight Citation Gaps, the pages that produce answers but never mention you.",
         bullets: [
             "Per-scan citation extraction with own-domain flagging",
             "Citation Gap analysis vs. every tracked competitor",
@@ -68,7 +68,7 @@ const STEPS: Step[] = [
         icon: Zap,
         title: "Act",
         lede: "You ship. Aelo snapshots the baseline the moment you do.",
-        body: "Mark a forum reply as posted, or hit publish from Content Studio — Aelo captures the frozen visibility snapshot at that moment. That baseline is denormalized into the intervention record, so even if raw scans are pruned later, the 'before' number survives. This is what makes the receipt trustworthy.",
+        body: "Mark a forum reply as posted, or hit publish from Content Studio, Aelo captures the frozen visibility snapshot at that moment. That baseline is denormalized into the intervention record, so even if raw scans are pruned later, the 'before' number survives. This is what makes the receipt trustworthy.",
         bullets: [
             "One-click 'mark as posted' from Forum Hub",
             "Content Studio publish → auto-intervention",
@@ -82,7 +82,7 @@ const STEPS: Step[] = [
         icon: CheckCircle2,
         title: "Prove",
         lede: "Re-scan. Compare. Deliver the receipt.",
-        body: "Hit Measure and Aelo re-scans every target prompt on every configured provider, computes the delta vs. baseline, and writes the receipt — visibility change in points, position change, a Verdict (improved / no_change / regressed), and the timestamp. Nothing is smoothed. If the follow-up regressed, it says regressed.",
+        body: "Hit Measure and Aelo re-scans every target prompt on every configured provider, computes the delta vs. baseline, and writes the receipt, visibility change in points, position change, a Verdict (improved / no_change / regressed), and the timestamp. Nothing is smoothed. If the follow-up regressed, it says regressed.",
         bullets: [
             "Per-intervention before/after receipts (Verdict + delta)",
             "Weekly digest email rolls receipts into one summary",
@@ -109,7 +109,7 @@ export default function ProductPage() {
                     </h1>
                     <p className="text-[16px] md:text-[18px] text-zinc-400 max-w-2xl mx-auto leading-relaxed">
                         Every other AEO tool stops at Scan. Aelo carries the loop all the way to the
-                        receipt — the number that says whether what you shipped moved the answer.
+                        receipt, the number that says whether what you shipped moved the answer.
                     </p>
                 </div>
             </section>

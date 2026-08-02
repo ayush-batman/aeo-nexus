@@ -105,7 +105,7 @@ export function AccuracyView({ summary, paidTier, plan, missingTable }: Props) {
         <>
             {/* Stat row */}
             <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8">
-                <StatTile label="Accuracy" value={summary.accuracyPct !== null ? `${summary.accuracyPct}%` : '—'} tone="accent" />
+                <StatTile label="Accuracy" value={summary.accuracyPct !== null ? `${summary.accuracyPct}%` : ', '} tone="accent" />
                 <StatTile label="True"       value={String(summary.counts.true)}       tone="green" />
                 <StatTile label="False"      value={String(summary.counts.false)}      tone="red" />
                 <StatTile label="Outdated"   value={String(summary.counts.outdated)}   tone="amber" />

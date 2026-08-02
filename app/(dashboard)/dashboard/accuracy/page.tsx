@@ -38,7 +38,7 @@ export default async function AccuracyPage() {
         <div className="flex flex-col min-h-screen">
             <Header
                 title="Accuracy Verdict"
-                description="Every factual claim the LLM made about you — checked against your own site. True, false, outdated, or unverified."
+                description="Every factual claim the LLM made about you, checked against your own site. True, false, outdated, or unverified."
             />
             <main className="flex-1 px-6 py-8 max-w-7xl mx-auto w-full">
                 <AccuracyView summary={summary} paidTier={paidTier} plan={plan} missingTable={missingTable} />

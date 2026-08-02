@@ -4,7 +4,7 @@ import { createAdminClient } from '@/lib/supabase/admin';
 // GET /api/scan/public/[id]
 // Public read for a share-link scan. No auth. Cache-friendly.
 
-export const revalidate = 300; // 5 min — receipts don't change after write
+export const revalidate = 300; // 5 min, receipts don't change after write
 
 export async function GET(
     _req: NextRequest,

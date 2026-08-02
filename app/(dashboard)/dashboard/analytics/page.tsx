@@ -145,7 +145,7 @@ export default function AnalyticsPage() {
     })();
 
     // ================================================================
-    // HISTORICAL TREND DATA — aggregate scans by day
+    // HISTORICAL TREND DATA, aggregate scans by day
     // ================================================================
     const trendData = (() => {
         if (filteredScans.length === 0) return [];
@@ -230,8 +230,8 @@ export default function AnalyticsPage() {
 
         // Sage rule: a delta only makes sense when both weeks have real data.
         // Otherwise 'from 0 scans to 5 scans' becomes '+5 vs last week' which
-        // is technically true but misleading — it implies a baseline. Show
-        // null (rendered as '—' in the UI) instead of a fake comparison.
+        // is technically true but misleading, it implies a baseline. Show
+        // null (rendered as ', ' in the UI) instead of a fake comparison.
         const hasBaseline = lastWeek.length > 0;
         const hasThisWeek = thisWeek.length > 0;
 
@@ -392,7 +392,7 @@ export default function AnalyticsPage() {
             pdf.rect(0, 0, pdfWidth, 20, "F");
             pdf.setTextColor(255, 255, 255);
             pdf.setFontSize(16);
-            pdf.text("Lumina — Analytics Report", 10, 13);
+            pdf.text("Lumina, Analytics Report", 10, 13);
             pdf.setFontSize(8);
             pdf.setTextColor(150, 150, 150);
             pdf.text(`Generated: ${new Date().toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}`, 10, 18);
@@ -583,7 +583,7 @@ export default function AnalyticsPage() {
                                                 : "bg-[var(--bg-raised)] text-[var(--text-secondary)] border border-[var(--border-default)]/50"
                                         )}>
                                             {metric.change === null
-                                                ? <>—&nbsp;need baseline</>
+                                                ? <>, &nbsp;need baseline</>
                                                 : <>
                                                     {metric.change > 0 ? <TrendingUp className="w-3 h-3" /> : metric.change < 0 ? <TrendingDown className="w-3 h-3" /> : null}
                                                     {metric.change > 0 ? "+" : ""}{metric.change}{metric.suffix}
@@ -996,7 +996,7 @@ export default function AnalyticsPage() {
                                     </div>
                                 ) : (
                                     <div className="h-48 flex items-center justify-center text-[var(--text-ghost)] text-sm">
-                                        No citations found in scans yet — run more scans to discover which sources LLMs cite
+                                        No citations found in scans yet, run more scans to discover which sources LLMs cite
                                     </div>
                                 )}
                             </motion.div>

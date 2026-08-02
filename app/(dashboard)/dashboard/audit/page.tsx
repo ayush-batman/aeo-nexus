@@ -79,7 +79,7 @@ export default function AuditPage() {
                     </h1>
                     <p className="text-sm text-[var(--text-secondary)] leading-relaxed max-w-xl">
                         Analyze any page on your site to see if it&apos;s optimized for AI agents
-                        and RAG systems — heading structure, schema markup, chunkable content,
+                        and RAG systems, heading structure, schema markup, chunkable content,
                         citation-ready facts.
                     </p>
                 </div>

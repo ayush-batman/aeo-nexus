@@ -15,10 +15,10 @@ export default function PrivacyPage() {
                 {
                     title: "What we collect",
                     body: [
-                        "Account data — name, email, hashed password, workspace and organization structure.",
-                        "Product data — target prompts, brand names, competitor names, scan history, interventions.",
-                        "Usage data — page views and product events, used to improve the product.",
-                        "Billing data — handled by Razorpay (India) or Stripe (global). We store customer IDs, not full card numbers.",
+                        "Account data, name, email, hashed password, workspace and organization structure.",
+                        "Product data, target prompts, brand names, competitor names, scan history, interventions.",
+                        "Usage data, page views and product events, used to improve the product.",
+                        "Billing data, handled by Razorpay (India) or Stripe (global). We store customer IDs, not full card numbers.",
                     ],
                 },
                 {
@@ -32,7 +32,7 @@ export default function PrivacyPage() {
                 },
                 {
                     title: "Who we share it with",
-                    body: "Only sub-processors strictly necessary to operate Aelo. Today: Supabase (Postgres, Auth, Storage), Vercel (hosting, Cron), Google Gemini / OpenAI / Anthropic / Perplexity (scan providers, prompts only — no PII sent), Resend (email delivery), Razorpay + Stripe (billing). We do not sell customer data. We do not share it with advertisers.",
+                    body: "Only sub-processors strictly necessary to operate Aelo. Today: Supabase (Postgres, Auth, Storage), Vercel (hosting, Cron), Google Gemini / OpenAI / Anthropic / Perplexity (scan providers, prompts only, no PII sent), Resend (email delivery), Razorpay + Stripe (billing). We do not sell customer data. We do not share it with advertisers.",
                 },
                 {
                     title: "How we store it",
@@ -41,10 +41,10 @@ export default function PrivacyPage() {
                 {
                     title: "Your controls",
                     body: [
-                        "Export — one-click JSON export of every row we hold on your workspace.",
-                        "Delete — delete your account and every associated row on request.",
-                        "Object — request that we stop using your data for a specific purpose.",
-                        "Audit — every metric on the dashboard is auditable to the raw scan.",
+                        "Export, one-click JSON export of every row we hold on your workspace.",
+                        "Delete, delete your account and every associated row on request.",
+                        "Object, request that we stop using your data for a specific purpose.",
+                        "Audit, every metric on the dashboard is auditable to the raw scan.",
                     ],
                 },
                 {

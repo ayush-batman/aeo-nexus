@@ -95,13 +95,13 @@ export default async function ClientDetailPage({ params }: PageProps) {
                         <div>
                             <p className="text-[var(--text-ghost)] text-sm mb-1">Stripe Customer ID</p>
                             <p className="text-white font-mono text-sm">
-                                {organization.stripe_customer_id || '—'}
+                                {organization.stripe_customer_id || ', '}
                             </p>
                         </div>
                         <div>
                             <p className="text-[var(--text-ghost)] text-sm mb-1">Subscription ID</p>
                             <p className="text-white font-mono text-sm">
-                                {organization.stripe_subscription_id || '—'}
+                                {organization.stripe_subscription_id || ', '}
                             </p>
                         </div>
                     </div>

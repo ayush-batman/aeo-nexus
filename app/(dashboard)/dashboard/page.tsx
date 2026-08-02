@@ -233,7 +233,7 @@ export default function DashboardPage() {
             />
 
             <div className="p-6 space-y-6">
-                {/* Empty state — Sage: instructive, no fanfare. */}
+                {/* Empty state, Sage: instructive, no fanfare. */}
                 {!hasData && !loading && (
                     <div className="rounded-lg border border-[var(--border-default)] bg-[var(--bg-surface)] p-6 flex flex-col md:flex-row items-start md:items-center gap-6 justify-between">
                         <div className="space-y-1.5">
@@ -244,7 +244,7 @@ export default function DashboardPage() {
                                 Run your first LLM scan to populate this workspace.
                             </h2>
                             <p className="max-w-xl text-[13px] leading-relaxed text-[var(--text-secondary)]">
-                                Every metric on this page is computed from real scans. Nothing is fabricated —
+                                Every metric on this page is computed from real scans. Nothing is fabricated, 
                                 so the numbers stay at zero until we have something to measure.
                             </p>
                         </div>
@@ -390,7 +390,7 @@ export default function DashboardPage() {
                         accentColor="emerald"
                         onClick={() => setReceipt({
                             title: `Share of Voice · ${stats.shareOfVoice}%`,
-                            subtitle: `The scans behind this SoV number — who was named alongside your brand, and how often.`,
+                            subtitle: `The scans behind this SoV number, who was named alongside your brand, and how often.`,
                         })}
                     />
                     <MetricCard
@@ -453,7 +453,7 @@ export default function DashboardPage() {
                                 </div>
                             </div>
 
-                            {/* Install hint — full-width row (not squeezed into narrow column) */}
+                            {/* Install hint, full-width row (not squeezed into narrow column) */}
                             {analytics.aiVisits === 0 && (
                                 <div className="flex items-center gap-3 rounded-md border border-[var(--border-subtle)] bg-[var(--bg-raised)] p-3">
                                     <span className="text-[10px] font-mono uppercase tracking-[0.14em] text-[var(--text-tertiary)] flex-shrink-0">

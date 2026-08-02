@@ -114,7 +114,7 @@ export default function OnboardingPage() {
         getContext();
     }, []);
 
-    // Auto-fire the first scan the moment step 3 opens — activation is
+    // Auto-fire the first scan the moment step 3 opens, activation is
     // higher when the receipt is already there when the user arrives.
     // The manual "Run First Scan" button stays as a fallback if the
     // auto-scan errors out (e.g. no LLM keys), so we only trigger once.
@@ -421,7 +421,7 @@ export default function OnboardingPage() {
                                         {scanning
                                             ? <>Scanning ChatGPT, Gemini, Claude and Perplexity for &ldquo;{brandName}&rdquo;… this takes ~15 seconds.</>
                                             : error
-                                                ? <>The auto-scan hit a snag. Try again — the receipt&apos;s worth the wait.</>
+                                                ? <>The auto-scan hit a snag. Try again, the receipt&apos;s worth the wait.</>
                                                 : <>Getting your first receipt ready…</>}
                                     </p>
                                     {!scanning && (
@@ -435,7 +435,7 @@ export default function OnboardingPage() {
                                             onClick={() => setCurrentStep(4)}
                                             className="text-[12px] text-[var(--text-tertiary)] hover:text-[var(--text-secondary)] transition-colors underline underline-offset-4 decoration-dotted"
                                         >
-                                            Skip for now — I&apos;ll run scans from the dashboard
+                                            Skip for now, I&apos;ll run scans from the dashboard
                                         </button>
                                     </div>
                                 </div>

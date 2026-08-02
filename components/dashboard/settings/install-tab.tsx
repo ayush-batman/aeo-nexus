@@ -12,7 +12,7 @@ interface Props {
 }
 
 // Sage-archetype install page. Shows a copy-pasteable snippet, verification
-// status, and instructions. No fanfare — the receipt is the message.
+// status, and instructions. No fanfare, the receipt is the message.
 export function InstallTab({ workspaceId, workspaceName }: Props) {
     const [origin, setOrigin] = useState<string>("");
     const [copied, setCopied] = useState(false);
@@ -22,12 +22,12 @@ export function InstallTab({ workspaceId, workspaceName }: Props) {
     const [totalVisits, setTotalVisits] = useState(0);
 
     useEffect(() => {
-        // window.location.origin runs client-side only — SSR would 500 otherwise.
+        // window.location.origin runs client-side only, SSR would 500 otherwise.
         setOrigin(window.location.origin);
     }, []);
 
     // Poll analytics summary once on mount. If any track events landed for
-    // this workspace, we're verified — no other signal needed.
+    // this workspace, we're verified, no other signal needed.
     useEffect(() => {
         let cancelled = false;
         (async () => {
@@ -140,7 +140,7 @@ export function InstallTab({ workspaceId, workspaceName }: Props) {
                                     Not detected yet.
                                 </div>
                                 <div className="text-[var(--text-secondary)] text-xs mt-0.5">
-                                    Once you deploy the snippet, refresh this page — verification
+                                    Once you deploy the snippet, refresh this page, verification
                                     happens on the first pageview.
                                 </div>
                             </div>
@@ -155,12 +155,12 @@ export function InstallTab({ workspaceId, workspaceName }: Props) {
                     <CardTitle className="text-base">Framework-specific placement</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-3">
-                    <FrameworkRow name="Next.js (App Router)"    location="app/layout.tsx — inside the <head>, or use next/script with strategy='afterInteractive'" />
-                    <FrameworkRow name="Next.js (Pages Router)"  location="pages/_document.tsx — inside <Head> in the <Html>" />
-                    <FrameworkRow name="React / Vite / CRA"      location="public/index.html — inside <head>" />
+                    <FrameworkRow name="Next.js (App Router)"    location="app/layout.tsx, inside the <head>, or use next/script with strategy='afterInteractive'" />
+                    <FrameworkRow name="Next.js (Pages Router)"  location="pages/_document.tsx, inside <Head> in the <Html>" />
+                    <FrameworkRow name="React / Vite / CRA"      location="public/index.html, inside <head>" />
                     <FrameworkRow name="Webflow / Framer"        location="Site Settings → Custom Code → Head Code" />
                     <FrameworkRow name="Shopify"                 location="Online Store → Themes → Edit code → theme.liquid, inside <head>" />
-                    <FrameworkRow name="WordPress"               location="Appearance → Theme File Editor → header.php, before </head> — or a plugin like Insert Headers and Footers" />
+                    <FrameworkRow name="WordPress"               location="Appearance → Theme File Editor → header.php, before </head>, or a plugin like Insert Headers and Footers" />
                     <FrameworkRow name="Static HTML"             location="Just paste before </head> and re-deploy" />
                 </CardContent>
             </Card>

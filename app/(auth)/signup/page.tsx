@@ -50,7 +50,7 @@ export default function SignupPage() {
             });
 
             if (signInError) {
-                // Account created but auto-login failed — redirect to login
+                // Account created but auto-login failed, redirect to login
                 setSuccess("Account created! Please sign in.");
                 setTimeout(() => router.push("/login"), 1500);
                 return;

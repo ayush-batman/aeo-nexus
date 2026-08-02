@@ -208,7 +208,7 @@ export default function LLMTrackerPage() {
 
             // Show partial failures as warnings
             if (data.platformErrors && data.platformErrors.length > 0) {
-                setScanError(`Partial success — ${data.platformErrors.map((e: any) => `${e.platform} failed`).join(', ')}`);
+                setScanError(`Partial success, ${data.platformErrors.map((e: any) => `${e.platform} failed`).join(', ')}`);
             }
 
             setNewPrompt("");
@@ -486,7 +486,7 @@ export default function LLMTrackerPage() {
                                             </div>
                                         ))
                                     ) : (
-                                        <span className="text-xs text-[var(--text-ghost)]">None — add in Settings or inline</span>
+                                        <span className="text-xs text-[var(--text-ghost)]">None, add in Settings or inline</span>
                                     )}
                                     <div className="flex gap-1">
                                         <Input

@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 
 export const metadata: Metadata = {
     title: "Manifesto · Aelo",
-    description: "Our honest-data policy — why Aelo refuses to invent a number.",
+    description: "Our honest-data policy, why Aelo refuses to invent a number.",
 };
 
 export default function ManifestoPage() {
@@ -26,17 +26,17 @@ export default function ManifestoPage() {
                 <article className="mx-auto max-w-2xl text-[16px] leading-[1.75] text-zinc-300 space-y-8">
                     <p className="text-[17px] text-white">
                         Analytics products sell one thing: trust. The moment we invent a number, we stop
-                        being useful — we become another mirror for wishful thinking.
+                        being useful, we become another mirror for wishful thinking.
                     </p>
 
                     <div className="border-l-2 border-[var(--accent-base)] pl-5">
                         <p className="text-zinc-400 text-[15px] italic">
                             &ldquo;Every metric on this page is computed from real scans. Nothing is
-                            fabricated — so the numbers stay at zero until we have something to
+                            fabricated, so the numbers stay at zero until we have something to
                             measure.&rdquo;
                         </p>
                         <p className="mt-2 text-[12px] font-mono text-zinc-600">
-                            — the empty state on every Aelo dashboard
+, the empty state on every Aelo dashboard
                         </p>
                     </div>
 
@@ -47,7 +47,7 @@ export default function ManifestoPage() {
                         <ul className="space-y-3 text-zinc-400">
                             <li>
                                 <span className="text-white">When a provider fails,</span> we surface an
-                                honest &ldquo;provider unavailable&rdquo; state — not a fabricated one.
+                                honest &ldquo;provider unavailable&rdquo; state, not a fabricated one.
                                 No mock row ever writes to the database labeled as real.
                             </li>
                             <li>
@@ -71,7 +71,7 @@ export default function ManifestoPage() {
                             Why we&apos;re strict about it
                         </h2>
                         <p>
-                            Marketing tools face pressure — from us and from customers — to make
+                            Marketing tools face pressure, from us and from customers, to make
                             dashboards look good. A dashboard that says &ldquo;you&apos;re winning&rdquo; is
                             easier to sell than one that says &ldquo;you&apos;re missing the top intent
                             query in your category.&rdquo;
@@ -79,7 +79,7 @@ export default function ManifestoPage() {
                         <p className="mt-3">
                             But the moment a customer discovers we softened a number, we&apos;ve broken
                             the product. Aelo bets everything on being the tool you can actually
-                            act on — and that only works if the numbers are true, all the way down.
+                            act on, and that only works if the numbers are true, all the way down.
                         </p>
                     </div>
 
@@ -90,7 +90,7 @@ export default function ManifestoPage() {
                         <p>
                             Every other tool in this category tells you where you stand. Aelo goes one
                             step further: it tells you what happened after you acted. The intervention
-                            model — action + baseline + follow-up scan + verdict — is what makes AEO
+                            model, action + baseline + follow-up scan + verdict, is what makes AEO
                             work at all as a discipline. Without it, we&apos;re guessing.
                         </p>
                         <p className="mt-3">

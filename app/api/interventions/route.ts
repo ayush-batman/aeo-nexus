@@ -18,7 +18,7 @@ interface CreateBody {
     action_taken_at?: string; // ISO. If set (or status='completed'), we snapshot baseline now.
 }
 
-// GET /api/interventions — list workspace's interventions, newest first
+// GET /api/interventions, list workspace's interventions, newest first
 export async function GET() {
     const context = await getCurrentWorkspaceContext();
     if (!context) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -37,7 +37,7 @@ export async function GET() {
     return NextResponse.json({ interventions: data ?? [] });
 }
 
-// POST /api/interventions — create a new intervention.
+// POST /api/interventions, create a new intervention.
 // If action_taken_at is set (or status='completed'), snapshot baseline visibility
 // for each target_prompt right now so we can compute a real delta later.
 export async function POST(request: NextRequest) {

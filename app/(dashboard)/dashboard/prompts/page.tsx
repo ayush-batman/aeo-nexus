@@ -280,7 +280,7 @@ export default function PromptResearchPage() {
                                         <Zap className="w-5 h-5 text-[var(--accent-base)]" />
                                     </div>
                                     <div className="flex-1">
-                                        <h3 className="font-semibold text-[var(--text-primary)] mb-1">Manual LLM Check — How It Works</h3>
+                                        <h3 className="font-semibold text-[var(--text-primary)] mb-1">Manual LLM Check, How It Works</h3>
                                         <p className="text-sm text-[var(--text-secondary)] mb-3">
                                             Copy any prompt below and paste it into ChatGPT, Gemini, Perplexity, or Claude.
                                             Check if your brand appears in the response, at what position, and with what sentiment.

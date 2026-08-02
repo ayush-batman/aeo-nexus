@@ -5,7 +5,7 @@ import type { BlogPost } from "@/lib/blog";
 
 const SITE_URL = (process.env.NEXT_PUBLIC_APP_URL ?? "https://aelohq.com").replace(/\/$/, "");
 
-// Base Organization — spread into any page-level entity via sameAs / publisher.
+// Base Organization, spread into any page-level entity via sameAs / publisher.
 const ORG = {
     "@type":  "Organization",
     name:     "Aelo",
@@ -69,7 +69,7 @@ export function SoftwareApplicationJsonLd() {
     return jsonLd({
         "@type": "SoftwareApplication",
         name:    "Aelo",
-        description: "Track and improve your brand's visibility across ChatGPT, Gemini, Claude, and Perplexity — with the raw receipts behind every number.",
+        description: "Track and improve your brand's visibility across ChatGPT, Gemini, Claude, and Perplexity, with the raw receipts behind every number.",
         applicationCategory: "BusinessApplication",
         operatingSystem: "Web",
         offers: {
@@ -83,7 +83,7 @@ export function SoftwareApplicationJsonLd() {
     });
 }
 
-// ── Dataset (for /india-index — it IS a dataset by any honest definition) ──
+// ── Dataset (for /india-index, it IS a dataset by any honest definition) ──
 export function IndiaIndexDatasetJsonLd({ label, brandCount, categoriesTracked }: {
     label: string;
     brandCount: number;
@@ -91,7 +91,7 @@ export function IndiaIndexDatasetJsonLd({ label, brandCount, categoriesTracked }
 }) {
     return jsonLd({
         "@type":     "Dataset",
-        name:        `India AI Visibility Index — ${label}`,
+        name:        `India AI Visibility Index, ${label}`,
         description: "Monthly measurement of how ChatGPT, Gemini, Claude, and Perplexity answer high-intent queries about Indian brands. Every number links to the raw scan behind it.",
         creator:     ORG,
         distribution: [

@@ -51,7 +51,7 @@ export function FreeScanWidget() {
             if (!res.ok) {
                 setState('error');
                 setErrMsg(
-                    data?.error === 'invalid_brand_name' ? 'Brand name looks off — try a real brand.' :
+                    data?.error === 'invalid_brand_name' ? 'Brand name looks off, try a real brand.' :
                     data?.error === 'invalid_prompt'     ? 'Prompt should be 8–240 characters.' :
                     data?.error === 'scan_failed'        ? "Gemini didn't return a response. Try again." :
                     'Something went wrong. Try again in a moment.'
@@ -59,7 +59,7 @@ export function FreeScanWidget() {
                 return;
             }
 
-            // Success — redirect to the receipt.
+            // Success, redirect to the receipt.
             const shareUrl = data.shareUrl || `/scan/${data.scanId}`;
             router.push(shareUrl);
         } catch {
@@ -137,7 +137,7 @@ export function FreeScanWidget() {
             </form>
 
             <p className="mt-3 text-[10.5px] font-mono text-zinc-600 text-center">
-                Every scan is a real Gemini query — receipt is public + shareable.
+                Every scan is a real Gemini query, receipt is public + shareable.
             </p>
         </div>
     );

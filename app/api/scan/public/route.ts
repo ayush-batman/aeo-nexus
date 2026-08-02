@@ -15,7 +15,7 @@ const FREE_LIMIT     = 3;
 const WINDOW_DAYS    = 7;
 
 // Salt only needs to be stable across a deploy for rate-limit accounting.
-// Real anonymity is not the goal here — light abuse prevention is.
+// Real anonymity is not the goal here, light abuse prevention is.
 const IP_SALT = process.env.PUBLIC_SCAN_IP_SALT ?? 'aelo-public-scan-2026';
 
 interface Body {
@@ -58,7 +58,7 @@ export async function POST(req: NextRequest) {
 
     const db = createAdminClient();
 
-    // Rate limit — count recent scans from this visitor.
+    // Rate limit, count recent scans from this visitor.
     const windowStart = new Date(Date.now() - WINDOW_DAYS * 24 * 60 * 60 * 1000).toISOString();
     const { count: recentCount } = await db
         .from('public_scans')
@@ -74,7 +74,7 @@ export async function POST(req: NextRequest) {
         }, { status: 429 });
     }
 
-    // Run the scan. Gemini only for the free tier — cheapest, most reliably
+    // Run the scan. Gemini only for the free tier, cheapest, most reliably
     // available, honest scope for the demo.
     try {
         const { results } = await scanLLM({
@@ -86,7 +86,7 @@ export async function POST(req: NextRequest) {
 
         const geminiResult = results.find(r => r.platform === 'gemini');
         if (!geminiResult) {
-            // No result at all — record the failure honestly.
+            // No result at all, record the failure honestly.
             const { data: failedScan } = await db
                 .from('public_scans')
                 .insert({

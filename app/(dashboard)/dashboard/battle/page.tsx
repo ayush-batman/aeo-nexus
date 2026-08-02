@@ -99,7 +99,7 @@ export default function BattlePage() {
                     </h1>
                     <p className="text-sm text-[var(--text-secondary)] leading-relaxed max-w-xl">
                         Run one head-to-head prompt against a specific competitor. See exactly
-                        which brand the AI names first and why — receipts attached.
+                        which brand the AI names first and why, receipts attached.
                     </p>
                 </div>
             </div>

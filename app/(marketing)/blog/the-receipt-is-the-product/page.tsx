@@ -60,8 +60,8 @@ export default function ReceiptIsTheProductPost() {
                         So we shipped the drawer.
                     </p>
                     <p>
-                        Every number in Aelo — every health score, every mention rate, every
-                        share-of-voice percentage — is one click away from a list of the raw
+                        Every number in Aelo, every health score, every mention rate, every
+                        share-of-voice percentage, is one click away from a list of the raw
                         scans that produced it. Click a metric, see the prompt, see the LLM&apos;s
                         response text verbatim, see when it was captured. There&apos;s a &ldquo;Copy
                         prompt&rdquo; button and a &ldquo;Reproduce on Gemini&rdquo; link that opens the
@@ -89,7 +89,7 @@ export default function ReceiptIsTheProductPost() {
                         Everything in Aelo cascades from this: our{" "}
                         <Link href="/methodology" className="text-[var(--accent-base)] hover:underline">methodology page</Link>{" "}
                         publishes every formula. Our verdict badges only fire above real
-                        thresholds — no smoothing. Our{" "}
+                        thresholds, no smoothing. Our{" "}
                         <Link href="/dashboard/interventions" className="text-[var(--accent-base)] hover:underline">
                             interventions receipts
                         </Link>{" "}

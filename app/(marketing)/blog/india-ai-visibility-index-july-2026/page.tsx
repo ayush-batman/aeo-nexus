@@ -19,7 +19,7 @@ export const metadata: Metadata = {
     },
 };
 
-// Flagship post — first substantive edition of the India Visibility Index.
+// Flagship post, first substantive edition of the India Visibility Index.
 // Every claim in the body links back to /india-index or /methodology so a
 // skeptical reader can audit the numbers in one click.
 
@@ -55,7 +55,7 @@ export default function IndiaIndexJuly2026Post() {
                 {/* Body */}
                 <div className="prose-body space-y-5 text-[15.5px] text-zinc-300 leading-relaxed">
                     <p>
-                        This is the first edition of the <Link href="/india-index" className="text-[var(--accent-base)] hover:underline">India AI Visibility Index</Link> —
+                        This is the first edition of the <Link href="/india-index" className="text-[var(--accent-base)] hover:underline">India AI Visibility Index</Link>, 
                         a monthly measurement of how Gemini (and, from August, ChatGPT + Claude +
                         Perplexity) actually answer high-intent questions in India&apos;s biggest
                         categories.
@@ -76,16 +76,16 @@ export default function IndiaIndexJuly2026Post() {
                         <strong className="text-white"> #1 Zoho</strong> and <strong className="text-white">#6 Byju&apos;s</strong>.
                     </p>
                     <p>
-                        For both prompts we tested Zoho against — &ldquo;Best CRM for Indian SMBs
-                        in 2026&rdquo; and &ldquo;Cheapest business email hosting for startups&rdquo; — Gemini
+                        For both prompts we tested Zoho against, &ldquo;Best CRM for Indian SMBs
+                        in 2026&rdquo; and &ldquo;Cheapest business email hosting for startups&rdquo;, Gemini
                         named Zoho positively. On the second query it named Zoho <em>first</em>,
                         ahead of Google Workspace and Microsoft 365. That&apos;s a <strong className="text-white">100% mention rate at position #1</strong> in
                         a category where Google and Microsoft are the incumbent giants. It&apos;s
                         the strongest result in the Index.
                     </p>
                     <p>
-                        For the two Byju&apos;s prompts — &ldquo;Best edtech app for CBSE class 10&rdquo; and
-                        &ldquo;Best JEE preparation online in India&rdquo; — Gemini did <em>not name Byju&apos;s once</em>.
+                        For the two Byju&apos;s prompts, &ldquo;Best edtech app for CBSE class 10&rdquo; and
+                        &ldquo;Best JEE preparation online in India&rdquo;, Gemini did <em>not name Byju&apos;s once</em>.
                         Not in the top ten. Not in the also-rans. Not at all. India&apos;s
                         best-funded EdTech company, once valued at $22B, is invisible to the AI
                         answer layer for the exact queries its future customers are asking.
@@ -104,14 +104,14 @@ export default function IndiaIndexJuly2026Post() {
 
                     <H2 id="fintech-split">Fintech: strong presence, positional gap</H2>
                     <p>
-                        Zerodha and Razorpay are both categorized as <strong className="text-white">Strong</strong> — 100% and
-                        67% mention rates respectively — but there&apos;s a meaningful difference
+                        Zerodha and Razorpay are both categorized as <strong className="text-white">Strong</strong>, 100% and
+                        67% mention rates respectively, but there&apos;s a meaningful difference
                         in how Gemini <em>positions</em> them within its answers.
                     </p>
                     <ul className="list-none space-y-2 pl-0">
                         <BulletFact
                             brand="Zerodha"
-                            fact="Named for both stockbroker queries but at position #5.5 average — usually the fifth or sixth name in the list. Present but not top-of-mind."
+                            fact="Named for both stockbroker queries but at position #5.5 average, usually the fifth or sixth name in the list. Present but not top-of-mind."
                         />
                         <BulletFact
                             brand="Razorpay"
@@ -120,7 +120,7 @@ export default function IndiaIndexJuly2026Post() {
                     </ul>
                     <p>
                         Position matters more than most brands assume. The AI answer isn&apos;t a
-                        SERP — users don&apos;t scroll past position #3. Being named at all is
+                        SERP, users don&apos;t scroll past position #3. Being named at all is
                         table stakes; being named <em>early</em> is the actual win. Razorpay
                         is closer to winning than Zerodha, despite Zerodha&apos;s higher mention
                         rate.
@@ -131,7 +131,7 @@ export default function IndiaIndexJuly2026Post() {
                         BoAt scores <strong className="text-white">Strong</strong> (67% mention, position #2.5), Mamaearth
                         scores <strong className="text-white">Contested</strong> (50% mention, position #1 when
                         mentioned). Interesting split: when Gemini mentions Mamaearth, it
-                        <em>leads</em> with it — but it only mentions Mamaearth half the time
+                        <em>leads</em> with it, but it only mentions Mamaearth half the time
                         for the tested category queries. That&apos;s a coverage problem, not a
                         positioning one.
                     </p>
@@ -195,7 +195,7 @@ export default function IndiaIndexJuly2026Post() {
                             <NextPost
                                 slug="the-receipt-is-the-product"
                                 title="The receipt is the product"
-                                excerpt="Every derived number in Aelo is one click away from the raw scan. This isn't a feature — it's the entire thesis."
+                                excerpt="Every derived number in Aelo is one click away from the raw scan. This isn't a feature, it's the entire thesis."
                             />
                         </div>
                     </div>
@@ -213,7 +213,7 @@ function RankingSummary() {
         { rank: 3, brand: 'Razorpay',  category: 'Fintech', mention: 67,  pos: '#2',   verdict: 'strong' },
         { rank: 4, brand: 'BoAt',      category: 'D2C',     mention: 67,  pos: '#2.5', verdict: 'strong' },
         { rank: 5, brand: 'Mamaearth', category: 'D2C',     mention: 50,  pos: '#1',   verdict: 'contested' },
-        { rank: 6, brand: "Byju's",    category: 'EdTech',  mention: 0,   pos: '—',    verdict: 'invisible' },
+        { rank: 6, brand: "Byju's",    category: 'EdTech',  mention: 0,   pos: ', ',    verdict: 'invisible' },
     ];
     const verdictStyle: Record<string, string> = {
         dominant:  'text-[var(--accent-base)] bg-[var(--accent-muted)]',

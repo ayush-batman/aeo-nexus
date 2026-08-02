@@ -186,7 +186,7 @@ export default function ExperimentsPage() {
                                         onChange={(e) => setTestQuestionsText(e.target.value)}
                                     />
                                     <p className="text-[10px] text-[var(--text-ghost)] mt-1">
-                                        {testQuestionsText.split("\n").filter(Boolean).length} questions — you will make AEO interventions for these
+                                        {testQuestionsText.split("\n").filter(Boolean).length} questions, you will make AEO interventions for these
                                     </p>
                                 </div>
                                 <div>
@@ -200,7 +200,7 @@ export default function ExperimentsPage() {
                                         onChange={(e) => setControlQuestionsText(e.target.value)}
                                     />
                                     <p className="text-[10px] text-[var(--text-ghost)] mt-1">
-                                        {controlQuestionsText.split("\n").filter(Boolean).length} questions — no interventions, used as baseline comparison
+                                        {controlQuestionsText.split("\n").filter(Boolean).length} questions, no interventions, used as baseline comparison
                                     </p>
                                 </div>
                             </div>
@@ -262,7 +262,7 @@ export default function ExperimentsPage() {
                                                         <p className="text-[10px] text-[var(--text-ghost)] uppercase tracking-wider mb-1">Test SoV</p>
                                                         <div className="flex items-center gap-1">
                                                             <p className="text-lg font-bold font-display text-[var(--text-primary)]">
-                                                                {exp.result_data?.testSov != null ? `${exp.result_data.testSov}%` : "—"}
+                                                                {exp.result_data?.testSov != null ? `${exp.result_data.testSov}%` : ", "}
                                                             </p>
                                                             {exp.result_data?.testLift != null && (
                                                                 <span className={`text-xs ${(exp.result_data.testLift as number) > 0 ? "text-[var(--data-green)]" : "text-[var(--data-red)]"}`}>
@@ -276,7 +276,7 @@ export default function ExperimentsPage() {
                                                         <p className="text-[10px] text-[var(--text-ghost)] uppercase tracking-wider mb-1">Control SoV</p>
                                                         <div className="flex items-center gap-1">
                                                             <p className="text-lg font-bold font-display text-[var(--text-primary)]">
-                                                                {exp.result_data?.controlSov != null ? `${exp.result_data.controlSov}%` : "—"}
+                                                                {exp.result_data?.controlSov != null ? `${exp.result_data.controlSov}%` : ", "}
                                                             </p>
                                                             {exp.result_data?.controlLift != null && (
                                                                 <span className="text-xs text-[var(--text-ghost)]">

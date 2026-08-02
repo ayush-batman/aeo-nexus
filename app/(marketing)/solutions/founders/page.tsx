@@ -13,10 +13,10 @@ export default function FoundersSolution() {
                 persona: "SaaS Founders",
                 headline: "The AI is already picking your competitors. You should know.",
                 subheadline:
-                    "Aelo tracks — and moves — how ChatGPT, Gemini, Claude and Perplexity answer the exact queries your ICP is typing. When you ship a landing page, we measure the delta.",
+                    "Aelo tracks, and moves, how ChatGPT, Gemini, Claude and Perplexity answer the exact queries your ICP is typing. When you ship a landing page, we measure the delta.",
                 problem: {
                     title: "AI answers are the new shortlist. Most founders have zero signal on theirs.",
-                    body: "By 2026 the majority of high-intent buying research happens inside an AI chat — 'best CRM for a 10-person team', 'YC-backed observability tools', 'Notion vs Confluence for scaling teams'. If you're not named, you're not shortlisted. Traditional SEO tools can't see this. Aelo can — and it can prescribe the exact action that closes the gap.",
+                    body: "By 2026 the majority of high-intent buying research happens inside an AI chat, 'best CRM for a 10-person team', 'YC-backed observability tools', 'Notion vs Confluence for scaling teams'. If you're not named, you're not shortlisted. Traditional SEO tools can't see this. Aelo can, and it can prescribe the exact action that closes the gap.",
                 },
                 capabilities: [
                     {
@@ -33,11 +33,11 @@ export default function FoundersSolution() {
                     },
                     {
                         title: "Before/after receipts",
-                        body: "Every action you take gets a receipt — visibility change on the target prompt, in points, with a verdict.",
+                        body: "Every action you take gets a receipt, visibility change on the target prompt, in points, with a verdict.",
                     },
                 ],
                 proofPoints: [
-                    "Signal in your first scan — no waiting for data to accumulate.",
+                    "Signal in your first scan, no waiting for data to accumulate.",
                     "Priced in ₹ starting ₹4,999/mo. Razorpay + Stripe.",
                     "You + one teammate on Radar; up to 5 on Command.",
                     "The honest data policy: no fabricated metrics, ever.",
@@ -45,7 +45,7 @@ export default function FoundersSolution() {
                 tierRecommendation: {
                     tierName: "Command",
                     rationale:
-                        "Founders need the whole loop — Scan through Prove. Radar is fine if you only want the mirror; Command is where the levers are.",
+                        "Founders need the whole loop, Scan through Prove. Radar is fine if you only want the mirror; Command is where the levers are.",
                 },
                 ctaCopy: "Find out what ChatGPT is telling your buyers about you.",
             }}

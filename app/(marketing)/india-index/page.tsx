@@ -10,7 +10,7 @@ export const metadata: Metadata = {
     description: "How ChatGPT, Gemini, Claude and Perplexity actually answer India's top intent queries. Real scans. Refreshed monthly.",
 };
 
-// Server component — pulls the current edition at request time.
+// Server component, pulls the current edition at request time.
 // Every number below comes from a live llm_scans row. Honest data policy.
 export const revalidate = 900; // 15 minutes; edition doesn't change often
 
@@ -48,7 +48,7 @@ export default async function IndiaIndexPage() {
                 </div>
             </section>
 
-            {/* Ranking table (client island — supports clicking rows to open receipts) */}
+            {/* Ranking table (client island, supports clicking rows to open receipts) */}
             <RankingTable edition={edition} />
 
             {/* Methodology + trust */}
@@ -70,7 +70,7 @@ export default async function IndiaIndexPage() {
                             },
                             {
                                 t: "Honest data policy",
-                                b: "When a scan provider fails, we surface an honest empty state. When a brand isn't named, we say invisible — not \"low visibility\". Zero fabricated metrics ever ship.",
+                                b: "When a scan provider fails, we surface an honest empty state. When a brand isn't named, we say invisible, not \"low visibility\". Zero fabricated metrics ever ship.",
                             },
                             {
                                 t: "Verdict rules (Sage: strict thresholds)",
@@ -129,7 +129,7 @@ export default async function IndiaIndexPage() {
                     <div className="flex items-start gap-2.5 text-[12px] text-zinc-500 leading-relaxed">
                         <Info className="w-3.5 h-3.5 mt-0.5 flex-shrink-0 text-zinc-600" strokeWidth={1.5} />
                         <p>
-                            LLM answers are non-deterministic — a single scan is a sample, not a truth. The Index
+                            LLM answers are non-deterministic, a single scan is a sample, not a truth. The Index
                             aggregates multiple prompts per brand to reduce noise, but any single number can drift
                             ±10 pts between measurements. See the raw responses in your own Aelo workspace to audit
                             any entry.

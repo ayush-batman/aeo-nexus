@@ -36,7 +36,7 @@ const TIERS: Tier[] = [
             "50 target prompts per workspace",
             "Aelo Health Score, Share of Voice, sentiment",
             "Citation attribution (which URLs the AI cites)",
-            "Weekly digest email — what changed, what to do",
+            "Weekly digest email, what changed, what to do",
             "1 workspace",
         ],
         footnote: "For founders and marketers who want a reliable mirror.",
@@ -59,7 +59,7 @@ const TIERS: Tier[] = [
             "3 workspaces · 5 team seats",
             "Priority support",
         ],
-        footnote: "For teams that ship — and want proof it worked.",
+        footnote: "For teams that ship, and want proof it worked.",
     },
     {
         key: "concierge",
@@ -85,11 +85,11 @@ const TIERS: Tier[] = [
 const FAQ: { q: string; a: string }[] = [
     {
         q: "Why aren't you priced on scan quotas like everyone else?",
-        a: "Quotas anchor us as a utility, and utilities race to zero. Aelo is priced on the outcome — visibility measured and moved — because that's what matters. Radar scans once a week (enough to notice change), Command scans daily.",
+        a: "Quotas anchor us as a utility, and utilities race to zero. Aelo is priced on the outcome, visibility measured and moved, because that's what matters. Radar scans once a week (enough to notice change), Command scans daily.",
     },
     {
         q: "Do you support Indian brands and ₹ billing?",
-        a: "Yes — Aelo is India-first. Native ₹ pricing, Razorpay billing, Indian-query nuance (\"best B2B SaaS in Pune\", \"phones under 20k\"), and a public monthly India AI Visibility Index. Stripe for USD if you're global.",
+        a: "Yes, Aelo is India-first. Native ₹ pricing, Razorpay billing, Indian-query nuance (\"best B2B SaaS in Pune\", \"phones under 20k\"), and a public monthly India AI Visibility Index. Stripe for USD if you're global.",
     },
     {
         q: "Which models do you monitor?",
@@ -97,15 +97,15 @@ const FAQ: { q: string; a: string }[] = [
     },
     {
         q: "How is Aelo different from Profound, Peec, Otterly?",
-        a: "Every other tool is a mirror — they show you visibility. Aelo is a lever — it prescribes actions (forum replies, content, schema) AND proves whether they worked with per-intervention before/after receipts. Nobody else measures outcome per action.",
+        a: "Every other tool is a mirror, they show you visibility. Aelo is a lever, it prescribes actions (forum replies, content, schema) AND proves whether they worked with per-intervention before/after receipts. Nobody else measures outcome per action.",
     },
     {
         q: "What does 'honest data' mean?",
-        a: "When a scan provider fails, Aelo shows an honest 'unavailable' state — not a fabricated one. When a follow-up scan regressed, the verdict says regressed. Analytics products die from one made-up number.",
+        a: "When a scan provider fails, Aelo shows an honest 'unavailable' state, not a fabricated one. When a follow-up scan regressed, the verdict says regressed. Analytics products die from one made-up number.",
     },
     {
         q: "Can I try before I pay?",
-        a: "Yes. Sign up with no credit card, add your brand, and run your first scan — Aelo shows you what you'd measure and where the gaps are. Upgrade only when you're ready to run scheduled scans, receive alerts, or unlock the intervention receipts.",
+        a: "Yes. Sign up with no credit card, add your brand, and run your first scan, Aelo shows you what you'd measure and where the gaps are. Upgrade only when you're ready to run scheduled scans, receive alerts, or unlock the intervention receipts.",
     },
 ];
 

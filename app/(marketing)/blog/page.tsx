@@ -6,7 +6,7 @@ import { NewsletterSubscribe } from "@/components/marketing/newsletter-subscribe
 
 export const metadata: Metadata = {
     title: "Blog · Aelo",
-    description: "Analysis, methodology, and field notes from Aelo — building the honest measurement layer for AI answer visibility.",
+    description: "Analysis, methodology, and field notes from Aelo, building the honest measurement layer for AI answer visibility.",
     alternates: {
         types: {
             "application/rss+xml": "/rss.xml",

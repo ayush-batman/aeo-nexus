@@ -119,10 +119,10 @@ export default function PlaybookPage() {
         // Simulate gap analysis based on questions
         const analyzed: ContentGap[] = questions.slice(0, 20).map((q, i) => ({
             question: q.text,
-            hasContent: i % 3 === 0, // Simulated — in production, would check actual content
+            hasContent: i % 3 === 0, // Simulated, in production, would check actual content
             recommendation: i % 3 === 0
-                ? "Content exists — optimize for AEO"
-                : "No content found — create a dedicated page",
+                ? "Content exists, optimize for AEO"
+                : "No content found, create a dedicated page",
         }));
         setGaps(analyzed);
         setLoadingGaps(false);

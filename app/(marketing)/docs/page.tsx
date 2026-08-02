@@ -7,24 +7,24 @@ export const metadata: Metadata = {
     description: "Install the pixel. Run your first scan. Read your first receipt. Everything you need to start winning AI answers.",
 };
 
-// Docs page — real, actionable content. Sage rule: no fluff, no
+// Docs page, real, actionable content. Sage rule: no fluff, no
 // "coming soon" placeholders in the primary flow. FAQ + reference sit
 // alongside the quickstart so a developer can copy-paste and go.
 
 const QUICKSTART = [
-    { icon: Zap,           title: "Create your workspace",   body: "Sign up (no card). Auto-onboarding provisions your first workspace with sensible defaults. Add your website and top 3 competitors in the first minute — the analyzer uses them to categorize citations correctly." },
+    { icon: Zap,           title: "Create your workspace",   body: "Sign up (no card). Auto-onboarding provisions your first workspace with sensible defaults. Add your website and top 3 competitors in the first minute, the analyzer uses them to categorize citations correctly." },
     { icon: Search,        title: "Add target prompts",      body: "LLM Tracker → Add prompts. Aelo seeds 30+ high-intent queries for your category. Edit, star, or add your own. Every scheduled scan runs against every starred prompt." },
-    { icon: ClipboardList, title: "Run your first scan",    body: "Click Run scan. Aelo hits Gemini live (Radar tier) or all four providers in parallel (Command). Analyzer extracts mention state, position, sentiment, competitors, and citations. Zero fabrication — a failed provider surfaces a real error, never a mock." },
-    { icon: CheckCircle2,  title: "Log your first intervention", body: "Ship something — a landing page, a Reddit reply, a schema block. Log it in /dashboard/interventions with the target prompt(s) it should move. Aelo snapshots a baseline at that moment. Hit Measure a week later to see the receipt." },
+    { icon: ClipboardList, title: "Run your first scan",    body: "Click Run scan. Aelo hits Gemini live (Radar tier) or all four providers in parallel (Command). Analyzer extracts mention state, position, sentiment, competitors, and citations. Zero fabrication, a failed provider surfaces a real error, never a mock." },
+    { icon: CheckCircle2,  title: "Log your first intervention", body: "Ship something, a landing page, a Reddit reply, a schema block. Log it in /dashboard/interventions with the target prompt(s) it should move. Aelo snapshots a baseline at that moment. Hit Measure a week later to see the receipt." },
 ];
 
 const FAQ = [
     { q: "How is Aelo different from ChatGPT SEO tools?",  a: "Most tools ship a black-box 'AI Score' averaged across platforms. Aelo shows per-platform per-prompt receipts you can reproduce yourself in 30 seconds. See /methodology for every formula." },
     { q: "Does the pixel slow down my site?",              a: "The script is ~3 KB gzipped, loaded async, and fires a single beacon per pageview. No render-blocking, no cookies. See the Event API below for the exact wire format." },
-    { q: "Which LLMs does Aelo scan?",                     a: "Gemini and Google AI Overview on Radar. ChatGPT, Gemini, Claude, and Perplexity on Command. Same prompt runs on every enabled platform in parallel, then each response is analyzed independently — no cross-platform averaging unless you ask for it." },
+    { q: "Which LLMs does Aelo scan?",                     a: "Gemini and Google AI Overview on Radar. ChatGPT, Gemini, Claude, and Perplexity on Command. Same prompt runs on every enabled platform in parallel, then each response is analyzed independently, no cross-platform averaging unless you ask for it." },
     { q: "What happens when an LLM API is down?",          a: "The failed scan is logged with the actual error, tagged failed, and excluded from all metrics. It does not become a 'zero' or 'not mentioned' data point. Failures are visible in the receipt drawer." },
-    { q: "Can I export my scan data?",                     a: "Yes — every workspace can export every scan as CSV or JSON from Settings → Data. Nothing about a metric is proprietary; take the receipts with you if you leave." },
-    { q: "How much does the pixel cost me on the LLM side?", a: "Nothing — the pixel captures pageviews on your site. LLM scans are billed against Aelo's plan. Your visitors never trigger an LLM call." },
+    { q: "Can I export my scan data?",                     a: "Yes, every workspace can export every scan as CSV or JSON from Settings → Data. Nothing about a metric is proprietary; take the receipts with you if you leave." },
+    { q: "How much does the pixel cost me on the LLM side?", a: "Nothing, the pixel captures pageviews on your site. LLM scans are billed against Aelo's plan. Your visitors never trigger an LLM call." },
 ];
 
 export default function DocsPage() {
@@ -91,7 +91,7 @@ export default function DocsPage() {
                     <SectionHeading icon={Code} eyebrow="02" title="Install the pixel" />
                     <p className="text-[14px] text-zinc-400 leading-relaxed mb-6">
                         The Aelo pixel is a single async script that measures which AI referrers
-                        drive real visits — ChatGPT.com, Perplexity, Gemini, Claude, and Google AI
+                        drive real visits, ChatGPT.com, Perplexity, Gemini, Claude, and Google AI
                         Overview all set identifiable referrers, and the pixel classifies them
                         for you.
                     </p>
@@ -106,7 +106,7 @@ export default function DocsPage() {
                     <p className="text-[13px] text-zinc-500 leading-relaxed mb-6">
                         Paste before <Mono>{`</head>`}</Mono>. Grab the workspace-personalized
                         snippet from <Link href="/dashboard/settings?tab=install" className="text-[var(--accent-base)] hover:underline">Settings → Install</Link>{" "}
-                        — the workspace ID is filled in for you and the tab shows a live
+, the workspace ID is filled in for you and the tab shows a live
                         verification badge that flips to VERIFIED the moment the first pageview
                         arrives.
                     </p>
@@ -207,7 +207,7 @@ Authorization: Bearer aelo_sk_...`}</CodeBlock>
 
                     <p className="text-[13px] text-zinc-500 leading-relaxed">
                         All scan endpoints are rate-limited (20 requests / hour / API key on
-                        Command). Failed scans return a real error surface (429, 5xx, etc.) — never
+                        Command). Failed scans return a real error surface (429, 5xx, etc.), never
                         a mock success. Full response schema is documented in{" "}
                         <a href="https://github.com/ayush-batman/aeo-nexus" target="_blank" rel="noreferrer" className="text-[var(--accent-base)] hover:underline">
                             the API repo
@@ -224,8 +224,8 @@ Authorization: Bearer aelo_sk_...`}</CodeBlock>
                         <ConceptRow term="Mention rate" def="Percentage of tested prompts in which the AI named your brand. Deterministic string match; no LLM-as-judge." />
                         <ConceptRow term="Average position" def="When named, how early in the AI's list. Position 1.0 = first mentioned. Scans where brand wasn't named are excluded from the average (not counted as ∞)." />
                         <ConceptRow term="Health score / 100" def="Composite of mention rate (weighted 70%) and position boost (30%). 0 = never mentioned; 100 = named first every time. Formula on /methodology." />
-                        <ConceptRow term="Share of Voice" def="Your mentions as a fraction of all named brands in your competitor set. Requires competitor list configured; otherwise displays '—'." />
-                        <ConceptRow term="Receipt" def="The raw scan behind any metric — prompt sent, LLM response received, timestamp. Every derived number in Aelo is one click away from its receipt." />
+                        <ConceptRow term="Share of Voice" def="Your mentions as a fraction of all named brands in your competitor set. Requires competitor list configured; otherwise displays ', '." />
+                        <ConceptRow term="Receipt" def="The raw scan behind any metric, prompt sent, LLM response received, timestamp. Every derived number in Aelo is one click away from its receipt." />
                         <ConceptRow term="Intervention" def="Something you did to improve visibility (a landing page, a Reddit reply, a schema block). Aelo snapshots a baseline when logged; Measure a week later to see the lift." />
                     </div>
                     <div className="mt-6">

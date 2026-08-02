@@ -170,7 +170,7 @@ export async function POST(request: NextRequest) {
             }
         }
 
-        // Fire alert evaluation asynchronously (don't await — don't slow down response)
+        // Fire alert evaluation asynchronously (don't await, don't slow down response)
         import('@/lib/alerts/evaluate').then(({ evaluateAlerts }) => {
             evaluateAlerts(workspaceId, results.map(r => ({
                 brand_mentioned: r.brandMentioned,

@@ -4,7 +4,7 @@ import { Download } from "lucide-react";
 
 export const metadata: Metadata = {
     title: "Brand · Aelo",
-    description: "Aelo brand assets — mark, wordmark, social banners. Direct downloads. No logo abuse.",
+    description: "Aelo brand assets, mark, wordmark, social banners. Direct downloads. No logo abuse.",
 };
 
 // Press kit / brand page. Sage-clean: no marketing copy, just the assets
@@ -17,18 +17,18 @@ interface Asset {
     format:      'SVG';
     intendedUse: string;
     dimensions:  string;
-    // preview background (light/dark) — some assets need the opposite
+    // preview background (light/dark), some assets need the opposite
     bg:          'dark' | 'light';
 }
 
 const MARKS: Asset[] = [
-    { id: 'mark',              label: 'Mark',              filename: 'mark.svg',              format: 'SVG', intendedUse: 'Default — a wearing its halo', dimensions: '512 × 512', bg: 'dark' },
+    { id: 'mark',              label: 'Mark',              filename: 'mark.svg',              format: 'SVG', intendedUse: 'Default, a wearing its halo', dimensions: '512 × 512', bg: 'dark' },
     { id: 'mark-mono-white',   label: 'Mark · mono white', filename: 'mark-mono-white.svg',   format: 'SVG', intendedUse: 'Dark backgrounds',           dimensions: '512 × 512', bg: 'dark' },
     { id: 'mark-mono-black',   label: 'Mark · mono black', filename: 'mark-mono-black.svg',   format: 'SVG', intendedUse: 'Light backgrounds',          dimensions: '512 × 512', bg: 'light' },
 ];
 
 const WORDMARKS: Asset[] = [
-    { id: 'wordmark',              label: 'Wordmark',              filename: 'wordmark.svg',              format: 'SVG', intendedUse: 'Default — halo over the a', dimensions: '360 × 120', bg: 'dark' },
+    { id: 'wordmark',              label: 'Wordmark',              filename: 'wordmark.svg',              format: 'SVG', intendedUse: 'Default, halo over the a', dimensions: '360 × 120', bg: 'dark' },
     { id: 'wordmark-mono-white',   label: 'Wordmark · mono white', filename: 'wordmark-mono-white.svg',   format: 'SVG', intendedUse: 'Dark backgrounds',           dimensions: '360 × 120', bg: 'dark' },
     { id: 'wordmark-mono-black',   label: 'Wordmark · mono black', filename: 'wordmark-mono-black.svg',   format: 'SVG', intendedUse: 'Light backgrounds',          dimensions: '360 × 120', bg: 'light' },
 ];
@@ -53,7 +53,7 @@ export default function BrandPage() {
                         Aelo brand assets.
                     </h1>
                     <p className="text-[15px] md:text-[17px] text-zinc-400 max-w-2xl leading-relaxed">
-                        Marks, wordmark, social banners. All SVG — infinitely scalable, editable
+                        Marks, wordmark, social banners. All SVG, infinitely scalable, editable
                         in any vector tool. Use them as-is or convert to PNG/JPG with any
                         online tool. Rules at the bottom.
                     </p>
@@ -117,9 +117,9 @@ export default function BrandPage() {
                         <Rule ok body="Use the ivory-halo mark on dark backgrounds. Default." />
                         <Rule ok body="Mono variants on backgrounds that fight the ivory halo." />
                         <Rule ok body="Give the mark at least the height of the mark itself as clear space around it." />
-                        <Rule ok body="Wordmark reads 'aelo' — always lowercase, always." />
+                        <Rule ok body="Wordmark reads 'aelo', always lowercase, always." />
                         <Rule    body="Don't detach the halo or change its tilt. It sits over the a." />
-                        <Rule    body="Don't recolor the halo — the ivory ring of light is the point." />
+                        <Rule    body="Don't recolor the halo, the ivory ring of light is the point." />
                         <Rule    body="Don't add drop-shadows, glows, or gradients. Sage archetype." />
                         <Rule    body="Don't lock the mark inside another shape (circle, square) unless it's the favicon variant." />
                     </div>
@@ -164,7 +164,7 @@ export default function BrandPage() {
                     </p>
                     <p className="text-[14px] text-zinc-400 leading-relaxed">
                         Writing about Aelo, referencing an India Index number, or building an
-                        integration? Email <span className="font-mono text-zinc-200">press@aelohq.com</span> —
+                        integration? Email <span className="font-mono text-zinc-200">press@aelohq.com</span>, 
                         we reply same day, and we&apos;ll happily point you to a real customer
                         (with their permission) or a specific receipt to cite.
                     </p>

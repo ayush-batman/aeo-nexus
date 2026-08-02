@@ -22,7 +22,7 @@ const PRICE_IDS: Record<string, string> = {
 export async function POST(request: NextRequest) {
     try {
         // Route through the shared context helper so dev-auth-bypass works
-        // here — same fix pattern as the /api/workspaces endpoints.
+        // here, same fix pattern as the /api/workspaces endpoints.
         const context = await getCurrentWorkspaceContext();
         if (!context) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });

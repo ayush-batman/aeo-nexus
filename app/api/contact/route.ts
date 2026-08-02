@@ -17,7 +17,7 @@ interface Body {
 const TO_EMAIL   = process.env.CONTACT_TO_EMAIL   || "hello@aelohq.com";
 const FROM_EMAIL = process.env.CONTACT_FROM_EMAIL || "Aelo <hello@aeonexus.com>";
 
-// Basic RFC 5322-adjacent shape check. Not exhaustive — Resend rejects
+// Basic RFC 5322-adjacent shape check. Not exhaustive, Resend rejects
 // obvious garbage server-side; we just avoid submitting nonsense.
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -47,13 +47,13 @@ export async function POST(req: NextRequest) {
         message:  message || null,
     };
 
-    // Always log — a durable audit trail even if delivery fails.
+    // Always log, a durable audit trail even if delivery fails.
     console.log("[contact]", { at: new Date().toISOString(), ...payload });
 
     // If no key, degrade gracefully. The submission is still logged; the
     // user still sees the receipt UI. Preferred over throwing on prod.
     if (!process.env.RESEND_API_KEY) {
-        console.warn("[contact] RESEND_API_KEY not set — email skipped");
+        console.warn("[contact] RESEND_API_KEY not set, email skipped");
         return NextResponse.json({ received: true, delivered: false });
     }
 
@@ -61,21 +61,21 @@ export async function POST(req: NextRequest) {
         ? { command: "Command tier", concierge: "Concierge tier", agency: "Agency partnership", "india-index": "India Index inclusion" }[payload.interest] ?? payload.interest
         : "general inquiry";
 
-    const subject = `[Aelo contact] ${payload.name} — ${interestLabel}`;
+    const subject = `[Aelo contact] ${payload.name}, ${interestLabel}`;
 
     // Plain-text body: readable, spam-filter friendly, greppable in inboxes.
     const text = [
         `New contact submission from ${payload.name}`,
         ``,
         `Email:     ${payload.email}`,
-        `Company:   ${payload.company ?? "—"}`,
-        `Role:      ${payload.role ?? "—"}`,
+        `Company:   ${payload.company ?? ", "}`,
+        `Role:      ${payload.role ?? ", "}`,
         `Interest:  ${interestLabel}`,
         ``,
         `Message:`,
         payload.message ?? "(no message)",
         ``,
-        `— submitted ${new Date().toISOString()}`,
+        `, submitted ${new Date().toISOString()}`,
     ].join("\n");
 
     try {

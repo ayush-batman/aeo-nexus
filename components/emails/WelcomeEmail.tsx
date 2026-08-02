@@ -49,7 +49,7 @@ export const WelcomeEmail = ({ firstName = "there" }: WelcomeEmailProps) => {
                             </Text>
 
                             <Text className="text-base text-zinc-700 mb-6 leading-relaxed">
-                                Aelo measures how ChatGPT, Gemini, Claude, and Perplexity actually answer questions in your category — with the raw receipts, not a black-box score. Your first workspace is ready.
+                                Aelo measures how ChatGPT, Gemini, Claude, and Perplexity actually answer questions in your category, with the raw receipts, not a black-box score. Your first workspace is ready.
                             </Text>
 
                             <Text className="text-base text-zinc-700 mb-8 leading-relaxed">
@@ -72,7 +72,7 @@ export const WelcomeEmail = ({ firstName = "there" }: WelcomeEmailProps) => {
                             </Text>
 
                             <Text className="text-sm text-[var(--text-secondary)]">
-                                — The Aelo Team
+, The Aelo Team
                             </Text>
 
                         </Section>

@@ -37,7 +37,7 @@ export default async function PositioningPage() {
         <div className="flex flex-col min-h-screen">
             <Header
                 title="Competitor Positioning"
-                description="What each AI actually says about you vs your competitors. Rows are entities, columns are attributes — cell darkness shows how often the LLM associates the two."
+                description="What each AI actually says about you vs your competitors. Rows are entities, columns are attributes, cell darkness shows how often the LLM associates the two."
             />
             <main className="flex-1 px-6 py-8 max-w-7xl mx-auto w-full">
                 <PositioningView data={serialized} missingTable={missingTable} />

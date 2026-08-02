@@ -137,13 +137,13 @@ export async function GET(request: NextRequest) {
         const presentTypes = new Set(sources.map(s => s.type));
         const gaps: string[] = [];
         const gapLabels: Record<string, string> = {
-            youtube: 'YouTube — Create video content for niche topics',
-            reddit: 'Reddit — Participate authentically in relevant communities',
-            quora: 'Quora — Answer questions with genuine expertise',
-            tier1_affiliate: 'Tier-1 Affiliates (Forbes, etc.) — Consider paid affiliate mentions',
-            review_site: 'Review Sites (G2, Capterra) — Get listed on review platforms',
-            blog: 'Blogs — Aim for mentions on relevant industry blogs',
-            tech_media: 'Tech Media — Pursue press coverage',
+            youtube: 'YouTube, Create video content for niche topics',
+            reddit: 'Reddit, Participate authentically in relevant communities',
+            quora: 'Quora, Answer questions with genuine expertise',
+            tier1_affiliate: 'Tier-1 Affiliates (Forbes, etc.), Consider paid affiliate mentions',
+            review_site: 'Review Sites (G2, Capterra), Get listed on review platforms',
+            blog: 'Blogs, Aim for mentions on relevant industry blogs',
+            tech_media: 'Tech Media, Pursue press coverage',
         };
 
         for (const [type, label] of Object.entries(gapLabels)) {

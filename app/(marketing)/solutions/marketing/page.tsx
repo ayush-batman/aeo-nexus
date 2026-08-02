@@ -13,10 +13,10 @@ export default function MarketingSolution() {
                 persona: "Marketing Teams",
                 headline: "Your SEO report was a mirror. Your AEO report is a receipt.",
                 subheadline:
-                    "Every action your team ships — a landing page, a schema block, a Reddit reply, a G2 comparison — becomes an intervention with a real before/after visibility receipt.",
+                    "Every action your team ships, a landing page, a schema block, a Reddit reply, a G2 comparison, becomes an intervention with a real before/after visibility receipt.",
                 problem: {
                     title: "Marketing dashboards told you where you ranked. They never told you why it worked.",
-                    body: "Traditional SEO gives you position and traffic — good, but you can only ever say 'position moved from 4 to 2'. AI answers work differently: an LLM either names you or doesn't, cites you or doesn't. Aelo captures the causal layer — which specific intervention moved which specific prompt — so your team can stop guessing which content is worth shipping.",
+                    body: "Traditional SEO gives you position and traffic, good, but you can only ever say 'position moved from 4 to 2'. AI answers work differently: an LLM either names you or doesn't, cites you or doesn't. Aelo captures the causal layer, which specific intervention moved which specific prompt, so your team can stop guessing which content is worth shipping.",
                 },
                 capabilities: [
                     {

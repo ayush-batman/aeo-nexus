@@ -13,7 +13,7 @@ import { NewsletterSubscribe } from "@/components/marketing/newsletter-subscribe
 import { FreeScanWidget } from "@/components/marketing/free-scan-widget";
 
 // ============================================================================
-// Landing — Aelo
+// Landing, Aelo
 // Archetype: Sage (primary) + Magician (shading).
 // Rules: data speaks first, no aspirational adjectives, no gradient hype.
 // ============================================================================
@@ -37,12 +37,12 @@ export default function LandingPage() {
                     </h1>
 
                     <p className="text-[17px] md:text-[19px] text-zinc-400 max-w-2xl text-balance leading-relaxed mb-10">
-                        Aelo is the instrument for measuring — and moving — how ChatGPT, Gemini,
+                        Aelo is the instrument for measuring, and moving, how ChatGPT, Gemini,
                         Claude and Perplexity answer questions about your brand. Every metric is
                         computed from a real scan. Nothing is fabricated.
                     </p>
 
-                    {/* Live free scan — the demo IS the pitch */}
+                    {/* Live free scan, the demo IS the pitch */}
                     <div className="w-full mb-6">
                         <FreeScanWidget />
                     </div>
@@ -131,7 +131,7 @@ export default function LandingPage() {
                         </h2>
                         <p className="text-zinc-400 text-[16px] leading-relaxed">
                             Every other tool in this category shows you where you stand. Aelo shows
-                            you what to do — and proves whether it worked. Five steps, welded into
+                            you what to do, and proves whether it worked. Five steps, welded into
                             one product.
                         </p>
                     </div>
@@ -139,10 +139,10 @@ export default function LandingPage() {
                     <div className="grid grid-cols-1 md:grid-cols-5 gap-px overflow-hidden rounded-lg border border-white/10 bg-white/10">
                         {[
                             { icon: Search,       title: "Scan",       body: "Automated multi-LLM scans across ChatGPT, Gemini, Claude, Perplexity, Google AI Overview." },
-                            { icon: Layers,       title: "Diagnose",   body: "Citation attribution — the exact URLs LLMs pull from when they mention (or ignore) your brand." },
+                            { icon: Layers,       title: "Diagnose",   body: "Citation attribution, the exact URLs LLMs pull from when they mention (or ignore) your brand." },
                             { icon: ClipboardList,title: "Prescribe",  body: "AI-drafted forum replies, content briefs, and schema markup targeting your weakest queries." },
                             { icon: Zap,          title: "Act",        body: "Publish the reply. Ship the page. Add the JSON-LD. Aelo captures a baseline the moment you act." },
-                            { icon: CheckCircle2, title: "Prove",      body: "Re-scan. Compare. Deliver the receipt — visibility change, verdict, and per-prompt delta." },
+                            { icon: CheckCircle2, title: "Prove",      body: "Re-scan. Compare. Deliver the receipt, visibility change, verdict, and per-prompt delta." },
                         ].map((step, i) => (
                             <div key={step.title} className="bg-black p-6 space-y-3">
                                 <div className="flex items-center gap-2">
@@ -169,7 +169,7 @@ export default function LandingPage() {
                     <p className="text-zinc-400 text-[16px] leading-relaxed max-w-2xl mx-auto">
                         When a scan fails, Aelo shows an honest &quot;provider unavailable&quot; state instead
                         of a fabricated one. When a follow-up scan shows regression, the receipt says
-                        regressed. Analytics products sell trust — the moment we invent numbers, we
+                        regressed. Analytics products sell trust, the moment we invent numbers, we
                         stop being useful.
                     </p>
                     <div className="mt-6 inline-flex items-center gap-2 text-[12px] font-mono text-zinc-500">

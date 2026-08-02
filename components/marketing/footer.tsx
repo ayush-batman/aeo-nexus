@@ -58,7 +58,7 @@ export function MarketingFooter() {
                             <span className="text-[15px] font-medium tracking-tight">aelo</span>
                         </div>
                         <p className="text-[13px] text-zinc-500 leading-relaxed max-w-[280px]">
-                            The instrument for measuring — and moving — your brand&apos;s presence in AI answers.
+                            The instrument for measuring, and moving, your brand&apos;s presence in AI answers.
                         </p>
                         <div className="pt-2 flex items-center gap-3 text-[11px] text-zinc-600 font-mono">
                             <span className="inline-flex items-center gap-1.5">

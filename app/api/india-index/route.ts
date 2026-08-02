@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { loadCurrentEdition } from '@/lib/india-index';
 
-// Public endpoint. The India Index is a PR asset by design — no auth.
+// Public endpoint. The India Index is a PR asset by design, no auth.
 export async function GET() {
     try {
         const edition = await loadCurrentEdition();

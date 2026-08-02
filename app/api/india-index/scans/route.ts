@@ -3,7 +3,7 @@ import { createAdminClient } from '@/lib/supabase/admin';
 
 // PUBLIC endpoint. Returns the raw scans behind a brand's India-Index
 // entry so anyone (unauthenticated) can audit the number themselves.
-// Zero PII is exposed — the brands are public, the prompts are public,
+// Zero PII is exposed, the brands are public, the prompts are public,
 // the LLM responses are public. This is the Sage trust bet.
 
 // Allowlist by brand name to avoid arbitrary workspace enumeration.
@@ -20,7 +20,7 @@ const INDIA_BRAND_NAMES = new Set([
     "Byju's", 'Unacademy', 'PhysicsWallah', 'upGrad', 'Great Learning', 'Vedantu',
 ]);
 
-export const revalidate = 900; // 15 min — same as the Index page
+export const revalidate = 900; // 15 min, same as the Index page
 
 export async function GET(request: NextRequest) {
     const brand = request.nextUrl.searchParams.get('brand');
@@ -31,7 +31,7 @@ export async function GET(request: NextRequest) {
     try {
         const db = createAdminClient();
 
-        // Look up the workspace by name (allowlisted) — no auth needed
+        // Look up the workspace by name (allowlisted), no auth needed
         // because this data is intentionally public for the Index.
         const { data: ws } = await db
             .from('workspaces')

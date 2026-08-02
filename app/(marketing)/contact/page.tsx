@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { Loader2, CheckCircle2 } from "lucide-react";
 
-// Contact form. Posts to /api/contact (to be wired later — for now stores in
+// Contact form. Posts to /api/contact (to be wired later, for now stores in
 // browser state so the form is testable end-to-end and shows the receipt).
 
 export default function ContactPage() {
@@ -29,7 +29,7 @@ export default function ContactPage() {
             if (!res.ok) throw new Error();
             setState("sent");
         } catch {
-            // Endpoint not yet wired — for now, log locally and pretend it succeeded
+            // Endpoint not yet wired, for now, log locally and pretend it succeeded
             // so the marketing flow is verifiable. A real /api/contact will follow.
             console.info("[contact] would send:", payload);
             setState("sent");
@@ -47,7 +47,7 @@ export default function ContactPage() {
                         Talk to a human. We reply within 24 hours.
                     </h1>
                     <p className="text-[15px] md:text-[17px] text-zinc-400 max-w-xl mx-auto leading-relaxed">
-                        Concierge inquiries, security review, agency partnerships, or press —
+                        Concierge inquiries, security review, agency partnerships, or press, 
                         this is the right form.
                     </p>
                 </div>
@@ -61,7 +61,7 @@ export default function ContactPage() {
                             <h2 className="text-2xl font-medium text-white tracking-tight mb-2">Received.</h2>
                             <p className="text-[14px] text-zinc-400 leading-relaxed">
                                 We&apos;ll be in touch within 24 hours at the email you provided.
-                                Watch your inbox — we don&apos;t send automated follow-ups.
+                                Watch your inbox, we don&apos;t send automated follow-ups.
                             </p>
                         </div>
                     ) : (
@@ -114,8 +114,8 @@ export default function ContactPage() {
                                     onChange={e => setPayload(p => ({ ...p, interest: e.target.value }))}
                                     className="w-full input-base"
                                 >
-                                    <option value="command">Command plan — evaluating</option>
-                                    <option value="concierge">Concierge — done-for-you</option>
+                                    <option value="command">Command plan, evaluating</option>
+                                    <option value="concierge">Concierge, done-for-you</option>
                                     <option value="agency">Agency partnership</option>
                                     <option value="press">Press / analyst inquiry</option>
                                     <option value="security">Security / compliance review</option>

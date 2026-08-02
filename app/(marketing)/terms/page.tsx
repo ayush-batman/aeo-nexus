@@ -10,7 +10,7 @@ export default function TermsPage() {
         <LegalPage
             kind="Terms of Service"
             lastUpdated="2026-07-04"
-            intro="These terms govern use of Aelo. They favor readability over legalese, but they are still binding. If anything is unclear, email us — we will explain."
+            intro="These terms govern use of Aelo. They favor readability over legalese, but they are still binding. If anything is unclear, email us, we will explain."
             sections={[
                 {
                     title: "Accounts",
@@ -31,7 +31,7 @@ export default function TermsPage() {
                 },
                 {
                     title: "Availability",
-                    body: "We aim for 99.9% uptime on the API and dashboard. Scan providers occasionally fail — when they do, we surface an honest empty state instead of fabricating data. See the manifesto.",
+                    body: "We aim for 99.9% uptime on the API and dashboard. Scan providers occasionally fail, when they do, we surface an honest empty state instead of fabricating data. See the manifesto.",
                 },
                 {
                     title: "Termination",
@@ -39,7 +39,7 @@ export default function TermsPage() {
                 },
                 {
                     title: "Liability",
-                    body: "Aelo is provided 'as is'. Our liability is limited to the amount you paid us in the 12 months preceding a claim. We are not liable for how you use the data we surface — you own the decisions you make with it.",
+                    body: "Aelo is provided 'as is'. Our liability is limited to the amount you paid us in the 12 months preceding a claim. We are not liable for how you use the data we surface, you own the decisions you make with it.",
                 },
                 {
                     title: "Governing law",

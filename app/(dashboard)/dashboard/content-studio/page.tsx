@@ -451,7 +451,7 @@ export default function ContentStudioPage() {
                                             <div className="flex items-center gap-3 p-3 rounded-lg bg-[var(--data-green-muted)] border border-[var(--data-green)]/25">
                                                 <CheckCircle className="w-5 h-5 text-[var(--data-green)]" />
                                                 <p className="text-sm text-[var(--text-secondary)]">
-                                                    Great job! No major issues found — your page is well-optimized for AI.
+                                                    Great job! No major issues found, your page is well-optimized for AI.
                                                 </p>
                                             </div>
                                         )}

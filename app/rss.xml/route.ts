@@ -39,10 +39,10 @@ export async function GET() {
     const xml = `<?xml version="1.0" encoding="UTF-8"?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
-    <title>Aelo — Analysis, methodology, field notes</title>
+    <title>Aelo, Analysis, methodology, field notes</title>
     <link>${SITE_URL}/blog</link>
     <atom:link href="${SITE_URL}/rss.xml" rel="self" type="application/rss+xml" />
-    <description>Real numbers with the receipts attached — from Aelo, the honest measurement layer for AI answer visibility.</description>
+    <description>Real numbers with the receipts attached, from Aelo, the honest measurement layer for AI answer visibility.</description>
     <language>en-us</language>
     <lastBuildDate>${lastBuildDate}</lastBuildDate>
     <generator>Aelo</generator>${items}

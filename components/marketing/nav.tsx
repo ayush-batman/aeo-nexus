@@ -7,7 +7,7 @@ import { cn } from "@/lib/utils";
 import { ChevronDown, Menu, X } from "lucide-react";
 
 // Sage nav: quiet, structured, no huge dropdowns. Solutions is the only
-// grouped item — everything else is a direct link.
+// grouped item, everything else is a direct link.
 
 const SOLUTIONS = [
     { href: "/solutions/founders",  title: "SaaS Founders",  subtitle: "Own the answer buyers ask AI." },

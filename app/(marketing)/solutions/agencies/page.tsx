@@ -15,8 +15,8 @@ export default function AgenciesSolution() {
                 subheadline:
                     "Multi-tenant workspaces, per-client dashboards, and per-intervention receipts you can drop into a monthly deliverable. Aelo is built for the agency shape.",
                 problem: {
-                    title: "Your SEO retainer is under price pressure. Your AI-visibility offering isn't — because nobody else has receipts.",
-                    body: "SEO retainers commoditized because reporting was templated. AEO is the opposite: a genuinely new discipline where methodology matters and outcome is measurable. Agencies that can hand a client a per-intervention receipt — 'we published this, the AI now names you here, visibility rose 42 pts' — command premium pricing and lower churn.",
+                    title: "Your SEO retainer is under price pressure. Your AI-visibility offering isn't, because nobody else has receipts.",
+                    body: "SEO retainers commoditized because reporting was templated. AEO is the opposite: a genuinely new discipline where methodology matters and outcome is measurable. Agencies that can hand a client a per-intervention receipt, 'we published this, the AI now names you here, visibility rose 42 pts', command premium pricing and lower churn.",
                 },
                 capabilities: [
                     {
@@ -37,7 +37,7 @@ export default function AgenciesSolution() {
                     },
                 ],
                 proofPoints: [
-                    "Priced per workspace, not per seat — grow your book without seat math.",
+                    "Priced per workspace, not per seat, grow your book without seat math.",
                     "Client offboarding = one click, full data export.",
                     "Every screenshot in your report is a real Aelo view. No mock-ups.",
                     "White-label and reseller options on Concierge.",
@@ -45,7 +45,7 @@ export default function AgenciesSolution() {
                 tierRecommendation: {
                     tierName: "Concierge",
                     rationale:
-                        "Concierge unlocks unlimited workspaces, done-for-you execution, and white-label — the shape most agencies need.",
+                        "Concierge unlocks unlimited workspaces, done-for-you execution, and white-label, the shape most agencies need.",
                 },
                 ctaCopy: "Turn AEO into your next retainer line.",
             }}

@@ -4,7 +4,7 @@ import { createAdminClient } from '@/lib/supabase/admin';
 // POST /api/newsletter/subscribe
 // Small, honest signup endpoint. Idempotent: re-subscribing an existing
 // address returns 'already subscribed' rather than an error. No
-// double-opt-in email yet — Sage rule: ship the smallest honest thing,
+// double-opt-in email yet, Sage rule: ship the smallest honest thing,
 // add confirmation flow when list size warrants it.
 
 interface Body {

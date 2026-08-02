@@ -22,7 +22,7 @@ const ENTRIES: Entry[] = [
         bullets: [
             "Citation Map: new default view under Forum Hub that ranks the sources actually cited across your workspace scans. The Sage improvement over generic 'go post on Reddit' advice.",
             "Discover source list expanded from 5 → 16 (added G2, Capterra, TrustRadius, Trustpilot, Medium, DEV, Substack, Product Hunt, AlternativeTo, GitHub, and more).",
-            "Per-source strategy notes — 'What to do' actionable Sage layer explaining how each source is weighted by LLMs.",
+            "Per-source strategy notes, 'What to do' actionable Sage layer explaining how each source is weighted by LLMs.",
             "Jump-to-Discover from any citation-map row closes the insight → action loop.",
         ],
     },
@@ -32,7 +32,7 @@ const ENTRIES: Entry[] = [
         kind: "feature",
         title: "Editorial & distribution",
         bullets: [
-            "Blog gains 'The 16 sources LLMs actually cite' — flagship research post with ranked table + per-tier analysis.",
+            "Blog gains 'The 16 sources LLMs actually cite', flagship research post with ranked table + per-tier analysis.",
             "RSS 2.0 feed at /rss.xml so Feedly + Reeder + newsletter tools can subscribe.",
             "India Index prepped for August edition: 20 new brand workspaces across SaaS/Fintech/D2C/EdTech, allowlisted for public receipts.",
         ],
@@ -45,17 +45,17 @@ const ENTRIES: Entry[] = [
         bullets: [
             "Sitemap 3 → 25 URLs; robots.txt env-driven; Sage OG image (1200×630) auto-served at /opengraph-image.",
             "JSON-LD structured data emitted across marketing pages (Organization, WebSite, Article, SoftwareApplication, Dataset, Breadcrumb).",
-            "All product emojis stripped — Sage archetype rule enforced. Analytics no longer fabricates 'vs last week' deltas without baseline. /docs rewritten with real quickstart + install + event API + scan API + FAQ.",
+            "All product emojis stripped, Sage archetype rule enforced. Analytics no longer fabricates 'vs last week' deltas without baseline. /docs rewritten with real quickstart + install + event API + scan API + FAQ.",
         ],
     },
     {
         date: "2026-07-05",
         version: "0.7.0",
         kind: "feature",
-        title: "The trust layer — receipts everywhere",
+        title: "The trust layer, receipts everywhere",
         bullets: [
-            "'See the receipt' drawer wired into dashboard tiles + LLM Tracker platform cards + India Index brand rows — every metric one click from raw scans.",
-            "Public /methodology page publishes every formula (mention rate, avg position, health score, share of voice, verdict tiers) with strict thresholds — no smoothing.",
+            "'See the receipt' drawer wired into dashboard tiles + LLM Tracker platform cards + India Index brand rows, every metric one click from raw scans.",
+            "Public /methodology page publishes every formula (mention rate, avg position, health score, share of voice, verdict tiers) with strict thresholds, no smoothing.",
             "Public India Index receipts: anyone can click any ranked brand to see the exact prompts + verbatim LLM responses. No auth required.",
         ],
     },
@@ -65,9 +65,9 @@ const ENTRIES: Entry[] = [
         kind: "feature",
         title: "India AI Visibility Index",
         bullets: [
-            "New /india-index — Preview Edition with 6 brands across SaaS/Fintech/D2C/EdTech, ranked by real Gemini scans. Every number auditable.",
+            "New /india-index, Preview Edition with 6 brands across SaaS/Fintech/D2C/EdTech, ranked by real Gemini scans. Every number auditable.",
             "Public /api/india-index endpoint returns the current edition; /api/india-index/scans?brand=X serves the receipts.",
-            "Zoho DOMINANT, Byju's INVISIBLE — real, honest, publishable.",
+            "Zoho DOMINANT, Byju's INVISIBLE, real, honest, publishable.",
         ],
     },
     {
@@ -87,7 +87,7 @@ const ENTRIES: Entry[] = [
         kind: "feature",
         title: "The receipt is live",
         bullets: [
-            "Interventions model shipped — action + baseline + follow-up + verdict, per intervention.",
+            "Interventions model shipped, action + baseline + follow-up + verdict, per intervention.",
             "New /dashboard/interventions page with per-row receipts and Measure Impact button.",
             "Forum Hub → intervention loop-closer: marking a thread as posted auto-creates an intervention with a baseline snapshot.",
         ],
@@ -111,7 +111,7 @@ const ENTRIES: Entry[] = [
         bullets: [
             "Killed the silent mock-data pathway: llm-scanner no longer fabricates a scan when providers fail.",
             "Removed the mock → gemini masquerade at all three write sites.",
-            "Dashboard health-score key mismatch fixed — real numbers now flow through.",
+            "Dashboard health-score key mismatch fixed, real numbers now flow through.",
         ],
     },
     {
@@ -120,9 +120,9 @@ const ENTRIES: Entry[] = [
         kind: "infra",
         title: "Migrations 015, 016, 017",
         bullets: [
-            "015 — interventions table with baseline_snapshot / impact_snapshot / impact_summary.",
-            "016 — llm_scans extended with brand_variants, sentiment_score, sentiment_reason, list_items, confidence.",
-            "017 — public.users RLS infinite recursion (42P17) killed with a SECURITY DEFINER helper.",
+            "015, interventions table with baseline_snapshot / impact_snapshot / impact_summary.",
+            "016, llm_scans extended with brand_variants, sentiment_score, sentiment_reason, list_items, confidence.",
+            "017, public.users RLS infinite recursion (42P17) killed with a SECURITY DEFINER helper.",
         ],
     },
 ];

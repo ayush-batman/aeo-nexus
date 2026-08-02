@@ -45,7 +45,7 @@ export default function WhyZeroIsHonestPost() {
                     </p>
                     <p>
                         Almost nothing ever scores under 40. The lowest-performing brand in
-                        the lowest-performing category is still &ldquo;Fair — needs improvement.&rdquo;
+                        the lowest-performing category is still &ldquo;Fair, needs improvement.&rdquo;
                         The color is orange, not red. The trend arrow flickers upward. The
                         product manager who bought the tool gets a story to tell.
                     </p>
@@ -54,8 +54,8 @@ export default function WhyZeroIsHonestPost() {
                     </p>
                     <p>
                         Under the hood, most competitors compute a &ldquo;visibility score&rdquo; that
-                        blends four or five separate signals — mention rate, sentiment,
-                        citation count, competitive share, brand-mention proximity — into a
+                        blends four or five separate signals, mention rate, sentiment,
+                        citation count, competitive share, brand-mention proximity, into a
                         single 0–100 number. Then they map <em>that</em> onto a curve so the
                         distribution feels helpful. A brand with 3% mention rate ends up at
                         42/100. A brand with 30% mention rate ends up at 68/100. Nobody sees a
@@ -67,8 +67,8 @@ export default function WhyZeroIsHonestPost() {
                     <p>
                         <strong className="text-white">If your brand is genuinely invisible to Gemini for the queries your
                         buyers ask, you need to know that.</strong> You need to see the zero and feel
-                        the sting of it. Because the alternative — being told you&apos;re at 42
-                        when you&apos;re actually at zero — is the reason so many brands
+                        the sting of it. Because the alternative, being told you&apos;re at 42
+                        when you&apos;re actually at zero, is the reason so many brands
                         &ldquo;invest in AEO&rdquo; for six months without moving the number, then blame the
                         strategy.
                     </p>
@@ -83,7 +83,7 @@ export default function WhyZeroIsHonestPost() {
                         The color is red. The truth is bracing.
                     </p>
                     <p>
-                        And then — this is the part that matters — you can{" "}
+                        And then, this is the part that matters, you can{" "}
                         <Link href="/dashboard/interventions" className="text-[var(--accent-base)] hover:underline">
                             log an intervention
                         </Link>

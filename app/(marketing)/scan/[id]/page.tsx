@@ -48,11 +48,11 @@ export async function generateMetadata(
         : 'not mentioned';
 
     return {
-        title: `${scan.brand_name} — ${verdict} on Gemini · Aelo`,
-        description: `Live Gemini scan for "${scan.prompt}" — ${scan.brand_name} was ${verdict}. Verify the raw response yourself.`,
+        title: `${scan.brand_name}, ${verdict} on Gemini · Aelo`,
+        description: `Live Gemini scan for "${scan.prompt}", ${scan.brand_name} was ${verdict}. Verify the raw response yourself.`,
         openGraph: {
-            title: `${scan.brand_name} — ${verdict} on Gemini`,
-            description: `Live scan: "${scan.prompt}" — verify the raw response.`,
+            title: `${scan.brand_name}, ${verdict} on Gemini`,
+            description: `Live scan: "${scan.prompt}", verify the raw response.`,
             type: 'article',
         },
     };
@@ -95,7 +95,7 @@ export default async function PublicScanPage(
                     </div>
                     <h1 className="text-3xl md:text-4xl font-medium tracking-tighter leading-[1.05] text-white mb-3 text-balance">
                         {scan.brand_name}
-                        {" — "}
+                        {", "}
                         <span className={scan.brand_mentioned === false ? 'text-[var(--data-red)]' : 'text-[var(--data-green)]'}>
                             {verdictLabel.toLowerCase()}
                         </span>
@@ -167,7 +167,7 @@ export default async function PublicScanPage(
                 {scan.error_message && (
                     <div className="mb-6 rounded-md border border-[var(--data-red)]/30 bg-[var(--data-red-muted)] px-4 py-4 text-[13.5px] text-[var(--data-red)]">
                         Scan failed: {scan.error_message}. This is what Aelo shows when a
-                        provider fails — no fabricated positive result.
+                        provider fails, no fabricated positive result.
                     </div>
                 )}
 
@@ -198,13 +198,13 @@ export default async function PublicScanPage(
 
                 {/* Sage disclaimer */}
                 <div className="mb-8 rounded-md border-l-2 border-[var(--accent-base)] bg-[var(--accent-muted)]/40 pl-4 pr-3 py-3 text-[13px] text-zinc-300 leading-relaxed italic">
-                    LLM answers are non-deterministic — this scan is a sample, not a truth.
+                    LLM answers are non-deterministic, this scan is a sample, not a truth.
                     Running the same prompt again could shift the position by ±2 and the
                     sentiment by one bucket. That&apos;s why the receipt is here: verify any
                     claim yourself in 30 seconds.
                 </div>
 
-                {/* CTA — track over time */}
+                {/* CTA, track over time */}
                 <div className="rounded-lg border border-[var(--accent-base)]/40 bg-black p-6 mb-6">
                     <p className="text-[10px] font-mono uppercase tracking-[0.14em] text-[var(--accent-base)] mb-2">
                         Track this over time
@@ -234,10 +234,10 @@ export default async function PublicScanPage(
                     </div>
                 </div>
 
-                {/* Newsletter — softer entry */}
+                {/* Newsletter, softer entry */}
                 <NewsletterSubscribe source={`public-scan`} variant="footer" />
 
-                {/* Micro footer — permalink for share */}
+                {/* Micro footer, permalink for share */}
                 <div className="mt-10 pt-6 border-t border-white/5 flex items-center justify-between">
                     <Link href="/" className="text-[13px] font-mono text-zinc-500 hover:text-white transition-colors">
                         ← Run your own free scan

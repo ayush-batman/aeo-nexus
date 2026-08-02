@@ -28,7 +28,7 @@ export default function MethodologyPage() {
                     <p className="text-[16px] md:text-[18px] text-zinc-400 leading-relaxed">
                         Every formula. Every threshold. Every disclosure. Read it before you
                         trust any number Aelo shows. When the methodology changes, we bump
-                        the version at the top of this page and log the change below —
+                        the version at the top of this page and log the change below, 
                         we never silently retune a metric behind your back.
                     </p>
                 </div>
@@ -42,12 +42,12 @@ export default function MethodologyPage() {
                         <PrincipleCard
                             n="01"
                             title="The receipt is the product"
-                            body="Every derived number in Aelo is one click from the raw scans that produced it — prompt sent, LLM response received, timestamp, platform. Verify any claim yourself."
+                            body="Every derived number in Aelo is one click from the raw scans that produced it, prompt sent, LLM response received, timestamp, platform. Verify any claim yourself."
                         />
                         <PrincipleCard
                             n="02"
                             title="Zero is honest"
-                            body="Low visibility means low visibility. We don't smooth it, we don't cap it, we don't paint it red just to alarm you. A score of 0 is a real answer — it means the AI didn't name your brand once."
+                            body="Low visibility means low visibility. We don't smooth it, we don't cap it, we don't paint it red just to alarm you. A score of 0 is a real answer, it means the AI didn't name your brand once."
                         />
                         <PrincipleCard
                             n="03"
@@ -95,7 +95,7 @@ where position_boost = 100 × max(0, (10 - avg_position) / 10)"
                             name="Share of Voice"
                             oneLine="Your mentions as a fraction of all brand mentions in a category."
                             formula="sov = (your_mentions / (your_mentions + Σ competitor_mentions)) × 100"
-                            details="Requires competitor names configured in your workspace. We count total occurrences of your name + each competitor's name across all scans in the window, then divide. If competitors aren't set, we show '—' — never a fake number."
+                            details="Requires competitor names configured in your workspace. We count total occurrences of your name + each competitor's name across all scans in the window, then divide. If competitors aren't set, we show ', ', never a fake number."
                         />
                         <FormulaCard
                             name="Verdict tiers (India Index + metric badges)"
@@ -104,7 +104,7 @@ where position_boost = 100 × max(0, (10 - avg_position) / 10)"
 strong    = mention_rate ≥ 60
 contested = 1 ≤ mention_rate ≤ 59
 invisible = mention_rate = 0"
-                            details="Numeric thresholds only. There is no 'trending up' verdict. If the numbers say invisible, the badge says invisible — even if you feel like the trend is positive."
+                            details="Numeric thresholds only. There is no 'trending up' verdict. If the numbers say invisible, the badge says invisible, even if you feel like the trend is positive."
                         />
                     </div>
                 </div>
@@ -120,7 +120,7 @@ invisible = mention_rate = 0"
                     <div className="space-y-3">
                         <BulletRow
                             label="Prompt selection"
-                            body="Every workspace tracks a curated prompt list — either configured by the customer (Command tier), or authored by our team from intent research (Concierge tier). Prompts are stored and versioned; when they change, the change is logged."
+                            body="Every workspace tracks a curated prompt list, either configured by the customer (Command tier), or authored by our team from intent research (Concierge tier). Prompts are stored and versioned; when they change, the change is logged."
                         />
                         <BulletRow
                             label="Cadence"
@@ -148,7 +148,7 @@ invisible = mention_rate = 0"
                     <div className="space-y-2">
                         <RefusalRow item="We don't use LLMs to score LLMs." reason="LLM-as-judge introduces a black box you can't audit and a bias you can't measure. Everything downstream inherits both." />
                         <RefusalRow item="We don't average across platforms unless you ask." reason="Averaging ChatGPT + Gemini + Claude produces a single feel-good number that hides real strategic differences. Per-platform first, aggregate on request." />
-                        <RefusalRow item="We don't include failed scans in the denominator." reason="A network error isn't 'invisible.' A rate limit isn't 'no mention.' Failed scans are logged, tagged, and excluded — with the failure visible in the receipt." />
+                        <RefusalRow item="We don't include failed scans in the denominator." reason="A network error isn't 'invisible.' A rate limit isn't 'no mention.' Failed scans are logged, tagged, and excluded, with the failure visible in the receipt." />
                         <RefusalRow item="We don't hide our sample size." reason="If a metric is computed from 3 scans, we say so. If it's computed from 300, we say so. Sample size travels with every number in the drawer." />
                         <RefusalRow item="We don't retune metrics silently." reason="If a formula changes, the version at the top of this page bumps and a changelog entry appears below. Historical numbers get re-flagged as 'v1' vs 'v2' so year-over-year comparisons stay honest." />
                     </div>
@@ -165,7 +165,7 @@ invisible = mention_rate = 0"
                     <div className="space-y-3">
                         <BulletRow label="Storage" body="Raw scan rows (prompt, response, timestamp, platform, position, sentiment, citations) live in Postgres with per-workspace RLS. Only members of your workspace can read them. Aelo staff access requires an audit-logged support ticket." />
                         <BulletRow label="Retention" body="90 days on Command, 24 months on Concierge, unlimited on Command Enterprise. Deleted workspaces have all scans purged within 30 days." />
-                        <BulletRow label="Export" body="Any workspace can export every scan as CSV or JSON. Nothing about a metric is proprietary to Aelo — take the receipts with you if you leave." />
+                        <BulletRow label="Export" body="Any workspace can export every scan as CSV or JSON. Nothing about a metric is proprietary to Aelo, take the receipts with you if you leave." />
                         <BulletRow label="Third-party access" body="We do not sell, share, or aggregate customer scan data. Ever." />
                     </div>
                 </div>

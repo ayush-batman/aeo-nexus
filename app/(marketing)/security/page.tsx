@@ -22,7 +22,7 @@ export default function SecurityPage() {
                 },
                 {
                     title: "Row-Level Security",
-                    body: "Every product table in Postgres has RLS policies scoped by organization. Users can only see rows in workspaces belonging to their organization — enforced at the database, not just the API.",
+                    body: "Every product table in Postgres has RLS policies scoped by organization. Users can only see rows in workspaces belonging to their organization, enforced at the database, not just the API.",
                 },
                 {
                     title: "Auth",

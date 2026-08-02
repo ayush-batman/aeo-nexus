@@ -5,7 +5,7 @@ import { Loader2, ExternalLink, MapPin, AlertCircle, ArrowRight } from "lucide-r
 import { cn } from "@/lib/utils";
 
 interface CitationMapViewProps {
-    // Optional callback wired by the parent Forum Hub — clicking
+    // Optional callback wired by the parent Forum Hub, clicking
     // 'Find threads on this source' jumps to Discover with the platform
     // pre-filtered. Closes the loop from insight to action.
     onJumpToDiscover?: (platform: string) => void;
@@ -32,7 +32,7 @@ interface Payload {
     sources:            SourceRow[];
 }
 
-// Citation Map — the strategic answer to "where do the LLMs actually source
+// Citation Map, the strategic answer to "where do the LLMs actually source
 // their answers for MY category?" Reads llm_scans.citations aggregated across
 // all scans for the workspace and ranks source domains by coverage.
 //
@@ -93,7 +93,7 @@ export function CitationMapView({ onJumpToDiscover }: CitationMapViewProps = {})
                             Every source below was cited by an LLM in one of your{" "}
                             <span className="font-mono text-[var(--text-primary)]">{data.totalScansAnalyzed}</span> scans with returned citations
                             (out of <span className="font-mono">{data.totalScansAll}</span>&nbsp;total). Aelo doesn&apos;t
-                            recommend from a generic playbook — this is the ground truth from your
+                            recommend from a generic playbook, this is the ground truth from your
                             own workspace. Focus your effort on the top-tier sources first.
                         </p>
                     </div>
@@ -222,7 +222,7 @@ function SourceRow({
 
             {expanded && (
                 <div className="border-b border-[var(--border-default)]/50 bg-[var(--bg-raised)]/30 px-4 py-4 space-y-3">
-                    {/* Strategy note — the actionable Sage layer */}
+                    {/* Strategy note, the actionable Sage layer */}
                     {src.strategyNote && (
                         <div className="rounded-md border-l-2 border-[var(--accent-base)] bg-[var(--accent-muted)]/50 pl-3 pr-3 py-2.5">
                             <div className="text-[10px] font-mono uppercase tracking-[0.14em] text-[var(--accent-base)] mb-1">
@@ -293,7 +293,7 @@ function SourceRow({
                         </div>
                     </div>
 
-                    {/* Jump to Discover — closes insight → action loop */}
+                    {/* Jump to Discover, closes insight → action loop */}
                     {onJumpToDiscover && DISCOVER_PLATFORM_MAP[src.domain] && (
                         <div className="pt-2 border-t border-[var(--border-default)]/50">
                             <button
@@ -326,7 +326,7 @@ function EmptyState({ scansAll }: { scansAll: number }) {
             <p className="text-[12.5px] text-[var(--text-secondary)] leading-relaxed max-w-md mx-auto">
                 {scansAll > 0
                     ? `Your ${scansAll} scan${scansAll === 1 ? '' : 's'} completed without any of the LLMs returning citations. This happens when Gemini answers from training data alone. Try a more specific "best X for Y" prompt in LLM Tracker to trigger grounded responses.`
-                    : `You haven't run any scans yet in this workspace. Head to LLM Tracker to add a prompt and run your first scan — the citation map fills in automatically once the LLMs start returning source URLs.`
+                    : `You haven't run any scans yet in this workspace. Head to LLM Tracker to add a prompt and run your first scan, the citation map fills in automatically once the LLMs start returning source URLs.`
                 }
             </p>
         </div>

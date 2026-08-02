@@ -6,7 +6,7 @@ import { CheckCircle2, Loader2 } from "lucide-react";
 type State = "idle" | "submitting" | "ok" | "error";
 
 interface Props {
-    // Where the signup happened — feeds analytics + list-segmentation later.
+    // Where the signup happened, feeds analytics + list-segmentation later.
     source?: string;
     // Alternate copy for context (post footer vs blog hero).
     variant?: "hero" | "footer";
@@ -15,7 +15,7 @@ interface Props {
 // Sage-quiet subscribe form. No modal, no popup, no urgency. One line of
 // copy explaining what you get + one input + one button. On success, the
 // form flips to a confirmation state that stays visible so the user knows
-// it worked — no toast that flickers away.
+// it worked, no toast that flickers away.
 export function NewsletterSubscribe({ source, variant = "hero" }: Props) {
     const [email, setEmail]     = useState("");
     const [state, setState]     = useState<State>("idle");
@@ -46,7 +46,7 @@ export function NewsletterSubscribe({ source, variant = "hero" }: Props) {
             setState("ok");
             setMessage(
                 data.status === "already_subscribed"
-                    ? "You're already on the list — nothing more to do."
+                    ? "You're already on the list, nothing more to do."
                     : "You're in. Next post lands in your inbox.",
             );
             setEmail("");
@@ -95,7 +95,7 @@ export function NewsletterSubscribe({ source, variant = "hero" }: Props) {
                 <p className="text-[12.5px] text-zinc-400 leading-relaxed">
                     {isFooter
                         ? "One email when a new post drops. No newsletter fluff, no 'top-of-mind' spam."
-                        : "New analysis, methodology notes, and monthly India Index editions — straight to your inbox."}
+                        : "New analysis, methodology notes, and monthly India Index editions, straight to your inbox."}
                 </p>
             </div>
             <form onSubmit={submit} className="flex flex-col sm:flex-row gap-2">

@@ -70,7 +70,7 @@ export function TryFreeSection() {
                     See how AI sees your brand
                 </h2>
                 <p className="text-[var(--text-secondary)] mb-8 max-w-xl mx-auto">
-                    Enter your brand name and get an instant visibility check — no signup required.
+                    Enter your brand name and get an instant visibility check, no signup required.
                 </p>
 
                 {/* Input Section */}

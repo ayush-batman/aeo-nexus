@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 
 export const metadata: Metadata = {
     title: "About · Aelo",
-    description: "Aelo is the instrument for measuring — and moving — how AI answers about your brand.",
+    description: "Aelo is the instrument for measuring, and moving, how AI answers about your brand.",
 };
 
 const VALUES = [
@@ -13,11 +13,11 @@ const VALUES = [
     },
     {
         t: "The receipt is the product",
-        b: "Anyone can build a mirror. We're building the lever — action + baseline + follow-up + verdict. This is what makes AEO defensible as a discipline.",
+        b: "Anyone can build a mirror. We're building the lever, action + baseline + follow-up + verdict. This is what makes AEO defensible as a discipline.",
     },
     {
         t: "India-first as a wedge",
-        b: "The global tools are built for US queries in US dollars. India is the #1 country for ChatGPT users. We build in ₹ and understand Indian intent — then expand outward.",
+        b: "The global tools are built for US queries in US dollars. India is the #1 country for ChatGPT users. We build in ₹ and understand Indian intent, then expand outward.",
     },
     {
         t: "Ship what you can defend",
@@ -38,7 +38,7 @@ export default function AboutPage() {
                     </h1>
                     <p className="text-[16px] md:text-[18px] text-zinc-400 leading-relaxed max-w-2xl mx-auto">
                         AI answers are becoming the shortlist. Aelo is the tool your team uses to
-                        measure — and move — where you land on it.
+                        measure, and move, where you land on it.
                     </p>
                 </div>
             </section>
@@ -50,7 +50,7 @@ export default function AboutPage() {
                         Mission
                     </p>
                     <p className="text-[18px] md:text-[20px] text-white leading-[1.5] font-medium tracking-tight">
-                        Make AI-answer visibility a measurable, movable, provable discipline — the
+                        Make AI-answer visibility a measurable, movable, provable discipline, the
                         way SEO once was, but faster and more honest.
                     </p>
                 </div>
@@ -98,7 +98,7 @@ export default function AboutPage() {
                         <p>
                             The insight was simple: the value of the mirror ends where the value of
                             the receipt begins. If we could log every action a team takes, capture a
-                            baseline, and re-measure after — we&apos;d have the first tool that could
+                            baseline, and re-measure after, we&apos;d have the first tool that could
                             actually prove AEO works, per intervention, in defensible numbers.
                         </p>
                         <p>

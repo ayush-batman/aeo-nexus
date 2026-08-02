@@ -154,7 +154,7 @@ export default function SettingsPage() {
         try {
             const supabase = createClient();
 
-            // Workspace fetch first — uses server-side context helpers that
+            // Workspace fetch first, uses server-side context helpers that
             // honor the dev-auth-bypass, so the Install tab always renders
             // even when the client-side Supabase SDK can't see a session.
             const [wsRes, activeRes] = await Promise.all([

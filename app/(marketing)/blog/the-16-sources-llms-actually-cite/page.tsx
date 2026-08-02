@@ -89,14 +89,14 @@ export default function LLMSourcesRankingPost() {
                     <p>
                         Aelo&apos;s{" "}
                         <Link href="/dashboard/forum-hub" className="text-[var(--accent-base)] hover:underline">Citation Map</Link>{" "}
-                        ranks the sources cited across a customer&apos;s own scans — the ground truth
+                        ranks the sources cited across a customer&apos;s own scans, the ground truth
                         for where LLMs pull their answers for that specific category. But before you
                         can interpret <em>your</em> map, it helps to know the cross-category baseline:
                         which sources actually matter, ranked by real LLM weighting.
                     </p>
                     <p>
                         This is our version. Compiled from public LLM training-data disclosures, our
-                        aggregated citation observations across ~1,000 scans, and — honestly — a
+                        aggregated citation observations across ~1,000 scans, and, honestly, a
                         decade of watching what shows up when we ask ChatGPT and Gemini &ldquo;best X&rdquo;
                         questions in categories we care about.
                     </p>
@@ -109,7 +109,7 @@ export default function LLMSourcesRankingPost() {
 
                     <SourceTable />
 
-                    <H2 id="tier-1">Tier 1 — the load-bearing five</H2>
+                    <H2 id="tier-1">Tier 1, the load-bearing five</H2>
                     <p>
                         Reddit, Stack Exchange, YouTube, G2, and Wikipedia together account for
                         roughly 60-70% of citations we&apos;ve observed across scans in both B2B
@@ -129,12 +129,12 @@ export default function LLMSourcesRankingPost() {
                     <p>
                         <strong className="text-white">Wikipedia</strong> is the highest-weight
                         source across all four models. If your brand doesn&apos;t have an article
-                        yet, the notability bar is real — but achievable. If it does, the article
+                        yet, the notability bar is real, but achievable. If it does, the article
                         is more consequential than your homepage. Do not edit your own page; it
                         will be reverted, and repeated violations can result in a permanent block.
                     </p>
 
-                    <H2 id="tier-2">Tier 2 — the strategic layer</H2>
+                    <H2 id="tier-2">Tier 2, the strategic layer</H2>
                     <p>
                         Capterra, Medium, Quora, Hacker News, TrustRadius, Product Hunt,
                         AlternativeTo, and GitHub. These are where a brand goes from &ldquo;findable&rdquo;
@@ -143,7 +143,7 @@ export default function LLMSourcesRankingPost() {
                     <p>
                         The generally-underused pick here is{" "}
                         <strong className="text-white">AlternativeTo</strong>. It has a single
-                        specific job — surface up when someone asks &ldquo;alternatives to X&rdquo; — and it
+                        specific job, surface up when someone asks &ldquo;alternatives to X&rdquo;, and it
                         does that job across ChatGPT, Gemini, and Perplexity with remarkable
                         consistency. The effort to add and maintain a listing is measured in tens
                         of minutes; the payoff shows up in every alternatives query in your
@@ -158,13 +158,13 @@ export default function LLMSourcesRankingPost() {
                         prioritize by <em>your</em> data, not this list.
                     </Callout>
 
-                    <H2 id="tier-3">Tier 3 — the specialists</H2>
+                    <H2 id="tier-3">Tier 3, the specialists</H2>
                     <p>
                         DEV Community, Trustpilot, and Substack are &ldquo;long tail with a purpose.&rdquo;
                         Each one dominates a narrow slice: DEV for developer tutorials, Trustpilot
                         for consumer trust queries, Substack for niche newsletter-driven
                         thought leadership. If your category maps to one of these, the return can
-                        be outsized — but broad-brand investment here rarely pays back.
+                        be outsized, but broad-brand investment here rarely pays back.
                     </p>
 
                     <H2 id="what-this-means">What to do with this</H2>
@@ -176,7 +176,7 @@ export default function LLMSourcesRankingPost() {
                             <strong className="text-white">Run your own Citation Map.</strong>{" "}
                             Sign up for Aelo, run 5-10 scans in your top-intent prompts. The
                             resulting citation map tells you which of these 16 sources actually
-                            matter for <em>your</em> category — often it&apos;s 4-6 of them, not all
+                            matter for <em>your</em> category, often it&apos;s 4-6 of them, not all
                             16.
                         </li>
                         <li>
@@ -187,8 +187,8 @@ export default function LLMSourcesRankingPost() {
                         </li>
                         <li>
                             <strong className="text-white">Log interventions.</strong>{" "}
-                            Every source-directed action — a Reddit reply, a G2 review request,
-                            a Medium post — should be logged in{" "}
+                            Every source-directed action, a Reddit reply, a G2 review request,
+                            a Medium post, should be logged in{" "}
                             <Link href="/dashboard/interventions" className="text-[var(--accent-base)] hover:underline">Aelo&apos;s Interventions</Link>{" "}
                             so you can measure whether it moved the visibility needle. Some will.
                             Some won&apos;t. The receipts tell you which.
@@ -205,13 +205,13 @@ export default function LLMSourcesRankingPost() {
                         <div className="space-y-3">
                             <NextPost
                                 slug="india-ai-visibility-index-july-2026"
-                                title="The India AI Visibility Index — July 2026 Preview"
-                                excerpt="Six brands, six categories, one Gemini pass — the receipts behind the first India AI Visibility Index."
+                                title="The India AI Visibility Index, July 2026 Preview"
+                                excerpt="Six brands, six categories, one Gemini pass, the receipts behind the first India AI Visibility Index."
                             />
                             <NextPost
                                 slug="the-receipt-is-the-product"
                                 title="The receipt is the product"
-                                excerpt="Every derived number in Aelo is one click away from the raw scan. This isn't a feature — it's the entire thesis."
+                                excerpt="Every derived number in Aelo is one click away from the raw scan. This isn't a feature, it's the entire thesis."
                             />
                         </div>
                     </div>

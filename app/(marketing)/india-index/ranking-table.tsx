@@ -108,7 +108,7 @@ function BrandRow({ entry, onClick }: { entry: IndiaBrandEntry; onClick: () => v
                 </div>
             </div>
             <div className="text-right text-[13px] tabular-nums text-zinc-300">
-                {entry.avgPosition !== null ? `#${entry.avgPosition}` : <span className="text-zinc-600">—</span>}
+                {entry.avgPosition !== null ? `#${entry.avgPosition}` : <span className="text-zinc-600">, </span>}
             </div>
             <div>
                 <span className={cn(

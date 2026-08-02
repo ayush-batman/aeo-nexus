@@ -291,7 +291,7 @@ function InterventionRow({
                 </div>
             </div>
 
-            {/* THE RECEIPT — the ONE Magician moment. Only when measured. */}
+            {/* THE RECEIPT, the ONE Magician moment. Only when measured. */}
             {hasReceipt && summary && <Receipt summary={summary} />}
         </div>
     );
@@ -387,7 +387,7 @@ function EmptyState() {
             <CardContent className="space-y-3 text-[14px] text-[var(--text-secondary)]">
                 <p>
                     An <em className="not-italic text-[var(--text-primary)]">intervention</em> is any action
-                    you take to move the AI answer — a forum reply, a page you published, a schema block
+                    you take to move the AI answer, a forum reply, a page you published, a schema block
                     you added. Aelo captures the visibility just before you act, then re-measures it later
                     so you can see whether the action worked.
                 </p>

@@ -288,7 +288,7 @@ export async function GET() {
         stackoverflow: true,  // always available (Stack Exchange public API)
         hackernews:    true,  // always available (Algolia HN public API)
 
-        // Google Custom Search-backed sources — B2B review + long-form +
+        // Google Custom Search-backed sources, B2B review + long-form +
         // discovery. All ride on the same CSE credentials.
         quora:          google,
         g2:             google,

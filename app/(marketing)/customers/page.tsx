@@ -19,7 +19,7 @@ export default function CustomersPage() {
                         We&apos;re signing our first cohort. Come with us.
                     </h1>
                     <p className="text-[16px] md:text-[18px] text-zinc-400 max-w-2xl mx-auto leading-relaxed">
-                        Aelo is early — early enough that the first customers get a strategist,
+                        Aelo is early, early enough that the first customers get a strategist,
                         a discount, and a real hand in what we build next.
                     </p>
                 </div>
@@ -35,7 +35,7 @@ export default function CustomersPage() {
                     </h2>
                     <ul className="space-y-2.5 text-[14px] text-zinc-300 leading-snug mb-8">
                         <li>· Concierge-level support at Command pricing for 12 months.</li>
-                        <li>· A named strategist who runs the loop with you — not just onboarding.</li>
+                        <li>· A named strategist who runs the loop with you, not just onboarding.</li>
                         <li>· Weekly reviews. Direct Slack. First read on every roadmap item.</li>
                         <li>· A public case study once we hit a real receipt (only if you approve it).</li>
                         <li>· ₹0 setup, cancel any time. We&apos;re earning the seat.</li>

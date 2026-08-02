@@ -1,9 +1,9 @@
 @import "tailwindcss";
 
 /* ========================================
-   AELO — DESIGN SYSTEM
+   AELO, DESIGN SYSTEM
    Archetype: Sage (primary) + Magician (shading)
-   See BRAND_ARCHETYPE.md — every token below inherits from that doc.
+   See BRAND_ARCHETYPE.md, every token below inherits from that doc.
    ======================================== */
 
 :root {
@@ -11,7 +11,7 @@
   --font-sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
 
-  /* ── BACKGROUNDS (Layered Depth — Sage keeps depth minimal) ── */
+  /* ── BACKGROUNDS (Layered Depth, Sage keeps depth minimal) ── */
   --bg-base:          #000000;   /* absolute noir */
   --bg-surface:       #0A0A0B;   /* card fill */
   --bg-raised:        #141415;   /* hover fills, inputs */
@@ -31,7 +31,7 @@
   --text-on-accent:   #08080A;   /* dark ink on the accent, Sage/Palantir-style */
 
   /* ── ACCENT: single high-signal color (Sage discipline)
-        A cool amber-ivory ("beacon") — reads as truth/measurement,
+        A cool amber-ivory ("beacon"), reads as truth/measurement,
         distinct from the indigo everyone else uses in this category. ── */
   --accent-base:      #E5D3A6;   /* beacon ivory */
   --accent-muted:     rgba(229, 211, 166, 0.08);
@@ -321,14 +321,14 @@ tr:hover td { background: var(--bg-hover); }
   background-clip: text;
 }
 
-/* Retired: brand-gradient (indigo→teal) — off-archetype. Sage keeps color
+/* Retired: brand-gradient (indigo→teal), off-archetype. Sage keeps color
    restrained. If you need to distinguish a headline, use text-gradient. */
 .brand-gradient { color: var(--text-primary); }
 
 /* ── SPECTRUM RULE ─────────────────────────────────────────────────────────
    The one flourish. Used ONLY on the receipt moment (a measured delta,
    a proof card). A very thin horizontal beam that refracts. Magician
-   shading applied surgically — never decorative. */
+   shading applied surgically, never decorative. */
 .spectrum-rule {
   height: 1px;
   background: linear-gradient(

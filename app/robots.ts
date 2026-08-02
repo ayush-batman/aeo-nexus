@@ -13,7 +13,7 @@ export default function robots(): MetadataRoute.Robots {
             userAgent: '*',
             allow: [
                 '/',
-                '/api/india-index/',  // Public trust artefact — indexable
+                '/api/india-index/',  // Public trust artefact, indexable
             ],
             disallow: [
                 '/private/',
