@@ -89,7 +89,7 @@ export default async function OG() {
                             letterSpacing:  '0.02em',
                         }}
                     >
-                        aelo.sh
+                        aelohq.com
                     </div>
                     <div
                         style={{

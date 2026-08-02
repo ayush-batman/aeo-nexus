@@ -99,7 +99,7 @@ export default function DocsPage() {
                     <SubHeading>Basic install</SubHeading>
                     <CodeBlock>{`<script
   id="aeo-pixel"
-  src="https://aelo.sh/aelo-pixel.js"
+  src="https://aelohq.com/aelo-pixel.js"
   data-workspace-id="YOUR_WORKSPACE_ID"
   async
 ></script>`}</CodeBlock>
@@ -129,7 +129,7 @@ export default function DocsPage() {
                     </div>
 
                     <SubHeading>What the pixel sends</SubHeading>
-                    <CodeBlock>{`POST https://aelo.sh/api/analytics/track
+                    <CodeBlock>{`POST https://aelohq.com/api/analytics/track
 Content-Type: application/json
 
 {
@@ -190,7 +190,7 @@ Content-Type: application/json
                     </p>
 
                     <SubHeading>Run a scan</SubHeading>
-                    <CodeBlock>{`POST https://aelo.sh/api/llm/scans
+                    <CodeBlock>{`POST https://aelohq.com/api/llm/scans
 Authorization: Bearer aelo_sk_...
 
 {
@@ -202,7 +202,7 @@ Authorization: Bearer aelo_sk_...
 }`}</CodeBlock>
 
                     <SubHeading>List recent scans</SubHeading>
-                    <CodeBlock>{`GET https://aelo.sh/api/llm/scans?limit=50&platform=gemini
+                    <CodeBlock>{`GET https://aelohq.com/api/llm/scans?limit=50&platform=gemini
 Authorization: Bearer aelo_sk_...`}</CodeBlock>
 
                     <p className="text-[13px] text-zinc-500 leading-relaxed">
@@ -258,7 +258,7 @@ Authorization: Bearer aelo_sk_...`}</CodeBlock>
                         Something not covered?
                     </p>
                     <p className="text-[14px] text-zinc-400 leading-relaxed">
-                        Email us at <span className="font-mono text-zinc-200">docs@aelo.sh</span>.
+                        Email us at <span className="font-mono text-zinc-200">docs@aelohq.com</span>.
                         We reply within a day, and every question becomes a doc entry.
                     </p>
                     <div className="mt-4">

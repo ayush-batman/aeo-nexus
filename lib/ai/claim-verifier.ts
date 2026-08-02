@@ -135,7 +135,7 @@ async function fetchSourceText(url: string): Promise<string | null> {
     try {
         const normalized = url.startsWith('http') ? url : `https://${url}`;
         const res = await fetch(normalized, {
-            headers: { 'User-Agent': 'Aelo-AccuracyBot/1.0 (+https://aelo.sh)' },
+            headers: { 'User-Agent': 'Aelo-AccuracyBot/1.0 (+https://aelohq.com)' },
             signal:  AbortSignal.timeout(10_000),
         });
         if (!res.ok) return null;

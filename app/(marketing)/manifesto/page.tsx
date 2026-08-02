@@ -104,7 +104,7 @@ export default function ManifestoPage() {
                             If Aelo ever ships a metric it can&apos;t defend, tell us. We will remove it.
                         </p>
                         <p className="mt-2 text-[13px] text-zinc-500 font-mono">
-                            trust@aelo.sh
+                            trust@aelohq.com
                         </p>
                     </div>
                 </article>

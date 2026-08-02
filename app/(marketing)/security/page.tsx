@@ -39,7 +39,7 @@ export default function SecurityPage() {
                 },
                 {
                     title: "Vulnerability disclosure",
-                    body: "Found something? Email security@aelo.sh. We reply within 48 hours and credit you on our security page if you want.",
+                    body: "Found something? Email security@aelohq.com. We reply within 48 hours and credit you on our security page if you want.",
                 },
                 {
                     title: "Compliance",

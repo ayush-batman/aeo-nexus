@@ -3,7 +3,7 @@
 
 import type { BlogPost } from "@/lib/blog";
 
-const SITE_URL = (process.env.NEXT_PUBLIC_APP_URL ?? "https://aelo.sh").replace(/\/$/, "");
+const SITE_URL = (process.env.NEXT_PUBLIC_APP_URL ?? "https://aelohq.com").replace(/\/$/, "");
 
 // Base Organization — spread into any page-level entity via sameAs / publisher.
 const ORG = {

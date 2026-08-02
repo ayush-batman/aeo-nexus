@@ -5,7 +5,7 @@ import { NextResponse } from "next/server";
 // so new posts appear without a deploy. Consumed by Feedly, Reeder,
 // email newsletter tools, and search-engine RSS crawlers.
 
-const SITE_URL = (process.env.NEXT_PUBLIC_APP_URL ?? "https://aelo.sh").replace(/\/$/, "");
+const SITE_URL = (process.env.NEXT_PUBLIC_APP_URL ?? "https://aelohq.com").replace(/\/$/, "");
 
 export const revalidate = 3600; // 1 hour
 
@@ -29,7 +29,7 @@ export async function GET() {
       <guid isPermaLink="true">${url}</guid>
       <description>${esc(p.excerpt)}</description>
       <category>${esc(p.category)}</category>
-      <author>research@aelo.sh (${esc(p.author)})</author>
+      <author>research@aelohq.com (${esc(p.author)})</author>
       <pubDate>${pubDate}</pubDate>
     </item>`;
     }).join("");

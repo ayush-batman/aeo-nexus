@@ -4,7 +4,7 @@ import { MetadataRoute } from 'next';
 // (so crawlers can discover our public receipts) and standard denies for
 // authenticated surfaces.
 
-const DEFAULT_BASE = 'https://aelo.sh';
+const DEFAULT_BASE = 'https://aelohq.com';
 
 export default function robots(): MetadataRoute.Robots {
     const baseUrl = (process.env.NEXT_PUBLIC_APP_URL ?? DEFAULT_BASE).replace(/\/$/, '');

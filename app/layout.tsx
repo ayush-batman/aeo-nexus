@@ -7,7 +7,7 @@ import { OrganizationJsonLd, WebSiteJsonLd } from "@/components/seo/structured-d
 // sandboxed/offline environments. Font families are defined as CSS
 // variables (--font-sans / --font-mono) in globals.css instead.
 
-const SITE_URL = (process.env.NEXT_PUBLIC_APP_URL ?? "https://aelo.sh").replace(/\/$/, "");
+const SITE_URL = (process.env.NEXT_PUBLIC_APP_URL ?? "https://aelohq.com").replace(/\/$/, "");
 
 export const metadata: Metadata = {
   title: {

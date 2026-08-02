@@ -16,7 +16,7 @@ import type { DriftAlert } from "@/lib/analytics/sentiment-drift";
 
 interface Props { alert: DriftAlert; }
 
-const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "https://aelo.sh";
+const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "https://aelohq.com";
 
 export const SentimentDriftEmail = ({ alert }: Props) => {
     const dir = alert.direction === 'up' ? 'rose' : 'dropped';

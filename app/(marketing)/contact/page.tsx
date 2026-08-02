@@ -145,7 +145,7 @@ export default function ContactPage() {
                             </button>
 
                             <p className="text-[11px] text-zinc-600 text-center pt-2 font-mono">
-                                Or email us directly: hello@aelo.sh
+                                Or email us directly: hello@aelohq.com
                             </p>
                         </form>
                     )}

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { Resend } from "resend";
 
-// Contact form endpoint. Delivers submissions to hello@aelo.sh via Resend.
+// Contact form endpoint. Delivers submissions to hello@aelohq.com via Resend.
 // Also logs to server console so we can audit received submissions even when
 // email delivery is misconfigured.
 
@@ -14,7 +14,7 @@ interface Body {
     message?: string;
 }
 
-const TO_EMAIL   = process.env.CONTACT_TO_EMAIL   || "hello@aelo.sh";
+const TO_EMAIL   = process.env.CONTACT_TO_EMAIL   || "hello@aelohq.com";
 const FROM_EMAIL = process.env.CONTACT_FROM_EMAIL || "Aelo <hello@aeonexus.com>";
 
 // Basic RFC 5322-adjacent shape check. Not exhaustive — Resend rejects

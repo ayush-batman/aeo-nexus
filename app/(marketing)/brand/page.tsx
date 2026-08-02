@@ -164,7 +164,7 @@ export default function BrandPage() {
                     </p>
                     <p className="text-[14px] text-zinc-400 leading-relaxed">
                         Writing about Aelo, referencing an India Index number, or building an
-                        integration? Email <span className="font-mono text-zinc-200">press@aelo.sh</span> —
+                        integration? Email <span className="font-mono text-zinc-200">press@aelohq.com</span> —
                         we reply same day, and we&apos;ll happily point you to a real customer
                         (with their permission) or a specific receipt to cite.
                     </p>

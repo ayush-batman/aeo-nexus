@@ -7,7 +7,7 @@ import { MetadataRoute } from 'next';
 // baseUrl is env-overridable so production deploys don't leak the
 // preview domain into indexed sitemaps.
 
-const DEFAULT_BASE = 'https://aelo.sh';
+const DEFAULT_BASE = 'https://aelohq.com';
 
 const routes: {
     path:     string;

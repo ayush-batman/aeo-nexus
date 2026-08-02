@@ -58,7 +58,7 @@ export function LegalPage({
                     ))}
 
                     <div className="border-t border-white/5 pt-6 text-[13px] text-zinc-500">
-                        Questions? Email <span className="font-mono text-zinc-300">legal@aelo.sh</span>.
+                        Questions? Email <span className="font-mono text-zinc-300">legal@aelohq.com</span>.
                     </div>
                 </div>
             </section>

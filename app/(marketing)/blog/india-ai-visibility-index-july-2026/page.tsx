@@ -144,7 +144,7 @@ export default function IndiaIndexJuly2026Post() {
                         Contested ≥ 1%, Invisible = 0%). No smoothing, no LLM-as-judge, no
                         averaging across platforms. The full formula sheet lives at{" "}
                         <Link href="/methodology" className="text-[var(--accent-base)] hover:underline">
-                            aelo.sh/methodology
+                            aelohq.com/methodology
                         </Link>.
                     </p>
                     <p>
