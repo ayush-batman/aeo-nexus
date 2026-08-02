@@ -11,7 +11,7 @@ const SITE_URL = (process.env.NEXT_PUBLIC_APP_URL ?? "https://aelohq.com").repla
 
 export const metadata: Metadata = {
   title: {
-    default:  "Aelo, See how ChatGPT, Gemini, Claude and Perplexity actually answer",
+    default:  "Aelo: See how ChatGPT, Gemini, Claude and Perplexity actually answer",
     template: "%s · Aelo",
   },
   description:
@@ -21,7 +21,7 @@ export const metadata: Metadata = {
     canonical: SITE_URL,
   },
   openGraph: {
-    title:       "Aelo, See how AI actually answers questions in your category",
+    title:       "Aelo: See how AI actually answers questions in your category",
     description: "Track your brand's visibility across ChatGPT, Gemini, Claude, and Perplexity, with the raw scans behind every number. The receipt is the product.",
     type:        "website",
     url:         SITE_URL,
@@ -30,7 +30,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card:        "summary_large_image",
-    title:       "Aelo, See how AI actually answers questions in your category",
+    title:       "Aelo: See how AI actually answers questions in your category",
     description: "Track your brand's visibility across ChatGPT, Gemini, Claude, and Perplexity. Every number links to the raw scan.",
     images:      ["/opengraph-image"],
   },
