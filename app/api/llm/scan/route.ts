@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { scanLLM, calculateVisibilityScore, getAvailablePlatforms, type LLMPlatform } from '@/lib/ai/llm-scanner';
 import { createClient } from '@/lib/supabase/server';
 import { getCurrentWorkspaceContext } from '@/lib/data-access';
+import { getEntitlements, scansThisWeek } from '@/lib/entitlements';
 
 export const maxDuration = 60; // Max timeout for Vercel
 
@@ -38,6 +39,36 @@ export async function POST(request: NextRequest) {
                 },
                 { status: 400 }
             );
+        }
+
+        // Tier gate: free = Gemini only + weekly cap; paid = all engines, uncapped.
+        const ent = await getEntitlements(context.orgId);
+        validPlatforms = validPlatforms.filter(p => ent.engines.includes(p));
+        if (validPlatforms.length === 0) {
+            return NextResponse.json(
+                {
+                    error: 'plan_required',
+                    message: 'Your plan runs on Gemini only. Upgrade to scan ChatGPT, Claude and Perplexity.',
+                    upgrade: true,
+                    allowedEngines: ent.engines,
+                },
+                { status: 402 }
+            );
+        }
+        if (ent.scansPerWeek != null) {
+            const used = await scansThisWeek(context.orgId);
+            if (used >= ent.scansPerWeek) {
+                return NextResponse.json(
+                    {
+                        error: 'limit_reached',
+                        message: `Free tier is limited to ${ent.scansPerWeek} scans per week. Upgrade for unlimited scans.`,
+                        upgrade: true,
+                        used,
+                        limit: ent.scansPerWeek,
+                    },
+                    { status: 402 }
+                );
+            }
         }
 
         const { results, errors: scanErrors } = await scanLLM({
