@@ -108,6 +108,25 @@ export async function POST(request: NextRequest) {
             );
         }
 
+        // Tier gate: restrict engines to the org's plan (free = Gemini only).
+        // Monthly scan-count limit is already enforced above via checkUsageLimit.
+        if (workspaceData?.org_id) {
+            const { getEntitlements } = await import('@/lib/entitlements');
+            const ent = await getEntitlements(workspaceData.org_id);
+            validPlatforms = validPlatforms.filter(p => ent.engines.includes(p));
+            if (validPlatforms.length === 0) {
+                return NextResponse.json(
+                    {
+                        error: 'plan_required',
+                        message: 'Your plan runs on Gemini only. Upgrade to scan ChatGPT, Claude and Perplexity.',
+                        upgrade: true,
+                        allowedEngines: ent.engines,
+                    },
+                    { status: 402 }
+                );
+            }
+        }
+
         // Run the scan with valid platforms
         const { results, errors: scanErrors } = await scanLLM({
             prompt,
