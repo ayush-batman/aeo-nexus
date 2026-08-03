@@ -118,6 +118,20 @@ export function IndiaIndexDatasetJsonLd({ label, brandCount, categoriesTracked }
     });
 }
 
+// ── FAQPage ─────────────────────────────────────────────────────────────────
+// Answer engines lift FAQ pairs directly. Keep answers self-contained and
+// under ~60 words so they are quotable without surrounding context.
+export function FaqJsonLd({ items }: { items: { q: string; a: string }[] }) {
+    return jsonLd({
+        "@type": "FAQPage",
+        mainEntity: items.map(it => ({
+            "@type": "Question",
+            name: it.q,
+            acceptedAnswer: { "@type": "Answer", text: it.a },
+        })),
+    });
+}
+
 // ── BreadcrumbList (helper for any nested page) ─────────────────────────────
 export function BreadcrumbJsonLd({ items }: { items: { label: string; path: string }[] }) {
     return jsonLd({

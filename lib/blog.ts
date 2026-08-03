@@ -16,6 +16,25 @@ export interface BlogPost {
 // Newest first.
 export const POSTS: BlogPost[] = [
     {
+        slug:        'ai-gets-brand-facts-wrong',
+        title:       'AI gets one in eight brand facts wrong',
+        excerpt:     'We asked AI to describe 26 Indian consumer brands and verified every checkable claim against the brands\' own sites. Roughly 18 percent were wrong or outdated, and three brands were described as an entirely different company.',
+        publishedAt: '2026-08-03',
+        readingTime: '9 min read',
+        category:    'Analysis',
+        author:      'Aelo Research',
+        featured:    true,
+    },
+    {
+        slug:        'ai-visibility-score-coin-flip',
+        title:       'Your AI visibility score is probably a coin flip',
+        excerpt:     'Most tools ask the model once and report the answer as a rank. But LLM output is a probability distribution, not a leaderboard. Why single-shot measurement is noise, and what a defensible number looks like.',
+        publishedAt: '2026-08-03',
+        readingTime: '8 min read',
+        category:    'Methodology',
+        author:      'Aelo Research',
+    },
+    {
         slug:        'profound-alternative',
         title:       'Looking for a Profound alternative? An honest guide',
         excerpt:     'Profound is the enterprise leader in AI visibility. If you are not an enterprise, here is when a lighter tool makes sense, how Peec, Otterly and the SEO add-ons compare, and where Aelo fits (accuracy, receipts, D2C and India-first).',
