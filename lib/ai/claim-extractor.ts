@@ -1,7 +1,7 @@
 import { getOpenAIClient } from './openai-client';
 
 // Given an LLM scan response, extract the discrete factual claims it makes
-// about the tracked brand. A "claim" is a checkable statement — a price, a
+// about the tracked brand. A "claim" is a checkable statement, a price, a
 // feature, a founding year, a comparison, a customer count. Fluff, adjectives,
 // and hedging get dropped.
 //

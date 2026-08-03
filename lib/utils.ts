@@ -50,7 +50,7 @@ export function getScoreBgColor(score: number): string {
 }
 
 export function getPriorityLabel(score: number): { label: string; emoji: string } {
-    // emoji kept as empty string for callers that still spread it — Sage rule:
+    // emoji kept as empty string for callers that still spread it, Sage rule:
     // no emojis in product copy. Labels are the whole story.
     if (score >= 80) return { label: "HOT",    emoji: "" };
     if (score >= 65) return { label: "HIGH",   emoji: "" };

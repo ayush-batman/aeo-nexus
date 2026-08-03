@@ -12,7 +12,7 @@ export async function updateSession(request: NextRequest) {
 
     // If no Supabase credentials, skip auth checks (development mode)
     if (!supabaseUrl || !supabaseKey || supabaseUrl === 'your_supabase_project_url') {
-        console.log('[middleware] Supabase not configured — skipping auth middleware')
+        console.log('[middleware] Supabase not configured, skipping auth middleware')
         return supabaseResponse
     }
 

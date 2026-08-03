@@ -6,10 +6,10 @@
  * verify their brand's AI visibility.
  * 
  * Variables:
- *  {{brand}}    — User's brand name
- *  {{industry}} — User's industry/category
- *  {{product}}  — Specific product/service name
- *  {{audience}} — Target audience description
+ *  {{brand}}, User's brand name
+ *  {{industry}}, User's industry/category
+ *  {{product}}, Specific product/service name
+ *  {{audience}}, Target audience description
  */
 
 export interface PromptTemplate {
@@ -115,8 +115,8 @@ export const PROMPT_TEMPLATES: PromptTemplate[] = [
         id: 'cc-1',
         category: 'competitor_comparison',
         title: 'Head-to-Head Comparison',
-        prompt: '{{brand}} vs competitors — which is better for {{audience}}?',
-        description: 'Direct comparison query — the most common type users ask LLMs.',
+        prompt: '{{brand}} vs competitors, which is better for {{audience}}?',
+        description: 'Direct comparison query, the most common type users ask LLMs.',
     },
     {
         id: 'cc-2',
@@ -177,7 +177,7 @@ export const PROMPT_TEMPLATES: PromptTemplate[] = [
         category: 'problem_solution',
         title: 'Tool Recommendation',
         prompt: 'I need a tool to help me with {{industry}}. What do you recommend?',
-        description: 'Direct tool recommendation — high commercial intent.',
+        description: 'Direct tool recommendation, high commercial intent.',
     },
     {
         id: 'ps-4',
@@ -245,7 +245,7 @@ export const PROMPT_TEMPLATES: PromptTemplate[] = [
         category: 'category_leaders',
         title: 'Best-of List',
         prompt: 'What are the best {{industry}} products in 2026?',
-        description: 'The most common "best of" query — checks if you\'re listed.',
+        description: 'The most common "best of" query, checks if you\'re listed.',
     },
     {
         id: 'cl-2',

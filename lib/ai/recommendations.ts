@@ -58,7 +58,7 @@ interface ScanData {
 
 /**
  * Generate actionable recommendations based on scan results.
- * This runs entirely client-side — no API calls needed.
+ * This runs entirely client-side, no API calls needed.
  */
 export function generateRecommendations(
     scans: ScanData[],
@@ -124,7 +124,7 @@ export function generateRecommendations(
     }
 
     // ============================================================
-    // RULE 3: Brand mentioned at #1-3 — maintain position
+    // RULE 3: Brand mentioned at #1-3, maintain position
     // ============================================================
     if (mentionRate > 0 && avgPosition && avgPosition <= 3) {
         recommendations.push({
@@ -132,7 +132,7 @@ export function generateRecommendations(
             priority: 'low',
             category: 'visibility',
             title: `Great position! Maintain your #${Math.round(avgPosition)} ranking`,
-            description: `${brandName} appears at position #${Math.round(avgPosition)} — this is excellent. Focus on defending this position.`,
+            description: `${brandName} appears at position #${Math.round(avgPosition)}, this is excellent. Focus on defending this position.`,
             action: 'Keep your content fresh and updated. Monitor competitors entering these queries. Set up scheduled scans to track changes.',
             link: '/dashboard/llm-tracker',
             linkLabel: 'Schedule Scans',
@@ -192,7 +192,7 @@ export function generateRecommendations(
     }
 
     // ============================================================
-    // RULE 7: Your domain IS being cited — good!
+    // RULE 7: Your domain IS being cited, good!
     // ============================================================
     if (ownCitations.length > 0) {
         recommendations.push({
@@ -200,7 +200,7 @@ export function generateRecommendations(
             priority: 'low',
             category: 'content',
             title: `Your site is being cited (${ownCitations.length} citation${ownCitations.length > 1 ? 's' : ''})`,
-            description: `LLMs are citing your website as a source — this is a strong signal of authority. Keep building on this.`,
+            description: `LLMs are citing your website as a source, this is a strong signal of authority. Keep building on this.`,
             action: 'Double down on the content types that are getting cited. Create more content in similar formats and topics.',
             metric: `${ownCitations.length} citation(s)`,
         });

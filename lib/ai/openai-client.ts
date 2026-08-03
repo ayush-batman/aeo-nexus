@@ -10,7 +10,7 @@ import OpenAI, { AzureOpenAI } from 'openai';
  *                              (reasoning-heavy work).
  *                 'embedding' → text-embedding-3-small on Azure/direct.
  *
- * @returns { client, model } — the chat/completions model name to pass
+ * @returns { client, model }, the chat/completions model name to pass
  *          when calling client.chat.completions.create({ model, ... }).
  *          For Azure, `model` is the DEPLOYMENT NAME (not the underlying
  *          model name). The Azure SDK routes deployments transparently.

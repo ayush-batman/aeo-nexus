@@ -26,7 +26,7 @@ interface ScanData {
     platform: string;
 }
 
-// Lazy singleton — instantiating at module load breaks Next 16 page-data
+// Lazy singleton, instantiating at module load breaks Next 16 page-data
 // collection on projects that don't have env vars set yet.
 let _supabaseAdmin: ReturnType<typeof createClient> | null = null;
 function getSupabaseAdmin() {

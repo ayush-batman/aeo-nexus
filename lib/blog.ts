@@ -1,4 +1,4 @@
-// Blog registry — each post is a self-contained module with front-matter
+// Blog registry, each post is a self-contained module with front-matter
 // exported from the post's own page.tsx. This registry gives the index
 // page + sitemap the structured metadata without duplicating it.
 
@@ -15,6 +15,15 @@ export interface BlogPost {
 
 // Newest first.
 export const POSTS: BlogPost[] = [
+    {
+        slug:        'answer-engine-optimization-guide',
+        title:       'Answer Engine Optimization (AEO): the 2026 guide',
+        excerpt:     'How to get named, quoted, and recommended when buyers ask ChatGPT, Gemini, Claude and Perplexity. The two ways AI answers get built, what actually moves citations (with the research), and a practical playbook.',
+        publishedAt: '2026-08-03',
+        readingTime: '11 min read',
+        category:    'Field notes',
+        author:      'Aelo Research',
+    },
     {
         slug:        'best-ai-visibility-tools-2026',
         title:       'The best AI visibility tools in 2026 (an honest comparison)',
@@ -36,8 +45,8 @@ export const POSTS: BlogPost[] = [
     },
     {
         slug:        'india-ai-visibility-index-july-2026',
-        title:       'The India AI Visibility Index — July 2026 Preview',
-        excerpt:     'Zoho holds a 100% mention rate for Indian CRM queries. Byju\'s doesn\'t appear once for EdTech intent. Six brands, six categories, one Gemini pass — the receipts behind the first India AI Visibility Index.',
+        title:       'The India AI Visibility Index, July 2026 Preview',
+        excerpt:     'Zoho holds a 100% mention rate for Indian CRM queries. Byju\'s doesn\'t appear once for EdTech intent. Six brands, six categories, one Gemini pass, the receipts behind the first India AI Visibility Index.',
         publishedAt: '2026-07-05',
         readingTime: '7 min read',
         category:    'Analysis',
@@ -56,7 +65,7 @@ export const POSTS: BlogPost[] = [
     {
         slug:        'the-receipt-is-the-product',
         title:       'The receipt is the product',
-        excerpt:     'Every derived number in Aelo is one click away from the raw scan that produced it. This isn\'t a feature — it\'s the entire thesis.',
+        excerpt:     'Every derived number in Aelo is one click away from the raw scan that produced it. This isn\'t a feature, it\'s the entire thesis.',
         publishedAt: '2026-07-05',
         readingTime: '4 min read',
         category:    'Product',

@@ -4,7 +4,7 @@
  * Free, no auth required for basic usage (300 requests/day without key, 10,000/day with key).
  * Covers Stack Overflow, Server Fault, Super User, and 170+ sites.
  * 
- * AEO Relevance: Google partnered with SO (Overflow API) — SO content feeds directly into Gemini.
+ * AEO Relevance: Google partnered with SO (Overflow API), SO content feeds directly into Gemini.
  * ChatGPT and Perplexity also heavily cite SO via Common Crawl.
  */
 

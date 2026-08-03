@@ -2,7 +2,7 @@ import { GoogleGenerativeAI } from '@google/generative-ai';
 
 export interface OriginalityResult {
     score: number; // 0-100
-    informationGain: number; // 0-100 — how much unique value this adds
+    informationGain: number; // 0-100, how much unique value this adds
     derivativeRisk: 'low' | 'medium' | 'high';
     uniqueAngles: string[]; // Suggestions for making content more original
     genericPhrases: string[]; // Phrases that are too common / AI-sounding
@@ -27,7 +27,7 @@ export async function scoreOriginality(
     const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
 
     const result = await model.generateContent(
-        `You are a content quality expert focused on "information gain" — the concept that content which adds unique value (original data, personal experience, proprietary insights, contrarian takes) performs better in AEO.
+        `You are a content quality expert focused on "information gain", the concept that content which adds unique value (original data, personal experience, proprietary insights, contrarian takes) performs better in AEO.
 
 Analyze this content about "${topic}" for originality and information gain:
 

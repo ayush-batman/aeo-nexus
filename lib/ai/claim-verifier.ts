@@ -2,14 +2,14 @@ import { getOpenAIClient } from './openai-client';
 import type { ExtractedClaim } from './claim-extractor';
 
 // Fact-check each extracted claim against the brand's own website.
-// Fetches the site (best-effort — one-page GET, no crawl) and feeds
+// Fetches the site (best-effort, one-page GET, no crawl) and feeds
 // it as ground-truth context to gpt-5 with strict verdict rubric.
 //
 // Verdicts:
-//   'true'        — site directly supports the claim
-//   'false'       — site directly contradicts the claim
-//   'outdated'    — site shows this used to be true but no longer is
-//   'unverified'  — site does not contain enough signal either way
+//   'true', site directly supports the claim
+//   'false', site directly contradicts the claim
+//   'outdated', site shows this used to be true but no longer is
+//   'unverified', site does not contain enough signal either way
 
 export type VerifiedClaim = ExtractedClaim & {
     verdict:     'true' | 'false' | 'outdated' | 'unverified';
@@ -30,7 +30,7 @@ export async function verifyClaims(params: {
     const evidenceUrl = params.website ?? null;
 
     if (!sourceText) {
-        // No ground truth available — mark all unverified, cheap short-circuit.
+        // No ground truth available, mark all unverified, cheap short-circuit.
         return params.claims.map(c => ({
             ...c,
             verdict:   'unverified' as const,
@@ -43,17 +43,17 @@ export async function verifyClaims(params: {
         }));
     }
 
-    // Batch the whole set into one LLM call — reasoning models handle multi-claim
+    // Batch the whole set into one LLM call, reasoning models handle multi-claim
     // rubrics well and it's one round-trip. Fall back to unverified on any error.
     const { client, model } = getOpenAIClient('premium');
     const isReasoning = /^gpt-5|^o[0-9]/.test(model);
 
     const systemPrompt = `You verify factual claims against a source text.
 Each claim gets one of four verdicts:
-- "true"       — the source directly supports the claim.
-- "false"      — the source directly contradicts the claim.
-- "outdated"   — the source shows the claim WAS true but no longer is (dated wording, "previously", explicit deprecation).
-- "unverified" — the source doesn't contain enough signal either way.
+- "true", the source directly supports the claim.
+- "false", the source directly contradicts the claim.
+- "outdated", the source shows the claim WAS true but no longer is (dated wording, "previously", explicit deprecation).
+- "unverified", the source doesn't contain enough signal either way.
 
 For each claim also return:
 - confidence (0..1)

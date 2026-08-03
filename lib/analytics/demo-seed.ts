@@ -1,10 +1,10 @@
-// Demo-seed mode — AELO_DEMO_SEED=1 (server env, never set in production).
+// Demo-seed mode, AELO_DEMO_SEED=1 (server env, never set in production).
 //
 // Purpose: screenshots, sales demos and investor decks need the newest
 // analytics surfaces (Drift, Positioning, Accuracy) to render with
 // representative data before a workspace has accumulated weeks of scans.
 // The payloads below are clearly-labeled sample data for the demo
-// workspace narrative (Notion vs Confluence/Obsidian/Slite) — they never
+// workspace narrative (Notion vs Confluence/Obsidian/Slite), they never
 // touch the database and are unreachable unless the flag is set.
 
 export const DEMO_SEED_ACTIVE = () => process.env.AELO_DEMO_SEED === '1';
@@ -168,7 +168,7 @@ export function demoAccuracySummary() {
             claim_text: 'Notion offers a free plan for individuals and small teams',
             verdict: 'true' as const, confidence: 0.95,
             evidence_url: 'https://notion.so/pricing',
-            evidence_snippet: 'Free for individuals — up to 10 guests, unlimited pages.',
+            evidence_snippet: 'Free for individuals, up to 10 guests, unlimited pages.',
             reasoning: 'Directly supported by the live pricing page.',
             created_at: now, scan: { platform: 'chatgpt', prompt: 'best team wiki for startups', created_at: now },
         },
@@ -177,7 +177,7 @@ export function demoAccuracySummary() {
             claim_text: 'Notion Business costs $25 per member per month',
             verdict: 'false' as const, confidence: 0.9,
             evidence_url: 'https://notion.so/pricing',
-            evidence_snippet: 'Business — $15 per member / month, billed annually.',
+            evidence_snippet: 'Business, $15 per member / month, billed annually.',
             reasoning: 'The model overstates the price by 66% to every prospect who asks.',
             created_at: now, scan: { platform: 'chatgpt', prompt: 'notion pricing for teams', created_at: now },
         },

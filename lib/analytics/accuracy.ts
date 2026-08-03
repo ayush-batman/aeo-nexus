@@ -2,7 +2,7 @@ import { createAdminClient } from '@/lib/supabase/admin';
 import { extractClaims } from '@/lib/ai/claim-extractor';
 import { verifyClaims } from '@/lib/ai/claim-verifier';
 
-// Cap Azure spend per verify run — the verifier uses gpt-5 (premium tier).
+// Cap Azure spend per verify run, the verifier uses gpt-5 (premium tier).
 const MAX_SCANS = 20;
 
 export type AccuracyRow = {

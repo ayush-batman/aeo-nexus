@@ -75,7 +75,7 @@ async function scanWithGemini(prompt: string): Promise<string> {
     return result.response.text();
 }
 
-// Scan with OpenAI (ChatGPT) — routes through Azure OpenAI when
+// Scan with OpenAI (ChatGPT), routes through Azure OpenAI when
 // AZURE_OPENAI_API_KEY + AZURE_OPENAI_ENDPOINT are set (Founders Hub),
 // falls back to direct OpenAI when only OPENAI_API_KEY is set.
 async function scanWithOpenAI(prompt: string): Promise<string> {
@@ -356,7 +356,7 @@ export async function scanLLM(options: ScanOptions): Promise<ScanOutput> {
 
     // HONEST DATA POLICY: if every requested platform failed, we return empty
     // results with the real errors intact. We do NOT fabricate a "mock" scan and
-    // pass it off as real — an analytics product must never show an invented number.
+    // pass it off as real, an analytics product must never show an invented number.
     // Callers are responsible for surfacing an honest "provider unavailable" state.
     // (Explicit mock is still available by requesting the 'mock' platform directly.)
     if (results.length === 0 && platforms.length > 0) {

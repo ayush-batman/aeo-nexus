@@ -19,7 +19,7 @@ interface SearchResponse {
     totalResults: number;
 }
 
-// Expanded source list — includes tier-1 B2B review sites, long-form
+// Expanded source list, includes tier-1 B2B review sites, long-form
 // content platforms, and product-discovery hubs that LLMs actually cite.
 // See docs/citation-sources.md for the ranking rationale.
 const FORUM_SITES = [
@@ -150,7 +150,7 @@ export function calculateSearchOpportunityScore(
     result: GoogleSearchResult,
     keywords: string[] = []
 ): number {
-    let score = 30; // Base score — it showed up in Google, so it's relevant
+    let score = 30; // Base score, it showed up in Google, so it's relevant
 
     const text = `${result.title} ${result.snippet}`.toLowerCase();
 

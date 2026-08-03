@@ -33,6 +33,7 @@ const routes: {
     // Reference + editorial
     { path: '/docs',         priority: 0.85, changeFrequency: 'weekly'  },
     { path: '/blog',                                                priority: 0.85, changeFrequency: 'weekly' },
+    { path: '/blog/answer-engine-optimization-guide',               priority: 0.95, changeFrequency: 'monthly' },
     { path: '/blog/best-ai-visibility-tools-2026',                  priority: 0.9,  changeFrequency: 'monthly' },
     { path: '/blog/the-16-sources-llms-actually-cite',              priority: 0.9,  changeFrequency: 'yearly' },
     { path: '/blog/india-ai-visibility-index-july-2026',            priority: 0.9,  changeFrequency: 'yearly' },

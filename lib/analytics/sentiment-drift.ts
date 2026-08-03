@@ -6,7 +6,7 @@ import { createAdminClient } from '@/lib/supabase/admin';
 export const DRIFT_THRESHOLD = 0.3;
 
 // Minimum scans in a week for the average to be trusted. Below this we
-// silently skip — one grumpy scan shouldn't page a marketing team.
+// silently skip, one grumpy scan shouldn't page a marketing team.
 export const MIN_SAMPLE_SIZE = 2;
 
 export type DriftSnapshot = {
@@ -45,7 +45,7 @@ export function isoDate(d: Date): string {
 }
 
 // Compute weekly rollups from raw llm_scans for a given week.
-// Idempotent — safe to re-run for the same week.
+// Idempotent, safe to re-run for the same week.
 export async function computeAndStoreSnapshots(targetWeekStart: Date) {
     const db = createAdminClient();
     const start = isoDate(targetWeekStart);

@@ -1,4 +1,4 @@
-// India AI Visibility Index — data + aggregation
+// India AI Visibility Index, data + aggregation
 //
 // Editions are the atomic unit. Each edition = a monthly snapshot of Indian
 // brands' AI-answer visibility, aggregated from real llm_scans rows in Aelo.
@@ -80,7 +80,7 @@ function verdictFor(mentionRatePct: number, avgPosition: number | null): IndiaBr
 /**
  * Compose the current July-2026 edition by aggregating llm_scans rows for
  * the India-flagged workspaces. Runs against the admin client (no auth
- * needed — this is public data by design; the Index is a PR asset).
+ * needed, this is public data by design; the Index is a PR asset).
  */
 export async function loadCurrentEdition(): Promise<IndiaEdition> {
     const db = createAdminClient();

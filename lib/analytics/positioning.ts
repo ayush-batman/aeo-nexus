@@ -133,7 +133,7 @@ export async function loadPositioningMatrix(workspaceId: string): Promise<Positi
 
     const entities = Array.from(entityTotals.entries())
         .map(([name, v]) => ({ name, type: v.type, total: v.total }))
-        // Brand first, competitors after — ranked by total citations.
+        // Brand first, competitors after, ranked by total citations.
         .sort((a, b) => {
             if (a.type !== b.type) return a.type === 'brand' ? -1 : 1;
             return b.total - a.total;

@@ -6,7 +6,7 @@ import type { LLMScan, ForumThread, VisibilityMetric } from './types';
 
 // ── Dev Auth Bypass ─────────────────────────────────────────────────────────
 // Guarded by NEXT_PUBLIC_ENABLE_DEV_AUTH_BYPASS=true AND a `dev-auth-bypass=true`
-// cookie. Both required — so it can NEVER activate in prod without the env flag
+// cookie. Both required, so it can NEVER activate in prod without the env flag
 // AND a cookie a browser has to actively set.
 //
 // Bootstraps a real Supabase auth user (dev@aelo.local) via the admin API so all
@@ -29,7 +29,7 @@ async function getOrCreateDevUser(): Promise<{ id: string; email: string } | nul
             cachedDevUser = { id: existing.id, email: existing.email };
             return cachedDevUser;
         }
-        // Create — random password, never used (we don't sign in via password)
+        // Create, random password, never used (we don't sign in via password)
         const { data, error } = await admin.auth.admin.createUser({
             email: DEV_BYPASS_EMAIL,
             password: randomUUID(),
@@ -86,7 +86,7 @@ export async function getCurrentWorkspaceContext(): Promise<{
 } | null> {
     const supabase = await createClient();
 
-    // Dev Auth Bypass (localhost / QA only — see helper at top of file)
+    // Dev Auth Bypass (localhost / QA only, see helper at top of file)
     let user: { id: string; email?: string | null; user_metadata?: { full_name?: string; avatar_url?: string } } | null = null;
     if (process.env.NEXT_PUBLIC_ENABLE_DEV_AUTH_BYPASS === 'true') {
         try {
@@ -98,7 +98,7 @@ export async function getCurrentWorkspaceContext(): Promise<{
                 }
             }
         } catch {
-            // cookies() unavailable in this context — fall through to normal auth
+            // cookies() unavailable in this context, fall through to normal auth
         }
     }
 
@@ -213,7 +213,7 @@ export async function getCurrentWorkspaceContext(): Promise<{
         };
     }
 
-    // Ensure workspace exists — check for active workspace cookie first
+    // Ensure workspace exists, check for active workspace cookie first
     let workspaceSelectQuery;
     let activeWsId: string | undefined;
     

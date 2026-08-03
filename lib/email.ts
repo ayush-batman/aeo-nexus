@@ -27,7 +27,7 @@ export async function sendWelcomeEmail(to: string, name?: string) {
         const { data, error } = await resend.emails.send({
             from: FROM_EMAIL,
             to: [to],
-            subject: 'Welcome to Aelo — your workspace is ready',
+            subject: 'Welcome to Aelo, your workspace is ready',
             react: WelcomeEmail({ firstName: name }),
         });
 

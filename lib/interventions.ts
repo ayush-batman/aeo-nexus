@@ -40,7 +40,7 @@ export async function snapshotVisibility(
 
     const out: VisibilitySnapshot = {};
     for (const prompt of prompts) out[prompt] = {};
-    // Results are DESC — keep only the newest per (prompt, platform)
+    // Results are DESC, keep only the newest per (prompt, platform)
     for (const s of scans) {
         const bucket = out[s.prompt] ?? (out[s.prompt] = {});
         if (bucket[s.platform]) continue;

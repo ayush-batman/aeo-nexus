@@ -12,7 +12,7 @@ import { getOpenAIClient } from './openai-client';
 // - Attributes are lowercased single-concept noun phrases (max 3 words),
 //   so aggregation actually clusters ("enterprise", "enterprise-grade" collapse).
 // - We only emit attributes explicitly grounded in the source text. No
-//   inference, no world knowledge — the whole point of Aelo is honest measurement.
+//   inference, no world knowledge, the whole point of Aelo is honest measurement.
 
 export type ExtractedAttribute = {
     entity_name: string;
