@@ -200,9 +200,14 @@ export default function LLMTrackerPage() {
             const data = await response.json();
 
             if (!response.ok) {
+                // Plan gate: show the human message with an upgrade nudge, not the raw code.
+                if (response.status === 402 || data.upgrade || data.error === 'plan_required') {
+                    setScanError(`${data.message || 'This requires a paid plan.'} → Upgrade at /pricing`);
+                    return;
+                }
                 const errMsg = data.platformErrors
                     ? `Some platforms failed: ${data.platformErrors.map((e: any) => `${e.platform} (${e.error})`).join(', ')}`
-                    : data.error || 'Scan failed';
+                    : data.message || data.error || 'Scan failed';
                 throw new Error(errMsg);
             }
 
