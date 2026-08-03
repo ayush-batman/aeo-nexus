@@ -16,6 +16,16 @@ export interface BlogPost {
 // Newest first.
 export const POSTS: BlogPost[] = [
     {
+        slug:        'best-ai-visibility-tools-2026',
+        title:       'The best AI visibility tools in 2026 (an honest comparison)',
+        excerpt:     'Profound, Peec, Otterly, the Semrush and Ahrefs add-ons, and where Aelo fits. A straight comparison of the tools that track how ChatGPT, Gemini, Claude and Perplexity talk about your brand, and what each one is actually best at.',
+        publishedAt: '2026-08-03',
+        readingTime: '8 min read',
+        category:    'Analysis',
+        author:      'Aelo Research',
+        featured:    true,
+    },
+    {
         slug:        'the-16-sources-llms-actually-cite',
         title:       'The 16 sources LLMs actually cite',
         excerpt:     'Reddit at #1 for consumer + prosumer queries. G2 dominates B2B software. YouTube transcripts feed Gemini heavily. A ranked, per-LLM breakdown of where AI answers actually source their information.',
