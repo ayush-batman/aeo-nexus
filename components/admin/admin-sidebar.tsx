@@ -12,11 +12,13 @@ import {
     ChevronLeft,
     Shield,
     ArrowLeft,
+    Activity,
 } from "lucide-react";
 import { useState } from "react";
 
 const navigation = [
     { name: "Overview", href: "/admin", icon: LayoutDashboard },
+    { name: "Usage", href: "/admin/usage", icon: Activity },
     { name: "Clients", href: "/admin/clients", icon: Users },
     { name: "Analytics", href: "/admin/analytics", icon: BarChart3 },
     { name: "Settings", href: "/admin/settings", icon: Settings },

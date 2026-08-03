@@ -112,3 +112,96 @@ export async function getPlatformStats() {
         planBreakdown: planCounts
     };
 }
+
+const PAID_PLANS = new Set(['starter', 'pro', 'agency', 'enterprise']);
+
+export type OrgUsageRow = {
+    id: string;
+    name: string;
+    plan: string;
+    paid: boolean;
+    users: number;
+    scans: number;
+    lastActive: string | null;
+    createdAt: string;
+};
+
+/**
+ * Per-organization usage: scans run, last-active, users, plan.
+ * Scans link via workspace_id -> workspaces.org_id, so we map in JS.
+ */
+export async function getOrgUsage(): Promise<{
+    rows: OrgUsageRow[];
+    summary: {
+        totalOrgs: number;
+        paidOrgs: number;
+        freeOrgs: number;
+        conversionRate: number;
+        activeLast7d: number;
+        totalScans: number;
+    };
+}> {
+    const supabase = await createClient();
+
+    const [orgsRes, wsRes, usersRes, scansRes] = await Promise.all([
+        supabase.from('organizations').select('id, name, plan, created_at'),
+        supabase.from('workspaces').select('id, org_id'),
+        supabase.from('users').select('id, org_id'),
+        supabase.from('llm_scans').select('workspace_id, created_at'),
+    ]);
+
+    const orgs = orgsRes.data || [];
+    const workspaces = wsRes.data || [];
+    const users = usersRes.data || [];
+    const scans = scansRes.data || [];
+
+    const wsToOrg = new Map<string, string>();
+    workspaces.forEach((w: any) => wsToOrg.set(w.id, w.org_id));
+
+    const usersByOrg = new Map<string, number>();
+    users.forEach((u: any) => {
+        if (u.org_id) usersByOrg.set(u.org_id, (usersByOrg.get(u.org_id) || 0) + 1);
+    });
+
+    const scanCountByOrg = new Map<string, number>();
+    const lastActiveByOrg = new Map<string, string>();
+    scans.forEach((s: any) => {
+        const org = wsToOrg.get(s.workspace_id);
+        if (!org) return;
+        scanCountByOrg.set(org, (scanCountByOrg.get(org) || 0) + 1);
+        const prev = lastActiveByOrg.get(org);
+        if (!prev || s.created_at > prev) lastActiveByOrg.set(org, s.created_at);
+    });
+
+    const rows: OrgUsageRow[] = orgs
+        .map((o: any) => ({
+            id: o.id,
+            name: o.name,
+            plan: o.plan,
+            paid: PAID_PLANS.has(o.plan),
+            users: usersByOrg.get(o.id) || 0,
+            scans: scanCountByOrg.get(o.id) || 0,
+            lastActive: lastActiveByOrg.get(o.id) || null,
+            createdAt: o.created_at,
+        }))
+        .sort((a, b) => b.scans - a.scans);
+
+    const totalOrgs = rows.length;
+    const paidOrgs = rows.filter((r) => r.paid).length;
+    const weekAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
+    const activeLast7d = rows.filter(
+        (r) => r.lastActive && new Date(r.lastActive).getTime() >= weekAgo
+    ).length;
+
+    return {
+        rows,
+        summary: {
+            totalOrgs,
+            paidOrgs,
+            freeOrgs: totalOrgs - paidOrgs,
+            conversionRate: totalOrgs ? Math.round((paidOrgs / totalOrgs) * 100) : 0,
+            activeLast7d,
+            totalScans: scans.length,
+        },
+    };
+}
