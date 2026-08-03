@@ -33,6 +33,7 @@ const routes: {
     // Reference + editorial
     { path: '/docs',         priority: 0.85, changeFrequency: 'weekly'  },
     { path: '/blog',                                                priority: 0.85, changeFrequency: 'weekly' },
+    { path: '/blog/how-to-get-cited-by-chatgpt',              priority: 0.9,  changeFrequency: 'monthly' },
     { path: '/blog/ai-gets-brand-facts-wrong',                      priority: 0.95, changeFrequency: 'monthly' },
     { path: '/blog/ai-visibility-score-coin-flip',                  priority: 0.9,  changeFrequency: 'monthly' },
     { path: '/blog/answer-engine-optimization-guide',               priority: 0.95, changeFrequency: 'monthly' },

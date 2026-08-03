@@ -26,6 +26,15 @@ export const POSTS: BlogPost[] = [
         featured:    true,
     },
     {
+        slug:        'how-to-get-cited-by-chatgpt',
+        title:       'How to get cited by ChatGPT',
+        excerpt:     'Two separate battles decide whether ChatGPT names you: what it learned in training, and what it retrieves and quotes at answer time. The citation funnel, what the research says actually moves it, and a practical checklist.',
+        publishedAt: '2026-08-03',
+        readingTime: '9 min read',
+        category:    'Field notes',
+        author:      'Aelo Research',
+    },
+    {
         slug:        'ai-visibility-score-coin-flip',
         title:       'Your AI visibility score is probably a coin flip',
         excerpt:     'Most tools ask the model once and report the answer as a rank. But LLM output is a probability distribution, not a leaderboard. Why single-shot measurement is noise, and what a defensible number looks like.',
