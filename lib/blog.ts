@@ -16,6 +16,15 @@ export interface BlogPost {
 // Newest first.
 export const POSTS: BlogPost[] = [
     {
+        slug:        'profound-alternative',
+        title:       'Looking for a Profound alternative? An honest guide',
+        excerpt:     'Profound is the enterprise leader in AI visibility. If you are not an enterprise, here is when a lighter tool makes sense, how Peec, Otterly and the SEO add-ons compare, and where Aelo fits (accuracy, receipts, D2C and India-first).',
+        publishedAt: '2026-08-03',
+        readingTime: '6 min read',
+        category:    'Analysis',
+        author:      'Aelo Research',
+    },
+    {
         slug:        'answer-engine-optimization-guide',
         title:       'Answer Engine Optimization (AEO): the 2026 guide',
         excerpt:     'How to get named, quoted, and recommended when buyers ask ChatGPT, Gemini, Claude and Perplexity. The two ways AI answers get built, what actually moves citations (with the research), and a practical playbook.',
