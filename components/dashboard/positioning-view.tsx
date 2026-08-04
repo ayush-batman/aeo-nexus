@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useTransition } from 'react';
+import { UpgradeModal, isPlanGate } from '@/components/billing/upgrade-modal';
 import { RefreshCw, Info } from 'lucide-react';
 import type { MatrixCell } from '@/lib/analytics/positioning';
 
@@ -20,6 +21,8 @@ type Props = {
 export function PositioningView({ data, missingTable }: Props) {
     const [pending, startTransition] = useTransition();
     const [status, setStatus] = useState<string | null>(null);
+    const [gateOpen, setGateOpen] = useState(false);
+    const [gateMessage, setGateMessage] = useState<string | null>(null);
     const cellMap = new Map(data.cells);
     const maxFreq = Math.max(1, ...data.cells.map(([, c]) => c.frequency));
 
@@ -28,6 +31,12 @@ export function PositioningView({ data, missingTable }: Props) {
         try {
             const res = await fetch('/api/positioning/regenerate', { method: 'POST' });
             const body = await res.json();
+            if (isPlanGate(res, body)) {
+                setStatus(null);
+                setGateMessage(body?.message ?? null);
+                setGateOpen(true);
+                return;
+            }
             if (!res.ok) throw new Error(body?.error || 'Regenerate failed');
             setStatus(`Processed ${body.processed} scans → ${body.attributes} attributes. Reloading…`);
             startTransition(() => window.location.reload());
@@ -68,6 +77,18 @@ export function PositioningView({ data, missingTable }: Props) {
 
     return (
         <>
+            <UpgradeModal
+                open={gateOpen}
+                onClose={() => setGateOpen(false)}
+                feature="Competitor Positioning"
+                message={gateMessage ?? undefined}
+                unlocks={[
+                    'See the attributes AI attaches to you and to each competitor',
+                    'Spot the positioning you own, lost, or never had',
+                    'Tracked across every engine, not just one',
+                ]}
+            />
+
             <div className="flex items-center justify-between mb-6">
                 <div className="flex items-center gap-2 text-xs text-[var(--text-ghost)]">
                     <Info className="h-3.5 w-3.5" />
@@ -142,7 +163,7 @@ export function PositioningView({ data, missingTable }: Props) {
 
 function Cell({ freq, intensity, platforms }: { freq: number; intensity: number; platforms: string[] }) {
     if (freq === 0) {
-        return <span className="text-[var(--text-ghost)] text-xs">, </span>;
+        return <span className="text-[var(--text-ghost)] text-xs">–</span>;
     }
     const opacity = Math.max(0.15, Math.min(1, intensity));
     return (

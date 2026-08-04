@@ -4,6 +4,7 @@ import { useState, useTransition } from 'react';
 import Link from 'next/link';
 import { RefreshCw, CheckCircle2, XCircle, Clock, HelpCircle, Lock, ExternalLink, Info } from 'lucide-react';
 import type { AccuracySummary, AccuracyRow } from '@/lib/analytics/accuracy';
+import { UpgradeModal, isPlanGate } from '@/components/billing/upgrade-modal';
 
 type Props = {
     summary: AccuracySummary;
@@ -38,6 +39,8 @@ function VerdictIcon({ v, className = 'h-4 w-4' }: { v: AccuracyRow['verdict']; 
 export function AccuracyView({ summary, paidTier, plan, missingTable }: Props) {
     const [pending, startTransition] = useTransition();
     const [status, setStatus] = useState<string | null>(null);
+    const [gateOpen, setGateOpen] = useState(false);
+    const [gateMessage, setGateMessage] = useState<string | null>(null);
 
     if (missingTable) {
         return (
@@ -72,6 +75,12 @@ export function AccuracyView({ summary, paidTier, plan, missingTable }: Props) {
         try {
             const res = await fetch('/api/accuracy/verify', { method: 'POST' });
             const body = await res.json();
+            if (isPlanGate(res, body)) {
+                setStatus(null);
+                setGateMessage(body?.message ?? null);
+                setGateOpen(true);
+                return;
+            }
             if (!res.ok) throw new Error(body?.error || 'Verify failed');
             setStatus(`Processed ${body.processed} scans → ${body.claims} claims verified. Reloading…`);
             startTransition(() => window.location.reload());
@@ -103,9 +112,21 @@ export function AccuracyView({ summary, paidTier, plan, missingTable }: Props) {
 
     return (
         <>
+            <UpgradeModal
+                open={gateOpen}
+                onClose={() => setGateOpen(false)}
+                feature="Accuracy Verdict"
+                message={gateMessage ?? undefined}
+                unlocks={[
+                    'Verify every factual claim AI makes about you against your live site',
+                    'True, false or outdated verdicts, with the evidence',
+                    'An alert the moment an engine states something wrong',
+                ]}
+            />
+
             {/* Stat row */}
             <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8">
-                <StatTile label="Accuracy" value={summary.accuracyPct !== null ? `${summary.accuracyPct}%` : ', '} tone="accent" />
+                <StatTile label="Accuracy" value={summary.accuracyPct !== null ? `${summary.accuracyPct}%` : '–'} tone="accent" />
                 <StatTile label="True"       value={String(summary.counts.true)}       tone="green" />
                 <StatTile label="False"      value={String(summary.counts.false)}      tone="red" />
                 <StatTile label="Outdated"   value={String(summary.counts.outdated)}   tone="amber" />

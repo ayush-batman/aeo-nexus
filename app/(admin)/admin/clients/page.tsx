@@ -100,7 +100,7 @@ export default async function ClientsPage() {
                                         {org.stripe_customer_id ? (
                                             <span className="text-emerald-400">{org.stripe_customer_id.slice(0, 12)}...</span>
                                         ) : (
-                                            <span className="text-[var(--text-ghost)]">, </span>
+                                            <span className="text-[var(--text-ghost)]">–</span>
                                         )}
                                     </td>
                                     <td className="px-6 py-4 text-right">

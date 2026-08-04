@@ -213,7 +213,7 @@ function RankingSummary() {
         { rank: 3, brand: 'Razorpay',  category: 'Fintech', mention: 67,  pos: '#2',   verdict: 'strong' },
         { rank: 4, brand: 'BoAt',      category: 'D2C',     mention: 67,  pos: '#2.5', verdict: 'strong' },
         { rank: 5, brand: 'Mamaearth', category: 'D2C',     mention: 50,  pos: '#1',   verdict: 'contested' },
-        { rank: 6, brand: "Byju's",    category: 'EdTech',  mention: 0,   pos: ', ',    verdict: 'invisible' },
+        { rank: 6, brand: "Byju's",    category: 'EdTech',  mention: 0,   pos: '–',    verdict: 'invisible' },
     ];
     const verdictStyle: Record<string, string> = {
         dominant:  'text-[var(--accent-base)] bg-[var(--accent-muted)]',

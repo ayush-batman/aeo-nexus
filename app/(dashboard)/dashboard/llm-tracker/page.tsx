@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
+import { UpgradeModal, isPlanGate } from '@/components/billing/upgrade-modal';
 import { Header } from "@/components/dashboard/header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -78,6 +79,8 @@ export default function LLMTrackerPage() {
     const [visibilityMetrics, setVisibilityMetrics] = useState<PlatformVisibility[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const [gateOpen, setGateOpen] = useState(false);
+    const [gateMessage, setGateMessage] = useState<string | null>(null);
     const [scanError, setScanError] = useState<string | null>(null);
     const [isLive, setIsLive] = useState(false);
     const [competitors, setCompetitors] = useState<string[]>([]);
@@ -201,8 +204,9 @@ export default function LLMTrackerPage() {
 
             if (!response.ok) {
                 // Plan gate: show the human message with an upgrade nudge, not the raw code.
-                if (response.status === 402 || data.upgrade || data.error === 'plan_required') {
-                    setScanError(`${data.message || 'This requires a paid plan.'} → Upgrade at /pricing`);
+                if (isPlanGate(response, data)) {
+                    setGateMessage(data?.message ?? null);
+                    setGateOpen(true);
                     return;
                 }
                 const errMsg = data.platformErrors
@@ -285,6 +289,13 @@ export default function LLMTrackerPage() {
 
     return (
         <>
+            <UpgradeModal
+                open={gateOpen}
+                onClose={() => setGateOpen(false)}
+                feature="Multi-engine scanning"
+                message={gateMessage ?? undefined}
+            />
+
             <Header
                 title="LLM Tracker"
                 description="Monitor your brand visibility across AI platforms"
