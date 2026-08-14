@@ -79,6 +79,7 @@ const navGroups = [
         items: [
             { name: "Accuracy Verdict", href: "/dashboard/accuracy", icon: ShieldCheck },
             { name: "Interventions", href: "/dashboard/interventions", icon: Check },
+            { name: "Client Report", href: "/dashboard/report", icon: FileText },
         ],
     },
     {
