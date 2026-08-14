@@ -2,12 +2,17 @@ import { NextRequest, NextResponse } from 'next/server';
 import Razorpay from 'razorpay';
 import { getCurrentWorkspaceContext } from '@/lib/data-access';
 
-// Self-serve plans. Keys match the marketing pricing page (radar/command);
-// dbPlan is the value written to organizations.plan. Amounts are in paise and
-// MUST equal the price shown on /pricing.
+// Self-serve plans. Accepts both the marketing keys (radar/command) and the DB
+// keys (starter/pro/agency) so the pricing page, the upgrade modal, and the
+// settings billing grid all work. dbPlan is written to organizations.plan.
+// Amounts are in paise and MUST equal the price shown on /pricing.
 const PLANS: Record<string, { amount: number; name: string; dbPlan: string }> = {
-    radar:   { amount: 499900,  name: 'Radar',   dbPlan: 'starter' }, // ₹4,999
-    command: { amount: 1499900, name: 'Command', dbPlan: 'pro' },     // ₹14,999
+    radar:     { amount: 499900,  name: 'Radar',     dbPlan: 'starter' }, // ₹4,999
+    starter:   { amount: 499900,  name: 'Radar',     dbPlan: 'starter' },
+    command:   { amount: 1499900, name: 'Command',   dbPlan: 'pro' },     // ₹14,999
+    pro:       { amount: 1499900, name: 'Command',   dbPlan: 'pro' },
+    concierge: { amount: 5000000, name: 'Concierge', dbPlan: 'agency' },  // ₹50,000
+    agency:    { amount: 5000000, name: 'Concierge', dbPlan: 'agency' },
 };
 
 function getRazorpay() {
@@ -57,6 +62,7 @@ export async function POST(request: NextRequest) {
             currency: order.currency,
             keyId: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
             planName: details.name,
+            plan: details.name, // back-compat for the settings billing grid
         });
     } catch (error) {
         console.error('[razorpay/create-order]', error);

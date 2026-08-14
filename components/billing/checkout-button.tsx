@@ -3,15 +3,15 @@
 import { useState } from "react";
 import { Loader2 } from "lucide-react";
 
-declare global {
-    interface Window {
-        Razorpay?: new (options: Record<string, unknown>) => { open: () => void };
-    }
+// window.Razorpay is typed globally in the settings page; use a local cast here
+// to avoid a duplicate global declaration.
+function getRazorpayCtor(): (new (options: Record<string, unknown>) => { open: () => void }) | undefined {
+    return (window as unknown as { Razorpay?: new (o: Record<string, unknown>) => { open: () => void } }).Razorpay;
 }
 
 function loadRazorpay(): Promise<boolean> {
     return new Promise((resolve) => {
-        if (window.Razorpay) return resolve(true);
+        if (getRazorpayCtor()) return resolve(true);
         const s = document.createElement("script");
         s.src = "https://checkout.razorpay.com/v1/checkout.js";
         s.onload = () => resolve(true);
@@ -56,13 +56,14 @@ export function CheckoutButton({
             }
 
             const ok = await loadRazorpay();
-            if (!ok || !window.Razorpay) {
+            const Ctor = getRazorpayCtor();
+            if (!ok || !Ctor) {
                 setError("Could not load the payment window. Check your connection.");
                 setLoading(false);
                 return;
             }
 
-            const rzp = new window.Razorpay({
+            const rzp = new Ctor({
                 key: data.keyId,
                 order_id: data.orderId,
                 amount: data.amount,
