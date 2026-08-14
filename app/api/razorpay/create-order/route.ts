@@ -2,17 +2,16 @@ import { NextRequest, NextResponse } from 'next/server';
 import Razorpay from 'razorpay';
 import { getCurrentWorkspaceContext } from '@/lib/data-access';
 
-// Plan prices in paise (INR)
-const PLAN_PRICES: Record<string, { amount: number; name: string }> = {
-    starter: { amount: 249900, name: 'Starter Plan' }, // ₹2,499/month
-    pro: { amount: 799900, name: 'Pro Plan' }, // ₹7,999/month
-    agency: { amount: 1999900, name: 'Agency Plan' }, // ₹19,999/month
+// Self-serve plans. Keys match the marketing pricing page (radar/command);
+// dbPlan is the value written to organizations.plan. Amounts are in paise and
+// MUST equal the price shown on /pricing.
+const PLANS: Record<string, { amount: number; name: string; dbPlan: string }> = {
+    radar:   { amount: 499900,  name: 'Radar',   dbPlan: 'starter' }, // ₹4,999
+    command: { amount: 1499900, name: 'Command', dbPlan: 'pro' },     // ₹14,999
 };
 
 function getRazorpay() {
-    if (!process.env.RAZORPAY_KEY_ID || !process.env.RAZORPAY_KEY_SECRET) {
-        return null;
-    }
+    if (!process.env.RAZORPAY_KEY_ID || !process.env.RAZORPAY_KEY_SECRET) return null;
     return new Razorpay({
         key_id: process.env.RAZORPAY_KEY_ID,
         key_secret: process.env.RAZORPAY_KEY_SECRET,
@@ -21,39 +20,34 @@ function getRazorpay() {
 
 export async function POST(request: NextRequest) {
     try {
-        // Route through the shared context helper so dev-auth-bypass works
-        // here, same fix pattern as the /api/workspaces endpoints.
         const context = await getCurrentWorkspaceContext();
         if (!context) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
         const { plan } = await request.json();
-
-        if (!plan || !PLAN_PRICES[plan]) {
+        const details = PLANS[plan as string];
+        if (!details) {
             return NextResponse.json({ error: 'Invalid plan' }, { status: 400 });
         }
 
-        const planDetails = PLAN_PRICES[plan];
         const razorpay = getRazorpay();
-
-        if (!razorpay) {
-            console.error('Razorpay keys not configured');
+        if (!razorpay || !process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID) {
             return NextResponse.json(
-                { error: 'Payment system configuration pending. Please contact support.' },
+                { error: 'payment_unconfigured', message: 'Payments are not set up yet. Please contact us to upgrade.' },
                 { status: 503 }
             );
         }
 
-        // Create Razorpay order
         const order = await razorpay.orders.create({
-            amount: planDetails.amount,
+            amount: details.amount,
             currency: 'INR',
-            receipt: `order_${Date.now()}`,
+            receipt: `ord_${Date.now()}`,
             notes: {
                 org_id: context.orgId,
-                plan,
                 user_id: context.userId,
+                db_plan: details.dbPlan,   // authoritative plan, read back on verify
+                display_plan: plan,
             },
         });
 
@@ -62,13 +56,10 @@ export async function POST(request: NextRequest) {
             amount: order.amount,
             currency: order.currency,
             keyId: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
-            plan: planDetails.name,
+            planName: details.name,
         });
     } catch (error) {
-        console.error('Razorpay order creation error:', error);
-        return NextResponse.json(
-            { error: 'Failed to create order' },
-            { status: 500 }
-        );
+        console.error('[razorpay/create-order]', error);
+        return NextResponse.json({ error: 'Failed to create order' }, { status: 500 });
     }
 }

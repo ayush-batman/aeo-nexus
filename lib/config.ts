@@ -7,9 +7,9 @@ export const PLAN_LIMITS: Record<string, { scans: number; threads: number; membe
 };
 
 export const PLAN_PRICES: Record<string, { amount: number; name: string; display: string }> = {
-    free: { amount: 0, name: 'Free Plan', display: '₹0' },
-    starter: { amount: 249900, name: 'Starter Plan', display: '₹2,499' },
-    pro: { amount: 799900, name: 'Pro Plan', display: '₹7,999' },
-    agency: { amount: 1999900, name: 'Agency Plan', display: '₹19,999' },
-    enterprise: { amount: 0, name: 'Enterprise Plan', display: 'Custom' },
+    free: { amount: 0, name: 'Free', display: '₹0' },
+    starter: { amount: 499900, name: 'Radar', display: '₹4,999' },
+    pro: { amount: 1499900, name: 'Command', display: '₹14,999' },
+    agency: { amount: 5000000, name: 'Concierge', display: 'From ₹50,000' },
+    enterprise: { amount: 0, name: 'Enterprise', display: 'Custom' },
 };

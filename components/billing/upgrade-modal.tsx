@@ -2,7 +2,8 @@
 
 import Link from "next/link";
 import { useEffect } from "react";
-import { Lock, ArrowRight, X } from "lucide-react";
+import { Lock, X } from "lucide-react";
+import { CheckoutButton } from "@/components/billing/checkout-button";
 
 /**
  * Shown when a free-tier user hits a server-side 402 plan gate.
@@ -77,19 +78,20 @@ export function UpgradeModal({
                     ))}
                 </ul>
 
-                <div className="mt-6 flex items-center gap-3">
-                    <Link
-                        href="/pricing"
-                        className="inline-flex items-center gap-1.5 rounded-lg bg-[var(--accent-base)] px-4 py-2 text-sm font-medium text-[var(--bg-base)] transition-opacity hover:opacity-90"
-                    >
-                        See plans <ArrowRight className="h-3.5 w-3.5" />
-                    </Link>
-                    <button
-                        onClick={onClose}
-                        className="rounded-lg px-3 py-2 text-sm text-[var(--text-secondary)] transition-colors hover:text-[var(--text-primary)]"
-                    >
-                        Not now
-                    </button>
+                <div className="mt-6 space-y-2.5">
+                    <CheckoutButton plan="command" label="Upgrade to Command · ₹14,999/mo" primary />
+                    <CheckoutButton plan="radar" label="Or start with Radar · ₹4,999/mo" primary={false} />
+                    <div className="flex items-center justify-between pt-1">
+                        <Link href="/pricing" className="text-xs text-[var(--text-secondary)] hover:text-[var(--text-primary)]">
+                            Compare plans
+                        </Link>
+                        <button
+                            onClick={onClose}
+                            className="rounded-lg px-2 py-1 text-xs text-[var(--text-secondary)] transition-colors hover:text-[var(--text-primary)]"
+                        >
+                            Not now
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
