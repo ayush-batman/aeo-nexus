@@ -64,7 +64,9 @@ async function isAlertEnabled(workspaceId: string, alertType: AlertType): Promis
         return ['visibility_drop', 'competitor_overtake', 'zero_visibility', 'new_citation', 'negative_sentiment', 'hot_thread'].includes(alertType);
     }
 
-    return data.enabled;
+    // Cast: the Supabase client has no generated Database types, so the row
+    // resolves to `never`. Replace with generated types to get real safety.
+    return (data as { enabled: boolean }).enabled;
 }
 
 /**
@@ -79,13 +81,14 @@ async function createNotification(
 ) {
     const { error } = await supabaseAdmin
         .from('notifications')
+        // Cast: untyped Supabase client resolves inserts to `never`.
         .insert({
             workspace_id: workspaceId,
             type,
             title,
             message,
             metadata: metadata || {},
-        });
+        } as any);
 
     if (error) {
         console.error(`Failed to create notification [${type}]:`, error);

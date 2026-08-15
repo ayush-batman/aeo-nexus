@@ -81,20 +81,18 @@ async function scanWithGemini(prompt: string): Promise<string> {
 async function scanWithOpenAI(prompt: string): Promise<string> {
     const { client, model } = getOpenAIClient('default');
 
+    // Reasoning models (gpt-5*, o-series) take max_completion_tokens +
+    // reasoning_effort; classic chat models take max_tokens. Build the
+    // non-streaming param object directly so it types cleanly.
     const isReasoning = /^gpt-5|^o[0-9]/.test(model);
-    const params: Record<string, unknown> = {
+    const params: OpenAI.Chat.Completions.ChatCompletionCreateParamsNonStreaming = {
         model,
         messages: [{ role: 'user', content: prompt }],
+        ...(isReasoning
+            ? { max_completion_tokens: 4000, reasoning_effort: 'minimal' as const }
+            : { max_tokens: 1024 }),
     };
-    if (isReasoning) {
-        params.max_completion_tokens = 4000;
-        params.reasoning_effort = 'minimal';
-    } else {
-        params.max_tokens = 1024;
-    }
-    const completion = await client.chat.completions.create(
-        params as Parameters<typeof client.chat.completions.create>[0] & { stream?: false }
-    );
+    const completion = await client.chat.completions.create(params);
 
     return completion.choices[0]?.message?.content || '';
 }

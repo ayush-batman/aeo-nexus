@@ -135,7 +135,9 @@ export async function getCurrentWorkspaceContext(): Promise<{
         const orgName = (user.user_metadata?.full_name || user.email?.split('@')[0] || 'User') + "'s Organization";
         const orgId = useManualIds ? randomUUID() : undefined;
 
-        const orgInsert = useManualIds
+        // `any`: untyped Supabase client resolves inserts to `never`. Replace
+        // with generated Database types for real column-level safety.
+        const orgInsert: any = useManualIds
             ? { id: orgId, name: orgName }
             : { name: orgName };
 
@@ -179,7 +181,8 @@ export async function getCurrentWorkspaceContext(): Promise<{
         }
 
         const workspaceId = useManualIds ? randomUUID() : undefined;
-        const wsInsert = useManualIds
+        // `any`: untyped Supabase client resolves inserts to `never`.
+        const wsInsert: any = useManualIds
             ? { id: workspaceId, org_id: createdOrgId, name: 'My Brand' }
             : { org_id: createdOrgId, name: 'My Brand' };
 
@@ -253,7 +256,8 @@ export async function getCurrentWorkspaceContext(): Promise<{
 
     if (!workspace?.id) {
         const workspaceId = useManualIds ? randomUUID() : undefined;
-        const wsInsert = useManualIds
+        // `any`: untyped Supabase client resolves inserts to `never`.
+        const wsInsert: any = useManualIds
             ? { id: workspaceId, org_id: profile.org_id, name: 'My Brand' }
             : { org_id: profile.org_id, name: 'My Brand' };
 
