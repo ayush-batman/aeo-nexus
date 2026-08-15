@@ -7,7 +7,7 @@ import { IndiaIndexDatasetJsonLd, BreadcrumbJsonLd } from "@/components/seo/stru
 
 export const metadata: Metadata = {
     title: "India AI Visibility Index · Aelo",
-    description: "How ChatGPT, Gemini, Claude and Perplexity actually answer India's top intent queries. Real scans. Refreshed monthly.",
+    description: "How Gemini actually answers India's top intent queries. Real scans, zero fabricated. More engines coming. Refreshed monthly.",
 };
 
 // Server component, pulls the current edition at request time.
@@ -37,8 +37,9 @@ export default async function IndiaIndexPage() {
                         The India AI Visibility Index
                     </h1>
                     <p className="text-[16px] md:text-[18px] text-zinc-400 max-w-2xl mx-auto leading-relaxed">
-                        How ChatGPT, Gemini, Claude and Perplexity actually answer India&apos;s top
-                        intent queries. Every number below is from a live scan. Zero fabricated.
+                        How Gemini actually answers India&apos;s top intent queries. Every number
+                        below is from a live scan. Zero fabricated. ChatGPT, Claude and Perplexity
+                        are next.
                     </p>
                     <div className="mt-6 flex items-center justify-center gap-4 text-[11px] font-mono text-zinc-600">
                         <span>{edition.brandCount} brands · {edition.categoriesTracked.length} categories</span>
