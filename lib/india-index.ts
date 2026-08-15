@@ -82,7 +82,31 @@ function verdictFor(mentionRatePct: number, avgPosition: number | null): IndiaBr
  * the India-flagged workspaces. Runs against the admin client (no auth
  * needed, this is public data by design; the Index is a PR asset).
  */
+function emptyEdition(): IndiaEdition {
+    return {
+        slug: '2026-07',
+        label: 'July 2026',
+        publishedAt: new Date().toISOString(),
+        isPreview: true,
+        brandCount: 0,
+        categoriesTracked: [],
+        entries: [],
+    };
+}
+
 export async function loadCurrentEdition(): Promise<IndiaEdition> {
+    // This public marketing page is statically prerendered at build time and
+    // reads via the service-role client (public Index data, RLS bypass). If the
+    // key is absent at build — as on any environment that hasn't set it — a
+    // thrown error here fails the ENTIRE build (this is what broke deploys on
+    // the duplicate Vercel project). Degrade to an empty edition instead;
+    // `revalidate` refills it at runtime once the key is present.
+    if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
+        console.warn('[india-index] SUPABASE_SERVICE_ROLE_KEY absent at render; empty edition');
+        return emptyEdition();
+    }
+
+    try {
     const db = createAdminClient();
 
     const { data: workspaces } = await db
@@ -149,4 +173,9 @@ export async function loadCurrentEdition(): Promise<IndiaEdition> {
         categoriesTracked: cats,
         entries: rows,
     };
+    } catch (err) {
+        // A transient DB failure at build time must not fail the whole build.
+        console.error('[india-index] failed to load edition; empty edition:', err);
+        return emptyEdition();
+    }
 }
