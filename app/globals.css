@@ -118,8 +118,15 @@ h1, h2, h3, h4, h5, h6, .font-display {
   letter-spacing: -0.025em;
 }
 
-.font-mono, code, pre {
+/* True monospace is reserved for actual code (<code>/<pre>). The small,
+   letter-spaced UI labels that used .font-mono were rendering as the SYSTEM
+   monospace fallback (Menlo/Consolas) in tiny caps, which is hard to read. They
+   now use the sans; labels keep their own uppercase + tracking utilities. */
+code, pre {
   font-family: var(--font-mono), ui-monospace, monospace;
+}
+.font-mono {
+  font-family: var(--font-sans), system-ui, -apple-system, sans-serif;
 }
 
 /* ========================================
