@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowRight, Loader2, AlertCircle } from "lucide-react";
+import { ArrowRight, AlertCircle } from "lucide-react";
+import { ScanProgress } from "@/components/marketing/scan-progress";
 
 // Landing-hero live scan widget. Takes brand name + a test query, runs
 // a real Gemini scan through /api/scan/public, redirects to the
@@ -82,59 +83,52 @@ export function FreeScanWidget() {
                 </p>
             </div>
 
-            <form onSubmit={submit} className="space-y-3">
-                <div>
-                    <label className="block text-[11px] font-mono uppercase tracking-[0.12em] text-zinc-500 mb-1.5">
-                        Your brand
-                    </label>
-                    <input
-                        type="text"
-                        value={brand}
-                        onChange={(e) => setBrand(e.target.value)}
-                        placeholder="Notion"
-                        disabled={state === 'submitting'}
-                        className="w-full px-3 py-2 text-[14px] bg-[#050506] border border-white/[0.08] rounded-md text-white placeholder-zinc-600 focus:outline-none focus:border-[var(--accent-base)]/40 transition-colors"
-                    />
-                </div>
-                <div>
-                    <label className="block text-[11px] font-mono uppercase tracking-[0.12em] text-zinc-500 mb-1.5">
-                        A high-intent question your buyers ask
-                    </label>
-                    <input
-                        type="text"
-                        value={prompt}
-                        onChange={(e) => setPrompt(e.target.value)}
-                        placeholder="Best team wiki for engineering docs in 2026"
-                        disabled={state === 'submitting'}
-                        className="w-full px-3 py-2 text-[14px] bg-[#050506] border border-white/[0.08] rounded-md text-white placeholder-zinc-600 focus:outline-none focus:border-[var(--accent-base)]/40 transition-colors"
-                    />
-                </div>
-
-                {errMsg && (
-                    <div className="flex items-start gap-2 text-[12.5px] text-[var(--data-red)]">
-                        <AlertCircle className="w-3.5 h-3.5 flex-shrink-0 mt-0.5" />
-                        <span>{errMsg}</span>
+            {state === 'submitting' ? (
+                <ScanProgress brand={brand} prompt={prompt} />
+            ) : (
+                <form onSubmit={submit} className="space-y-3">
+                    <div>
+                        <label className="block text-[11px] font-mono uppercase tracking-[0.12em] text-zinc-500 mb-1.5">
+                            Your brand
+                        </label>
+                        <input
+                            type="text"
+                            value={brand}
+                            onChange={(e) => setBrand(e.target.value)}
+                            placeholder="Notion"
+                            className="w-full px-3 py-2 text-[14px] bg-[#050506] border border-white/[0.08] rounded-md text-white placeholder-zinc-600 focus:outline-none focus:border-[var(--accent-base)]/40 transition-colors"
+                        />
                     </div>
-                )}
+                    <div>
+                        <label className="block text-[11px] font-mono uppercase tracking-[0.12em] text-zinc-500 mb-1.5">
+                            A high-intent question your buyers ask
+                        </label>
+                        <input
+                            type="text"
+                            value={prompt}
+                            onChange={(e) => setPrompt(e.target.value)}
+                            placeholder="Best team wiki for engineering docs in 2026"
+                            className="w-full px-3 py-2 text-[14px] bg-[#050506] border border-white/[0.08] rounded-md text-white placeholder-zinc-600 focus:outline-none focus:border-[var(--accent-base)]/40 transition-colors"
+                        />
+                    </div>
 
-                <button
-                    type="submit"
-                    disabled={disabled}
-                    className="w-full inline-flex items-center justify-center gap-1.5 px-4 py-2.5 text-[14px] bg-[var(--accent-base)] text-[var(--text-on-accent)] rounded-md hover:bg-[var(--accent-hover)] transition-colors font-medium disabled:opacity-40 disabled:cursor-not-allowed"
-                >
-                    {state === 'submitting' ? (
-                        <>
-                            <Loader2 className="w-4 h-4 animate-spin" />
-                            Asking Gemini…
-                        </>
-                    ) : (
-                        <>
-                            Run free scan
-                            <ArrowRight className="w-3.5 h-3.5" />
-                        </>
+                    {errMsg && (
+                        <div className="flex items-start gap-2 text-[12.5px] text-[var(--data-red)]">
+                            <AlertCircle className="w-3.5 h-3.5 flex-shrink-0 mt-0.5" />
+                            <span>{errMsg}</span>
+                        </div>
                     )}
-                </button>
-            </form>
+
+                    <button
+                        type="submit"
+                        disabled={disabled}
+                        className="w-full inline-flex items-center justify-center gap-1.5 px-4 py-2.5 text-[14px] bg-[var(--accent-base)] text-[var(--text-on-accent)] rounded-md hover:bg-[var(--accent-hover)] transition-colors font-medium disabled:opacity-40 disabled:cursor-not-allowed"
+                    >
+                        Run free scan
+                        <ArrowRight className="w-3.5 h-3.5" />
+                    </button>
+                </form>
+            )}
 
             <p className="mt-3 text-[10.5px] font-mono text-zinc-600 text-center">
                 Every scan is a real Gemini query, receipt is public + shareable.
