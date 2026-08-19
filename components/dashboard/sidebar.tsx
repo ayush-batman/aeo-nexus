@@ -26,6 +26,7 @@ import {
     TrendingDown,
     Grid3x3,
     ShieldCheck,
+    Lock,
 } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 import { createClient } from "@/lib/supabase/client";
@@ -51,7 +52,7 @@ const navGroups = [
             { name: "LLM Tracker", href: "/dashboard/llm-tracker", icon: Search },
             { name: "Agent Auditor", href: "/dashboard/audit", icon: Sparkles },
             { name: "Battle Arena", href: "/dashboard/battle", icon: Swords },
-            { name: "Positioning", href: "/dashboard/positioning", icon: Grid3x3 },
+            { name: "Positioning", href: "/dashboard/positioning", icon: Grid3x3, premium: true },
             { name: "Question Mine", href: "/dashboard/question-mine", icon: HelpCircle },
             { name: "Prompt Research", href: "/dashboard/prompts", icon: Lightbulb },
         ],
@@ -69,7 +70,7 @@ const navGroups = [
         label: "Measure",
         items: [
             { name: "Analytics", href: "/dashboard/analytics", icon: BarChart3 },
-            { name: "Sentiment Drift", href: "/dashboard/drift", icon: TrendingDown },
+            { name: "Sentiment Drift", href: "/dashboard/drift", icon: TrendingDown, premium: true },
             { name: "Attribution", href: "/dashboard/attribution", icon: Users },
         ],
     },
@@ -77,7 +78,7 @@ const navGroups = [
         // The closed-loop / PROOF layer. This is the class-apart page.
         label: "Prove",
         items: [
-            { name: "Accuracy Verdict", href: "/dashboard/accuracy", icon: ShieldCheck },
+            { name: "Accuracy Verdict", href: "/dashboard/accuracy", icon: ShieldCheck, premium: true },
             { name: "Interventions", href: "/dashboard/interventions", icon: Check },
             { name: "Client Report", href: "/dashboard/report", icon: FileText },
         ],
@@ -95,6 +96,15 @@ export function Sidebar() {
     const pathname = usePathname();
     const router = useRouter();
     const [collapsed, setCollapsed] = useState(false);
+    // null = unknown (avoid flashing a lock before we know the plan)
+    const [paid, setPaid] = useState<boolean | null>(null);
+
+    useEffect(() => {
+        fetch("/api/entitlements", { cache: "no-store" })
+            .then((r) => (r.ok ? r.json() : null))
+            .then((d) => { if (d) setPaid(!!d.paid); })
+            .catch(() => {});
+    }, []);
 
     // Workspace switcher state
     const [workspaces, setWorkspaces] = useState<Workspace[]>([]);
@@ -388,6 +398,12 @@ export function Sidebar() {
                                     >
                                         <item.icon className="w-[18px] h-[18px] flex-shrink-0" strokeWidth={1.5} />
                                         {!collapsed && <span>{item.name}</span>}
+                                        {!collapsed && "premium" in item && item.premium && paid === false && (
+                                            <Lock
+                                                className="w-3 h-3 ml-auto flex-shrink-0 text-[var(--text-ghost)]"
+                                                strokeWidth={2}
+                                            />
+                                        )}
                                     </Link>
                                 );
                             })}
