@@ -5,7 +5,7 @@ import { getCurrentWorkspaceContext } from '@/lib/data-access';
 import { getEntitlements } from '@/lib/entitlements';
 import { loadDriftHistory, DRIFT_THRESHOLD } from '@/lib/analytics/sentiment-drift';
 import { Header } from '@/components/dashboard/header';
-import { PaidFeatureGate } from '@/components/billing/paid-feature-gate';
+import { LockedPreview } from '@/components/billing/locked-preview';
 
 export const dynamic = 'force-dynamic';
 
@@ -39,11 +39,13 @@ export default async function DriftPage() {
                     description="Track how the tone of AI answers about you moves over time."
                 />
                 <main className="flex-1 px-6 py-8 max-w-7xl mx-auto w-full">
-                    <PaidFeatureGate
+                    <LockedPreview
                         feature="Sentiment Drift"
                         blurb="Watch how the tone of AI answers about you shifts week over week, and get alerted when it moves. Available on Starter and above."
                         plan={ent.plan}
-                    />
+                    >
+                        <SampleDriftTeaser />
+                    </LockedPreview>
                 </main>
             </div>
         );
@@ -95,6 +97,37 @@ export default async function DriftPage() {
                     </section>
                 )}
             </main>
+        </div>
+    );
+}
+
+// Illustrative sample shown blurred behind the upgrade card (not real data).
+function SampleDriftTeaser() {
+    const samples = [
+        { platform: 'ChatGPT', prompt: 'best team wiki for startups', prior: 0.42, current: 0.18, pts: [0.5, 0.46, 0.42, 0.3, 0.18] },
+        { platform: 'Gemini', prompt: 'notion vs confluence for docs', prior: 0.31, current: 0.55, pts: [0.2, 0.28, 0.31, 0.44, 0.55] },
+    ];
+    return (
+        <div className="grid gap-4">
+            {samples.map((s) => {
+                const delta = s.current - s.prior;
+                const up = delta > 0;
+                return (
+                    <div key={s.prompt} className="rounded-xl border border-[var(--border)] bg-[var(--surface)] p-6">
+                        <div className="flex items-start justify-between gap-6 mb-4">
+                            <div className="flex-1 min-w-0">
+                                <div className="text-xs uppercase tracking-widest text-[var(--text-ghost)] mb-1">{s.platform}</div>
+                                <div className="text-base font-medium text-[var(--text-primary)] truncate">&ldquo;{s.prompt}&rdquo;</div>
+                            </div>
+                            <div className="flex items-center gap-2 text-2xl font-medium tabular-nums" style={{ color: up ? 'var(--data-green)' : 'var(--data-red)' }}>
+                                {up ? <TrendingUp className="h-6 w-6" /> : <TrendingDown className="h-6 w-6" />}
+                                {up ? '+' : ''}{delta.toFixed(2)}
+                            </div>
+                        </div>
+                        <Sparkline points={s.pts} />
+                    </div>
+                );
+            })}
         </div>
     );
 }
