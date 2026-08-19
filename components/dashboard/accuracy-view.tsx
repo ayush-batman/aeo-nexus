@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { RefreshCw, CheckCircle2, XCircle, Clock, HelpCircle, Lock, ExternalLink, Info } from 'lucide-react';
 import type { AccuracySummary, AccuracyRow } from '@/lib/analytics/accuracy';
 import { UpgradeModal, isPlanGate } from '@/components/billing/upgrade-modal';
+import { LockedPreview } from '@/components/billing/locked-preview';
 
 type Props = {
     summary: AccuracySummary;
@@ -36,6 +37,42 @@ function VerdictIcon({ v, className = 'h-4 w-4' }: { v: AccuracyRow['verdict']; 
     }
 }
 
+// Illustrative sample shown blurred behind the upgrade card (not real data).
+function SampleAccuracyTeaser() {
+    const tiles = [
+        { label: 'Accuracy', value: '50%', color: 'var(--accent-base)' },
+        { label: 'True', value: '2', color: 'var(--data-green)' },
+        { label: 'False', value: '1', color: 'var(--data-red)' },
+        { label: 'Outdated', value: '1', color: 'var(--data-amber)' },
+        { label: 'Unverified', value: '1', color: 'var(--text-ghost)' },
+    ];
+    const claims = [
+        { v: 'False', c: 'var(--data-red)', claim: 'Your Business plan costs $25 per member per month', note: 'The model overstates the price to every prospect who asks.' },
+        { v: 'Outdated', c: 'var(--data-amber)', claim: 'You do not offer SCIM provisioning', note: 'Shipped since; the model is repeating a pre-2024 limitation.' },
+    ];
+    return (
+        <div>
+            <div className="grid grid-cols-5 gap-3 mb-6">
+                {tiles.map((t) => (
+                    <div key={t.label} className="rounded-xl border border-[var(--border)] bg-[var(--surface)] p-4">
+                        <div className="text-[11px] uppercase tracking-widest text-[var(--text-ghost)] mb-2">{t.label}</div>
+                        <div className="text-3xl font-medium tabular-nums" style={{ color: t.color }}>{t.value}</div>
+                    </div>
+                ))}
+            </div>
+            <div className="grid gap-3">
+                {claims.map((c) => (
+                    <div key={c.claim} className="rounded-xl border border-[var(--border)] bg-[var(--surface)] p-5">
+                        <div className="text-[11px] uppercase tracking-widest mb-1" style={{ color: c.c }}>{c.v}</div>
+                        <div className="text-sm text-[var(--text-primary)]">{c.claim}</div>
+                        <div className="text-sm text-[var(--text-secondary)] mt-1">{c.note}</div>
+                    </div>
+                ))}
+            </div>
+        </div>
+    );
+}
+
 export function AccuracyView({ summary, paidTier, plan, missingTable }: Props) {
     const [pending, startTransition] = useTransition();
     const [status, setStatus] = useState<string | null>(null);
@@ -53,20 +90,13 @@ export function AccuracyView({ summary, paidTier, plan, missingTable }: Props) {
 
     if (!paidTier) {
         return (
-            <div className="rounded-xl border border-[var(--border)] bg-[var(--surface)] p-10 text-center">
-                <Lock className="h-8 w-8 text-[var(--accent-base)] mx-auto mb-4" />
-                <div className="text-lg font-medium text-[var(--text-primary)] mb-2">Accuracy Verdict is a paid feature</div>
-                <p className="text-sm text-[var(--text-secondary)] max-w-md mx-auto leading-relaxed mb-6">
-                    Free plan tracks whether AIs mention you. Starter and above check whether what they&apos;re
-                    saying is actually true. Your current plan: <span className="text-[var(--text-primary)] font-medium">{plan}</span>.
-                </p>
-                <Link
-                    href="/pricing"
-                    className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-[var(--accent-base)] text-white text-sm font-medium"
-                >
-                    See plans
-                </Link>
-            </div>
+            <LockedPreview
+                feature="Accuracy Verdict"
+                blurb="Free tracks whether AIs mention you. Starter and above check whether what they say is actually true, claim by claim. Available on Starter and above."
+                plan={plan}
+            >
+                <SampleAccuracyTeaser />
+            </LockedPreview>
         );
     }
 
