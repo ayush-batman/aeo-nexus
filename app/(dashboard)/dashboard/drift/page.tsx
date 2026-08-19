@@ -2,8 +2,10 @@ import { redirect } from 'next/navigation';
 import Link from 'next/link';
 import { TrendingDown, TrendingUp, ArrowRight, Minus } from 'lucide-react';
 import { getCurrentWorkspaceContext } from '@/lib/data-access';
+import { getEntitlements } from '@/lib/entitlements';
 import { loadDriftHistory, DRIFT_THRESHOLD } from '@/lib/analytics/sentiment-drift';
 import { Header } from '@/components/dashboard/header';
+import { PaidFeatureGate } from '@/components/billing/paid-feature-gate';
 
 export const dynamic = 'force-dynamic';
 
@@ -26,6 +28,26 @@ type Row = {
 export default async function DriftPage() {
     const ctx = await getCurrentWorkspaceContext();
     if (!ctx?.workspaceId) redirect('/login');
+
+    // Paid-only feature. Gate before loading any data so free users never see it.
+    const ent = await getEntitlements(ctx.orgId);
+    if (!ent.paid) {
+        return (
+            <div className="flex flex-col min-h-screen">
+                <Header
+                    title="Sentiment Drift"
+                    description="Track how the tone of AI answers about you moves over time."
+                />
+                <main className="flex-1 px-6 py-8 max-w-7xl mx-auto w-full">
+                    <PaidFeatureGate
+                        feature="Sentiment Drift"
+                        blurb="Watch how the tone of AI answers about you shifts week over week, and get alerted when it moves. Available on Starter and above."
+                        plan={ent.plan}
+                    />
+                </main>
+            </div>
+        );
+    }
 
     let history: Row[] = [];
     try {
