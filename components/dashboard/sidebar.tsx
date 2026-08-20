@@ -28,6 +28,7 @@ import {
     ShieldCheck,
     Lock,
     Target,
+    Bot,
 } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 import { createClient } from "@/lib/supabase/client";
@@ -73,6 +74,7 @@ const navGroups = [
         items: [
             { name: "Analytics", href: "/dashboard/analytics", icon: BarChart3 },
             { name: "Sentiment Drift", href: "/dashboard/drift", icon: TrendingDown, premium: true },
+            { name: "AI Crawlers", href: "/dashboard/crawlers", icon: Bot },
             { name: "Attribution", href: "/dashboard/attribution", icon: Users },
         ],
     },
