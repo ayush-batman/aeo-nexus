@@ -27,6 +27,7 @@ import {
     Grid3x3,
     ShieldCheck,
     Lock,
+    Target,
 } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 import { createClient } from "@/lib/supabase/client";
@@ -44,6 +45,7 @@ const navGroups = [
         label: "Overview",
         items: [
             { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
+            { name: "Insights", href: "/dashboard/insights", icon: Target },
         ],
     },
     {
