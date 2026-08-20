@@ -16,6 +16,16 @@ export interface BlogPost {
 // Newest first.
 export const POSTS: BlogPost[] = [
     {
+        slug:        'ai-same-question-different-answer',
+        title:       'We asked AI the same question 100 times. It changed its top brand half of them.',
+        excerpt:     'A volatility experiment across five categories and two engines, one hundred live calls. Ask an AI the identical "best brand in India" question twice and it names a different number one about 45 percent of the time. The full table, the most and least stable categories, and why a one-time check is noise.',
+        publishedAt: '2026-08-18',
+        readingTime: '7 min read',
+        category:    'Analysis',
+        author:      'Aelo Research',
+        featured:    true,
+    },
+    {
         slug:        'ai-gets-brand-facts-wrong',
         title:       'AI gets one in eight brand facts wrong',
         excerpt:     'We asked AI to describe 26 Indian consumer brands and verified every checkable claim against the brands\' own sites. Roughly 18 percent were wrong or outdated, and three brands were described as an entirely different company.',
