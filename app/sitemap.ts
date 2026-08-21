@@ -17,6 +17,7 @@ const routes: {
     // Landing + primary product surface
     { path: '',              priority: 1.0, changeFrequency: 'weekly'  },
     { path: '/product',      priority: 0.9, changeFrequency: 'weekly'  },
+    { path: '/features',     priority: 0.9, changeFrequency: 'weekly'  },
     { path: '/pricing',      priority: 0.9, changeFrequency: 'weekly'  },
 
     // PR + trust pages (Sage bets)
