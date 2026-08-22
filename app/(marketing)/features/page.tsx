@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type { Metadata } from "next";
+import { cn } from "@/lib/utils";
 import {
     Search, Bot, BarChart3, Target, Grid3x3, TrendingDown,
     ShieldCheck, FileText, Globe, ArrowRight, CheckCircle2,
@@ -13,6 +14,13 @@ export const metadata: Metadata = {
 };
 
 type Feature = { icon: typeof Search; name: string; desc: string; badge?: string };
+
+// One real product view per group, shown alongside its features.
+const GROUP_IMAGE: Record<string, { src: string; alt: string }> = {
+    Measure:  { src: "/features/crawlers.png",  alt: "Aelo AI Crawlers and Traffic view" },
+    Diagnose: { src: "/features/insights.png",  alt: "Aelo Insights board" },
+    Prove:    { src: "/features/accuracy.png",  alt: "Aelo Accuracy Verdict" },
+};
 
 const GROUPS: { stage: string; tagline: string; features: Feature[] }[] = [
     {
@@ -70,34 +78,45 @@ export default function FeaturesPage() {
                 </div>
             </section>
 
-            {GROUPS.map((group) => (
-                <section key={group.stage} className="pb-16 px-6">
-                    <div className="mx-auto max-w-5xl">
-                        <div className="flex items-baseline gap-3 mb-6">
+            {GROUPS.map((group, gi) => {
+                const img = GROUP_IMAGE[group.stage];
+                return (
+                <section key={group.stage} className="pb-20 px-6">
+                    <div className="mx-auto max-w-6xl">
+                        <div className="flex items-baseline gap-3 mb-8">
                             <h2 className="text-2xl md:text-3xl font-medium tracking-tight text-white">{group.stage}</h2>
                             <span className="text-[13px] text-zinc-500">{group.tagline}</span>
                         </div>
-                        <div className="grid md:grid-cols-3 gap-4">
-                            {group.features.map((f) => (
-                                <div key={f.name} className="rounded-xl border border-white/[0.08] bg-[#0d0d10] p-6">
-                                    <div className="flex items-center justify-between mb-4">
-                                        <div className="inline-flex h-10 w-10 items-center justify-center rounded-lg border border-[var(--accent-base)]/25 bg-[var(--accent-base)]/10">
-                                            <f.icon className="h-5 w-5 text-[var(--accent-base)]" strokeWidth={1.5} />
-                                        </div>
-                                        {f.badge && (
-                                            <span className="text-[10px] font-mono uppercase tracking-[0.12em] text-[var(--accent-base)] border border-[var(--accent-base)]/25 rounded px-1.5 py-0.5">
-                                                {f.badge}
-                                            </span>
-                                        )}
-                                    </div>
-                                    <h3 className="text-[16px] font-medium text-white mb-1.5">{f.name}</h3>
-                                    <p className="text-[13.5px] text-zinc-400 leading-relaxed">{f.desc}</p>
+                        <div className="grid lg:grid-cols-2 gap-10 items-center">
+                            {img && (
+                                <div className={cn("rounded-xl border border-white/[0.08] overflow-hidden bg-[#0d0d10] shadow-2xl", gi % 2 === 1 && "lg:order-2")}>
+                                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                                    <img src={img.src} alt={img.alt} className="w-full h-auto block" loading="lazy" />
                                 </div>
-                            ))}
+                            )}
+                            <div className="space-y-3">
+                                {group.features.map((f) => (
+                                    <div key={f.name} className="rounded-xl border border-white/[0.08] bg-[#0d0d10] p-5">
+                                        <div className="flex items-center gap-3 mb-2">
+                                            <div className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-[var(--accent-base)]/25 bg-[var(--accent-base)]/10 flex-shrink-0">
+                                                <f.icon className="h-[18px] w-[18px] text-[var(--accent-base)]" strokeWidth={1.5} />
+                                            </div>
+                                            <h3 className="text-[16px] font-medium text-white">{f.name}</h3>
+                                            {f.badge && (
+                                                <span className="ml-auto text-[10px] font-mono uppercase tracking-[0.12em] text-[var(--accent-base)] border border-[var(--accent-base)]/25 rounded px-1.5 py-0.5">
+                                                    {f.badge}
+                                                </span>
+                                            )}
+                                        </div>
+                                        <p className="text-[13.5px] text-zinc-400 leading-relaxed">{f.desc}</p>
+                                    </div>
+                                ))}
+                            </div>
                         </div>
                     </div>
                 </section>
-            ))}
+                );
+            })}
 
             <section className="py-20 border-t border-white/5 text-center px-6">
                 <h2 className="text-3xl md:text-4xl font-medium tracking-tight text-white mb-4 text-balance">

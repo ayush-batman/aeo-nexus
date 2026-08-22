@@ -17,6 +17,7 @@ const SOLUTIONS = [
 ];
 
 const NAV_LINKS = [
+    { href: "/features",    label: "Features" },
     { href: "/product",     label: "Product" },
     { href: "/pricing",     label: "Pricing" },
     { href: "/india-index", label: "India Index" },
