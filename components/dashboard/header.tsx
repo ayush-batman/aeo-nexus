@@ -125,9 +125,12 @@ export function Header({ title, description }: HeaderProps) {
         try {
             const supabase = createClient();
             await supabase.auth.signOut();
-        } finally {
-            router.push("/login");
+        } catch {
+            // ignore; force the redirect regardless
         }
+        // Hard navigation so the server + middleware re-evaluate with cookies cleared.
+        // router.push() is a soft nav and leaves the stale session, so logout "does nothing".
+        window.location.href = "/login";
     }
     async function openNotification(n: Notification) {
         if (!n.read) {

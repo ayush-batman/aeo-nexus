@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import {
     LayoutDashboard,
@@ -98,7 +98,6 @@ const navGroups = [
 
 export function Sidebar() {
     const pathname = usePathname();
-    const router = useRouter();
     const [collapsed, setCollapsed] = useState(false);
     // null = unknown (avoid flashing a lock before we know the plan)
     const [paid, setPaid] = useState<boolean | null>(null);
@@ -235,9 +234,11 @@ export function Sidebar() {
         try {
             const supabase = createClient();
             await supabase.auth.signOut();
-        } finally {
-            router.push("/login");
+        } catch {
+            // ignore; force the redirect regardless
         }
+        // Hard navigation so the server + middleware re-evaluate with cookies cleared.
+        window.location.href = "/login";
     };
 
     return (
