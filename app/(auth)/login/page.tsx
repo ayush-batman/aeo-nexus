@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { AlertCircle, Loader2 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { AeloWordmark } from "@/components/brand/logo";
+import { GoogleSignInButton } from "@/components/auth/google-button";
 
 function LoginForm() {
     const router = useRouter();
@@ -88,6 +89,14 @@ function LoginForm() {
                             {error}
                         </div>
                     )}
+
+                    <GoogleSignInButton />
+
+                    <div className="flex items-center gap-3 my-6">
+                        <div className="flex-1 h-px bg-[var(--border-default)]" />
+                        <span className="text-xs text-[var(--text-tertiary)]">or</span>
+                        <div className="flex-1 h-px bg-[var(--border-default)]" />
+                    </div>
 
                     <form onSubmit={handleSubmit} className="space-y-4">
                         <div>
