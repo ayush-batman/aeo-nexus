@@ -4,10 +4,12 @@ import { useState, useEffect, useRef } from "react";
 import {
     Bell, Search, ChevronDown, X,
     TrendingDown, Zap, Flame, Sparkles, Link2, AlertTriangle, Bell as BellDot,
-    ShieldAlert,
+    ShieldAlert, LogOut, Settings,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
+import { createClient } from "@/lib/supabase/client";
 
 interface HeaderProps {
     title: string;
@@ -28,6 +30,8 @@ export function Header({ title, description }: HeaderProps) {
     const [unreadCount, setUnreadCount] = useState(0);
     const [showDropdown, setShowDropdown] = useState(false);
     const dropdownRef = useRef<HTMLDivElement>(null);
+    const [showUserMenu, setShowUserMenu] = useState(false);
+    const userMenuRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
         fetchNotifications();
@@ -39,6 +43,9 @@ export function Header({ title, description }: HeaderProps) {
         function handleClickOutside(e: MouseEvent) {
             if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
                 setShowDropdown(false);
+            }
+            if (userMenuRef.current && !userMenuRef.current.contains(e.target as Node)) {
+                setShowUserMenu(false);
             }
         }
         document.addEventListener("mousedown", handleClickOutside);
@@ -113,6 +120,15 @@ export function Header({ title, description }: HeaderProps) {
         negative_sentiment:  "/dashboard/drift",
     };
     const router = useRouter();
+
+    async function handleSignOut() {
+        try {
+            const supabase = createClient();
+            await supabase.auth.signOut();
+        } finally {
+            router.push("/login");
+        }
+    }
     async function openNotification(n: Notification) {
         if (!n.read) {
             await fetch("/api/alerts/notifications", {
@@ -247,13 +263,35 @@ export function Header({ title, description }: HeaderProps) {
                         )}
                     </div>
 
-                    {/* User avatar */}
-                    <button className="flex items-center gap-1.5 p-1 rounded-md transition-all hover:bg-[var(--bg-hover)] ml-1">
-                        <div className="w-7 h-7 rounded-md bg-[var(--accent-base)] flex items-center justify-center text-white text-xs font-semibold">
-                           U
-                        </div>
-                        <ChevronDown className="w-3.5 h-3.5 text-[var(--text-secondary)]" />
-                    </button>
+                    {/* User avatar + menu */}
+                    <div className="relative ml-1" ref={userMenuRef}>
+                        <button
+                            onClick={() => setShowUserMenu((v) => !v)}
+                            className="flex items-center gap-1.5 p-1 rounded-md transition-all hover:bg-[var(--bg-hover)]"
+                        >
+                            <div className="w-7 h-7 rounded-md bg-[var(--accent-base)] flex items-center justify-center text-white text-xs font-semibold">
+                               U
+                            </div>
+                            <ChevronDown className={`w-3.5 h-3.5 text-[var(--text-secondary)] transition-transform ${showUserMenu ? "rotate-180" : ""}`} />
+                        </button>
+                        {showUserMenu && (
+                            <div className="absolute right-0 top-full mt-1.5 w-44 z-50 rounded-lg border border-[var(--border-default)] bg-[var(--bg-raised)] shadow-lg overflow-hidden py-1">
+                                <Link
+                                    href="/dashboard/settings"
+                                    onClick={() => setShowUserMenu(false)}
+                                    className="flex items-center gap-2.5 px-3 py-2 text-sm text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] hover:text-[var(--text-primary)] transition-colors"
+                                >
+                                    <Settings className="w-4 h-4" /> Settings
+                                </Link>
+                                <button
+                                    onClick={() => { setShowUserMenu(false); handleSignOut(); }}
+                                    className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-[var(--text-secondary)] hover:bg-[var(--data-red-muted)] hover:text-[var(--data-red)] transition-colors"
+                                >
+                                    <LogOut className="w-4 h-4" /> Sign out
+                                </button>
+                            </div>
+                        )}
+                    </div>
                 </div>
             </div>
         </header>

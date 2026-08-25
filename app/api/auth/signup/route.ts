@@ -16,7 +16,7 @@ export async function POST(request: NextRequest) {
             'unknown';
 
         try {
-            await limiter.check(5, ip); // Max 5 signups per IP per hour
+            await limiter.check(20, ip); // Max 20 signups per IP per hour (shared office/VPN IPs were tripping the old limit of 5)
         } catch {
             return NextResponse.json(
                 { error: 'Too many signup attempts. Please try again later.' },
