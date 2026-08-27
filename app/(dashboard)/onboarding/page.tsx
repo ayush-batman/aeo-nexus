@@ -6,7 +6,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { createClient } from "@/lib/supabase/client";
 import {
     Zap,
     ArrowRight,
@@ -206,19 +205,19 @@ export default function OnboardingPage() {
         setLoading(true);
 
         try {
-            const supabase = createClient();
-
-            // Mark onboarding complete
-            if (userId) {
-                await supabase
-                    .from('users')
-                    .update({ onboarding_completed: true })
-                    .eq('id', userId);
+            // Mark onboarding complete server-side (service role + RLS fallback).
+            // A client-side update here silently no-ops under RLS and leaves the
+            // flag stuck at false; the server route surfaces real failures.
+            const res = await fetch('/api/onboarding/complete', { method: 'POST' });
+            if (!res.ok) {
+                const data = await res.json().catch(() => ({}));
+                console.error('Error completing onboarding:', data?.error || res.status);
             }
-
-            router.push('/dashboard');
         } catch (error) {
             console.error('Error completing onboarding:', error);
+        } finally {
+            // Always land on the dashboard; the OnboardingCheck gate keys off
+            // hasBrand, so the user is not blocked even if the flag write fails.
             router.push('/dashboard');
         }
     }
