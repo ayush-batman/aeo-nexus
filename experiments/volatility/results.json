@@ -1,0 +1,158 @@
+{
+  "generatedAt": "2026-08-18T05:21:04.889Z",
+  "ok": 100,
+  "headline_diffTopProb_all": 0.44666666666666677,
+  "byEngine": {
+    "gemini": 0.5022222222222222,
+    "chatgpt": 0.3911111111111111
+  },
+  "mostVolatile": [
+    "protein bars",
+    0.7222222222222223
+  ],
+  "mostStable": [
+    "wireless earbuds",
+    0.09999999999999998
+  ],
+  "summary": [
+    {
+      "category": "skincare",
+      "engine": "gemini",
+      "n": 10,
+      "failed": 0,
+      "uniqueFirsts": 2,
+      "distinctTop3": 9,
+      "diffTopProb": 0.4666666666666667,
+      "distribution": [
+        "Plum 7/10",
+        "Forest Essentials 3/10"
+      ]
+    },
+    {
+      "category": "skincare",
+      "engine": "chatgpt",
+      "n": 10,
+      "failed": 0,
+      "uniqueFirsts": 4,
+      "distinctTop3": 9,
+      "diffTopProb": 0.6444444444444444,
+      "distribution": [
+        "La Roche-Posay 6/10",
+        "Minimalist 2/10",
+        "Forest Essentials 1/10",
+        "CeraVe 1/10"
+      ]
+    },
+    {
+      "category": "coffee",
+      "engine": "gemini",
+      "n": 10,
+      "failed": 0,
+      "uniqueFirsts": 3,
+      "distinctTop3": 4,
+      "diffTopProb": 0.6444444444444444,
+      "distribution": [
+        "Sleepy Owl 5/10",
+        "Blue Tokai 4/10",
+        "Rage Coffee 1/10"
+      ]
+    },
+    {
+      "category": "coffee",
+      "engine": "chatgpt",
+      "n": 10,
+      "failed": 0,
+      "uniqueFirsts": 2,
+      "distinctTop3": 7,
+      "diffTopProb": 0.19999999999999996,
+      "distribution": [
+        "Blue Tokai 9/10",
+        "Bru 1/10"
+      ]
+    },
+    {
+      "category": "protein bars",
+      "engine": "gemini",
+      "n": 10,
+      "failed": 0,
+      "uniqueFirsts": 4,
+      "distinctTop3": 7,
+      "diffTopProb": 0.7333333333333334,
+      "distribution": [
+        "RiteBite Max Protein 5/10",
+        "Myprotein 2/10",
+        "MuscleBlaze 2/10",
+        "Yoga Bar 1/10"
+      ]
+    },
+    {
+      "category": "protein bars",
+      "engine": "chatgpt",
+      "n": 10,
+      "failed": 0,
+      "uniqueFirsts": 4,
+      "distinctTop3": 8,
+      "diffTopProb": 0.7111111111111111,
+      "distribution": [
+        "MuscleBlaze 5/10",
+        "RiteBite 3/10",
+        "Grenade 1/10",
+        "The Whole Truth 1/10"
+      ]
+    },
+    {
+      "category": "wireless earbuds",
+      "engine": "gemini",
+      "n": 10,
+      "failed": 0,
+      "uniqueFirsts": 1,
+      "distinctTop3": 7,
+      "diffTopProb": 0,
+      "distribution": [
+        "Sony 10/10"
+      ]
+    },
+    {
+      "category": "wireless earbuds",
+      "engine": "chatgpt",
+      "n": 10,
+      "failed": 0,
+      "uniqueFirsts": 2,
+      "distinctTop3": 5,
+      "diffTopProb": 0.19999999999999996,
+      "distribution": [
+        "Sony 9/10",
+        "Apple 1/10"
+      ]
+    },
+    {
+      "category": "men's fashion",
+      "engine": "gemini",
+      "n": 10,
+      "failed": 0,
+      "uniqueFirsts": 5,
+      "distinctTop3": 13,
+      "diffTopProb": 0.6666666666666667,
+      "distribution": [
+        "Louis Philippe 6/10",
+        "Kunal Rawal 1/10",
+        "Rohit Gandhi + Rahul Khanna 1/10",
+        "Peter England 1/10",
+        "Manyavar 1/10"
+      ]
+    },
+    {
+      "category": "men's fashion",
+      "engine": "chatgpt",
+      "n": 10,
+      "failed": 0,
+      "uniqueFirsts": 2,
+      "distinctTop3": 7,
+      "diffTopProb": 0.19999999999999996,
+      "distribution": [
+        "Raymond 9/10",
+        "Zara 1/10"
+      ]
+    }
+  ]
+}

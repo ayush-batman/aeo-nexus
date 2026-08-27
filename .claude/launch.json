@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "aelo-dev",
+      "runtimeExecutable": "bash",
+      "runtimeArgs": ["-lc", "cd /Users/ayush/dev/aeo-saas && exec npm run dev"],
+      "port": 3000
+    }
+  ]
+}
