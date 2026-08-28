@@ -29,7 +29,8 @@ export async function GET(request: Request) {
         const d = domainOf(c.url);
         const rec = domains[d] || (domains[d] = { citations: 0, citesYou: false });
         rec.citations++;
-        if (c.is_own_domain) rec.citesYou = true;
+        // Records vary: newer scans store is_own_domain, older ones isOwnDomain.
+        if (c.is_own_domain ?? c.isOwnDomain) rec.citesYou = true;
       }
     }
 

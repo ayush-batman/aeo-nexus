@@ -32,7 +32,8 @@ export async function GET(request: Request) {
       const cites = Array.isArray(r.citations) ? r.citations : [];
       for (const c of cites) {
         if (!c || typeof c.url !== 'string') continue;
-        const isOwn = Boolean(c.is_own_domain);
+        // Records vary: newer scans store is_own_domain, older ones isOwnDomain.
+        const isOwn = Boolean(c.is_own_domain ?? c.isOwnDomain);
         if (citesYou !== undefined && isOwn !== citesYou) continue;
         out.push({ url: c.url, domain: domainOf(c.url), title: c.title || '', citesYou: isOwn, engine: r.platform, prompt: r.prompt });
       }
