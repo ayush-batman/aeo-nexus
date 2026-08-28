@@ -142,5 +142,5 @@ export async function POST(request: Request) {
       engines,
       note: 'Each engine was asked the same question `samples` times. mentionRate and confidence reflect agreement across samples; evidence holds every raw pass so the number is defensible.',
     };
-  });
+  }, { limitPerMinute: 10, bucket: 'scan' });
 }

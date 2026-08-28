@@ -1,6 +1,6 @@
 import Link from "next/link";
 import type { Metadata } from "next";
-import { CopyBlock } from "@/components/marketing/copy-block";
+import { McpInstall } from "@/components/marketing/mcp-install";
 import {
     ArrowRight, Eye, Activity, Search, GitCompare, Target, Link2,
     ShieldCheck, Bot, ListChecks, CalendarClock, XCircle, CheckCircle2,
@@ -28,21 +28,6 @@ const WRITES = [
     { icon: ListChecks, name: "track_prompt", desc: "Start measuring a buyer question. Measurement only." },
     { icon: CalendarClock, name: "schedule_scan", desc: "Schedule a recurring multi-sample scan. Spends nothing on your behalf." },
 ];
-
-const CLAUDE_CONFIG = `{
-  "mcpServers": {
-    "aelo": {
-      "command": "npx",
-      "args": ["-y", "@aelo/mcp"],
-      "env": {
-        "AELO_API_KEY": "alo_live_your_key_here",
-        "AELO_API_BASE": "https://aelohq.com/api/v1"
-      }
-    }
-  }
-}`;
-
-const INSTALL_PROMPT = `Add the Aelo MCP server to my config. Run it with "npx -y @aelo/mcp", and set env AELO_API_KEY to my alo_live_ key and AELO_API_BASE to https://aelohq.com/api/v1. Then call get_visibility_overview for my brand.`;
 
 export default function McpPage() {
     return (
@@ -146,34 +131,7 @@ export default function McpPage() {
             <section id="install" className="border-t border-white/5 bg-[#070707]">
                 <div className="mx-auto max-w-3xl px-6 py-16">
                     <h2 className="text-2xl sm:text-3xl font-semibold tracking-tight">Connect it in a minute</h2>
-                    <ol className="mt-8 space-y-8">
-                        <li>
-                            <div className="flex items-center gap-3 mb-3">
-                                <span className="flex-shrink-0 w-6 h-6 rounded-full bg-white/10 text-[13px] flex items-center justify-center font-mono">1</span>
-                                <p className="text-sm text-zinc-300">
-                                    Create a read-only key in{" "}
-                                    <Link href="/dashboard/settings?tab=api" className="text-[var(--accent-base)] hover:text-[var(--accent-hover)]">
-                                        Settings → API keys
-                                    </Link>
-                                    . Copy the <code className="font-mono text-zinc-400">alo_live_…</code> secret.
-                                </p>
-                            </div>
-                        </li>
-                        <li>
-                            <div className="flex items-center gap-3 mb-3">
-                                <span className="flex-shrink-0 w-6 h-6 rounded-full bg-white/10 text-[13px] flex items-center justify-center font-mono">2</span>
-                                <p className="text-sm text-zinc-300">Add Aelo to your assistant.</p>
-                            </div>
-                            <CopyBlock label="claude_desktop_config.json · or ~/.cursor/mcp.json" code={CLAUDE_CONFIG} />
-                        </li>
-                        <li>
-                            <div className="flex items-center gap-3 mb-3">
-                                <span className="flex-shrink-0 w-6 h-6 rounded-full bg-white/10 text-[13px] flex items-center justify-center font-mono">3</span>
-                                <p className="text-sm text-zinc-300">Or paste this prompt into your assistant and let it wire itself up.</p>
-                            </div>
-                            <CopyBlock label="Install prompt" code={INSTALL_PROMPT} />
-                        </li>
-                    </ol>
+                    <McpInstall />
                 </div>
             </section>
 
