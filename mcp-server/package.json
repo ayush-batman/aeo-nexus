@@ -1,0 +1,26 @@
+{
+  "name": "@aelo/mcp",
+  "version": "0.1.0",
+  "description": "Aelo MCP server. Ask your AI assistant how visible your brand is across ChatGPT, Gemini, Claude and Perplexity, with multi-sampled numbers and the receipts behind them. Read-only and honest: no bought upvotes, no ordered citations.",
+  "type": "module",
+  "bin": {
+    "aelo-mcp": "dist/index.js"
+  },
+  "files": ["dist"],
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "dev": "tsc --watch"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.4",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "typescript": "^5.6.0",
+    "@types/node": "^22.0.0"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
