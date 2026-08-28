@@ -19,6 +19,7 @@ const SOLUTIONS = [
 const NAV_LINKS = [
     { href: "/features",    label: "Features" },
     { href: "/product",     label: "Product" },
+    { href: "/mcp",         label: "MCP" },
     { href: "/pricing",     label: "Pricing" },
     { href: "/india-index", label: "India Index" },
     { href: "/methodology", label: "Methodology" },

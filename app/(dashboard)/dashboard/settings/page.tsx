@@ -6,6 +6,7 @@ import Script from "next/script";
 import { Header } from "@/components/dashboard/header";
 import { SchedulesTab } from "@/components/dashboard/settings/schedules-tab";
 import { InstallTab } from "@/components/dashboard/settings/install-tab";
+import { ApiKeysTab } from "@/components/dashboard/settings/api-keys-tab";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -855,30 +856,8 @@ export default function SettingsPage() {
                                     </Card>
                                 )}
 
-                                {activeTab === "api" && (
-                                    <Card>
-                                        <CardHeader>
-                                            <CardTitle className="text-lg">API Keys</CardTitle>
-                                        </CardHeader>
-                                        <CardContent className="space-y-4">
-                                            <div className="p-4 rounded-lg bg-[var(--bg-raised)] border border-[var(--border-default)]">
-                                                <div className="flex items-center justify-between mb-2">
-                                                    <p className="font-medium text-[var(--text-primary)]">Production Key</p>
-                                                    <Badge variant="success">Active</Badge>
-                                                </div>
-                                                <code className="text-sm text-[var(--text-secondary)] bg-[var(--bg-surface)] px-2 py-1 rounded">
-                                                    aelo_live_••••••••••••••••
-                                                </code>
-                                            </div>
-                                            <Button variant="outline">
-                                                <Plus className="w-4 h-4 mr-2" />
-                                                Generate New Key
-                                            </Button>
-                                            <p className="text-xs text-[var(--text-ghost)]">
-                                                API access is available on Pro and Agency plans.
-                                            </p>
-                                        </CardContent>
-                                    </Card>
+                                {activeTab === "api" && workspace && (
+                                    <ApiKeysTab workspaceId={workspace.id} />
                                 )}
 
                                 {activeTab === "schedules" && workspace && (
