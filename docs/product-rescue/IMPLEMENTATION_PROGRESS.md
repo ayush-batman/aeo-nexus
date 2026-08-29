@@ -554,4 +554,71 @@ Website checks now accept only credential-free HTTP(S) URLs on standard ports. E
 
 ### Commit hash
 
-Pending Batch 1H commit; will be recorded in the next progress update.
+`bcae09c` — `security: constrain outbound website fetches`
+
+## Batch 1I — Signed, bounded analytics ingestion
+
+### Problem addressed
+
+The public analytics route accepted any workspace UUID and arbitrary JSON, trusted the caller's AI-source label, had no body/schema bounds, and inserted through the service role without authentication or rate limits.
+
+### User impact
+
+Pixel events now require a workspace-bound HMAC signature issued only through an authenticated install-token endpoint. Event names, UUIDs, referrers, paths, metadata depth/keys/bytes, and total request bytes are bounded. AI source is derived server-side from an exact referrer hostname, and both IP and signed-token traffic use the shared limiter.
+
+### Files changed
+
+- `lib/analytics-ingest.ts`
+- `app/api/analytics/track/route.ts`
+- `app/api/analytics/install-token/route.ts`
+- `public/aelo-pixel.js`
+- `components/dashboard/settings/install-tab.tsx`
+- `app/(marketing)/docs/page.tsx`
+- `tests/unit/analytics-ingest.test.ts`
+- `docs/product-rescue/IMPLEMENTATION_PROGRESS.md`
+
+### Tests added
+
+- A signed token validates only for its workspace and fails after workspace/token tampering.
+- Event-schema fixtures cover exact referrer classification, invalid names, oversized paths, and oversized metadata.
+- A streamed request over 16 KB stops with HTTP 413 semantics.
+- Route contract requires signed verification, bounded parsing, shared rate limiting, and excludes unbounded `request.json()`.
+
+### Commands run and results
+
+- Focused tests before implementation → expected missing-module failure, then route-contract failure.
+- `npm test` after implementation → 43 passed.
+- `npm run typecheck` → passed.
+- `npm run typecheck:mcp` → passed.
+- Targeted ESLint across the ingest module/routes, install UI, docs, and tests → passed. One older client-effect lint error was removed.
+- Full `npm run lint` → 64 existing errors and 79 warnings remain, down from 65 errors before this sub-batch; changed files are clean.
+- `npm run build -- --webpack` → passed: compilation, TypeScript, 134 static pages, traces, and the new `/api/analytics/install-token` route completed.
+- `git diff --check` → passed before the progress update.
+- Removed the generated `.next` cache after browser verification; source and user data were not affected.
+
+### Browser/runtime evidence
+
+- Local `/docs` rendered the signed `data-ingest-token` install attribute and signed request fields at 1280 px and 390 px.
+- Desktop width was 1280 with 1274 px document width; mobile width was 390 with 384 px document width. No horizontal overflow or console warnings/errors were found.
+- An unsigned local POST to `/api/analytics/track` returned HTTP 401.
+- An unauthenticated local GET to `/api/analytics/install-token` returned HTTP 401.
+- The authenticated Install tab could not be browser-tested because no authorized test login was supplied; no auth bypass was used.
+
+### Configuration and rollout
+
+- Generate a random `ANALYTICS_INGEST_SECRET` of at least 32 characters and configure the same value in every production/staging instance before deploying.
+- Existing pixel snippets do not contain a signed token and will receive 401 after rollout. Customers must copy the refreshed snippet from Settings → Install; coordinate this as a breaking migration.
+- The signing secret is currently absent locally, and the Install tab honestly reports that analytics signing is not configured.
+- No database migration is required; the signature travels with the request and existing event rows remain readable.
+- Verify a valid signed event, token/workspace mismatch, high-volume legitimate traffic, rate-limit boundaries, metadata rejection, and signing-secret rotation behavior in staging.
+
+### Remaining risks
+
+- A browser pixel token is necessarily public on the customer's site. It prevents workspace-ID guessing/forgery but can be copied and replayed; shared IP/token limits bound that abuse. Stronger replay resistance would require a server-side collector or per-page short-lived token exchange.
+- Referrer attribution is derived rather than trusted as `ai_source`, but a non-browser client can still forge the referrer string. Treat pixel attribution as traffic evidence, not payment-grade proof.
+- `ANALYTICS_INGEST_SECRET` and Upstash credentials are required before deployment; the code fails closed without them.
+- Full repository lint still fails with 64 pre-existing errors.
+
+### Commit hash
+
+Pending Batch 1I commit; will be recorded in the next progress update.

@@ -99,14 +99,15 @@ export default function DocsPage() {
                     <SubHeading>Basic install</SubHeading>
                     <CodeBlock>{`<script
   id="aeo-pixel"
-  src="https://aelohq.com/aelo-pixel.js"
-  data-workspace-id="YOUR_WORKSPACE_ID"
-  async
+	  src="https://aelohq.com/aelo-pixel.js"
+	  data-workspace-id="YOUR_WORKSPACE_ID"
+	  data-ingest-token="YOUR_SIGNED_INGEST_TOKEN"
+	  async
 ></script>`}</CodeBlock>
                     <p className="text-[13px] text-zinc-500 leading-relaxed mb-6">
                         Paste before <Mono>{`</head>`}</Mono>. Grab the workspace-personalized
                         snippet from <Link href="/dashboard/settings?tab=install" className="text-[var(--accent-base)] hover:underline">Settings → Install</Link>{" "}
-, the workspace ID is filled in for you and the tab shows a live
+, the workspace ID and signed ingest token are filled in for you and the tab shows a live
                         verification badge that flips to VERIFIED the moment the first pageview
                         arrives.
                     </p>
@@ -133,13 +134,12 @@ export default function DocsPage() {
 Content-Type: application/json
 
 {
-  "workspaceId": "wsp_XYZ",
-  "eventType":   "pageview",
-  "url":         "https://your-site.com/pricing",
-  "referrer":    "https://chatgpt.com/",
-  "aiSource":    "chatgpt",         // null when not from an AI referrer
-  "userAgent":   "Mozilla/5.0 …",
-  "timestamp":   "2026-07-05T14:23:15Z"
+  "workspace_id": "YOUR_WORKSPACE_UUID",
+  "ingest_token": "v1.SIGNED_TOKEN_FROM_SETTINGS",
+  "event_type":   "pageview",
+  "referrer":     "https://chatgpt.com/",
+  "path":         "/pricing",
+  "metadata":     {}
 }`}</CodeBlock>
                     <p className="text-[13px] text-zinc-500 leading-relaxed">
                         No cookies. No fingerprinting. No personal data. Just enough to know which
@@ -166,11 +166,12 @@ Content-Type: application/json
 
                     <SubHeading>Shape of the payload sent to Aelo</SubHeading>
                     <CodeBlock>{`{
-  "workspaceId": "wsp_XYZ",
-  "eventType":   "signup",           // your event name
-  "aiSource":    "chatgpt",          // hydrated from initial pageview
-  "metadata":    { "plan": "command", "ltv": 4900 },
-  "timestamp":   "2026-07-05T14:23:47Z"
+  "workspace_id": "YOUR_WORKSPACE_UUID",
+  "ingest_token": "v1.SIGNED_TOKEN_FROM_SETTINGS",
+  "event_type":   "signup",
+  "referrer":     "https://chatgpt.com/",
+  "path":         "/pricing",
+  "metadata":     { "plan": "command", "ltv": 4900 }
 }`}</CodeBlock>
                     <p className="text-[13px] text-zinc-500 leading-relaxed">
                         Events attributed to an AI referrer show up in{" "}

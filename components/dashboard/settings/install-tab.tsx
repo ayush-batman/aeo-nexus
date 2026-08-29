@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useSyncExternalStore } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Copy, CheckCircle, Zap, ExternalLink, AlertCircle, Loader2 } from "lucide-react";
@@ -11,19 +11,38 @@ interface Props {
     workspaceName: string;
 }
 
+const subscribeToOrigin = () => () => {};
+
 // Sage-archetype install page. Shows a copy-pasteable snippet, verification
 // status, and instructions. No fanfare, the receipt is the message.
 export function InstallTab({ workspaceId, workspaceName }: Props) {
-    const [origin, setOrigin] = useState<string>("");
+    const origin = useSyncExternalStore(
+        subscribeToOrigin,
+        () => window.location.origin,
+        () => "",
+    );
     const [copied, setCopied] = useState(false);
     const [verifying, setVerifying] = useState(true);
     const [verified, setVerified] = useState(false);
     const [aiVisits, setAiVisits] = useState(0);
     const [totalVisits, setTotalVisits] = useState(0);
+    const [ingestToken, setIngestToken] = useState("");
+    const [tokenError, setTokenError] = useState(false);
 
     useEffect(() => {
-        // window.location.origin runs client-side only, SSR would 500 otherwise.
-        setOrigin(window.location.origin);
+        let cancelled = false;
+        fetch("/api/analytics/install-token", { cache: "no-store" })
+            .then(async (response) => {
+                if (!response.ok) throw new Error();
+                return response.json();
+            })
+            .then((data) => {
+                if (!cancelled && typeof data.ingestToken === "string") setIngestToken(data.ingestToken);
+            })
+            .catch(() => {
+                if (!cancelled) setTokenError(true);
+            });
+        return () => { cancelled = true; };
     }, []);
 
     // Poll analytics summary once on mount. If any track events landed for
@@ -50,8 +69,8 @@ export function InstallTab({ workspaceId, workspaceName }: Props) {
         return () => { cancelled = true; };
     }, []);
 
-    const snippet = origin
-        ? `<script id="aeo-pixel" src="${origin}/aelo-pixel.js" data-workspace-id="${workspaceId}" async></script>`
+    const snippet = origin && ingestToken
+        ? `<script id="aeo-pixel" src="${origin}/aelo-pixel.js" data-workspace-id="${workspaceId}" data-ingest-token="${ingestToken}" async></script>`
         : "";
 
     async function handleCopy() {
@@ -111,7 +130,7 @@ export function InstallTab({ workspaceId, workspaceName }: Props) {
                             </Button>
                         </div>
                         <pre className="p-4 rounded-md border border-[var(--border-default)] bg-[var(--bg-raised)] text-[12px] font-mono text-[var(--text-primary)] leading-relaxed overflow-x-auto whitespace-pre-wrap break-all">
-                            {snippet || "Loading…"}
+                            {snippet || (tokenError ? "Analytics signing is not configured yet." : "Loading…")}
                         </pre>
                     </div>
 

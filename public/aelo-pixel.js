@@ -15,10 +15,15 @@
         return scriptTag ? scriptTag.getAttribute('data-workspace-id') : null;
     }
 
+    function getIngestToken() {
+        return scriptTag ? scriptTag.getAttribute('data-ingest-token') : null;
+    }
+
     function trackEvent(eventType, metadata = {}) {
         const workspaceId = getWorkspaceId();
-        if (!workspaceId) {
-            console.warn('AEO Pixel: Missing data-workspace-id attribute');
+        const ingestToken = getIngestToken();
+        if (!workspaceId || !ingestToken) {
+            console.warn('Aelo Pixel: Missing workspace ID or ingest token');
             return;
         }
 
@@ -37,10 +42,9 @@
         // Only track if it's an AI source OR if we want to track all (let's track all for now and filter in dashboard)
         // Actually, to save DB space, maybe only track AI + direct? No, track all properly.
         // Normalized source
-        const effectiveSource = aiSource || (referrer ? new URL(referrer).hostname : 'direct');
-
         const payload = {
             workspace_id: workspaceId,
+            ingest_token: ingestToken,
             event_type: eventType,
             referrer: referrer,
             ai_source: aiSource || 'other', // explicitly mark known AI sources
