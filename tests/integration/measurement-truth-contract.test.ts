@@ -56,3 +56,30 @@ test('intervention receipts use multi-sample matched cohorts and allow inconclus
   assert.match(snapshot, /SNAPSHOT_SAMPLES_PER_ENGINE = 8/);
   assert.match(page, /"inconclusive"/);
 });
+
+test('marketing examples and provider status are not presented as live evidence', async () => {
+  const [home, footer] = await Promise.all([
+    source('app/(marketing)/page.tsx'),
+    source('components/marketing/footer.tsx'),
+  ]);
+  assert.match(home, /Illustrative product view · example data/);
+  assert.match(home, /Example data, clearly labeled/);
+  assert.doesNotMatch(home, /No mock data anywhere/);
+  assert.doesNotMatch(home, /Live on ChatGPT/);
+  assert.doesNotMatch(footer, /All systems operational/);
+});
+
+test('dashboard visibility summaries expose sample count and Wilson confidence', async () => {
+  const [dataAccess, dashboard, tracker, overview, metricCard] = await Promise.all([
+    source('lib/data-access.ts'),
+    source('app/(dashboard)/dashboard/page.tsx'),
+    source('app/(dashboard)/dashboard/llm-tracker/page.tsx'),
+    source('app/api/v1/visibility/overview/route.ts'),
+    source('components/dashboard/metric-card.tsx'),
+  ]);
+  assert.match(dataAccess, /estimateMentionConfidence/);
+  assert.match(dashboard, /llmVisibilitySamples/);
+  assert.match(tracker, /mention rate/);
+  assert.match(overview, /confidenceInterval/);
+  assert.match(metricCard, /<button type="button"/);
+});

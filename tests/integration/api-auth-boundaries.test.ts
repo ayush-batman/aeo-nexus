@@ -69,6 +69,19 @@ test('new workspace activation also uses a canonical four-sample measurement', a
   assert.doesNotMatch(route, /scanLLM\(/);
 });
 
+test('MCP preserves measurement and API failure detail', async () => {
+  const [server, client] = await Promise.all([
+    source('mcp-server/src/index.ts'),
+    source('mcp-server/src/client.ts'),
+  ]);
+  assert.match(server, /measurement\.v1/);
+  assert.match(server, /e\.status/);
+  assert.match(server, /retryAfter/);
+  assert.match(client, /res\.status === 429/);
+  assert.match(client, /retry-after/);
+  assert.match(server, /provider_citation means the provider supplied it/);
+});
+
 test('scan quota reservation is serialized, idempotent, and service-role only', async () => {
   const sql = await source('supabase/migrations/027_create_scan_quota_reservations.sql');
   const normalized = sql.replace(/\s+/g, ' ');

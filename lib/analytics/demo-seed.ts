@@ -6,6 +6,7 @@
 // The payloads below are clearly-labeled sample data for the demo
 // workspace narrative (Notion vs Confluence/Obsidian/Slite), they never
 // touch the database and are unreachable unless the flag is set.
+import { estimateMentionConfidence } from '@/lib/measurement/confidence';
 
 export const DEMO_SEED_ACTIVE = () => process.env.AELO_DEMO_SEED === '1';
 
@@ -108,11 +109,24 @@ export function demoPositioningMatrix() {
 // ── Dashboard + Tracker: visibility metrics, scans, stats ───────
 export function demoVisibilityMetrics() {
     return [
-        { platform: 'Chatgpt',    score: 84, change: 12, scanCount: 6 },
-        { platform: 'Gemini',     score: 90, change: 8,  scanCount: 9 },
-        { platform: 'Perplexity', score: 71, change: 5,  scanCount: 4 },
-        { platform: 'Claude',     score: 66, change: -4, scanCount: 4 },
+        metric('Chatgpt', 84, 12, 5, 6),
+        metric('Gemini', 90, 8, 8, 9),
+        metric('Perplexity', 71, 5, 3, 4),
+        metric('Claude', 66, -4, 2, 4),
     ];
+}
+
+function metric(platform: string, score: number, change: number, mentions: number, samples: number) {
+    const confidence = estimateMentionConfidence(mentions, samples);
+    return {
+        platform,
+        score,
+        change,
+        scanCount: samples,
+        mentionCount: mentions,
+        mentionRate: confidence.mentionRate,
+        confidence,
+    };
 }
 
 export function demoScanRows() {
@@ -150,6 +164,8 @@ export function demoDashboardStats() {
         aeoScoreChange: 6,
         llmVisibility: 78,
         llmVisibilityChange: 9,
+        llmVisibilitySamples: 23,
+        llmVisibilityConfidence: 'high' as const,
         forumThreadCount: 23,
         highPriorityThreads: 4,
         shareOfVoice: 58,

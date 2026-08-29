@@ -762,4 +762,60 @@ First-run, manual signed-in, workspace-creation, and recurring measurements now 
 
 ### Commit hash
 
-Pending Batch 2C commit; will be recorded in the next progress update.
+`24b0b47` — `feat: unify product measurement paths`
+
+## Batch 2D — Trustworthy summaries, MCP errors, and public claims
+
+### Problem addressed
+
+Dashboard and API overview scores did not show the sample count or statistical interval behind them. MCP errors flattened HTTP status/retry detail. The homepage presented hard-coded example scores beside “No mock data anywhere,” claimed all four engines were live, and the footer always claimed every system was operational without a health source.
+
+### User impact
+
+Dashboard and tracker summaries now show successful sample counts, mention rates, and Wilson confidence. The visibility API includes mention count/rate and the 95% interval. MCP returns structured status/code/retry detail and describes `measurement.v1`, partial/all-failed behavior, and citation provenance accurately. Public example data is plainly labeled, and unverified live/system-health claims are removed.
+
+### Files changed
+
+- `lib/data-access.ts`
+- `lib/analytics/demo-seed.ts`
+- `app/api/v1/visibility/overview/route.ts`
+- `app/(dashboard)/dashboard/page.tsx`
+- `app/(dashboard)/dashboard/llm-tracker/page.tsx`
+- `components/dashboard/metric-card.tsx`
+- `mcp-server/src/client.ts`
+- `mcp-server/src/index.ts`
+- `app/(marketing)/page.tsx`
+- `components/marketing/footer.tsx`
+- `tests/integration/api-auth-boundaries.test.ts`
+- `tests/integration/measurement-truth-contract.test.ts`
+- `docs/product-rescue/evidence/batch-2d-homepage-desktop-1440.jpg`
+- `docs/product-rescue/evidence/batch-2d-homepage-mobile-390.jpg`
+- `docs/product-rescue/IMPLEMENTATION_PROGRESS.md`
+
+### Tests and checks
+
+- Contract tests require dashboard sample/confidence fields, Wilson intervals, semantic metric buttons, structured MCP errors, accurate citation wording, and labeled marketing examples.
+- Full `npm test` → 60 passed.
+- `npm run typecheck` → passed.
+- `npm run typecheck:mcp` → passed.
+- Targeted ESLint across all changed app, marketing, MCP, and test files → passed.
+- `npm run build -- --webpack` → passed: compilation, TypeScript, 134 static pages, and traces completed.
+- Generated `.next` output was removed after the build to recover disk space.
+
+### Browser evidence
+
+- Local homepage at 1440 px: 1440 px viewport, 1434 px document width, no horizontal overflow, no console warnings/errors.
+- Local homepage at 390 px: 390 px viewport, 384 px document/body width, no horizontal overflow, no console warnings/errors.
+- The accessibility tree exposed the example label, live Gemini free-scan wording, and per-scan availability statement.
+- Screenshots: `docs/product-rescue/evidence/batch-2d-homepage-desktop-1440.jpg` and `docs/product-rescue/evidence/batch-2d-homepage-mobile-390.jpg`.
+- Authenticated dashboard browser verification remains blocked by the lack of an authorized test login; source, type, lint, contract, and production-build checks passed.
+
+### Compatibility and limits
+
+- Existing dashboard score/change fields and MCP tool names remain. Confidence and evidence fields are additive.
+- Historical rows without run metadata can still contribute to window summaries; they are counted honestly as individual stored samples.
+- The dashboard score remains the existing composite visibility score. Mention rate and its confidence are now shown separately so the composite is not mistaken for statistical confidence.
+
+### Commit hash
+
+Pending Batch 2D commit; will be recorded in the next progress update.

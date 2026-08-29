@@ -25,9 +25,9 @@ export default function LandingPage() {
             <section className="pt-24 pb-16 md:pt-36 md:pb-24 px-6">
                 <div className="mx-auto max-w-4xl text-center flex flex-col items-center">
                     <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-white/10 bg-white/[0.03] mb-8">
-                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                        <span className="w-1.5 h-1.5 rounded-full bg-zinc-500" />
                         <span className="text-[11px] text-zinc-300 tracking-[0.14em] uppercase font-mono">
-                            Live on ChatGPT · Gemini · Claude · Perplexity
+                            Measures ChatGPT · Gemini · Claude · Perplexity
                         </span>
                     </div>
 
@@ -77,7 +77,7 @@ export default function LandingPage() {
                             <div className="flex flex-col md:flex-row gap-10 items-start">
                                 <div className="flex-1 min-w-0">
                                     <p className="text-[10px] font-mono text-zinc-500 uppercase tracking-[0.16em] mb-2">
-                                        Aelo Health Score · Notion
+                                        Illustrative product view · example data
                                     </p>
                                     <div className="flex items-baseline gap-3 mb-3">
                                         <span className="text-6xl md:text-7xl font-medium tracking-tighter text-white tabular-nums">67</span>
@@ -89,8 +89,8 @@ export default function LandingPage() {
                                         Receipt · Verdict improved
                                     </p>
                                     <p className="text-[13px] text-zinc-400 leading-relaxed">
-                                        Published /best-team-wikis-2026 → visibility rose from 49 → 67
-                                        on the target query in 3 weeks. Measured on real Gemini calls.
+                                        Example: publishing /best-team-wikis-2026 is followed by a measured
+                                        visibility change on the same target query and comparable samples.
                                     </p>
                                 </div>
 
@@ -114,7 +114,7 @@ export default function LandingPage() {
                         </div>
                     </div>
                     <p className="text-center text-[11px] font-mono text-zinc-600 mt-3">
-                        Real UI. Real numbers on request. No mock data anywhere.
+                        Example data, clearly labeled. Run the free scan above for a live Gemini result and raw receipt.
                     </p>
                 </div>
             </section>

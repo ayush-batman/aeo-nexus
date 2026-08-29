@@ -30,6 +30,8 @@ interface DashboardStats {
     aeoScoreChange: number;
     llmVisibility: number;
     llmVisibilityChange: number;
+    llmVisibilitySamples: number;
+    llmVisibilityConfidence: "none" | "low" | "medium" | "high";
     forumThreadCount: number;
     highPriorityThreads: number;
     shareOfVoice: number;
@@ -206,6 +208,8 @@ export default function DashboardPage() {
         aeoScoreChange: 0,
         llmVisibility: 0,
         llmVisibilityChange: 0,
+        llmVisibilitySamples: 0,
+        llmVisibilityConfidence: "none",
         forumThreadCount: 0,
         highPriorityThreads: 0,
         shareOfVoice: 0,
@@ -363,6 +367,7 @@ export default function DashboardPage() {
                             : "No change"
                         }
                         changeType={stats.llmVisibilityChange > 0 ? "positive" : stats.llmVisibilityChange < 0 ? "negative" : "neutral"}
+                        evidence={`n=${stats.llmVisibilitySamples} successful samples · ${stats.llmVisibilityConfidence} confidence`}
                         icon={Eye}
                         accentColor="violet"
                         onClick={() => setReceipt({

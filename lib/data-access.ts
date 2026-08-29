@@ -4,6 +4,8 @@ import { randomUUID } from 'crypto';
 import { cookies } from 'next/headers';
 import type { LLMScan, ForumThread } from './types';
 import { normalizeWorkspaceRole, type WorkspaceRole } from './authorization';
+import { estimateMentionConfidence } from './measurement/confidence';
+import type { MeasurementConfidenceLevel } from './measurement/types';
 
 // ── Dev Auth Bypass ─────────────────────────────────────────────────────────
 // Guarded by NEXT_PUBLIC_ENABLE_DEV_AUTH_BYPASS=true AND a `dev-auth-bypass=true`
@@ -55,6 +57,8 @@ export interface DashboardStats {
     aeoScoreChange: number;
     llmVisibility: number;
     llmVisibilityChange: number;
+    llmVisibilitySamples: number;
+    llmVisibilityConfidence: MeasurementConfidenceLevel;
     forumThreadCount: number;
     highPriorityThreads: number;
     shareOfVoice: number;
@@ -68,6 +72,9 @@ export interface PlatformVisibility {
     score: number;
     change: number;
     scanCount: number;
+    mentionCount: number;
+    mentionRate: number | null;
+    confidence: ReturnType<typeof estimateMentionConfidence>;
 }
 
 export interface RecentMention {
@@ -381,12 +388,17 @@ export async function getVisibilityMetrics(
 
         const currentScore = calculatePlatformScore(currentPlatformScans);
         const previousScore = calculatePlatformScore(previousPlatformScans);
+        const mentionCount = currentPlatformScans.filter(scan => scan.brand_mentioned).length;
+        const confidence = estimateMentionConfidence(mentionCount, currentPlatformScans.length);
 
         metrics.push({
             platform: platform.charAt(0).toUpperCase() + platform.slice(1),
             score: currentScore,
             change: currentScore - previousScore,
             scanCount: currentPlatformScans.length,
+            mentionCount,
+            mentionRate: confidence.mentionRate,
+            confidence,
         });
     }
 
@@ -533,6 +545,9 @@ export async function getDashboardStats(
     const avgVisibilityChange = visibilityMetrics.length > 0
         ? Math.round(visibilityMetrics.reduce((sum, m) => sum + m.change, 0) / visibilityMetrics.length)
         : 0;
+    const llmVisibilitySamples = visibilityMetrics.reduce((sum, metric) => sum + metric.scanCount, 0);
+    const llmVisibilityMentions = visibilityMetrics.reduce((sum, metric) => sum + metric.mentionCount, 0);
+    const llmVisibilityConfidence = estimateMentionConfidence(llmVisibilityMentions, llmVisibilitySamples).level;
 
     // Count high priority threads (score >= 70)
     const highPriorityThreads = threads.filter(t => t.opportunity_score >= 70).length;
@@ -581,6 +596,8 @@ export async function getDashboardStats(
         aeoScoreChange: healthScore.change,
         llmVisibility: avgVisibility,
         llmVisibilityChange: avgVisibilityChange,
+        llmVisibilitySamples,
+        llmVisibilityConfidence,
         forumThreadCount: threads.length,
         highPriorityThreads,
         shareOfVoice,

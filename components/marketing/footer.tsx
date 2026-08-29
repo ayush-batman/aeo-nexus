@@ -63,8 +63,8 @@ export function MarketingFooter() {
                         </p>
                         <div className="pt-2 flex items-center gap-3 text-[11px] text-zinc-600 font-mono">
                             <span className="inline-flex items-center gap-1.5">
-                                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                                All systems operational
+                                <span className="w-1.5 h-1.5 rounded-full bg-zinc-600" />
+                                Engine availability is reported per scan
                             </span>
                         </div>
                     </div>

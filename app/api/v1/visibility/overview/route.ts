@@ -19,7 +19,10 @@ export async function GET(request: Request) {
     visibility: m.score,
     change7d: m.change,
     samples: m.scanCount,
-    confidence: m.scanCount >= 4 ? 'high' : m.scanCount > 0 ? 'low' : 'none',
+    mentions: m.mentionCount,
+    mentionRate: m.mentionRate,
+    confidence: m.confidence.level,
+    confidenceInterval: m.confidence.interval,
   }));
 
   const tracked = engines.filter((e) => e.samples > 0);
@@ -32,6 +35,6 @@ export async function GET(request: Request) {
     overall,
     engines,
     note:
-      'Scores are averaged across multi-sample scans in the window; confidence reflects the sample count. A "low" or "none" confidence means run more scans before trusting the number.',
+      'Scores are averaged across stored samples in the window. Mention confidence is a 95% Wilson interval; low or none means more successful samples are needed.',
   });
 }

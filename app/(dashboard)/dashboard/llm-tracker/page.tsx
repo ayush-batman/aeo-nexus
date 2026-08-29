@@ -73,6 +73,11 @@ interface PlatformVisibility {
     score: number;
     change: number;
     scanCount: number;
+    mentionCount: number;
+    mentionRate: number | null;
+    confidence: {
+        level: "none" | "low" | "medium" | "high";
+    };
 }
 
 interface WorkspaceSummary {
@@ -417,6 +422,12 @@ export default function LLMTrackerPage() {
                                                 </div>
                                                 <div className="mt-2 text-[10px] font-mono uppercase tracking-[0.12em] text-[var(--text-ghost)] opacity-0 group-hover:opacity-100 transition-opacity">
                                                     See the receipt →
+                                                </div>
+                                                <div className="mt-2 text-[11px] text-[var(--text-secondary)]">
+                                                    {metrics?.scanCount ?? 0} samples · {metrics?.confidence.level ?? "none"} confidence
+                                                    {metrics?.mentionRate !== null && metrics?.mentionRate !== undefined
+                                                        ? ` · ${Math.round(metrics.mentionRate * 100)}% mention rate`
+                                                        : ""}
                                                 </div>
                                             </CardContent>
                                         </Card>
