@@ -3,8 +3,7 @@ import WelcomeEmail from '@/components/emails/WelcomeEmail';
 import SentimentDriftEmail from '@/components/emails/SentimentDriftEmail';
 import WeeklyDigestEmail from '@/components/emails/WeeklyDigestEmail';
 import type { DriftAlert } from '@/lib/analytics/sentiment-drift';
-import type { Report } from '@/lib/analytics/report';
-import * as React from 'react';
+import type { WeeklyDecisionInbox } from '@/lib/weekly-inbox';
 
 // Lazy init: constructing Resend without an API key throws, and Next's
 // build-time page-data collection evaluates this module before env vars
@@ -68,21 +67,19 @@ export async function sendDriftAlertEmail(to: string, alert: DriftAlert) {
     }
 }
 
-export async function sendWeeklyDigestEmail(to: string, report: Report, paid: boolean) {
+export async function sendWeeklyDigestEmail(to: string, brand: string, inbox: WeeklyDecisionInbox) {
     const resend = getResend();
     if (!resend) {
         console.warn('RESEND_API_KEY not set. Skipping weekly digest to:', to);
         return { success: false, skipped: true };
     }
-    const subject = report.totalScans === 0
-        ? `${report.brand}: run your weekly AI visibility scan`
-        : `${report.brand}: ${report.overallMentionRate}% AI mention rate this week`;
+    const subject = `${brand}: ${inbox.items.length} confidence-qualified change${inbox.items.length === 1 ? '' : 's'} this week`;
     try {
         const { data, error } = await resend.emails.send({
             from: FROM_EMAIL,
             to: [to],
             subject,
-            react: WeeklyDigestEmail({ report, paid }),
+            react: WeeklyDigestEmail({ brand, inbox }),
         });
         if (error) { console.error('Weekly digest email error:', error); return { success: false, error }; }
         return { success: true, data };

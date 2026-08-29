@@ -41,64 +41,40 @@ interface Workspace {
     created_at: string;
 }
 
-const navGroups = [
-    {
-        label: "Overview",
-        items: [
-            { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
-            { name: "Insights", href: "/dashboard/insights", icon: Target },
-        ],
-    },
-    {
-        label: "Analyze",
-        items: [
+const primaryNav = [
+    { name: "Overview", href: "/dashboard", icon: LayoutDashboard },
+    { name: "Prompts & Scans", href: "/dashboard/llm-tracker", icon: Search },
+    { name: "Sources", href: "/dashboard/analytics#citation-sources", icon: BarChart3 },
+    { name: "Actions", href: "/dashboard/interventions", icon: Target },
+    { name: "Reports & Settings", href: "/dashboard/report", icon: FileText },
+];
+
+const legacyNav = [
             { name: "LLM Tracker", href: "/dashboard/llm-tracker", icon: Search },
             { name: "Agent Auditor", href: "/dashboard/audit", icon: Sparkles },
             { name: "Battle Arena", href: "/dashboard/battle", icon: Swords },
             { name: "Positioning", href: "/dashboard/positioning", icon: Grid3x3, premium: true },
             { name: "Question Mine", href: "/dashboard/question-mine", icon: HelpCircle },
             { name: "Prompt Research", href: "/dashboard/prompts", icon: Lightbulb },
-        ],
-    },
-    {
-        label: "Grow",
-        items: [
             { name: "Content Studio", href: "/dashboard/content-studio", icon: FileText },
             { name: "Forum Hub", href: "/dashboard/forum-hub", icon: MessageSquare },
             { name: "Playbook", href: "/dashboard/playbook", icon: BookOpen },
             { name: "Experiments", href: "/dashboard/experiments", icon: FlaskConical },
-        ],
-    },
-    {
-        label: "Measure",
-        items: [
             { name: "Analytics", href: "/dashboard/analytics", icon: BarChart3 },
             { name: "Sentiment Drift", href: "/dashboard/drift", icon: TrendingDown, premium: true },
             { name: "AI Crawlers", href: "/dashboard/crawlers", icon: Bot },
             { name: "Attribution", href: "/dashboard/attribution", icon: Users },
-        ],
-    },
-    {
-        // The closed-loop / PROOF layer. This is the class-apart page.
-        label: "Prove",
-        items: [
             { name: "Accuracy Verdict", href: "/dashboard/accuracy", icon: ShieldCheck, premium: true },
-            { name: "Interventions", href: "/dashboard/interventions", icon: Check },
+            { name: "Legacy Insights URL", href: "/dashboard/insights", icon: Check },
             { name: "Client Report", href: "/dashboard/report", icon: FileText },
-        ],
-    },
-    {
-        label: "Workspace",
-        items: [
             { name: "Products", href: "/dashboard/products", icon: Package },
             { name: "Settings", href: "/dashboard/settings", icon: Settings },
-        ],
-    },
 ];
 
 export function Sidebar() {
     const pathname = usePathname();
     const [collapsed, setCollapsed] = useState(false);
+    const [showMoreTools, setShowMoreTools] = useState(false);
     // null = unknown (avoid flashing a lock before we know the plan)
     const [paid, setPaid] = useState<boolean | null>(null);
 
@@ -183,7 +159,7 @@ export function Sidebar() {
             // Small delay to ensure cookie is persisted
             await new Promise(resolve => setTimeout(resolve, 100));
             // Full page reload to refresh all server components with new workspace
-            window.location.href = "/dashboard";
+            window.location.assign("/dashboard");
         } catch (e) {
             console.error("Failed to switch workspace:", e);
         }
@@ -238,7 +214,7 @@ export function Sidebar() {
             // ignore; force the redirect regardless
         }
         // Hard navigation so the server + middleware re-evaluate with cookies cleared.
-        window.location.href = "/login";
+        window.location.assign("/login");
     };
 
     return (
@@ -376,19 +352,26 @@ export function Sidebar() {
             )}
 
             {/* Navigation */}
-            <nav className="flex-1 px-3 py-3 overflow-y-auto space-y-4">
-                {navGroups.map((group) => (
-                    <div key={group.label}>
-                        {!collapsed && (
-                            <p className="px-3 mb-1.5 text-[10px] font-semibold uppercase tracking-widest text-[var(--text-ghost)]">
-                                {group.label}
-                            </p>
-                        )}
-                        {collapsed && (
-                            <div className="mx-auto my-2 h-px w-6 bg-[var(--border-subtle)]" />
-                        )}
-                        <div className="space-y-0.5">
-                            {group.items.map((item) => {
+            <nav className="flex-1 px-3 py-3 overflow-y-auto space-y-4" aria-label="Product">
+                <div>
+                    {!collapsed && <p className="px-3 mb-1.5 text-[10px] font-semibold uppercase tracking-widest text-[var(--text-ghost)]">Workspace</p>}
+                    <div className="space-y-0.5">
+                        {primaryNav.map((item) => {
+                            const pathHref = item.href.split('#')[0];
+                            const isActive = pathname === pathHref || (pathHref !== "/dashboard" && pathname.startsWith(pathHref + "/"));
+                            return <Link key={item.name} href={item.href} title={collapsed ? item.name : undefined} className={cn("nav-item min-h-10", isActive && "active", collapsed && "justify-center px-0 w-10 h-10 mx-auto gap-0")}>
+                                <item.icon className="w-[18px] h-[18px] flex-shrink-0" strokeWidth={1.5} />{!collapsed && <span>{item.name}</span>}
+                            </Link>;
+                        })}
+                    </div>
+                </div>
+                <div>
+                    <button type="button" aria-expanded={showMoreTools} onClick={() => setShowMoreTools(value => !value)} className={cn("nav-item min-h-10 w-full", collapsed && "justify-center px-0 w-10 h-10 mx-auto gap-0")} title={collapsed ? "More tools" : undefined}>
+                        <Grid3x3 className="w-[18px] h-[18px] flex-shrink-0" strokeWidth={1.5} />
+                        {!collapsed && <><span>More tools</span><ChevronDown className={cn("ml-auto h-4 w-4 transition-transform", showMoreTools && "rotate-180")} /></>}
+                    </button>
+                    {showMoreTools && <div className="mt-1 space-y-0.5 border-l border-[var(--border-subtle)] pl-2">
+                        {legacyNav.map((item) => {
                                 const isActive = pathname === item.href || (item.href !== "/dashboard" && pathname.startsWith(item.href + "/"));
                                 return (
                                     <Link
@@ -411,10 +394,9 @@ export function Sidebar() {
                                         )}
                                     </Link>
                                 );
-                            })}
-                        </div>
-                    </div>
-                ))}
+                        })}
+                    </div>}
+                </div>
             </nav>
 
             {/* Sign Out */}

@@ -1,143 +1,52 @@
-import {
-    Body,
-    Button,
-    Container,
-    Head,
-    Heading,
-    Hr,
-    Html,
-    Preview,
-    Section,
-    Text,
-    Tailwind,
-} from "@react-email/components";
+import { Body, Button, Container, Head, Heading, Html, Preview, Section, Text } from "@react-email/components";
 import * as React from "react";
-import type { Report } from "@/lib/analytics/report";
-
-interface Props {
-    report: Report;
-    paid: boolean;
-}
+import type { WeeklyDecisionInbox } from "@/lib/weekly-inbox";
 
 const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "https://aelohq.com";
 
-const PLATFORM_LABEL: Record<string, string> = {
-    chatgpt: "ChatGPT", gemini: "Gemini", claude: "Claude",
-    perplexity: "Perplexity", google_ai_overview: "Google AI Overview",
-};
+export default function WeeklyDigestEmail({ brand, inbox }: { brand: string; inbox: WeeklyDecisionInbox }) {
+  const losses = inbox.items.filter(item => item.direction === "regressed").length;
+  const preview = `${brand}: ${inbox.items.length} confidence-qualified change${inbox.items.length === 1 ? "" : "s"} this week`;
 
-export const WeeklyDigestEmail = ({ report, paid }: Props) => {
-    const pos = report.avgPosition == null ? "—" : `#${report.avgPosition.toFixed(1)}`;
-    const previewText = report.totalScans === 0
-        ? `Run your weekly AI visibility scan for ${report.brand}`
-        : `${report.brand} appeared in ${report.overallMentionRate}% of AI answers this week`;
-    return (
-        <Html>
-            <Head />
-            <Preview>{previewText}</Preview>
-            <Tailwind>
-                <Body className="bg-zinc-50 font-sans">
-                    <Container className="mx-auto py-10 px-4 max-w-[600px]">
-                        <Section className="bg-white rounded-xl border border-zinc-200 p-8 shadow-sm">
-                            <Text className="text-xs uppercase tracking-widest text-zinc-500 mb-2">
-                                Your AI visibility this week · {report.brand}
-                            </Text>
-                            <Heading className="text-2xl font-medium text-zinc-900 mb-4 tracking-tight leading-tight">
-                                {report.totalScans === 0
-                                    ? `No scans yet for ${report.brand} this week`
-                                    : `${report.brand} appeared in ${report.overallMentionRate}% of AI answers`}
-                            </Heading>
-
-                            {report.totalScans === 0 ? (
-                                <Text className="text-base text-zinc-700 mb-2 leading-relaxed">
-                                    You haven&apos;t run a scan this week. It takes under a minute to see how AI
-                                    describes {report.brand} right now.
-                                </Text>
-                            ) : (
-                                <>
-                                    <Section className="my-5 p-4 rounded-lg border border-zinc-200 bg-zinc-50">
-                                        <table className="w-full text-sm">
-                                            <tbody>
-                                                <tr>
-                                                    <td className="text-zinc-500 py-1">Mention rate</td>
-                                                    <td className="text-zinc-900 font-medium py-1 text-right">{report.overallMentionRate}%</td>
-                                                </tr>
-                                                <tr>
-                                                    <td className="text-zinc-500 py-1">Average position</td>
-                                                    <td className="text-zinc-900 font-medium py-1 text-right">{pos}</td>
-                                                </tr>
-                                                <tr>
-                                                    <td className="text-zinc-500 py-1">Scans this week</td>
-                                                    <td className="text-zinc-900 font-medium py-1 text-right">{report.totalScans}</td>
-                                                </tr>
-                                            </tbody>
-                                        </table>
-                                    </Section>
-
-                                    {report.engines.length > 0 && (
-                                        <Section className="my-5">
-                                            <Text className="text-xs uppercase tracking-widest text-zinc-500 mb-2">By engine</Text>
-                                            <table className="w-full text-sm">
-                                                <tbody>
-                                                    {report.engines.map((e) => (
-                                                        <tr key={e.platform}>
-                                                            <td className="text-zinc-700 py-1">{PLATFORM_LABEL[e.platform] ?? e.label}</td>
-                                                            <td className="text-zinc-900 font-medium py-1 text-right">
-                                                                {e.mentionRate}%{e.avgPosition != null ? ` · #${e.avgPosition.toFixed(1)}` : ""}
-                                                            </td>
-                                                        </tr>
-                                                    ))}
-                                                </tbody>
-                                            </table>
-                                        </Section>
-                                    )}
-
-                                    {report.competitors.length > 0 && (
-                                        <Text className="text-sm text-zinc-600 leading-relaxed">
-                                            Also named alongside you: {report.competitors.slice(0, 4).map(c => c.name).join(", ")}.
-                                        </Text>
-                                    )}
-                                </>
-                            )}
-
-                            <Section className="text-center my-6">
-                                <Button
-                                    className="bg-[var(--accent-base)] text-white font-medium py-3 px-6 rounded-lg text-center mx-auto block w-fit"
-                                    href={`${baseUrl}/dashboard`}
-                                >
-                                    {report.totalScans === 0 ? "Run your scan" : "Open your dashboard"}
-                                </Button>
-                            </Section>
-
-                            {!paid && (
-                                <>
-                                    <Hr className="border-t border-zinc-200 my-6" />
-                                    <Section className="p-4 rounded-lg border border-zinc-200 bg-zinc-50">
-                                        <Text className="text-sm text-zinc-700 leading-relaxed m-0">
-                                            You&apos;re seeing <span className="font-medium">Gemini only</span>. Upgrade to add
-                                            ChatGPT, Claude and Perplexity, check whether what they say is actually true,
-                                            and track how you move against competitors.
-                                        </Text>
-                                        <Button
-                                            className="text-[var(--accent-base)] font-medium text-sm mt-3 block"
-                                            href={`${baseUrl}/pricing`}
-                                        >
-                                            See plans →
-                                        </Button>
-                                    </Section>
-                                </>
-                            )}
-                        </Section>
-                        <Text className="text-xs text-center text-zinc-500 mt-8">
-                            © {new Date().getFullYear()} Aelo · the honest measurement layer for AI answer visibility
-                            <br />
-                            Weekly digest. Manage in Settings → Alerts.
-                        </Text>
-                    </Container>
-                </Body>
-            </Tailwind>
-        </Html>
-    );
-};
-
-export default WeeklyDigestEmail;
+  return (
+    <Html>
+      <Head />
+      <Preview>{preview}</Preview>
+      <Body style={{ background: "#f4f4f5", fontFamily: "Arial, sans-serif" }}>
+        <Container style={{ margin: "0 auto", padding: "40px 16px", maxWidth: "600px" }}>
+          <Section style={{ background: "#fff", border: "1px solid #e4e4e7", borderRadius: "12px", padding: "32px" }}>
+            <Text style={{ color: "#71717a", fontSize: "11px", textTransform: "uppercase", letterSpacing: "1.5px" }}>
+              Weekly decision inbox · {brand}
+            </Text>
+            <Heading style={{ color: "#18181b", fontSize: "24px", lineHeight: "1.3" }}>
+              {inbox.items.length} change{inbox.items.length === 1 ? "" : "s"} strong enough to act on
+            </Heading>
+            <Text style={{ color: "#52525b", fontSize: "14px", lineHeight: "1.6" }}>
+              Each item has at least four samples in both weeks and non-overlapping 95% confidence ranges. {losses ? `${losses} moved down and may need attention.` : "No confidence-qualified losses were found."}
+            </Text>
+            {inbox.items.slice(0, 6).map(item => (
+              <Section key={item.id} style={{ borderTop: "1px solid #e4e4e7", padding: "16px 0" }}>
+                <Text style={{ color: item.direction === "regressed" ? "#b91c1c" : "#15803d", fontSize: "12px", fontWeight: "700", textTransform: "uppercase" }}>
+                  {item.engine} · {item.changePoints > 0 ? "+" : ""}{item.changePoints} points
+                </Text>
+                <Text style={{ color: "#18181b", fontSize: "15px", fontWeight: "600" }}>{item.prompt}</Text>
+                <Text style={{ color: "#52525b", fontSize: "13px", lineHeight: "1.5" }}>{item.whyItMatters}</Text>
+                <Text style={{ color: "#71717a", fontSize: "12px" }}>
+                  {Math.round((item.previous.mentionRate ?? 0) * 100)}% (n={item.previous.sampleCount}) → {Math.round((item.current.mentionRate ?? 0) * 100)}% (n={item.current.sampleCount}) · Next: {item.action?.title ?? "review and assign an action"}
+                </Text>
+              </Section>
+            ))}
+            <Section style={{ textAlign: "center", marginTop: "24px" }}>
+              <Button href={`${baseUrl}/dashboard`} style={{ background: "#18181b", color: "#fff", borderRadius: "8px", padding: "12px 20px" }}>
+                Open decision inbox
+              </Button>
+            </Section>
+          </Section>
+          <Text style={{ color: "#71717a", fontSize: "11px", textAlign: "center", marginTop: "24px" }}>
+            Weekly digest. Manage in Settings → Notifications.
+          </Text>
+        </Container>
+      </Body>
+    </Html>
+  );
+}

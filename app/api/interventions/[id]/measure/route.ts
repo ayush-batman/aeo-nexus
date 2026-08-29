@@ -75,9 +75,20 @@ export async function POST(
 
     // One intervention measurement is one user-requested batch, even when it
     // contains several target prompts. The database reservation is atomic.
-    const reservation = await reserveScanQuota(context.orgId, `intervention:${id}:${randomUUID()}`, db);
+    const suppliedKey = request.headers.get('idempotency-key')?.trim();
+    if (suppliedKey && suppliedKey.length > 100) {
+        return NextResponse.json({ error: 'Idempotency-Key must be 100 characters or fewer.' }, { status: 400 });
+    }
+    const requestKey = suppliedKey || randomUUID();
+    const reservation = await reserveScanQuota(context.orgId, `intervention:${id}:${requestKey}`, db);
     if (reservation === 'denied') {
         return NextResponse.json({ error: 'Weekly scan quota exceeded' }, { status: 429 });
+    }
+    if (reservation === 'duplicate') {
+        if (interv.status === 'measured') {
+            return NextResponse.json({ intervention: interv, summary: interv.impact_summary, duplicate: true });
+        }
+        return NextResponse.json({ error: 'This measurement request is already running or did not finish.' }, { status: 409 });
     }
 
     // Brand name comes off the workspace
@@ -153,6 +164,21 @@ export async function POST(
     if (updErr) {
         console.error('[interventions/measure] update failed:', updErr);
         return NextResponse.json({ error: 'Failed to save impact' }, { status: 500 });
+    }
+
+    const { error: eventError } = await db.from('action_events').upsert({
+        action_id: id,
+        workspace_id: context.workspaceId,
+        actor_id: context.userId,
+        event_type: 'measured',
+        from_status: interv.status,
+        to_status: 'measured',
+        changes: { impact_summary: summary },
+        idempotency_key: `measured:${requestKey}`,
+    }, { onConflict: 'action_id,idempotency_key', ignoreDuplicates: true });
+    if (eventError) {
+        console.error('[interventions/measure-event] insert failed:', eventError);
+        return NextResponse.json({ error: 'Measurement was saved, but its audit event failed. Retry safely.' }, { status: 500 });
     }
 
     return NextResponse.json({ intervention: updated, summary, successfulSamples, failedSamples });

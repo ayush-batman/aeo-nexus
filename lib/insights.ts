@@ -15,6 +15,7 @@ export type Insight = {
     detail: string;
     actionLabel: string;
     actionHref: string;
+    targetPrompt?: string;
 };
 
 type ScanRow = {
@@ -81,6 +82,7 @@ export async function generateInsights(workspaceId: string): Promise<Insight[]> 
                     title: `${rival} owns "${short}"`,
                     detail: `AI named ${rival} but never you for this query in the last 30 days. This is a lost recommendation on a question your buyers ask.`,
                     actionLabel: 'Plan content', actionHref: '/dashboard/content-studio',
+                    targetPrompt: a.prompt,
                 });
             } else {
                 insights.push({
@@ -88,6 +90,7 @@ export async function generateInsights(workspaceId: string): Promise<Insight[]> 
                     title: `Invisible for "${short}"`,
                     detail: `No AI engine named you for this query in the last 30 days. Nothing you publish is being surfaced here yet.`,
                     actionLabel: 'Plan content', actionHref: '/dashboard/content-studio',
+                    targetPrompt: a.prompt,
                 });
             }
         } else if (rate < 0.5) {
@@ -96,6 +99,7 @@ export async function generateInsights(workspaceId: string): Promise<Insight[]> 
                 title: `Weak coverage on "${short}"`,
                 detail: `You appear in only ${Math.round(rate * 100)}% of AI answers for this query. Reinforce the sources that already mention you.`,
                 actionLabel: 'Find sources', actionHref: '/dashboard/forum-hub',
+                targetPrompt: a.prompt,
             });
         } else if (avgPos != null && avgPos > 3) {
             insights.push({
@@ -103,6 +107,7 @@ export async function generateInsights(workspaceId: string): Promise<Insight[]> 
                 title: `Ranked low on "${short}"`,
                 detail: `You are mentioned but at average position ${avgPos.toFixed(1)}. Moving up means more third-party corroboration.`,
                 actionLabel: 'Find sources', actionHref: '/dashboard/forum-hub',
+                targetPrompt: a.prompt,
             });
         }
 
@@ -112,6 +117,7 @@ export async function generateInsights(workspaceId: string): Promise<Insight[]> 
                 title: `Negative tone on "${short}"`,
                 detail: `At least one engine framed you negatively for this query. Address the perception directly in your own content.`,
                 actionLabel: 'Draft response', actionHref: '/dashboard/content-studio',
+                targetPrompt: a.prompt,
             });
         }
     }

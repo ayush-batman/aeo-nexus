@@ -24,6 +24,7 @@ import {
 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import Link from "next/link";
+import { WeeklyDecisionInbox } from "@/components/dashboard/weekly-decision-inbox";
 
 interface DashboardStats {
     aeoHealthScore: number;
@@ -270,6 +271,8 @@ export default function DashboardPage() {
                         <span>Live updates enabled</span>
                     </div>
                 )}
+
+                <WeeklyDecisionInbox />
 
                 {/* Aelo Health Score */}
                 <div

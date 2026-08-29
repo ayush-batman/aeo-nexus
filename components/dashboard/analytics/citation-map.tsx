@@ -1,11 +1,10 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Loader2, Globe, Link2, AlertCircle, TrendingUp, Lightbulb, MapPin, Search } from "lucide-react";
-import { cn } from "@/lib/utils";
 
 interface CitationSource {
     domain: string;
@@ -32,11 +31,7 @@ export function CitationMap() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
-    useEffect(() => {
-        fetchData();
-    }, []);
-
-    const fetchData = async () => {
+    const fetchData = useCallback(async () => {
         setLoading(true);
         setError(null);
         try {
@@ -65,7 +60,12 @@ export function CitationMap() {
         } finally {
             setLoading(false);
         }
-    };
+    }, []);
+
+    useEffect(() => {
+        const timer = window.setTimeout(() => { void fetchData(); }, 0);
+        return () => window.clearTimeout(timer);
+    }, [fetchData]);
 
     if (loading) {
         return (
@@ -117,7 +117,7 @@ export function CitationMap() {
     }
 
     return (
-        <Card className="overflow-hidden bg-[var(--bg-base)]/50 border border-[var(--border-default)]/80 backdrop-blur-xl">
+        <Card id="citation-sources" className="scroll-mt-20 overflow-hidden bg-[var(--bg-base)]/50 border border-[var(--border-default)]/80 backdrop-blur-xl">
             <CardHeader className="border-b border-[var(--border-default)]/50 pb-4">
                 <div className="flex items-center gap-2">
                     <div className="p-2 bg-[var(--accent-muted)] rounded-lg border border-[var(--accent-base)]/25">

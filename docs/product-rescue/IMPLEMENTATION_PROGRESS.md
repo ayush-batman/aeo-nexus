@@ -881,4 +881,75 @@ Onboarding now proposes three editable buyer prompts and accepts three to five. 
 
 ### Commit hash
 
-Pending Batch 2E commit; will be recorded in the next progress update.
+`a8664b5` — `feat: persist activation decision packets`
+
+## Batch 3A — Persisted Actions and weekly decision inbox
+
+### Problem addressed
+
+Insights saved lane changes only in one browser, while Interventions held separate database evidence. Neither surface offered a complete shared workflow for assigning work, recording the hypothesis/source, validating state transitions, or reviewing an audit trail. The sidebar exposed roughly 22 peer destinations, and the weekly email reported a broad single-week score without requiring a comparable prior cohort or recording delivery failure honestly.
+
+### User impact
+
+Insights and Interventions now converge on one persisted **Actions** queue. A scan-derived suggestion can be saved exactly once, assigned to an organization member, moved through a validated planned → doing → shipped → measured workflow, and reviewed with its hypothesis, source, target prompt, stable baseline, history, and uncertainty-aware receipt. The old `/dashboard/insights` URL remains reachable and redirects to Actions. The primary sidebar now exposes five user jobs—Overview, Prompts & Scans, Sources, Actions, and Reports & Settings—while every legacy route remains under More tools.
+
+Overview now includes a weekly decision inbox. It compares the last seven days with the seven before that per prompt and engine, requires at least four samples in each cohort, and displays a gain or loss only when the two 95% Wilson confidence ranges do not overlap. Weekly email uses the same material-change list, claims one delivery per workspace/week, skips empty inboxes, and records failed or unconfigured delivery instead of claiming it was sent.
+
+### Files changed
+
+- `supabase/migrations/030_persist_team_actions.sql`
+- `supabase/migrations/031_weekly_digest_delivery.sql`
+- `lib/actions.ts`
+- `lib/weekly-inbox.ts`
+- `lib/insights.ts`
+- `lib/email.ts`
+- `app/api/interventions/route.ts`
+- `app/api/interventions/[id]/route.ts`
+- `app/api/dashboard/decision-inbox/route.ts`
+- `app/api/cron/weekly-digest/route.ts`
+- `app/(dashboard)/dashboard/interventions/page.tsx`
+- `app/(dashboard)/dashboard/insights/page.tsx`
+- `app/(dashboard)/dashboard/page.tsx`
+- `components/dashboard/sidebar.tsx`
+- `components/dashboard/weekly-decision-inbox.tsx`
+- `components/dashboard/analytics/citation-map.tsx`
+- `components/emails/WeeklyDigestEmail.tsx`
+- `tests/unit/actions.test.ts`
+- `tests/unit/weekly-inbox.test.ts`
+- `tests/integration/actions-contract.test.ts`
+- `tests/integration/weekly-digest-contract.test.ts`
+
+### Tests and checks
+
+- Domain tests cover allowed/forbidden state transitions, validated evidence URLs, stable insight idempotency keys, minimum weekly cohort size, confidence-qualified material changes, and matching open work.
+- Contract tests require additive organization-scoped action/event storage, server-only mutations, workspace binding, role checks, legacy Insights redirect, one delivery claim per week, material-only digest input, and visible failed delivery.
+- Full `npm test` → 75 passed.
+- `npm run typecheck` → passed.
+- `npm run typecheck:mcp` → passed.
+- Targeted ESLint across every changed TypeScript file → passed with no warnings or errors.
+- First `npm run build -- --webpack` attempt stopped with `ENOSPC` while writing generated `.next` files. After removing only `.next`, the clean retry passed: compilation, TypeScript, 136 static pages/routes, and traces completed.
+- Generated `.next` output was removed after the successful build to recover disk space.
+
+### Browser and state coverage
+
+- Loading skeletons, empty lanes, suggestion state, request errors with retry, owner controls, valid forward actions, measurement busy state, audit history, weekly empty/qualified states, and digest failure storage are implemented and covered by type/contract checks.
+- Authenticated Actions, assignment persistence across two users/devices, and the weekly inbox could not be exercised in a real browser because no authorized non-production login was supplied. No auth bypass or production data was used.
+- Production migrations were not applied. Supabase CLI/Docker is unavailable, so migrations 030–031 have static contract coverage and require staging execution before deployment.
+
+### Migration and rollback
+
+- Apply migration 030 after 029, then 031. Code that selects the new action/event or digest-delivery fields must not deploy before both migrations.
+- Migration 030 adds nullable action metadata, one partial unique insight index, and `action_events`. It replaces the old broad authenticated `FOR ALL` intervention policy with organization-scoped read-only policies; writes remain in validated server routes.
+- Migration 031 adds `weekly_digest_deliveries`, a nullable notification dedupe key/index, and a service-role-only delivery claim function.
+- Rollback code before dropping data-bearing tables. For schema rollback: drop `claim_weekly_digest_delivery`, drop `weekly_digest_deliveries`, drop the notification dedupe index/column, drop `action_events`, drop the action insight index, then drop the six additive intervention columns and restore the prior intervention policy if the old application still needs direct authenticated writes. Export action history/delivery failures first if support records must be retained.
+
+### Remaining risks
+
+- Action row update and audit-event insert are two server calls rather than one database transaction. An event failure is surfaced as a retryable 500 and never presented as success, but a database RPC should make the pair atomic in a later reliability pass.
+- Action measurement now reuses a caller-provided retry key for quota and event deduplication. A worker crash before the receipt is saved still returns a clear 409 on retry because the quota reservation cannot yet distinguish running from abandoned work; durable measurement jobs remain future work.
+- Weekly comparison currently uses stored prompt/platform/time cohorts. Model/version/region/scorer compatibility must be added to stored scan run metadata before those dimensions can be enforced in the inbox.
+- Email delivery remains blocked in environments without `RESEND_API_KEY`; the new delivery row and notification make that failure visible.
+
+### Commit hash
+
+Pending Batch 3A commit; will be recorded in the next progress update.
