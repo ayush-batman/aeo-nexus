@@ -15,7 +15,7 @@ function GoogleIcon() {
     );
 }
 
-export function GoogleSignInButton({ label = "Continue with Google" }: { label?: string }) {
+export function GoogleSignInButton({ label = "Continue with Google", selectedPlan }: { label?: string; selectedPlan?: "radar" | "command" | null }) {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
@@ -24,9 +24,11 @@ export function GoogleSignInButton({ label = "Continue with Google" }: { label?:
         setError(null);
         try {
             const supabase = createClient();
+            const callback = new URL('/auth/callback', window.location.origin);
+            if (selectedPlan) callback.searchParams.set('plan', selectedPlan);
             const { error } = await supabase.auth.signInWithOAuth({
                 provider: "google",
-                options: { redirectTo: `${window.location.origin}/auth/callback` },
+                options: { redirectTo: callback.toString() },
             });
             // On success the browser redirects to Google, nothing else runs here.
             if (error) {
@@ -50,7 +52,7 @@ export function GoogleSignInButton({ label = "Continue with Google" }: { label?:
                 {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <GoogleIcon />}
                 {label}
             </button>
-            {error && <p className="mt-2 text-xs text-[var(--data-red)]">{error}</p>}
+            {error && <p className="mt-2 text-xs text-[var(--data-red)]" role="alert">{error}</p>}
         </div>
     );
 }

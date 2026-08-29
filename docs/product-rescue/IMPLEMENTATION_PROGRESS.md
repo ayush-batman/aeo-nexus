@@ -818,4 +818,67 @@ Dashboard and tracker summaries now show successful sample counts, mention rates
 
 ### Commit hash
 
-Pending Batch 2D commit; will be recorded in the next progress update.
+`a9d2396` — `fix: expose honest measurement context`
+
+## Batch 2E — Persisted activation decision packet
+
+### Problem addressed
+
+Onboarding measured one generic brand-awareness question and stopped at provider rows. It did not let the user choose buyer-intent prompts, did not rank a source/action gap, did not preserve the result across refresh, lost paid-plan intent at signup, and redirected to the dashboard even when the onboarding completion write failed.
+
+### User impact
+
+Onboarding now proposes three editable buyer prompts and accepts three to five. One quota-reserved activation batch measures each prompt four times per entitled, configured engine, saves the samples, and persists a versioned packet. The packet shows complete/partial/all-failed/untracked state, per-engine mention rate, successful/failed sample counts, confidence, sample snippets, provider-backed source links, and one ranked next action. A return visit reloads the latest packet. Selected Radar/Command intent survives password or Google signup without starting checkout or charging the user, and a failed completion write stays visible and retryable.
+
+### Files changed
+
+- `supabase/migrations/029_create_decision_packets.sql`
+- `lib/measurement/decision-packet.ts`
+- `lib/measurement/persistence.ts`
+- `app/api/onboarding/decision-packet/route.ts`
+- `app/(dashboard)/onboarding/page.tsx`
+- `app/(auth)/signup/page.tsx`
+- `app/api/auth/signup/route.ts`
+- `app/auth/callback/route.ts`
+- `components/auth/google-button.tsx`
+- `tests/unit/decision-packet.test.ts`
+- `tests/integration/measurement-truth-contract.test.ts`
+- `tests/integration/api-auth-boundaries.test.ts`
+- `docs/product-rescue/evidence/batch-2e-signup-command-desktop-1440.jpg`
+- `docs/product-rescue/evidence/batch-2e-signup-command-mobile-390.jpg`
+- `docs/product-rescue/IMPLEMENTATION_PROGRESS.md`
+
+### Tests and checks
+
+- Unit fixtures cover ranked grounded-source action, partial/untracked persistence, and all-provider-failed repair guidance.
+- Contract tests require 3–5 prompts, four samples, atomic quota, saved packets, RLS, raw sample receipts, source gaps, plan-intent preservation, eight-character password consistency, and retryable onboarding completion.
+- Full `npm test` → 65 passed.
+- `npm run typecheck` → passed.
+- `npm run typecheck:mcp` → passed.
+- Targeted ESLint across activation, auth, packet service/routes, and tests → passed.
+- `npm run build -- --webpack` → passed: compilation, TypeScript, 135 static pages/routes, and traces completed.
+- Generated `.next` output was removed after checks.
+
+### Browser evidence
+
+- `/signup?plan=command` at 1440 px showed the selected Command plan, explicit no-charge copy, programmatic labels for name/email/password, and the eight-character instruction. No console warnings/errors or horizontal overflow.
+- At 390 px the viewport was 390 px, body/document width 384 px, with no horizontal overflow or console warnings/errors.
+- Screenshots: `docs/product-rescue/evidence/batch-2e-signup-command-desktop-1440.jpg` and `docs/product-rescue/evidence/batch-2e-signup-command-mobile-390.jpg`.
+- Authenticated prompt editing, live providers, packet persistence, and return-visit rendering could not be browser-tested without an authorized test account. They are covered by unit/contract/type/build checks only; no auth bypass was used.
+
+### Migration and rollback
+
+- Apply migration 029 after 028. It creates one additive table and index; existing scan and workspace rows are unchanged.
+- Authenticated clients have read-only, organization-scoped RLS. Packet writes use the authenticated server route plus owner/admin/editor role checks and the service role.
+- Before rollback, export any packet JSON needed for support. Rollback is `DROP TABLE public.decision_packets;`; stored `llm_scans` evidence remains intact.
+- Deploying code before migration makes saved-packet reads/writes fail; apply the migration first.
+
+### Remaining risks
+
+- One activation batch can make up to 5 prompts × 4 samples × entitled engines and has a 300-second route budget. Durable queued execution remains the safer long-term design for large/provider-slow batches.
+- Packet source gaps use only provider-backed citations returned in this batch. If providers supply none, the ranked action becomes a direct-answer publishing recommendation and says why.
+- Prompt-library persistence is secondary to packet persistence; a prompt-library write failure is logged and does not falsify the saved measurement packet.
+
+### Commit hash
+
+Pending Batch 2E commit; will be recorded in the next progress update.

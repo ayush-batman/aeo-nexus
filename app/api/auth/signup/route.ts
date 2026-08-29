@@ -10,7 +10,7 @@ const limiter = rateLimit({
 
 export async function POST(request: NextRequest) {
     try {
-        const { email, password, fullName } = await request.json();
+        const { email, password, fullName, selectedPlan } = await request.json();
 
         const ip = request.headers.get('x-forwarded-for') ||
             request.headers.get('x-real-ip') ||
@@ -34,6 +34,10 @@ export async function POST(request: NextRequest) {
                 { status: 400 }
             );
         }
+        if (typeof password !== 'string' || password.length < 8) {
+            return NextResponse.json({ error: 'Password must be at least 8 characters' }, { status: 400 });
+        }
+        const planIntent = selectedPlan === 'radar' || selectedPlan === 'command' ? selectedPlan : null;
 
         const supabase = createAdminClient();
 
@@ -44,6 +48,7 @@ export async function POST(request: NextRequest) {
             email_confirm: true,
             user_metadata: {
                 full_name: fullName?.trim() || '',
+                selected_plan: planIntent,
             },
         });
 

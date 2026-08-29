@@ -44,7 +44,7 @@ test('signed-in app scans use the same canonical multi-sample and quota contract
   assert.match(route, /measurement\.status === 'all_failed'/);
   assert.doesNotMatch(route, /scansThisWeek/);
   assert.doesNotMatch(route, /calculateVisibilityScore/);
-  assert.match(onboarding, /r\.mentionRate/);
+  assert.match(onboarding, /engine\.mentionRate/);
   assert.doesNotMatch(onboarding, /r\.confidence \?\? 0\.6/);
 });
 
@@ -80,6 +80,24 @@ test('MCP preserves measurement and API failure detail', async () => {
   assert.match(client, /res\.status === 429/);
   assert.match(client, /retry-after/);
   assert.match(server, /provider_citation means the provider supplied it/);
+});
+
+test('pricing intent survives password and OAuth signup without starting checkout', async () => {
+  const [signupPage, signupRoute, callback, google] = await Promise.all([
+    source('app/(auth)/signup/page.tsx'),
+    source('app/api/auth/signup/route.ts'),
+    source('app/auth/callback/route.ts'),
+    source('components/auth/google-button.tsx'),
+  ]);
+  assert.match(signupPage, /No checkout or charge happens during signup/);
+  assert.match(signupPage, /selectedPlan/);
+  assert.match(signupPage, /minLength=\{8\}/);
+  assert.match(signupRoute, /selected_plan: planIntent/);
+  assert.match(callback, /selected_plan: selectedPlan/);
+  assert.match(google, /callback\.searchParams\.set\('plan'/);
+  for (const sourceText of [signupPage, signupRoute, callback, google]) {
+    assert.doesNotMatch(sourceText, /stripe\/checkout|razorpay\/create-order/);
+  }
 });
 
 test('scan quota reservation is serialized, idempotent, and service-role only', async () => {

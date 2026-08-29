@@ -83,3 +83,24 @@ test('dashboard visibility summaries expose sample count and Wilson confidence',
   assert.match(overview, /confidenceInterval/);
   assert.match(metricCard, /<button type="button"/);
 });
+
+test('activation packet persists three-to-five prompt measurements and one ranked action', async () => {
+  const [route, packet, onboarding, migration] = await Promise.all([
+    source('app/api/onboarding/decision-packet/route.ts'),
+    source('lib/measurement/decision-packet.ts'),
+    source('app/(dashboard)/onboarding/page.tsx'),
+    source('supabase/migrations/029_create_decision_packets.sql'),
+  ]);
+  assert.match(route, /prompts\.length < 3 \|\| prompts\.length > 5/);
+  assert.match(route, /samples: 4/);
+  assert.match(route, /reserveScanQuota/);
+  assert.match(route, /decision_packets/);
+  assert.match(packet, /provider_citation/);
+  assert.match(packet, /rankedAction/);
+  assert.match(onboarding, /Open sample receipt/);
+  assert.match(onboarding, /Provider-backed source gaps/);
+  assert.match(onboarding, /throw new Error\(data\?\.error \|\| `Could not finish onboarding/);
+  assert.doesNotMatch(onboarding, /finally \{[\s\S]{0,200}router\.push\('\/dashboard'\)/);
+  assert.match(migration, /ENABLE ROW LEVEL SECURITY/i);
+  assert.doesNotMatch(migration, /FOR (INSERT|UPDATE|DELETE)\s+TO authenticated/i);
+});

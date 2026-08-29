@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { Suspense, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,8 +10,13 @@ import { createClient } from "@/lib/supabase/client";
 import { AeloWordmark } from "@/components/brand/logo";
 import { GoogleSignInButton } from "@/components/auth/google-button";
 
-export default function SignupPage() {
+const PLAN_LABELS = { radar: "Radar · ₹4,999/mo", command: "Command · ₹14,999/mo" } as const;
+
+function SignupForm() {
     const router = useRouter();
+    const searchParams = useSearchParams();
+    const planParam = searchParams.get('plan');
+    const selectedPlan = planParam === 'radar' || planParam === 'command' ? planParam : null;
     const [name, setName] = useState("");
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
@@ -34,6 +39,7 @@ export default function SignupPage() {
                     email: email.trim(),
                     password,
                     fullName: name.trim(),
+                    selectedPlan,
                 }),
             });
 
@@ -58,7 +64,7 @@ export default function SignupPage() {
             }
 
             // Step 3: Redirect to onboarding
-            router.push("/onboarding");
+            router.push(selectedPlan ? `/onboarding?plan=${selectedPlan}` : "/onboarding");
             router.refresh();
         } catch (err) {
             console.error("Signup error:", err);
@@ -85,19 +91,27 @@ export default function SignupPage() {
                         No card. First scan in under a minute.
                     </p>
 
+                    {selectedPlan && (
+                        <div className="mb-6 rounded-md border border-[var(--accent-base)]/25 bg-[var(--accent-muted)] p-3 text-center">
+                            <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-[var(--text-tertiary)]">Selected after your free trial</p>
+                            <p className="mt-1 text-sm font-medium text-[var(--text-primary)]">{PLAN_LABELS[selectedPlan]}</p>
+                            <p className="mt-1 text-xs text-[var(--text-secondary)]">No checkout or charge happens during signup.</p>
+                        </div>
+                    )}
+
                     {error && (
-                        <div className="mb-4 p-3 rounded-md bg-[var(--data-red-muted)] border border-[var(--data-red)]/25 flex items-center gap-2 text-[var(--data-red)] text-sm">
+                        <div className="mb-4 p-3 rounded-md bg-[var(--data-red-muted)] border border-[var(--data-red)]/25 flex items-center gap-2 text-[var(--data-red)] text-sm" role="alert" aria-live="assertive">
                             <AlertCircle className="w-4 h-4" />
                             {error}
                         </div>
                     )}
                     {success && (
-                        <div className="mb-4 p-3 rounded-lg bg-[var(--data-green-muted)] border border-[var(--data-green)]/25 text-[var(--data-green)] text-sm">
+                        <div className="mb-4 p-3 rounded-lg bg-[var(--data-green-muted)] border border-[var(--data-green)]/25 text-[var(--data-green)] text-sm" role="status" aria-live="polite">
                             {success}
                         </div>
                     )}
 
-                    <GoogleSignInButton label="Sign up with Google" />
+                    <GoogleSignInButton label="Sign up with Google" selectedPlan={selectedPlan} />
 
                     <div className="flex items-center gap-3 my-6">
                         <div className="flex-1 h-px bg-[var(--border-default)]" />
@@ -107,10 +121,11 @@ export default function SignupPage() {
 
                     <form onSubmit={handleSubmit} className="space-y-4">
                         <div>
-                            <label className="block text-sm font-medium text-[var(--text-secondary)] mb-2">
+                            <label htmlFor="signup-name" className="block text-sm font-medium text-[var(--text-secondary)] mb-2">
                                 Full Name
                             </label>
                             <Input
+                                id="signup-name"
                                 type="text"
                                 placeholder="John Doe"
                                 value={name}
@@ -120,10 +135,11 @@ export default function SignupPage() {
                         </div>
 
                         <div>
-                            <label className="block text-sm font-medium text-[var(--text-secondary)] mb-2">
+                            <label htmlFor="signup-email" className="block text-sm font-medium text-[var(--text-secondary)] mb-2">
                                 Email
                             </label>
                             <Input
+                                id="signup-email"
                                 type="email"
                                 placeholder="you@example.com"
                                 value={email}
@@ -133,17 +149,20 @@ export default function SignupPage() {
                         </div>
 
                         <div>
-                            <label className="block text-sm font-medium text-[var(--text-secondary)] mb-2">
+                            <label htmlFor="signup-password" className="block text-sm font-medium text-[var(--text-secondary)] mb-2">
                                 Password
                             </label>
                             <Input
+                                id="signup-password"
                                 type="password"
                                 placeholder="••••••••"
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
                                 required
-                                minLength={6}
+                                minLength={8}
+                                aria-describedby="signup-password-help"
                             />
+                            <p id="signup-password-help" className="mt-1 text-xs text-[var(--text-tertiary)]">At least 8 characters.</p>
                         </div>
 
                         <div className="text-sm text-[var(--text-secondary)]">
@@ -178,5 +197,13 @@ export default function SignupPage() {
                 </div>
             </div>
         </div>
+    );
+}
+
+export default function SignupPage() {
+    return (
+        <Suspense fallback={<div className="min-h-screen bg-black" role="status" aria-label="Loading signup" />}>
+            <SignupForm />
+        </Suspense>
     );
 }
