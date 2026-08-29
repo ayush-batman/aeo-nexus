@@ -55,4 +55,57 @@ All confirmed P0/P1 issues remain until their implementation batches complete. L
 
 ### Commit hash
 
-Pending Batch 0 commit.
+`1012d9b` — `docs: record product rescue baseline and plan`
+
+## Batch 1A — Verification gates
+
+### Problem addressed
+
+The repository referenced ESLint but did not declare its packages, had no explicit type/test scripts, mixed the nested MCP package into the root type-check, and allowed production builds to ignore TypeScript errors.
+
+### User impact
+
+No customer-facing behavior changes. Future security and journey fixes now have explicit, non-bypassable verification commands.
+
+### Files changed
+
+- `package.json`
+- `package-lock.json`
+- `next.config.mjs`
+- `tsconfig.json`
+- `tests/unit/release-config.test.ts`
+- `docs/product-rescue/IMPLEMENTATION_PROGRESS.md`
+
+### Tests added
+
+- Production build cannot set `ignoreBuildErrors: true`.
+- Required lint/app-type/MCP-type scripts remain declared.
+
+### Commands run and results
+
+- Removed generated `.next` cache (992 MB); source and user data were not affected.
+- `npm install` → restored existing root dependencies; reported 8 dependency advisories (3 moderate, 5 high). No automatic audit fix was run.
+- `npm install --prefix mcp-server` → restored MCP dependencies; 0 advisories reported for that package.
+- Added missing development tooling `eslint@^9` and `eslint-config-next@16.2.9`, matching the installed Next 16.2.9 line.
+- `npm run test:unit` → 2 passed after approved local IPC access; sandbox-only first attempt failed with `listen EPERM`.
+- `npm run typecheck:mcp` → passed.
+- `npm run typecheck` → failed with 9 existing errors in scanner, alerts, and data-access code.
+- `npm run lint -- --quiet` → tool now runs against Aelo application/test sources and reports 87 existing errors.
+
+### Evidence
+
+Command output in the implementation task; regression test at `tests/unit/release-config.test.ts`.
+
+### Migration considerations
+
+None.
+
+### Remaining risks
+
+- App lint and type-check do not yet pass; they are now visible and blocking rather than silently skipped.
+- Root dependency audit reports 5 high and 3 moderate advisories; each needs package-by-package review rather than an unsafe blanket update.
+- Disk remains constrained; generated caches must be managed during verification.
+
+### Commit hash
+
+Pending Batch 1A commit; will be recorded in the next progress update.
