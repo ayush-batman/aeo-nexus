@@ -16,6 +16,8 @@ export function scanResultPersistenceRow(workspaceId: string, result: ScanResult
     citations: result.citations,
     list_items: result.listItems,
     confidence: result.confidence,
+    winner: 'winner' in result ? result.winner : null,
+    winner_reason: 'winnerReason' in result ? result.winnerReason : null,
     measurement_run_id: result.measurementRunId ?? null,
     measurement_contract_version: result.measurementContractVersion ?? null,
     sample_number: result.sampleNumber ?? null,

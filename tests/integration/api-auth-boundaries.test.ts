@@ -38,19 +38,26 @@ test('measurement requires measure scope, atomic quota, and honest partial state
   assert.match(scan, /requestedEngines/);
   assert.match(scan, /failedEngines/);
   assert.match(scan, /persistence/);
+  assert.match(scan, /measurement\.status === 'all_failed'/);
+  assert.match(scan, /new ApiV1Error\([\s\S]*502,[\s\S]*'all_engines_failed'/);
+  assert.doesNotMatch(scan, /measurement\.visibilityScore \?\? 0/);
 });
 
 test('signed-in app scans use the same canonical multi-sample and quota contract', async () => {
-  const [route, onboarding] = await Promise.all([
+  const [route, legacyRoute, onboarding] = await Promise.all([
     source('app/api/llm/scan/route.ts'),
+    source('app/api/llm/scans/route.ts'),
     source('app/(dashboard)/onboarding/page.tsx'),
   ]);
   assert.match(route, /runVisibilityMeasurement/);
   assert.match(route, /samples: 4/);
   assert.match(route, /reserveScanQuota/);
   assert.match(route, /measurement\.status === 'all_failed'/);
+  assert.match(route, /requireWorkspaceRole\(context, \['owner', 'admin', 'editor'\]\)/);
   assert.doesNotMatch(route, /scansThisWeek/);
   assert.doesNotMatch(route, /calculateVisibilityScore/);
+  assert.match(legacyRoute, /runCanonicalScan\(request\)/);
+  assert.doesNotMatch(legacyRoute, /scanLLM\(/);
   assert.match(onboarding, /engine\.mentionRate/);
   assert.doesNotMatch(onboarding, /r\.confidence \?\? 0\.6/);
 });

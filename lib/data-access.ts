@@ -6,6 +6,14 @@ import type { LLMScan, ForumThread } from './types';
 import { normalizeWorkspaceRole, type WorkspaceRole } from './authorization';
 import { estimateMentionConfidence } from './measurement/confidence';
 import type { MeasurementConfidenceLevel } from './measurement/types';
+import {
+    aggregateMentionMetric,
+    compareCompatibleMentionMetrics,
+    healthScoreMetric,
+    mentionMetricFromCounts,
+    shareOfVoiceMetric,
+    type ComparableMentionSample,
+} from './measurement/metrics';
 
 // ── Dev Auth Bypass ─────────────────────────────────────────────────────────
 // Guarded by a non-production runtime, NEXT_PUBLIC_ENABLE_DEV_AUTH_BYPASS=true,
@@ -52,28 +60,36 @@ async function getOrCreateDevUser(): Promise<{ id: string; email: string } | nul
 
 // Types for dashboard data
 export interface DashboardStats {
-    aeoHealthScore: number;
-    aeoScoreChange: number;
-    llmVisibility: number;
-    llmVisibilityChange: number;
+    aeoHealthScore: number | null;
+    aeoScoreChange: number | null;
+    llmVisibility: number | null;
+    llmVisibilityChange: number | null;
     llmVisibilitySamples: number;
     llmVisibilityConfidence: MeasurementConfidenceLevel;
     forumThreadCount: number;
     highPriorityThreads: number;
-    shareOfVoice: number;
-    shareOfVoiceChange: number;
-    contentScore: number;
+    shareOfVoice: number | null;
+    shareOfVoiceChange: number | null;
+    contentScore: number | null;
     pagesNeedingOptimization: number;
 }
 
 export interface PlatformVisibility {
     platform: string;
-    score: number;
-    change: number;
+    score: number | null;
+    change: number | null;
+    changeStatus: 'comparable' | 'incompatible' | 'insufficient_samples';
     scanCount: number;
     mentionCount: number;
     mentionRate: number | null;
     confidence: ReturnType<typeof estimateMentionConfidence>;
+    averageMentionPosition: number | null;
+    mentionPositionCount: number;
+    mentionPositionTotal: number;
+    comparisonCurrentSamples: number;
+    comparisonCurrentMentions: number;
+    comparisonPreviousSamples: number;
+    comparisonPreviousMentions: number;
 }
 
 export interface RecentMention {
@@ -361,9 +377,10 @@ export async function getVisibilityMetrics(
     const sevenDaysAgo = new Date();
     sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
 
-    const { data: recentScans } = await supabase
+    const scanFields = 'platform, prompt, brand_mentioned, mention_position, provider_model, measurement_region, measurement_mode, scorer_version, measurement_contract_version';
+    const { data: recentScans, error: recentError } = await supabase
         .from('llm_scans')
-        .select('platform, brand_mentioned, mention_position, sentiment')
+        .select(scanFields)
         .eq('workspace_id', workspaceId)
         .gte('created_at', sevenDaysAgo.toISOString());
 
@@ -371,12 +388,16 @@ export async function getVisibilityMetrics(
     const fourteenDaysAgo = new Date();
     fourteenDaysAgo.setDate(fourteenDaysAgo.getDate() - 14);
 
-    const { data: previousScans } = await supabase
+    const { data: previousScans, error: previousError } = await supabase
         .from('llm_scans')
-        .select('platform, brand_mentioned, mention_position, sentiment')
+        .select(scanFields)
         .eq('workspace_id', workspaceId)
         .gte('created_at', fourteenDaysAgo.toISOString())
         .lt('created_at', sevenDaysAgo.toISOString());
+
+    if (recentError || previousError) {
+        console.error('Error fetching visibility metrics:', recentError || previousError);
+    }
 
     const platforms = ['chatgpt', 'gemini', 'perplexity', 'claude'];
     const metrics: PlatformVisibility[] = [];
@@ -385,50 +406,48 @@ export async function getVisibilityMetrics(
         const currentPlatformScans = (recentScans || []).filter(s => s.platform === platform);
         const previousPlatformScans = (previousScans || []).filter(s => s.platform === platform);
 
-        const currentScore = calculatePlatformScore(currentPlatformScans);
-        const previousScore = calculatePlatformScore(previousPlatformScans);
-        const mentionCount = currentPlatformScans.filter(scan => scan.brand_mentioned).length;
-        const confidence = estimateMentionConfidence(mentionCount, currentPlatformScans.length);
+        const currentMetric = aggregateMentionMetric(currentPlatformScans.map((scan) => ({ mentioned: scan.brand_mentioned })));
+        const comparable = (scan: typeof currentPlatformScans[number]): ComparableMentionSample => ({
+            prompt: scan.prompt,
+            platform: scan.platform,
+            mentioned: scan.brand_mentioned,
+            providerModel: scan.provider_model,
+            region: scan.measurement_region,
+            mode: scan.measurement_mode,
+            scorerVersion: scan.scorer_version,
+            contractVersion: scan.measurement_contract_version,
+        });
+        const comparison = compareCompatibleMentionMetrics(
+            currentPlatformScans.map(comparable),
+            previousPlatformScans.map(comparable),
+        );
+        const mentionPositions = currentPlatformScans
+            .filter((scan) => scan.brand_mentioned && scan.mention_position !== null)
+            .map((scan) => scan.mention_position as number);
+        const mentionPositionTotal = mentionPositions.reduce((sum, position) => sum + position, 0);
 
         metrics.push({
             platform: platform.charAt(0).toUpperCase() + platform.slice(1),
-            score: currentScore,
-            change: currentScore - previousScore,
-            scanCount: currentPlatformScans.length,
-            mentionCount,
-            mentionRate: confidence.mentionRate,
-            confidence,
+            score: currentMetric.visibilityPercent,
+            change: comparison.changePoints,
+            changeStatus: comparison.status,
+            scanCount: currentMetric.samples,
+            mentionCount: currentMetric.mentions,
+            mentionRate: currentMetric.mentionRate,
+            confidence: currentMetric.confidence,
+            averageMentionPosition: mentionPositions.length
+                ? Math.round((mentionPositionTotal / mentionPositions.length) * 10) / 10
+                : null,
+            mentionPositionCount: mentionPositions.length,
+            mentionPositionTotal,
+            comparisonCurrentSamples: comparison.current.samples,
+            comparisonCurrentMentions: comparison.current.mentions,
+            comparisonPreviousSamples: comparison.previous.samples,
+            comparisonPreviousMentions: comparison.previous.mentions,
         });
     }
 
     return metrics;
-}
-
-// Helper to calculate platform visibility score
-function calculatePlatformScore(scans: Array<{ brand_mentioned: boolean; mention_position: number | null; sentiment: string | null }>): number {
-    if (scans.length === 0) return 0;
-
-    let totalScore = 0;
-
-    for (const scan of scans) {
-        if (scan.brand_mentioned) {
-            // Base score for being mentioned
-            let score = 40;
-
-            // Position bonus
-            if (scan.mention_position === 1) score += 30;
-            else if (scan.mention_position === 2) score += 20;
-            else if (scan.mention_position && scan.mention_position <= 5) score += 10;
-
-            // Sentiment bonus
-            if (scan.sentiment === 'positive') score += 20;
-            else if (scan.sentiment === 'neutral') score += 10;
-
-            totalScore += score;
-        }
-    }
-
-    return Math.min(100, Math.round(totalScore / scans.length));
 }
 
 // Fetch forum threads
@@ -472,51 +491,18 @@ export async function getForumThreads(
 // Calculate AEO Health Score
 export async function getAEOHealthScore(
     workspaceId: string
-): Promise<{ score: number; change: number }> {
-    const supabase = await createAdminClient();
-
-    // Get all visibility metrics
+): Promise<{ score: number | null; change: number | null }> {
     const visibilityMetrics = await getVisibilityMetrics(workspaceId);
-
-    // Get forum engagement metrics
-    const { data: threads } = await supabase
-        .from('forum_threads')
-        .select('status, opportunity_score')
-        .eq('workspace_id', workspaceId);
-
-    // Calculate composite score
-    let score = 0;
-    let change = 0;
-
-    // LLM Visibility component (50% weight)
-    if (visibilityMetrics.length > 0) {
-        const avgVisibility = visibilityMetrics.reduce((sum, m) => sum + m.score, 0) / visibilityMetrics.length;
-        const avgChange = visibilityMetrics.reduce((sum, m) => sum + m.change, 0) / visibilityMetrics.length;
-        score += avgVisibility * 0.5;
-        change += avgChange * 0.5;
-    }
-
-    // Forum engagement component (30% weight)
-    if (threads && threads.length > 0) {
-        const postedThreads = threads.filter(t => t.status === 'posted').length;
-        const engagementRate = (postedThreads / threads.length) * 100;
-        score += Math.min(100, engagementRate) * 0.3;
-    }
-
-    // Content score component (20% weight)
-    const { data: contentAnalyses } = await supabase
-        .from('content_analyses')
-        .select('aeo_score')
-        .eq('workspace_id', workspaceId);
-
-    if (contentAnalyses && contentAnalyses.length > 0) {
-        const avgContentScore = contentAnalyses.reduce((sum, a) => sum + (a.aeo_score || 0), 0) / contentAnalyses.length;
-        score += avgContentScore * 0.2;
-    }
+    const visibilitySamples = visibilityMetrics.reduce((sum, metric) => sum + metric.scanCount, 0);
+    const visibilityMentions = visibilityMetrics.reduce((sum, metric) => sum + metric.mentionCount, 0);
+    const visibility = mentionMetricFromCounts(visibilityMentions, visibilitySamples).visibilityPercent;
+    const positionCount = visibilityMetrics.reduce((sum, metric) => sum + metric.mentionPositionCount, 0);
+    const positionTotal = visibilityMetrics.reduce((sum, metric) => sum + metric.mentionPositionTotal, 0);
+    const averagePosition = positionCount > 0 ? positionTotal / positionCount : null;
 
     return {
-        score: Math.round(score),
-        change: Math.round(change),
+        score: healthScoreMetric(visibility, averagePosition),
+        change: null,
     };
 }
 
@@ -536,24 +522,25 @@ export async function getDashboardStats(
         getForumThreads(workspaceId, { limit: 100 }),
     ]);
 
-    // Calculate average LLM visibility
-    const avgVisibility = visibilityMetrics.length > 0
-        ? Math.round(visibilityMetrics.reduce((sum, m) => sum + m.score, 0) / visibilityMetrics.length)
-        : 0;
-
-    const avgVisibilityChange = visibilityMetrics.length > 0
-        ? Math.round(visibilityMetrics.reduce((sum, m) => sum + m.change, 0) / visibilityMetrics.length)
-        : 0;
     const llmVisibilitySamples = visibilityMetrics.reduce((sum, metric) => sum + metric.scanCount, 0);
     const llmVisibilityMentions = visibilityMetrics.reduce((sum, metric) => sum + metric.mentionCount, 0);
-    const llmVisibilityConfidence = estimateMentionConfidence(llmVisibilityMentions, llmVisibilitySamples).level;
+    const llmMetric = mentionMetricFromCounts(llmVisibilityMentions, llmVisibilitySamples);
+    const comparableCurrentSamples = visibilityMetrics.reduce((sum, metric) => sum + metric.comparisonCurrentSamples, 0);
+    const comparableCurrentMentions = visibilityMetrics.reduce((sum, metric) => sum + metric.comparisonCurrentMentions, 0);
+    const comparablePreviousSamples = visibilityMetrics.reduce((sum, metric) => sum + metric.comparisonPreviousSamples, 0);
+    const comparablePreviousMentions = visibilityMetrics.reduce((sum, metric) => sum + metric.comparisonPreviousMentions, 0);
+    const comparableCurrent = mentionMetricFromCounts(comparableCurrentMentions, comparableCurrentSamples);
+    const comparablePrevious = mentionMetricFromCounts(comparablePreviousMentions, comparablePreviousSamples);
+    const llmVisibilityChange = comparableCurrent.visibilityPercent !== null && comparablePrevious.visibilityPercent !== null
+        ? comparableCurrent.visibilityPercent - comparablePrevious.visibilityPercent
+        : null;
 
     // Count high priority threads (score >= 70)
     const highPriorityThreads = threads.filter(t => t.opportunity_score >= 70).length;
 
     // ── Share of Voice: brand mentions vs competitor mentions ──
-    let shareOfVoice = 0;
-    const shareOfVoiceChange = 0;
+    let shareOfVoice: number | null = null;
+    const shareOfVoiceChange: number | null = null;
 
     const sevenDaysAgo = new Date();
     sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
@@ -565,17 +552,14 @@ export async function getDashboardStats(
         .gte('created_at', sevenDaysAgo.toISOString());
 
     if (recentScans && recentScans.length > 0) {
-        const myMentions = recentScans.filter(s => s.brand_mentioned).length;
-        const totalCompMentions = recentScans.reduce((sum, s) => {
-            const comps = s.competitors_mentioned || [];
-            return sum + comps.length;
-        }, 0);
-        const totalMentions = myMentions + totalCompMentions;
-        shareOfVoice = totalMentions > 0 ? Math.round((myMentions / totalMentions) * 100) : 0;
+        shareOfVoice = shareOfVoiceMetric(recentScans.map((scan) => ({
+            brandMentioned: scan.brand_mentioned,
+            competitorsMentioned: scan.competitors_mentioned,
+        }))).sharePercent;
     }
 
     // ── Content Score: average from content_analyses ──
-    let contentScore = 0;
+    let contentScore: number | null = null;
     let pagesNeedingOptimization = 0;
 
     const { data: contentAnalyses } = await supabase
@@ -593,10 +577,10 @@ export async function getDashboardStats(
     return {
         aeoHealthScore: healthScore.score,
         aeoScoreChange: healthScore.change,
-        llmVisibility: avgVisibility,
-        llmVisibilityChange: avgVisibilityChange,
+        llmVisibility: llmMetric.visibilityPercent,
+        llmVisibilityChange,
         llmVisibilitySamples,
-        llmVisibilityConfidence,
+        llmVisibilityConfidence: llmMetric.confidence.level,
         forumThreadCount: threads.length,
         highPriorityThreads,
         shareOfVoice,

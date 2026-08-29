@@ -1,4 +1,5 @@
 import { withKey, getWorkspaceBrand } from '@/lib/api-v1';
+import { shareOfVoiceMetric } from '@/lib/measurement/metrics';
 
 // GET /api/v1/competitors?window=30d  — share of voice: how often each brand
 // gets named in answers about your category, you included. (compare_competitors)
@@ -21,8 +22,7 @@ export async function GET(request: Request) {
       .gte('created_at', since);
 
     const rows = data || [];
-    const total = rows.length;
-    const counts: Record<string, number> = {};
+    const counts = new Map<string, { name: string; mentions: number }>();
     let youMentions = 0;
     for (const r of rows) {
       if (r.brand_mentioned) youMentions++;
@@ -30,19 +30,40 @@ export async function GET(request: Request) {
       const seen = new Set<string>();
       for (const c of comps) {
         const n = nameOf(c);
-        if (n && !seen.has(n.toLowerCase())) {
-          seen.add(n.toLowerCase());
-          counts[n] = (counts[n] || 0) + 1;
+        const normalized = n?.trim().toLocaleLowerCase();
+        if (n && normalized && !seen.has(normalized)) {
+          seen.add(normalized);
+          const existing = counts.get(normalized);
+          counts.set(normalized, { name: existing?.name ?? n.trim(), mentions: (existing?.mentions ?? 0) + 1 });
         }
       }
     }
 
-    const you = { name: brand.name || 'You', mentions: youMentions, shareOfVoice: total ? Math.round((youMentions / total) * 100) : 0, isYou: true };
-    const competitors = Object.entries(counts)
-      .map(([name, mentions]) => ({ name, mentions, shareOfVoice: total ? Math.round((mentions / total) * 100) : 0, isYou: false }))
+    const voice = shareOfVoiceMetric(rows.map((row) => ({
+      brandMentioned: row.brand_mentioned,
+      competitorsMentioned: Array.isArray(row.competitors_mentioned)
+        ? row.competitors_mentioned.map(nameOf).filter((name): name is string => Boolean(name))
+        : [],
+    })));
+    const totalMentions = voice.brandMentions + voice.competitorMentions;
+    const you = { name: brand.name || 'You', mentions: youMentions, shareOfVoice: voice.sharePercent, isYou: true };
+    const competitors = [...counts.values()]
+      .map(({ name, mentions }) => ({
+        name,
+        mentions,
+        shareOfVoice: totalMentions ? Math.round((mentions / totalMentions) * 100) : null,
+        isYou: false,
+      }))
       .sort((a, b) => b.mentions - a.mentions);
 
     const ranking = [you, ...competitors].sort((a, b) => b.mentions - a.mentions);
-    return { window: w, samples: total, you, ranking };
+    return {
+      window: w,
+      samples: rows.length,
+      totalBrandMentions: totalMentions,
+      you,
+      ranking,
+      note: 'Share of voice is each brand\'s share of all observed brand mentions; duplicate names within one answer count once.',
+    };
   });
 }

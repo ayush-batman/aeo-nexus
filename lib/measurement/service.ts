@@ -2,6 +2,7 @@ import { randomUUID } from 'node:crypto';
 import { scanLLM, type LLMPlatform, type ScanOptions, type ScanOutput, type ScanResult } from '@/lib/ai/llm-scanner';
 import type { CitationEvidence } from '@/lib/types';
 import { estimateMentionConfidence } from './confidence';
+import { aggregateMentionMetric } from './metrics';
 import {
   MEASUREMENT_CONTRACT_VERSION,
   MEASUREMENT_SCORER_VERSION,
@@ -68,18 +69,12 @@ function engineMeasurement(engine: LLMPlatform, requestedSamples: number, sample
 }
 
 function visibilityScore(engines: EngineMeasurement[]): number | null {
-  const measured = engines.filter((engine) => engine.successfulSamples > 0);
-  if (measured.length === 0) return null;
-  const total = measured.reduce((sum, engine) => {
-    if (!engine.mentioned || engine.mentionRate === null) return sum;
-    const positionScore = engine.avgPosition && engine.avgPosition <= 3
-      ? 90
-      : engine.avgPosition && engine.avgPosition <= 5
-        ? 70
-        : 55;
-    return sum + Math.round(engine.mentionRate * positionScore);
-  }, 0);
-  return Math.round(total / measured.length);
+  const successfulSamples = engines.flatMap((engine) =>
+    engine.evidence
+      .filter((sample) => sample.status === 'succeeded')
+      .map((sample) => ({ mentioned: sample.mentioned === true })),
+  );
+  return aggregateMentionMetric(successfulSamples).visibilityPercent;
 }
 
 export async function runVisibilityMeasurement(

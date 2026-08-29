@@ -102,7 +102,7 @@ export default function ReportView({ paid, brand, report }: { paid: boolean; bra
                     <>
                         {/* Summary */}
                         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-                            <Tile label="Mention rate" value={`${s.overallMentionRate}%`} />
+                            <Tile label="Mention rate" value={s.overallMentionRate === null ? "—" : `${s.overallMentionRate}%`} />
                             <Tile label="Avg position" value={s.avgPosition != null ? String(s.avgPosition) : "–"} />
                             <Tile label="Scans" value={String(s.totalScans)} />
                             <Tile label="Prompts" value={String(s.uniquePrompts)} />

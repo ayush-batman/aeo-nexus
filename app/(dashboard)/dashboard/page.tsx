@@ -27,17 +27,17 @@ import Link from "next/link";
 import { WeeklyDecisionInbox } from "@/components/dashboard/weekly-decision-inbox";
 
 interface DashboardStats {
-    aeoHealthScore: number;
-    aeoScoreChange: number;
-    llmVisibility: number;
-    llmVisibilityChange: number;
+    aeoHealthScore: number | null;
+    aeoScoreChange: number | null;
+    llmVisibility: number | null;
+    llmVisibilityChange: number | null;
     llmVisibilitySamples: number;
     llmVisibilityConfidence: "none" | "low" | "medium" | "high";
     forumThreadCount: number;
     highPriorityThreads: number;
-    shareOfVoice: number;
-    shareOfVoiceChange: number;
-    contentScore: number;
+    shareOfVoice: number | null;
+    shareOfVoiceChange: number | null;
+    contentScore: number | null;
     pagesNeedingOptimization: number;
 }
 
@@ -70,8 +70,8 @@ interface DashboardData {
     recentMentions: RecentMention[];
     visibilityMetrics: Array<{
         platform: string;
-        score: number;
-        change: number;
+        score: number | null;
+        change: number | null;
         scanCount: number;
     }>;
     analytics?: AnalyticsData;
@@ -205,17 +205,17 @@ export default function DashboardPage() {
     }
 
     const stats = data?.stats || {
-        aeoHealthScore: 0,
-        aeoScoreChange: 0,
-        llmVisibility: 0,
-        llmVisibilityChange: 0,
+        aeoHealthScore: null,
+        aeoScoreChange: null,
+        llmVisibility: null,
+        llmVisibilityChange: null,
         llmVisibilitySamples: 0,
         llmVisibilityConfidence: "none",
         forumThreadCount: 0,
         highPriorityThreads: 0,
-        shareOfVoice: 0,
-        shareOfVoiceChange: 0,
-        contentScore: 0,
+        shareOfVoice: null,
+        shareOfVoiceChange: null,
+        contentScore: null,
         pagesNeedingOptimization: 0,
     };
 
@@ -228,7 +228,7 @@ export default function DashboardPage() {
         return 'Research';
     };
 
-    const hasData = (data?.visibilityMetrics?.some(m => m.scanCount > 0)) || stats.forumThreadCount > 0 || stats.contentScore > 0;
+    const hasData = (data?.visibilityMetrics?.some(m => m.scanCount > 0)) || stats.forumThreadCount > 0 || stats.contentScore !== null;
 
     return (
         <>
@@ -250,7 +250,7 @@ export default function DashboardPage() {
                             </h2>
                             <p className="max-w-xl text-[13px] leading-relaxed text-[var(--text-secondary)]">
                                 Every metric on this page is computed from real scans. Nothing is fabricated, 
-                                so the numbers stay at zero until we have something to measure.
+                                Missing evidence is shown as unmeasured, never as a zero score.
                             </p>
                         </div>
                         <div className="flex-shrink-0">
@@ -305,19 +305,19 @@ export default function DashboardPage() {
                                         backgroundClip: "text",
                                     }}
                                 >
-                                    {stats.aeoHealthScore}
+                                    {stats.aeoHealthScore ?? "—"}
                                 </span>
                                 <span className="text-xl" style={{ color: "var(--text-tertiary)" }}>/100</span>
-                                {stats.aeoScoreChange !== 0 && (
+                                {stats.aeoScoreChange !== null && stats.aeoScoreChange !== 0 && (
                                     <Badge variant={stats.aeoScoreChange > 0 ? "success" : "destructive"}>
                                         {stats.aeoScoreChange > 0 ? "+" : ""}{stats.aeoScoreChange} this week
                                     </Badge>
                                 )}
                             </div>
                             <p className="text-sm mt-2" style={{ color: "var(--text-secondary)" }}>
-                                {stats.aeoHealthScore === 0
-                                    ? "Run your first LLM scan to start tracking visibility"
-                                    : stats.aeoScoreChange > 0
+                                {stats.aeoHealthScore === null
+                                    ? "Run successful scans to calculate visibility and average mention position"
+                                    : (stats.aeoScoreChange ?? 0) > 0
                                         ? "Your brand visibility across AI platforms is improving"
                                         : "Monitor and optimize your AI presence"
                                 }
@@ -339,7 +339,7 @@ export default function DashboardPage() {
                                         stroke="url(#ring-grad)"
                                         strokeWidth="6"
                                         strokeLinecap="round"
-                                        strokeDasharray={`${(stats.aeoHealthScore / 100) * 301.6} 301.6`}
+                                        strokeDasharray={`${((stats.aeoHealthScore ?? 0) / 100) * 301.6} 301.6`}
                                         transform="rotate(-90 56 56)"
                                     />
                                     <defs>
@@ -364,17 +364,19 @@ export default function DashboardPage() {
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                     <MetricCard
                         title="LLM Visibility"
-                        value={`${stats.llmVisibility}%`}
-                        change={stats.llmVisibilityChange !== 0
+                        value={stats.llmVisibility === null ? "—" : `${stats.llmVisibility}%`}
+                        change={stats.llmVisibilityChange === null
+                            ? "Need a matched 4-sample baseline"
+                            : stats.llmVisibilityChange !== 0
                             ? `${stats.llmVisibilityChange > 0 ? '↑' : '↓'} ${Math.abs(stats.llmVisibilityChange)}% from last scan`
                             : "No change"
                         }
-                        changeType={stats.llmVisibilityChange > 0 ? "positive" : stats.llmVisibilityChange < 0 ? "negative" : "neutral"}
+                        changeType={(stats.llmVisibilityChange ?? 0) > 0 ? "positive" : (stats.llmVisibilityChange ?? 0) < 0 ? "negative" : "neutral"}
                         evidence={`n=${stats.llmVisibilitySamples} successful samples · ${stats.llmVisibilityConfidence} confidence`}
                         icon={Eye}
                         accentColor="violet"
                         onClick={() => setReceipt({
-                            title: `LLM Visibility · ${stats.llmVisibility}%`,
+                            title: `LLM Visibility · ${stats.llmVisibility === null ? "unmeasured" : `${stats.llmVisibility}%`}`,
                             subtitle: `Every scan across every platform that produced this number, most recent first. Verify any of them yourself.`,
                         })}
                     />
@@ -388,23 +390,25 @@ export default function DashboardPage() {
                     />
                     <MetricCard
                         title="Share of Voice"
-                        value={`${stats.shareOfVoice}%`}
-                        change={stats.shareOfVoiceChange !== 0
+                        value={stats.shareOfVoice === null ? "—" : `${stats.shareOfVoice}%`}
+                        change={stats.shareOfVoiceChange !== null && stats.shareOfVoiceChange !== 0
                             ? `${stats.shareOfVoiceChange > 0 ? '↑' : '↓'} ${Math.abs(stats.shareOfVoiceChange)}% vs competitors`
                             : "Track competitors to enable"
                         }
-                        changeType={stats.shareOfVoiceChange > 0 ? "positive" : "neutral"}
+                        changeType={(stats.shareOfVoiceChange ?? 0) > 0 ? "positive" : "neutral"}
                         icon={TrendingUp}
                         accentColor="emerald"
                         onClick={() => setReceipt({
-                            title: `Share of Voice · ${stats.shareOfVoice}%`,
+                            title: `Share of Voice · ${stats.shareOfVoice === null ? "unmeasured" : `${stats.shareOfVoice}%`}`,
                             subtitle: `The scans behind this SoV number, who was named alongside your brand, and how often.`,
                         })}
                     />
                     <MetricCard
                         title="Content Score"
-                        value={stats.contentScore.toString()}
-                        change={stats.pagesNeedingOptimization > 0
+                        value={stats.contentScore?.toString() ?? "—"}
+                        change={stats.contentScore === null
+                            ? "Run a content analysis to measure"
+                            : stats.pagesNeedingOptimization > 0
                             ? `${stats.pagesNeedingOptimization} pages need optimization`
                             : "All content optimized"
                         }

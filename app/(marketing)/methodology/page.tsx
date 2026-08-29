@@ -74,8 +74,8 @@ export default function MethodologyPage() {
                     <div className="space-y-4">
                         <FormulaCard
                             name="Mention rate"
-                            oneLine="Percentage of tracked prompts where the AI named your brand."
-                            formula="mention_rate = (scans_where_brand_named / total_scans) × 100"
+                            oneLine="Percentage of successful AI-answer samples that named your brand."
+                            formula="mention_rate = (successful_samples_where_brand_named / total_successful_samples) × 100"
                             details="Deterministic string match against your brand name and known aliases. Case-insensitive, word-boundary respected (so 'Notion' matches but not 'ancnotionally'). Aliases are stored per-workspace and editable."
                         />
                         <FormulaCard
@@ -88,14 +88,14 @@ export default function MethodologyPage() {
                             name="Health score / 100"
                             oneLine="Weighted composite: are you visible, and are you visible early?"
                             formula="health = round( mention_rate × 0.7  +  position_boost × 0.3 )
-where position_boost = 100 × max(0, (10 - avg_position) / 10)"
+where position_boost = 100 × max(0, (10 - avg_position) / 9)"
                             details="Mention rate carries most of the weight because being named at all matters more than being named first. Position boost caps out at position 1 (100) and decays linearly to 0 by position 10. Health of 0 means never mentioned; 100 means named first in every scan."
                         />
                         <FormulaCard
                             name="Share of Voice"
                             oneLine="Your mentions as a fraction of all brand mentions in a category."
                             formula="sov = (your_mentions / (your_mentions + Σ competitor_mentions)) × 100"
-                            details="Requires competitor names configured in your workspace. We count total occurrences of your name + each competitor's name across all scans in the window, then divide. If competitors aren't set, we show ', ', never a fake number."
+                            details="Requires competitor names configured in your workspace. A brand counts at most once per AI answer, even if the answer repeats its name. If no tracked brand is mentioned, we show '—', never a fake zero."
                         />
                         <FormulaCard
                             name="Verdict tiers (India Index + metric badges)"

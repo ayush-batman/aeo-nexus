@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { scanLLM, getAvailablePlatforms, calculateVisibilityScore, LLMPlatform, type ScanOutput } from '@/lib/ai/llm-scanner';
 import rateLimit, { isRateLimitUnavailableError } from '@/lib/rate-limit';
+import { estimateMentionConfidence } from '@/lib/measurement/confidence';
 
 // Rate limit: 3 scans per IP per hour
 const limiter = rateLimit({
@@ -98,16 +99,22 @@ export async function POST(request: NextRequest) {
         }
 
         const visibilityScore = calculateVisibilityScore(scanOutput.results);
+        const mentionCount = scanOutput.results.filter((result) => result.brandMentioned).length;
+        const confidence = estimateMentionConfidence(mentionCount, scanOutput.results.length);
 
         return NextResponse.json({
             platform: scanResult.platform,
             mentioned: scanResult.brandMentioned,
             sentiment: scanResult.sentiment || 'neutral',
             visibilityScore,
+            samples: scanOutput.results.length,
+            confidence: confidence.level,
+            confidenceInterval: confidence.interval,
             // Truncate response for free tier
             snippet: scanResult.response?.substring(0, 200) + '...',
             // Teaser data
             limitedView: true,
+            note: 'Visibility is the observed mention rate. This free result is a single low-confidence sample, not a stable trend.',
             message: 'Sign up to see full analysis, track over time, and scan all AI platforms!',
         });
     } catch (error) {

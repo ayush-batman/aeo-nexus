@@ -25,12 +25,12 @@ export async function GET(request: Request) {
     const gaps = (prompts || [])
       .map((p) => {
         const stat = byPrompt[p.prompt];
-        const visibility = stat && stat.total ? Math.round((stat.mentions / stat.total) * 100) : 0;
+        const visibility = stat && stat.total ? Math.round((stat.mentions / stat.total) * 100) : null;
         const samples = stat ? stat.total : 0;
-        return { id: p.id, prompt: p.prompt, visibility, samples, status: samples === 0 ? 'unmeasured' : visibility < 50 ? 'gap' : 'covered' };
+        return { id: p.id, prompt: p.prompt, visibility, samples, status: samples === 0 ? 'unmeasured' : visibility! < 50 ? 'gap' : 'covered' };
       })
       .filter((g) => g.status !== 'covered')
-      .sort((a, b) => a.visibility - b.visibility)
+      .sort((a, b) => (a.visibility ?? Number.POSITIVE_INFINITY) - (b.visibility ?? Number.POSITIVE_INFINITY))
       .slice(0, limit);
 
     return {

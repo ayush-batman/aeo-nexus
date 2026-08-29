@@ -26,6 +26,7 @@ test('canonical run records complete engine and sample receipts', async () => {
   assert.equal(run.status, 'complete');
   assert.equal(run.engines[0].successfulSamples, 4);
   assert.equal(run.engines[0].mentionRate, 0.75);
+  assert.equal(run.visibilityScore, 75);
   assert.equal(run.engines[0].confidence.level, 'medium');
   assert.equal(run.samples.length, 4);
   assert.equal(run.samples[0].scorerVersion, 'aelo-brand-scorer.v1');
@@ -46,11 +47,32 @@ test('canonical run distinguishes partial, all-failed, and untracked states', as
     prompt: 'best tools', brandName: 'Aelo', platforms: ['claude'], samples: 1,
   }, { execute: async () => ({ results: [], errors: [{ platform: 'claude', error: 'offline' }] }) });
   assert.equal(allFailed.status, 'all_failed');
+  assert.equal(allFailed.visibilityScore, null);
 
   const untracked = await runVisibilityMeasurement({
     prompt: 'best tools', brandName: 'Aelo', platforms: [], samples: 1,
   }, { execute: async () => ({ results: [], errors: [] }) });
   assert.equal(untracked.status, 'untracked');
+});
+
+test('canonical visibility pools successful samples across engines', async () => {
+  let call = 0;
+  const run = await runVisibilityMeasurement({
+    prompt: 'best tools', brandName: 'Aelo', platforms: ['gemini', 'claude'], samples: 2,
+  }, {
+    execute: async () => {
+      call += 1;
+      return {
+        results: [
+          result('gemini', true, `g${call}`),
+          result('claude', call === 1, `c${call}`),
+        ],
+        errors: [],
+      };
+    },
+  });
+
+  assert.equal(run.visibilityScore, 75);
 });
 
 test('persistence failure makes an otherwise successful run partial', async () => {

@@ -61,6 +61,14 @@ export async function POST(request: Request) {
       },
     });
 
+    if (measurement.status === 'all_failed') {
+      throw new ApiV1Error(
+        502,
+        'all_engines_failed',
+        'Every requested engine failed, so no visibility measurement was produced.',
+      );
+    }
+
     // Keep legacy fields for existing API/MCP clients. `measurement` is the
     // canonical receipt and new clients should prefer it.
     const engines = measurement.engines
@@ -96,7 +104,7 @@ export async function POST(request: Request) {
       prompt,
       brandName,
       samples,
-      visibility: measurement.visibilityScore ?? 0,
+      visibility: measurement.visibilityScore,
       engines,
       requestedEngines: measurement.requestedEngines,
       succeededEngines,

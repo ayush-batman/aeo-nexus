@@ -403,44 +403,10 @@ export async function scanLLM(options: ScanOptions): Promise<ScanOutput> {
 }
 
 // Calculate visibility score from scan results
-export function calculateVisibilityScore(results: ScanResult[]): number {
-    if (results.length === 0) return 0;
-
-    let totalScore = 0;
-
-    for (const result of results) {
-        let score = 0;
-
-        // Base score for being mentioned
-        if (result.brandMentioned) {
-            score += 40;
-
-            // Position bonus (higher position = better)
-            if (result.mentionPosition) {
-                if (result.mentionPosition === 1) score += 30;
-                else if (result.mentionPosition === 2) score += 20;
-                else if (result.mentionPosition === 3) score += 15;
-                else if (result.mentionPosition <= 5) score += 10;
-                else if (result.mentionPosition <= 10) score += 5;
-            }
-
-            // Sentiment bonus (using score for more granularity)
-            if (result.sentimentScore > 0.5) score += 20;
-            else if (result.sentimentScore > 0) score += 10;
-            else if (result.sentimentScore < -0.5) score -= 10;
-
-            // Own domain citation bonus
-            if (result.citations.some(c => c.is_own_domain)) score += 10;
-
-            // Confidence adjustment
-            score = Math.round(score * result.confidence);
-        }
-
-        totalScore += score;
-    }
-
-    // Average across platforms and cap at 100
-    return Math.min(100, Math.round(totalScore / results.length));
+export function calculateVisibilityScore(results: ScanResult[]): number | null {
+    if (results.length === 0) return null;
+    const mentions = results.filter((result) => result.brandMentioned).length;
+    return Math.round((mentions / results.length) * 100);
 }
 
 // Get available platforms (those with configured API keys)

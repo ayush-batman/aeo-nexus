@@ -84,6 +84,27 @@ test('dashboard visibility summaries expose sample count and Wilson confidence',
   assert.match(metricCard, /<button type="button"/);
 });
 
+test('all active visibility surfaces use mention rate and preserve unmeasured state', async () => {
+  const [metrics, dataAccess, overview, gaps, freeScan, methodology] = await Promise.all([
+    source('lib/measurement/metrics.ts'),
+    source('lib/data-access.ts'),
+    source('app/api/v1/visibility/overview/route.ts'),
+    source('app/api/v1/prompts/gaps/route.ts'),
+    source('lib/ai/llm-scanner.ts'),
+    source('app/(marketing)/methodology/page.tsx'),
+  ]);
+  assert.match(metrics, /visibilityPercent/);
+  assert.match(metrics, /estimateMentionConfidence/);
+  assert.match(metrics, /minimumSamplesPerCohort = 4/);
+  assert.match(dataAccess, /compareCompatibleMentionMetrics/);
+  assert.doesNotMatch(dataAccess, /calculatePlatformScore/);
+  assert.match(overview, /withKey\(request, 'read'/);
+  assert.match(overview, /overall\.visibilityPercent/);
+  assert.match(gaps, /: null/);
+  assert.doesNotMatch(freeScan, /score \+= 40/);
+  assert.match(methodology, /successful_samples_where_brand_named/);
+});
+
 test('activation packet persists three-to-five prompt measurements and one ranked action', async () => {
   const [route, packet, onboarding, migration] = await Promise.all([
     source('app/api/onboarding/decision-packet/route.ts'),

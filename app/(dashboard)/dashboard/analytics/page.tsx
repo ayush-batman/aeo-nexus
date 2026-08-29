@@ -60,8 +60,8 @@ const itemVariants: Variants = {
 
 interface PlatformVisibility {
     platform: string;
-    score: number;
-    change: number;
+    score: number | null;
+    change: number | null;
     scanCount: number;
 }
 
@@ -77,15 +77,15 @@ interface LLMScan {
 }
 
 interface DashboardStats {
-    aeoHealthScore: number;
-    aeoScoreChange: number;
-    llmVisibility: number;
-    llmVisibilityChange: number;
+    aeoHealthScore: number | null;
+    aeoScoreChange: number | null;
+    llmVisibility: number | null;
+    llmVisibilityChange: number | null;
     forumThreadCount: number;
     highPriorityThreads: number;
-    shareOfVoice: number;
-    shareOfVoiceChange: number;
-    contentScore: number;
+    shareOfVoice: number | null;
+    shareOfVoiceChange: number | null;
+    contentScore: number | null;
     pagesNeedingOptimization: number;
 }
 
@@ -256,7 +256,7 @@ export default function AnalyticsPage() {
             thisWeek: { scans: thisWeek.length, visibility: thisWeekVis, sentiment: thisWeekSentiment },
             lastWeek: { scans: lastWeek.length, visibility: lastWeekVis, sentiment: lastWeekSentiment },
             visChange:       hasBaseline && hasThisWeek ? thisWeekVis - lastWeekVis           : null,
-            sentimentChange: hasBaseline && hasThisWeek ? thisWeekSentiment - lastWeekSentiment : null,
+            sentimentChange: null,
             scanChange:      hasBaseline && hasThisWeek ? thisWeek.length - lastWeek.length   : null,
         };
     })();
@@ -358,7 +358,7 @@ export default function AnalyticsPage() {
         return Math.round((scansWithOwnCitation / filteredScans.length) * 100);
     })();
 
-    const hasData = scans.length > 0 || (stats && stats.aeoHealthScore > 0);
+    const hasData = scans.length > 0 || stats?.aeoHealthScore !== null;
 
     // ================================================================
     // EXPORT FUNCTIONS
@@ -528,8 +528,8 @@ export default function AnalyticsPage() {
                             {[
                                 {
                                     label: "AEO Health Score",
-                                    value: stats?.aeoHealthScore ?? 0,
-                                    change: stats?.aeoScoreChange ?? 0,
+                                    value: stats?.aeoHealthScore ?? "—",
+                                    change: stats?.aeoScoreChange ?? null,
                                     icon: Eye,
                                     suffix: "",
                                     gradient: " ",
@@ -537,8 +537,8 @@ export default function AnalyticsPage() {
                                 },
                                 {
                                     label: "LLM Visibility",
-                                    value: `${stats?.llmVisibility ?? 0}%`,
-                                    change: weekComparison.visChange,
+                                    value: stats?.llmVisibility === null || stats?.llmVisibility === undefined ? "—" : `${stats.llmVisibility}%`,
+                                    change: stats?.llmVisibilityChange ?? null,
                                     icon: TrendingUp,
                                     suffix: "% vs last week",
                                     gradient: "from-emerald-600/10 to-teal-600/10",
@@ -845,11 +845,11 @@ export default function AnalyticsPage() {
                                                     className="flex-1 flex flex-col items-center gap-2 group cursor-pointer"
                                                 >
                                                     <div className="opacity-0 group-hover:opacity-100 transition-opacity bg-[var(--bg-raised)] px-2 py-1 rounded text-xs font-bold text-white absolute -mt-10 pointer-events-none">
-                                                        {metric.score}%
+                                                        {metric.score === null ? "unmeasured" : `${metric.score}%`}
                                                     </div>
                                                     <div
                                                         className="w-full bg-[var(--accent-muted)] rounded-t-xl group-hover: group-hover: transition-colors shadow-[0_0_15px_rgba(229, 211, 166, 0.15)] group-hover:shadow-[0_0_20px_rgba(229, 211, 166, 0.3)] relative overflow-hidden"
-                                                        style={{ height: `${Math.max(metric.score * 2.2, 12)}px` }}
+                                                        style={{ height: `${metric.score === null ? 0 : Math.max(metric.score * 2.2, 12)}px` }}
                                                     >
                                                         {/* Inner glass highlight */}
                                                         <div className="absolute top-0 left-0 right-0 h-1 bg-white/30 rounded-t-xl" />
@@ -857,9 +857,9 @@ export default function AnalyticsPage() {
                                                     <span className="text-xs font-medium text-[var(--text-secondary)] capitalize mt-2 group-hover:text-[var(--text-primary)] transition-colors">{metric.platform}</span>
                                                     <span className={cn(
                                                         "text-[10px] font-bold px-1.5 py-0.5 rounded-md",
-                                                        metric.change > 0 ? "bg-[var(--data-green)]/20 text-[var(--data-green)] border border-[var(--data-green)]/25" : metric.change < 0 ? "bg-[var(--data-red)]/20 text-[var(--data-red)] border border-[var(--data-red)]/25" : "text-[var(--text-ghost)]"
+                                                        (metric.change ?? 0) > 0 ? "bg-[var(--data-green)]/20 text-[var(--data-green)] border border-[var(--data-green)]/25" : (metric.change ?? 0) < 0 ? "bg-[var(--data-red)]/20 text-[var(--data-red)] border border-[var(--data-red)]/25" : "text-[var(--text-ghost)]"
                                                     )}>
-                                                        {metric.change > 0 ? "+" : ""}{metric.change}
+                                                        {metric.change === null ? "baseline needed" : `${metric.change > 0 ? "+" : ""}${metric.change}`}
                                                     </span>
                                                 </motion.div>
                                             ))}

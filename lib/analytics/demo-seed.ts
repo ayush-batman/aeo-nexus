@@ -109,23 +109,33 @@ export function demoPositioningMatrix() {
 // ── Dashboard + Tracker: visibility metrics, scans, stats ───────
 export function demoVisibilityMetrics() {
     return [
-        metric('Chatgpt', 84, 12, 5, 6),
-        metric('Gemini', 90, 8, 8, 9),
-        metric('Perplexity', 71, 5, 3, 4),
-        metric('Claude', 66, -4, 2, 4),
+        metric('Chatgpt', 5, 6, 4, 6),
+        metric('Gemini', 8, 9, 7, 9),
+        metric('Perplexity', 3, 4, 2, 4),
+        metric('Claude', 2, 4, 3, 4),
     ];
 }
 
-function metric(platform: string, score: number, change: number, mentions: number, samples: number) {
+function metric(platform: string, mentions: number, samples: number, previousMentions: number, previousSamples: number) {
     const confidence = estimateMentionConfidence(mentions, samples);
+    const score = Math.round((mentions / samples) * 100);
+    const previousScore = Math.round((previousMentions / previousSamples) * 100);
     return {
         platform,
         score,
-        change,
+        change: score - previousScore,
+        changeStatus: 'comparable' as const,
         scanCount: samples,
         mentionCount: mentions,
         mentionRate: confidence.mentionRate,
         confidence,
+        averageMentionPosition: 2,
+        mentionPositionCount: mentions,
+        mentionPositionTotal: mentions * 2,
+        comparisonCurrentSamples: samples,
+        comparisonCurrentMentions: mentions,
+        comparisonPreviousSamples: previousSamples,
+        comparisonPreviousMentions: previousMentions,
     };
 }
 
@@ -160,10 +170,10 @@ export function demoScanRows() {
 
 export function demoDashboardStats() {
     return {
-        aeoHealthScore: 72,
-        aeoScoreChange: 6,
+        aeoHealthScore: 81,
+        aeoScoreChange: null,
         llmVisibility: 78,
-        llmVisibilityChange: 9,
+        llmVisibilityChange: 8,
         llmVisibilitySamples: 23,
         llmVisibilityConfidence: 'high' as const,
         forumThreadCount: 23,

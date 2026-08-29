@@ -70,8 +70,9 @@ interface LLMScan {
 
 interface PlatformVisibility {
     platform: string;
-    score: number;
-    change: number;
+    score: number | null;
+    change: number | null;
+    changeStatus: "comparable" | "incompatible" | "insufficient_samples";
     scanCount: number;
     mentionCount: number;
     mentionRate: number | null;
@@ -109,7 +110,7 @@ export default function LLMTrackerPage() {
     const [expandedScan, setExpandedScan] = useState<number | null>(null);
     const [scanRegion, setScanRegion] = useState<string>("global");
     const [receiptOpen, setReceiptOpen] = useState(false);
-    const [receiptPlatform, setReceiptPlatform] = useState<{ id: string; name: string; score: number } | null>(null);
+    const [receiptPlatform, setReceiptPlatform] = useState<{ id: string; name: string; score: number | null } | null>(null);
 
     const REGIONS = [
         { id: "global", label: "Global",  context: "" },
@@ -377,8 +378,8 @@ export default function LLMTrackerPage() {
                                     const metrics = visibilityMetrics.find(
                                         m => m.platform.toLowerCase() === platform.id
                                     );
-                                    const score = metrics?.score || 0;
-                                    const change = metrics?.change || 0;
+                                    const score = metrics?.score ?? null;
+                                    const change = metrics?.change ?? null;
 
                                     return (
                                         <Card
@@ -394,30 +395,30 @@ export default function LLMTrackerPage() {
                                                     <span className="text-sm text-[var(--text-secondary)]">{platform.name}</span>
                                                     <div className={cn(
                                                         "flex items-center gap-1 text-xs",
-                                                        change > 0 && "text-[var(--data-green)]",
-                                                        change < 0 && "text-[var(--data-red)]",
-                                                        change === 0 && "text-[var(--text-ghost)]"
+                                                        (change ?? 0) > 0 && "text-[var(--data-green)]",
+                                                        (change ?? 0) < 0 && "text-[var(--data-red)]",
+                                                        (change ?? 0) === 0 && "text-[var(--text-ghost)]"
                                                     )}>
-                                                        {change > 0 ? <TrendingUp className="w-3 h-3" /> :
-                                                            change < 0 ? <TrendingDown className="w-3 h-3" /> :
+                                                        {(change ?? 0) > 0 ? <TrendingUp className="w-3 h-3" /> :
+                                                            (change ?? 0) < 0 ? <TrendingDown className="w-3 h-3" /> :
                                                                 <Minus className="w-3 h-3" />}
-                                                        {change > 0 ? "+" : ""}{change}%
+                                                        {change === null ? "baseline needed" : `${change > 0 ? "+" : ""}${change}%`}
                                                     </div>
                                                 </div>
                                                 <div className="flex items-end gap-2">
-                                                    <span className={cn("text-3xl font-bold", getScoreColor(score))}>
-                                                        {score}
+                                                    <span className={cn("text-3xl font-bold", getScoreColor(score ?? 0))}>
+                                                        {score ?? "—"}
                                                     </span>
                                                     <span className="text-[var(--text-ghost)] text-sm mb-1">/100</span>
                                                 </div>
                                                 <div className="mt-2 h-1.5 bg-[var(--bg-raised)] rounded-full overflow-hidden">
                                                     <div
                                                         className={cn("h-full rounded-full transition-all",
-                                                            score >= 70 ? "bg-[var(--data-green)]" :
-                                                                score >= 50 ? "bg-[var(--data-amber)]" :
+                                                            (score ?? 0) >= 70 ? "bg-[var(--data-green)]" :
+                                                                (score ?? 0) >= 50 ? "bg-[var(--data-amber)]" :
                                                                     "bg-[var(--data-red)]"
                                                         )}
-                                                        style={{ width: `${score}%` }}
+                                                        style={{ width: `${score ?? 0}%` }}
                                                     />
                                                 </div>
                                                 <div className="mt-2 text-[10px] font-mono uppercase tracking-[0.12em] text-[var(--text-ghost)] opacity-0 group-hover:opacity-100 transition-opacity">
@@ -872,7 +873,7 @@ export default function LLMTrackerPage() {
             <ScanReceiptDrawer
                 open={receiptOpen}
                 onOpenChange={setReceiptOpen}
-                title={receiptPlatform ? `${receiptPlatform.name} visibility · ${receiptPlatform.score}/100` : "Scans"}
+                title={receiptPlatform ? `${receiptPlatform.name} visibility · ${receiptPlatform.score === null ? "unmeasured" : `${receiptPlatform.score}/100`}` : "Scans"}
                 subtitle={receiptPlatform ? `Every scan that produced this ${receiptPlatform.name} score, most recent first. Verify any of them yourself.` : undefined}
                 platform={receiptPlatform?.id}
             />

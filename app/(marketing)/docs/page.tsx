@@ -222,7 +222,7 @@ Authorization: Bearer aelo_sk_...`}</CodeBlock>
                 <div className="mx-auto max-w-3xl">
                     <SectionHeading icon={BookOpen} eyebrow="05" title="Core concepts" />
                     <div className="space-y-2">
-                        <ConceptRow term="Mention rate" def="Percentage of tested prompts in which the AI named your brand. Deterministic string match; no LLM-as-judge." />
+                        <ConceptRow term="Mention rate" def="Percentage of successful AI-answer samples in which the AI named your brand. Deterministic string match; no LLM-as-judge." />
                         <ConceptRow term="Average position" def="When named, how early in the AI's list. Position 1.0 = first mentioned. Scans where brand wasn't named are excluded from the average (not counted as ∞)." />
                         <ConceptRow term="Health score / 100" def="Composite of mention rate (weighted 70%) and position boost (30%). 0 = never mentioned; 100 = named first every time. Formula on /methodology." />
                         <ConceptRow term="Share of Voice" def="Your mentions as a fraction of all named brands in your competitor set. Requires competitor list configured; otherwise displays ', '." />

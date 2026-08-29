@@ -1,6 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import { NextRequest, NextResponse } from 'next/server';
-import { getAvailablePlatforms, type LLMPlatform } from '@/lib/ai/llm-scanner';
+import { getAvailablePlatforms, scanLLM, type BattleResult, type LLMPlatform, type ScanResult } from '@/lib/ai/llm-scanner';
+import { requireWorkspaceRole } from '@/lib/authorization';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { getCurrentWorkspaceContext } from '@/lib/data-access';
 import { getEntitlements, reserveScanQuota } from '@/lib/entitlements';
@@ -13,6 +14,9 @@ export async function POST(request: NextRequest) {
     try {
         const context = await getCurrentWorkspaceContext();
         if (!context) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        if (!requireWorkspaceRole(context, ['owner', 'admin', 'editor'])) {
+            return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+        }
 
         const body = await request.json().catch(() => null) as Record<string, unknown> | null;
         const prompt = typeof body?.prompt === 'string' ? body.prompt.trim() : '';
@@ -57,6 +61,7 @@ export async function POST(request: NextRequest) {
             }, { status: 429 });
         }
 
+        const rawResults: ScanResult[] = [];
         const measurement = await runVisibilityMeasurement({
             prompt,
             brandName,
@@ -66,6 +71,11 @@ export async function POST(request: NextRequest) {
             samples: 4,
             mode: body?.mode === 'battle' ? 'battle' : 'standard',
         }, {
+            execute: async (options) => {
+                const output = await scanLLM(options);
+                rawResults.push(...output.results);
+                return output;
+            },
             persist: async (results) => {
                 const { error } = await admin.from('llm_scans').insert(results.map(result => scanResultPersistenceRow(context.workspaceId, result)));
                 if (error) throw new Error('Failed to store measurement samples.');
@@ -82,7 +92,7 @@ export async function POST(request: NextRequest) {
 
         // Keep the small legacy result list for the onboarding screen while
         // making every value an aggregate from the canonical receipt.
-        const results = measurement.engines
+        const aggregateResults = measurement.engines
             .filter(engine => engine.successfulSamples > 0)
             .map(engine => ({
                 platform: engine.engine,
@@ -95,6 +105,49 @@ export async function POST(request: NextRequest) {
                 confidence: engine.confidence,
                 citations: engine.citations,
             }));
+        const results = measurement.mode === 'battle'
+            ? measurement.engines
+                .filter((engine) => engine.successfulSamples > 0)
+                .map((engine) => {
+                    const engineResults = rawResults.filter((result): result is BattleResult =>
+                        result.platform === engine.engine && 'winner' in result,
+                    );
+                    const winnerCounts = new Map<string, { label: string; count: number }>();
+                    for (const result of engineResults) {
+                        const label = result.winner?.trim();
+                        if (!label) continue;
+                        const key = label.toLocaleLowerCase();
+                        const current = winnerCounts.get(key);
+                        winnerCounts.set(key, { label: current?.label ?? label, count: (current?.count ?? 0) + 1 });
+                    }
+                    const rankedWinners = [...winnerCounts.values()].sort((a, b) => b.count - a.count);
+                    const winner = rankedWinners[0] && rankedWinners[0].count > (rankedWinners[1]?.count ?? 0)
+                        ? rankedWinners[0].label
+                        : null;
+                    const representative = engineResults.find((result) => result.winner?.toLocaleLowerCase() === winner?.toLocaleLowerCase())
+                        ?? engineResults[0];
+                    return {
+                        ...representative,
+                        platform: engine.engine,
+                        brandMentioned: engine.mentioned,
+                        mentionRate: engine.mentionRate,
+                        mentionPosition: engine.avgPosition,
+                        sentiment: engine.sentiment,
+                        samples: engine.successfulSamples,
+                        requestedSamples: engine.requestedSamples,
+                        confidence: engine.confidence,
+                        citations: engine.citations,
+                        winner,
+                        winnerCounts: rankedWinners,
+                        winnerReason: winner
+                            ? `${winner} led in ${rankedWinners[0].count} of ${engineResults.length} successful samples. ${representative?.winnerReason ?? ''}`.trim()
+                            : `No stable winner: the ${engineResults.length} successful samples were tied or inconclusive.`,
+                        response: representative
+                            ? `Representative sample (1 of ${engineResults.length}):\n\n${representative.response}`
+                            : '',
+                    };
+                })
+            : aggregateResults;
 
         return NextResponse.json({
             success: true,

@@ -37,7 +37,7 @@ export type Report = {
     to: string;
     totalScans: number;
     uniquePrompts: number;
-    overallMentionRate: number;    // 0-100
+    overallMentionRate: number | null;    // 0-100, null when unmeasured
     avgPosition: number | null;
     engines: ReportEngine[];
     prompts: ReportPrompt[];
@@ -140,7 +140,7 @@ export async function buildReport(workspaceId: string, brand: string, days = 30)
         to: new Date().toISOString().slice(0, 10),
         totalScans: scans.length,
         uniquePrompts: byPrompt.size,
-        overallMentionRate: scans.length ? Math.round((mentionedTotal / scans.length) * 100) : 0,
+        overallMentionRate: scans.length ? Math.round((mentionedTotal / scans.length) * 100) : null,
         avgPosition: avg(allPositions),
         engines,
         prompts,
