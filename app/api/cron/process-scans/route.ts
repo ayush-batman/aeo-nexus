@@ -1,228 +1,141 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
-import { scanLLM } from '@/lib/ai/llm-scanner';
-import type { LLMPlatform } from '@/lib/ai/llm-scanner';
-import { PLAN_LIMITS } from '@/lib/config';
+import { scanLLM, type LLMPlatform } from '@/lib/ai/llm-scanner';
+import { reserveScanQuota } from '@/lib/entitlements';
+import { createAdminClient } from '@/lib/supabase/admin';
 
-// Lazy init: build-time page-data collection can evaluate module scope
-// before env vars are set (e.g. new Vercel projects). Instantiating the
-// client at request time keeps Next build safe.
-function getSupabaseAdmin() {
-    const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-    const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
-    if (!url || !key) {
-        throw new Error('Supabase env vars missing at runtime (NEXT_PUBLIC_SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY)');
-    }
-    return createClient(url, key, {
-        auth: { autoRefreshToken: false, persistSession: false },
-    });
+export const maxDuration = 60;
+
+type ClaimedSchedule = {
+    schedule_id: string;
+    workspace_id: string;
+    workspace_name: string | null;
+    org_id: string;
+    prompt: string;
+    platforms: string[];
+    competitors: string[] | null;
+    frequency: 'daily' | 'weekly' | 'monthly';
+    scheduled_for: string;
+    claim_token: string;
+};
+
+function nextRunAt(frequency: ClaimedSchedule['frequency']): string {
+    const next = new Date();
+    if (frequency === 'daily') next.setUTCDate(next.getUTCDate() + 1);
+    if (frequency === 'weekly') next.setUTCDate(next.getUTCDate() + 7);
+    if (frequency === 'monthly') next.setUTCMonth(next.getUTCMonth() + 1);
+    return next.toISOString();
 }
 
 export async function GET(request: NextRequest) {
-    // Verify Cron Secret
-    const authHeader = request.headers.get('authorization');
-    if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
-        // Fallback check for Vercel Cron
-        // Vercel Cron requests do not send a Bearer token by default in the same way, 
-        // they verify via signature, but user can set header.
-        // For simplicity, we enforce CRON_SECRET which user must configure in Vercel Cron job.
+    const cronSecret = process.env.CRON_SECRET?.trim();
+    if (!cronSecret) {
+        console.error('[process-scans] CRON_SECRET is not configured');
+        return NextResponse.json({ error: 'cron_not_configured' }, { status: 503 });
+    }
+    if (request.headers.get('authorization') !== `Bearer ${cronSecret}`) {
         return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const supabaseAdmin = getSupabaseAdmin();
-
     try {
-        // 1. Fetch due schedules
-        const now = new Date().toISOString();
-        const { data: schedules, error } = await supabaseAdmin
-            .from('scheduled_scans')
-            .select(`
-                *,
-                workspaces (
-                    name,
-                    id,
-                    org_id
-                )
-            `)
-            .eq('status', 'active')
-            .lte('next_run_at', now);
-
+        const admin = createAdminClient();
+        const { data, error } = await admin.rpc('claim_due_scheduled_scans', {
+            p_limit: 10,
+            p_lease_seconds: 300,
+        });
         if (error) {
-            console.error('Error fetching schedules:', error);
+            console.error('[process-scans] failed to claim schedules:', error);
             return NextResponse.json({ error: 'Database error' }, { status: 500 });
         }
 
-        if (!schedules || schedules.length === 0) {
-            return NextResponse.json({ message: 'No schedules due' });
+        const schedules = (data ?? []) as ClaimedSchedule[];
+        if (schedules.length === 0) {
+            return NextResponse.json({ success: true, processed: 0, details: [] });
         }
 
-        console.log(`Found ${schedules.length} schedules to run`);
-
-        const results = [];
-
-        // 2. Process each schedule
+        const details: Array<Record<string, unknown>> = [];
         for (const schedule of schedules) {
-            const workspace = schedule.workspaces;
-            if (!workspace) continue;
-
-            // Check usage limits
-            // @ts-ignore
-            const orgId = workspace.org_id;
-
-            // Get plan
-            const { data: org } = await supabaseAdmin
-                .from('organizations')
-                .select('plan')
-                .eq('id', orgId)
-                .single();
-
-            const plan = org?.plan || 'free';
-            // @ts-ignore
-            const limit = PLAN_LIMITS[plan]?.scans ?? PLAN_LIMITS.free.scans;
-
-            if (limit !== -1) {
-                // Count usage
-                const now = new Date();
-                const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
-
-                // Get all workspace IDs for this org
-                const { data: orgWorkspaces } = await supabaseAdmin
-                    .from('workspaces')
-                    .select('id')
-                    .eq('org_id', orgId);
-
-                const wsIds = orgWorkspaces?.map(w => w.id) || [];
-
-                const { count: currentUsage } = await supabaseAdmin
-                    .from('llm_scans')
-                    .select('*', { count: 'exact', head: true })
-                    .in('workspace_id', wsIds)
-                    .gte('created_at', startOfMonth);
-
-                if ((currentUsage || 0) >= limit) {
-                    console.warn(`Skipping schedule ${schedule.id}: Org ${orgId} reached scan limit (${currentUsage}/${limit})`);
-
-                    // Update status to show skipped
-                    await supabaseAdmin
-                        .from('scheduled_scans')
-                        .update({
-                            last_run_status: 'skipped_limit_reached',
-                            updated_at: new Date().toISOString()
-                        })
-                        .eq('id', schedule.id);
-
-                    results.push({
-                        id: schedule.id,
-                        status: 'skipped',
-                        reason: 'limit_reached'
-                    });
-                    continue;
-                }
-            }
-
-            const brandName = workspace.name || 'My Brand';
-
-            // Try to get brand domain from settings if available (assuming it's in a jsonb column or separate table)
-            // For now, we skip brandDomain or hardcode if needed. 
-            // Better: fetch it from settings table if it existed.
-            // We'll proceed without brandDomain for now.
-
-            console.log(`Processing schedule ${schedule.id} for workspace ${workspace.name}`);
+            const finish = async (status: string) => {
+                const { error: updateError } = await admin
+                    .from('scheduled_scans')
+                    .update({
+                        claim_token: null,
+                        claim_expires_at: null,
+                        last_run_status: status,
+                        last_run_at: new Date().toISOString(),
+                        next_run_at: nextRunAt(schedule.frequency),
+                        updated_at: new Date().toISOString(),
+                    })
+                    .eq('id', schedule.schedule_id)
+                    .eq('claim_token', schedule.claim_token);
+                if (updateError) throw new Error(`Could not finish schedule claim: ${updateError.message}`);
+            };
 
             try {
-                // Run Scan
-                const { results: scanResults, errors: scanErrors } = await scanLLM({
+                if (!Array.isArray(schedule.platforms) || schedule.platforms.length === 0) {
+                    await finish('invalid_no_platforms');
+                    details.push({ id: schedule.schedule_id, status: 'skipped', reason: 'no_platforms' });
+                    continue;
+                }
+
+                const reservationId = `schedule:${schedule.schedule_id}:${schedule.scheduled_for}`;
+                const reservation = await reserveScanQuota(schedule.org_id, reservationId, admin);
+                if (reservation !== 'reserved') {
+                    const status = reservation === 'denied' ? 'skipped_limit_reached' : 'skipped_duplicate';
+                    await finish(status);
+                    details.push({ id: schedule.schedule_id, status: 'skipped', reason: reservation });
+                    continue;
+                }
+
+                const { results, errors } = await scanLLM({
                     prompt: schedule.prompt,
-                    brandName: brandName,
+                    brandName: schedule.workspace_name || 'My Brand',
                     competitors: schedule.competitors || [],
                     platforms: schedule.platforms as LLMPlatform[],
                     mode: 'standard',
                 });
 
-                if (scanErrors.length > 0) {
-                    console.warn(`Schedule ${schedule.id}: ${scanErrors.length} platform(s) failed:`, scanErrors.map(e => `${e.platform}: ${e.error}`).join(', '));
-                }
-
-                if (scanResults.length > 0) {
-                    const scansToInsert = scanResults.map(res => ({
+                if (results.length > 0) {
+                    const { error: insertError } = await admin.from('llm_scans').insert(results.map((result) => ({
                         workspace_id: schedule.workspace_id,
-                        platform: res.platform,
-                        prompt: res.prompt,
-                        response: res.response,
-                        brand_mentioned: res.brandMentioned,
-                        mention_position: res.mentionPosition,
-                        sentiment: res.sentiment,
-                        competitors_mentioned: res.competitorsMentioned,
-                        citations: res.citations,
-                        created_at: new Date().toISOString(),
-                    }));
-
-                    const { error: insertError } = await supabaseAdmin
-                        .from('llm_scans')
-                        .insert(scansToInsert);
-
-                    if (insertError) {
-                        console.error(`Error saving scan results for schedule ${schedule.id}:`, insertError);
-                    }
+                        platform: result.platform,
+                        prompt: result.prompt,
+                        response: result.response,
+                        brand_mentioned: result.brandMentioned,
+                        brand_variants: result.brandVariants,
+                        mention_position: result.mentionPosition,
+                        sentiment: result.sentiment,
+                        sentiment_score: result.sentimentScore,
+                        sentiment_reason: result.sentimentReason,
+                        competitors_mentioned: result.competitorsMentioned,
+                        citations: result.citations,
+                        list_items: result.listItems,
+                        confidence: result.confidence,
+                    })));
+                    if (insertError) throw new Error(`Could not save scan results: ${insertError.message}`);
                 }
 
-                // Calculate next run time
-                const lastRun = new Date();
-                let nextRun = new Date(schedule.next_run_at); // Start from previous scheduled time to avoid drift? 
-                // Or simply from NOW? Usually from NOW is safer to avoid catch-up loops if cron was down.
-                // But from scheduled time preserves cadence. 
-                // Let's use NOW for simplicity and robustness.
-                nextRun = new Date();
-
-                switch (schedule.frequency) {
-                    case 'daily':
-                        nextRun.setDate(nextRun.getDate() + 1);
-                        break;
-                    case 'weekly':
-                        nextRun.setDate(nextRun.getDate() + 7);
-                        break;
-                    case 'monthly':
-                        nextRun.setMonth(nextRun.getMonth() + 1);
-                        break;
-                    default:
-                        nextRun.setDate(nextRun.getDate() + 1); // Default to daily
+                const status = results.length === 0 ? 'all_failed' : errors.length > 0 ? 'partial' : 'complete';
+                await finish(status);
+                details.push({
+                    id: schedule.schedule_id,
+                    status,
+                    scans_count: results.length,
+                    errors_count: errors.length,
+                });
+            } catch (error) {
+                console.error(`[process-scans] schedule ${schedule.schedule_id} failed:`, error);
+                try {
+                    await finish('failed');
+                } catch (finishError) {
+                    console.error(`[process-scans] failed to release claim ${schedule.schedule_id}:`, finishError);
                 }
-
-                // Update schedule
-                await supabaseAdmin
-                    .from('scheduled_scans')
-                    .update({
-                        last_run_at: lastRun.toISOString(),
-                        next_run_at: nextRun.toISOString(),
-                        updated_at: new Date().toISOString()
-                    })
-                    .eq('id', schedule.id);
-
-                results.push({
-                    id: schedule.id,
-                    status: scanResults.length > 0 ? 'success' : 'no_results',
-                    scans_count: scanResults.length,
-                    errors_count: scanErrors.length,
-                });
-
-            } catch (err) {
-                console.error(`Error processing schedule ${schedule.id}:`, err);
-                results.push({
-                    id: schedule.id,
-                    status: 'failed',
-                    error: String(err)
-                });
+                details.push({ id: schedule.schedule_id, status: 'failed' });
             }
         }
 
-        return NextResponse.json({
-            success: true,
-            processed: results.length,
-            details: results
-        });
-
+        return NextResponse.json({ success: true, processed: details.length, details });
     } catch (error) {
-        console.error('Cron job failed:', error);
+        console.error('[process-scans] cron failed:', error);
         return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
     }
 }

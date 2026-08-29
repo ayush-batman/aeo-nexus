@@ -385,4 +385,58 @@ The destructive route is absent. Measurement requires a `measure`-scoped API key
 
 ### Commit hash
 
-Pending Batch 1E commit; will be recorded in the next progress update.
+`71709ff` — `security: enforce API authorization and quotas`
+
+## Batch 1F — Scheduled-scan claims and engine resolution
+
+### Problem addressed
+
+The API saved recurring scans with an empty engine list, so they could run without producing evidence. The cron selected due rows without a lock, allowing concurrent workers to run the same schedule, and a missing cron secret could be compared as the literal value `Bearer undefined`.
+
+### User impact
+
+New API schedules contain at least one configured engine allowed by the customer plan. Due schedules are leased in one database transaction, so concurrent cron workers skip work already claimed. Scheduled runs use the same atomic weekly quota reservation as manual measurement, and cron access fails closed when its secret is missing.
+
+### Files changed
+
+- `app/api/v1/scans/schedule/route.ts`
+- `app/api/cron/process-scans/route.ts`
+- `supabase/migrations/028_claim_scheduled_scans.sql`
+- `tests/integration/scheduled-scan-contract.test.ts`
+- `docs/product-rescue/IMPLEMENTATION_PROGRESS.md`
+
+### Tests added
+
+- API schedules must resolve configured, entitled engines and may not write an empty list.
+- The database claim uses `FOR UPDATE SKIP LOCKED`, an expiring lease, bounded batches, and service-role-only execution.
+- The cron must reject missing configuration, consume the claim RPC, bind completion to the claim token, and use atomic scan quota reservation.
+
+### Commands run and results
+
+- Focused tests before implementation → 3 expected failures.
+- `npm test` after implementation → 33 passed; the sandbox-only first attempt failed with `listen EPERM`, then passed with approved local IPC access.
+- `npm run typecheck` → passed.
+- `npm run typecheck:mcp` → passed.
+- Targeted ESLint on all changed TypeScript files → passed.
+- Full `npm run lint` → 74 existing errors and 83 warnings remain; changed files are clean.
+- `npm run build -- --webpack` → passed: compilation, TypeScript, 133 static pages, and build traces completed.
+- `git diff --check` → passed before the progress update.
+- Removed the generated `.next` cache after the successful build; source and user data were not affected.
+
+### Migration considerations
+
+- Apply migration 028 after 027 and before deploying the updated schedule routes.
+- Existing empty-engine schedules are paused and labelled `invalid_no_platforms`; they are not silently assigned engines because their owners may have different plan/configuration state.
+- The migration adds an enforced non-empty platform constraint, claim lease fields, a due-row index, and the service-role-only claim function.
+- Claims expire after five minutes. Each handled run advances its schedule even on provider failure, preventing a broken provider from creating an immediate retry loop.
+- Verify concurrent cron requests, lease expiry, quota denial, partial engine failure, and legacy empty-schedule pausing in a migrated staging database.
+
+### Remaining risks
+
+- Migration 028 has static contract coverage only because Supabase CLI/Docker is unavailable here.
+- A worker crash after quota reservation but before completion can cause the stable run identity to be treated as a duplicate after lease expiry; staging should confirm the desired recovery policy before production.
+- Shared rate limiting, SSRF-safe crawling, and protected analytics ingestion remain in the rest of the reliability batch.
+
+### Commit hash
+
+Pending Batch 1F commit; will be recorded in the next progress update.
