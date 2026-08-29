@@ -1,61 +1,67 @@
 import { NextRequest, NextResponse } from 'next/server';
-import crypto from 'crypto';
 import Razorpay from 'razorpay';
 import { getCurrentWorkspaceContext } from '@/lib/data-access';
-import { createAdminClient } from '@/lib/supabase/admin';
-
-const VALID_DB_PLANS = new Set(['starter', 'pro', 'agency', 'enterprise']);
+import {
+    validateRazorpayPayment,
+    verifyRazorpayPaymentSignature,
+    type RazorpayOrderLike,
+    type RazorpayPaymentLike,
+} from '@/lib/billing/razorpay';
+import { applyBillingEvent } from '@/lib/billing/webhook-events';
 
 export async function POST(request: NextRequest) {
     try {
         const context = await getCurrentWorkspaceContext();
         if (!context) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-        const { razorpay_order_id, razorpay_payment_id, razorpay_signature } = await request.json();
+        const body = await request.json().catch(() => null) as Record<string, unknown> | null;
+        const razorpay_order_id = typeof body?.razorpay_order_id === 'string' ? body.razorpay_order_id : '';
+        const razorpay_payment_id = typeof body?.razorpay_payment_id === 'string' ? body.razorpay_payment_id : '';
+        const razorpay_signature = typeof body?.razorpay_signature === 'string' ? body.razorpay_signature : '';
         if (!razorpay_order_id || !razorpay_payment_id || !razorpay_signature) {
             return NextResponse.json({ error: 'Missing payment fields' }, { status: 400 });
         }
 
-        // 1. Verify the signature (proves the payment is genuine).
-        const expected = crypto
-            .createHmac('sha256', process.env.RAZORPAY_KEY_SECRET!)
-            .update(`${razorpay_order_id}|${razorpay_payment_id}`)
-            .digest('hex');
-        if (expected !== razorpay_signature) {
+        const keyId = process.env.RAZORPAY_KEY_ID;
+        const keySecret = process.env.RAZORPAY_KEY_SECRET;
+        if (!keyId || !keySecret) {
+            return NextResponse.json({ error: 'Payment verification is not configured' }, { status: 503 });
+        }
+        if (!verifyRazorpayPaymentSignature({
+            orderId: razorpay_order_id,
+            paymentId: razorpay_payment_id,
+            signature: razorpay_signature,
+            secret: keySecret,
+        })) {
             return NextResponse.json({ error: 'Invalid signature' }, { status: 400 });
         }
 
-        // 2. Read the plan + org from the ORDER itself (authoritative), never
-        //    from the client, so a user cannot pay for Radar and claim Command.
         const razorpay = new Razorpay({
-            key_id: process.env.RAZORPAY_KEY_ID!,
-            key_secret: process.env.RAZORPAY_KEY_SECRET!,
+            key_id: keyId,
+            key_secret: keySecret,
         });
-        const order = await razorpay.orders.fetch(razorpay_order_id);
-        const notes = (order.notes ?? {}) as Record<string, string>;
-        const dbPlan = notes.db_plan;
-        const orderOrgId = notes.org_id;
-
-        if (!dbPlan || !VALID_DB_PLANS.has(dbPlan)) {
-            return NextResponse.json({ error: 'Order missing valid plan' }, { status: 400 });
-        }
-        // The order must belong to the authenticated user's org.
-        if (orderOrgId && orderOrgId !== context.orgId) {
+        const [paymentResult, orderResult] = await Promise.all([
+            razorpay.payments.fetch(razorpay_payment_id),
+            razorpay.orders.fetch(razorpay_order_id),
+        ]);
+        const validated = validateRazorpayPayment({
+            payment: paymentResult as unknown as RazorpayPaymentLike,
+            order: orderResult as unknown as RazorpayOrderLike,
+        });
+        if (validated.orgId !== context.orgId) {
             return NextResponse.json({ error: 'Order org mismatch' }, { status: 403 });
         }
 
-        // 3. Apply the plan.
-        const db = createAdminClient();
-        const { error } = await db
-            .from('organizations')
-            .update({ plan: dbPlan, razorpay_subscription_id: razorpay_payment_id })
-            .eq('id', context.orgId);
-        if (error) {
-            console.error('[razorpay/verify] plan update failed', error);
-            return NextResponse.json({ error: 'Could not apply plan' }, { status: 500 });
-        }
+        const applied = await applyBillingEvent({
+            provider: 'razorpay',
+            eventId: `payment:${validated.paymentId}`,
+            eventType: 'client.payment.verified',
+            orgId: validated.orgId,
+            plan: validated.plan,
+            subscriptionId: validated.paymentId,
+        });
 
-        return NextResponse.json({ success: true, plan: dbPlan });
+        return NextResponse.json({ success: true, plan: validated.plan, duplicate: !applied });
     } catch (error) {
         console.error('[razorpay/verify]', error);
         return NextResponse.json({ error: 'Payment verification failed' }, { status: 500 });

@@ -2,22 +2,14 @@ import { NextRequest, NextResponse } from 'next/server';
 import Stripe from 'stripe';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { getCurrentWorkspaceContext } from '@/lib/data-access';
+import { getStripePriceForPlan, isBillablePlan } from '@/lib/billing/plans';
 
 function getStripe() {
     if (!process.env.STRIPE_SECRET_KEY) {
         throw new Error('Stripe secret key not configured');
     }
-    return new Stripe(process.env.STRIPE_SECRET_KEY, {
-        apiVersion: '2025-01-27.acacia',
-    } as any);
+    return new Stripe(process.env.STRIPE_SECRET_KEY);
 }
-
-// Stripe price IDs - configure these in your Stripe dashboard
-const PRICE_IDS: Record<string, string> = {
-    starter: process.env.STRIPE_STARTER_PRICE_ID || 'price_starter',
-    pro: process.env.STRIPE_PRO_PRICE_ID || 'price_pro',
-    agency: process.env.STRIPE_AGENCY_PRICE_ID || 'price_agency',
-};
 
 export async function POST(request: NextRequest) {
     try {
@@ -28,9 +20,14 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
-        const { plan } = await request.json();
-        if (!plan || !PRICE_IDS[plan]) {
+        const body = await request.json().catch(() => null) as { plan?: unknown } | null;
+        const plan = body?.plan;
+        if (!isBillablePlan(plan)) {
             return NextResponse.json({ error: 'Invalid plan' }, { status: 400 });
+        }
+        const priceId = getStripePriceForPlan(plan, process.env);
+        if (!priceId) {
+            return NextResponse.json({ error: 'payment_unconfigured' }, { status: 503 });
         }
 
         const db = createAdminClient();
@@ -55,23 +52,27 @@ export async function POST(request: NextRequest) {
             });
             customerId = customer.id;
 
-            await db
+            const { error: customerUpdateError } = await db
                 .from('organizations')
                 .update({ stripe_customer_id: customerId })
                 .eq('id', context.orgId);
+            if (customerUpdateError) throw customerUpdateError;
         }
 
         // Create checkout session
         const session = await stripe.checkout.sessions.create({
             customer: customerId,
             payment_method_types: ['card'],
-            line_items: [{ price: PRICE_IDS[plan], quantity: 1 }],
+            line_items: [{ price: priceId, quantity: 1 }],
             mode: 'subscription',
             success_url: `${request.nextUrl.origin}/dashboard/settings?success=true`,
             cancel_url:  `${request.nextUrl.origin}/dashboard/settings?canceled=true`,
             metadata: {
                 org_id: context.orgId,
                 plan,
+            },
+            subscription_data: {
+                metadata: { org_id: context.orgId },
             },
         });
 

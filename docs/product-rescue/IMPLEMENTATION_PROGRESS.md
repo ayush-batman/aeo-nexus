@@ -161,4 +161,76 @@ Tenant membership, privileges, and paid entitlements become server-owned. Existi
 
 ### Commit hash
 
-Pending Batch 1B commit; will be recorded in the next progress update.
+`3a952b4` — `security: lock tenant and billing fields`
+
+## Batch 1C — Verified, duplicate-safe billing events
+
+### Problem addressed
+
+Razorpay webhooks could process unsigned payloads, trusted plan data carried in the event, and applied repeated events directly. Stripe mapped client metadata to plans, used a cookie-scoped database client in the webhook, ignored database update failures, and had placeholder price IDs that could reach checkout.
+
+### User impact
+
+Paid access changes only after a signed provider event is checked against provider-owned payment, order, subscription, amount, currency, and price data. Replayed events are recorded once and cannot apply the same upgrade twice. Older Stripe events cannot overwrite newer billing state.
+
+### Files changed
+
+- `app/api/razorpay/create-order/route.ts`
+- `app/api/razorpay/verify/route.ts`
+- `app/api/webhooks/razorpay/route.ts`
+- `app/api/stripe/checkout/route.ts`
+- `app/api/stripe/webhook/route.ts`
+- `lib/billing/plans.ts`
+- `lib/billing/razorpay.ts`
+- `lib/billing/webhook-events.ts`
+- `supabase/migrations/026_create_billing_webhook_events.sql`
+- `tests/unit/billing-plans.test.ts`
+- `tests/unit/billing-razorpay.test.ts`
+- `tests/integration/billing-route-contract.test.ts`
+- `tests/integration/billing-webhook-migration.test.ts`
+- `docs/product-rescue/IMPLEMENTATION_PROGRESS.md`
+
+### Tests added
+
+- Razorpay signatures fail closed when their secret/signature is missing or invalid.
+- Razorpay payments must be captured and match the provider-fetched paid order, server-owned plan, exact amount, currency, and organization.
+- Stripe price IDs map through configured server-owned allowlists; missing and placeholder prices fail closed.
+- Billing event storage has a provider/event uniqueness key, atomic plan application, restricted function access, and stale-event protection.
+- Webhook routes retain provider retrieval, service-role access, and the shared atomic event function; direct plan updates and Razorpay fallback plans are rejected by regression checks.
+
+### Commands run and results
+
+- Initial billing tests before implementation → expected failures because the billing modules and migration did not exist.
+- `npm test` after implementation → 14 passed; sandbox-only first attempt failed with `listen EPERM`, then passed with approved local IPC access.
+- targeted ESLint for all changed TypeScript routes/modules/tests → passed.
+- `npm run typecheck:mcp` → passed.
+- `npm run typecheck` → still fails only on the same 9 recorded scanner/alerts/data-access errors; no billing files fail.
+- `npm run build -- --webpack` → application bundle compiled successfully, then Next's TypeScript worker failed with the existing WASM fallback error `invalid type: unit value, expected usize` because native SWC is unavailable.
+- `git diff --check` → passed before the progress update.
+- Removed the newly generated 651 MB `.next` build cache after the failed build; source and user data were not affected.
+
+### Evidence
+
+- Fourteen automated unit/integration contract tests pass.
+- Provider signatures and authoritative object retrieval are explicit in both webhook paths.
+- Plan changes are centralized in the `apply_billing_event` database transaction instead of route-level updates.
+- No live provider checkout or webhook was attempted because test provider credentials and a disposable deployed endpoint are not available in this environment.
+
+### Migration considerations
+
+- Apply after migrations 024 and 025.
+- Migration 026 creates a private billing-event audit ledger and a service-role-only atomic function. It does not rewrite existing organization plans.
+- Configure real Stripe price IDs and both webhook secrets before enabling traffic; checkout now returns 503 instead of using placeholder price IDs.
+- Verify signed Stripe and Razorpay test-mode events in staging, including duplicates and deliberately out-of-order Stripe events, before production rollout.
+- Keep the event ledger during rollback so provider retries cannot lose their audit/idempotency history. Disable webhook delivery before removing the function.
+
+### Remaining risks
+
+- Migration 026 still needs execution against a clean Supabase test project and upgraded staging database.
+- Real provider SDK responses and webhook retries need test-mode staging verification.
+- Stripe events created in the same one-second timestamp bucket do not have a stronger provider sequence number; exact duplicates are safe, while two distinct same-second lifecycle events follow delivery order.
+- The application-wide type/build failures remain release blockers outside this billing batch.
+
+### Commit hash
+
+Pending Batch 1C commit; will be recorded in the next progress update.
