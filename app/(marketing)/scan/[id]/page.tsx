@@ -15,7 +15,13 @@ interface PublicScan {
     mention_position:       number | null;
     sentiment:              'positive' | 'neutral' | 'negative' | null;
     competitors_mentioned:  string[] | null;
-    citations:              { url: string; title: string; isOwnDomain?: boolean }[] | null;
+    citations:              Array<{
+        url: string;
+        title: string;
+        isOwnDomain?: boolean;
+        provenance?: 'provider_citation' | 'link_mentioned' | 'unverified';
+        fetch_validation?: 'not_checked' | 'valid' | 'invalid' | 'blocked';
+    }> | null;
     error_message:          string | null;
     created_at:             string;
 }
@@ -176,22 +182,39 @@ export default async function PublicScanPage(
                     <div className="mb-8 rounded-md border border-white/[0.08] bg-black overflow-hidden">
                         <div className="px-4 py-2.5 border-b border-white/[0.06]">
                             <span className="text-[10px] font-mono uppercase tracking-[0.14em] text-zinc-500">
-                                Citations Gemini returned
+                                Evidence links in this answer
                             </span>
                         </div>
                         <div className="px-4 py-3 space-y-1.5">
-                            {scan.citations!.slice(0, 10).map((c, i) => (
-                                <a
-                                    key={i}
-                                    href={c.url}
-                                    target="_blank"
-                                    rel="noreferrer"
-                                    className="flex items-center gap-1.5 text-[12.5px] font-mono text-zinc-400 hover:text-white truncate"
-                                >
+                            {scan.citations!.slice(0, 10).map((c, i) => {
+                                const unsafe = c.fetch_validation === 'invalid' || c.fetch_validation === 'blocked';
+                                const content = <>
                                     <span className="truncate">{c.title || c.url}</span>
-                                    <ExternalLink className="w-2.5 h-2.5 flex-shrink-0" />
-                                </a>
-                            ))}
+                                    <span className="shrink-0 text-[9px] uppercase tracking-wide text-zinc-600">
+                                        {c.provenance === 'provider_citation'
+                                            ? 'Provider citation'
+                                            : c.provenance === 'link_mentioned'
+                                                ? 'Link mentioned'
+                                                : 'Unverified'}
+                                    </span>
+                                    {!unsafe && <ExternalLink className="w-2.5 h-2.5 flex-shrink-0" />}
+                                </>;
+                                return unsafe ? (
+                                    <div key={i} className="flex items-center gap-1.5 text-[12.5px] font-mono text-zinc-600 truncate">
+                                        {content}
+                                    </div>
+                                ) : (
+                                    <a
+                                        key={i}
+                                        href={c.url}
+                                        target="_blank"
+                                        rel="noreferrer"
+                                        className="flex items-center gap-1.5 text-[12.5px] font-mono text-zinc-400 hover:text-white truncate"
+                                    >
+                                        {content}
+                                    </a>
+                                );
+                            })}
                         </div>
                     </div>
                 )}

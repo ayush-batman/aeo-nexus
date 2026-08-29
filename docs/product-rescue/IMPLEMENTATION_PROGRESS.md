@@ -233,4 +233,84 @@ Paid access changes only after a signed provider event is checked against provid
 
 ### Commit hash
 
-Pending Batch 1C commit; will be recorded in the next progress update.
+`8c8f53e` — `security: verify and deduplicate billing events`
+
+## Batch 1D — Exact brand matching and citation provenance
+
+### Problem addressed
+
+The analyzer generated single-character deletion variants and used substring matching, so `Aelo` could match ordinary `AEO`. Own-domain detection also used a substring. Separately, URLs extracted from ordinary generated prose were stored and displayed as citations even when the provider supplied no grounded source evidence.
+
+### User impact
+
+Visibility scores no longer count known deletion/subword false positives. Citation receipts now distinguish provider-backed citations, links merely mentioned in an answer, and unverified references. Source aggregates include only provider-backed evidence, while legacy citation keys remain readable.
+
+### Files changed
+
+- `lib/ai/brand-matching.ts`
+- `lib/ai/citation-provenance.ts`
+- `lib/ai/ai-analyzer.ts`
+- `lib/ai/llm-scanner.ts`
+- `lib/types.ts`
+- `app/api/v1/scan/route.ts`
+- `app/api/v1/citations/route.ts`
+- `app/api/v1/citations/sources/route.ts`
+- `app/api/analytics/citations/route.ts`
+- `app/api/forum/citation-map/route.ts`
+- `components/dashboard/scan-receipt-drawer.tsx`
+- `app/(dashboard)/dashboard/llm-tracker/page.tsx`
+- `app/(marketing)/scan/[id]/page.tsx`
+- `tests/unit/brand-matching.test.ts`
+- `tests/unit/citation-provenance.test.ts`
+- `tests/integration/measurement-truth-contract.test.ts`
+- `docs/product-rescue/IMPLEMENTATION_PROGRESS.md`
+
+### Tests added
+
+- Versioned golden corpus for Aelo/AEO, deletion/subword cases, configured aliases, case, punctuation, possessive/plural, hyphen/whitespace, Unicode, and short brands.
+- URL/hostname normalization including exact/subdomain boundaries and IDN punycode behavior.
+- Provider-native, prose-only, duplicate, invalid-scheme, loopback, metadata, and IPv6 link-local citation fixtures.
+- Structured Perplexity and Gemini citation extraction fixtures.
+- Route/display contract assertions requiring provider-only source aggregation and visible evidence labels.
+
+### Commands run and results
+
+- Focused tests before implementation → 2 expected module-not-found failures.
+- `npm test` after implementation → 25 passed.
+- targeted ESLint across all changed TypeScript/TSX files → passed with no warnings.
+- `npm run typecheck:mcp` → passed.
+- `npm run typecheck` → 8 existing errors remain in alerts/data-access; the scanner error was fixed, reducing the baseline from 9.
+- `npm run lint -- --quiet` → 78 existing repository errors remain, down from the recorded 87; changed files are clean.
+- `npm run build -- --webpack` → blocked by `ENOSPC` while writing the webpack cache. The 250 MB generated `.next` cache was removed; no source or user data was affected.
+- `git diff --check` → passed before the final review.
+
+### Browser evidence
+
+- Local Aelo verified at `http://localhost:3001` using webpack because native SWC/Turbopack is unavailable.
+- Desktop public page title and content matched Aelo; no console warnings/errors.
+- At 390×844, Menu and Start free were present, no horizontal overflow, and no console warnings/errors.
+- Authenticated tracker correctly redirected to `/login`. No test login was supplied. A request to enable the local developer bypass was rejected by the safety reviewer, so authenticated receipt labels were not browser-tested or bypassed. Their rendering is covered by the passing regression contract.
+
+### Evidence
+
+- `BRAND_MATCHING_CORPUS_VERSION` records the scorer corpus version.
+- New citation JSON keeps `url`, `title`, and `is_own_domain`, then adds provenance, provider, sample ID, raw provider reference, and fetch-validation state.
+- Plain response URLs are `link_mentioned`; only structured provider references become `provider_citation`.
+- Invalid/private references are never fetched and are rendered as non-clickable unverified text in updated receipt views.
+
+### Migration considerations
+
+No schema migration is required because `llm_scans.citations` is JSONB and new fields are additive. Existing rows without provenance are treated as `unverified`; they are excluded from provider-source aggregates but remain visible in receipts and API history.
+
+### Remaining risks
+
+- Existing rows cannot be retroactively promoted to provider citations because their raw provider evidence was not stored.
+- Authenticated receipt UI needs desktop/mobile browser verification with an authorized test login.
+- Current Gemini calls do not enable a search/grounding tool, so they may legitimately return no provider-backed citations even if prose mentions URLs.
+- URL validation is intentionally non-fetching. DNS/redirect validation belongs in the later SSRF-safe fetch batch.
+- The disk has only about 1.1 GiB free after cache cleanup and continues to block production builds.
+- Eight app type errors and 78 app lint errors remain release blockers.
+
+### Commit hash
+
+Pending Batch 1D commit; will be recorded in the next progress update.

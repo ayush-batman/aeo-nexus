@@ -1,6 +1,7 @@
 import { scanLLM, getAvailablePlatforms, type LLMPlatform } from '@/lib/ai/llm-scanner';
 import { getEntitlements } from '@/lib/entitlements';
 import { withKey, getWorkspaceBrand } from '@/lib/api-v1';
+import type { CitationEvidence } from '@/lib/types';
 
 export const maxDuration = 60;
 
@@ -8,8 +9,8 @@ interface EngineAgg {
   mentions: number;
   positions: number[];
   sentiments: string[];
-  citations: Array<{ url: string; title: string; is_own_domain: boolean }>;
-  evidence: Array<{ sample: number; mentioned: boolean; position: number | null; sentiment: string | null; snippet: string }>;
+  citations: CitationEvidence[];
+  evidence: Array<{ sample: number; sampleId: string; mentioned: boolean; position: number | null; sentiment: string | null; snippet: string }>;
 }
 
 function mode(arr: string[]): string | null {
@@ -20,12 +21,16 @@ function mode(arr: string[]): string | null {
 }
 
 function dedupeCitations(cites: EngineAgg['citations']): EngineAgg['citations'] {
-  const seen = new Set<string>();
   const out: EngineAgg['citations'] = [];
+  const indexByUrl = new Map<string, number>();
   for (const c of cites) {
-    if (c && typeof c.url === 'string' && !seen.has(c.url)) {
-      seen.add(c.url);
+    if (!c || typeof c.url !== 'string') continue;
+    const existingIndex = indexByUrl.get(c.url);
+    if (existingIndex === undefined) {
+      indexByUrl.set(c.url, out.length);
       out.push(c);
+    } else if (out[existingIndex].provenance !== 'provider_citation' && c.provenance === 'provider_citation') {
+      out[existingIndex] = c;
     }
   }
   return out;
@@ -74,6 +79,7 @@ export async function POST(request: Request) {
         if (Array.isArray(r.citations)) a.citations.push(...r.citations);
         a.evidence.push({
           sample: i + 1,
+          sampleId: r.sampleId,
           mentioned: r.brandMentioned,
           position: r.mentionPosition,
           sentiment: r.sentiment,

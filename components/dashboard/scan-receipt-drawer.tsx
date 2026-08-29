@@ -16,7 +16,13 @@ interface Scan {
     mention_position:      number | null;
     sentiment:             'positive' | 'neutral' | 'negative' | null;
     competitors_mentioned: string[] | null;
-    citations:             { url: string; title: string; is_own_domain: boolean }[] | null;
+    citations:             Array<{
+        url: string;
+        title: string;
+        is_own_domain: boolean;
+        provenance?: 'provider_citation' | 'link_mentioned' | 'unverified';
+        fetch_validation?: 'not_checked' | 'valid' | 'invalid' | 'blocked';
+    }> | null;
     created_at:            string;
 }
 
@@ -240,26 +246,42 @@ function ScanRow({ scan, expanded, onToggle }: { scan: Scan; expanded: boolean; 
                     {(scan.citations?.length ?? 0) > 0 && (
                         <div>
                             <div className="text-[10px] font-mono uppercase tracking-[0.14em] text-[var(--text-tertiary)] mb-1">
-                                Citations ({scan.citations!.length})
+                                Evidence links ({scan.citations!.length})
                             </div>
                             <div className="space-y-1">
-                                {scan.citations!.slice(0, 8).map((c, i) => (
-                                    <a
-                                        key={i}
-                                        href={c.url}
-                                        target="_blank"
-                                        rel="noreferrer"
+                                {scan.citations!.slice(0, 8).map((c, i) => {
+                                    const unsafe = c.fetch_validation === 'invalid' || c.fetch_validation === 'blocked';
+                                    const label = c.provenance === 'provider_citation'
+                                        ? 'Provider citation'
+                                        : c.provenance === 'link_mentioned'
+                                            ? 'Link mentioned'
+                                            : 'Unverified legacy link';
+                                    const content = <>
+                                        <span className="truncate">{c.title || c.url}</span>
+                                        <span className="shrink-0 text-[9px] uppercase tracking-wide text-[var(--text-tertiary)]">{label}</span>
+                                        {!unsafe && <ExternalLink className="w-2.5 h-2.5 flex-shrink-0" />}
+                                    </>;
+                                    return unsafe ? (
+                                        <div key={i} className="flex items-center gap-2 text-[12px] font-mono text-[var(--text-tertiary)]">
+                                            {content}
+                                        </div>
+                                    ) : (
+                                        <a
+                                            key={i}
+                                            href={c.url}
+                                            target="_blank"
+                                            rel="noreferrer"
                                         className={cn(
                                             "flex items-center gap-2 text-[12px] font-mono",
                                             c.is_own_domain
                                                 ? "text-[var(--data-green)]"
                                                 : "text-[var(--text-secondary)] hover:text-[var(--text-primary)]",
                                         )}
-                                    >
-                                        <span className="truncate">{c.title || c.url}</span>
-                                        <ExternalLink className="w-2.5 h-2.5 flex-shrink-0" />
-                                    </a>
-                                ))}
+                                        >
+                                            {content}
+                                        </a>
+                                    );
+                                })}
                             </div>
                         </div>
                     )}

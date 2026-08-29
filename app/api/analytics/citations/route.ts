@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { getCurrentWorkspaceId } from '@/lib/data-access';
 
@@ -60,12 +60,7 @@ function classifyUrl(url: string): { type: string; label: string } {
     return { type: 'other', label: 'Other' };
 }
 
-const ALL_SOURCE_TYPES = [
-    'youtube', 'reddit', 'quora', 'tier1_affiliate', 'review_site',
-    'tech_media', 'blog', 'news', 'github', 'docs', 'wikipedia', 'other',
-];
-
-export async function GET(request: NextRequest) {
+export async function GET() {
     try {
         const workspaceId = await getCurrentWorkspaceId();
         if (!workspaceId) {
@@ -95,11 +90,17 @@ export async function GET(request: NextRequest) {
         let ownDomainCitations = 0;
 
         for (const scan of (scans || [])) {
-            const citations = scan.citations as Array<{ url: string; title?: string; is_own_domain?: boolean }> | null;
+            const citations = scan.citations as Array<{
+                url: string;
+                title?: string;
+                is_own_domain?: boolean;
+                provenance?: string;
+            }> | null;
             if (!citations || !Array.isArray(citations)) continue;
 
             for (const cit of citations) {
                 if (!cit.url) continue;
+                if (cit.provenance !== 'provider_citation') continue;
                 totalCitations++;
 
                 if (cit.is_own_domain) {

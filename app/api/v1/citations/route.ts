@@ -1,7 +1,7 @@
 import { withKey } from '@/lib/api-v1';
 
-// GET /api/v1/citations?window=30d&citesYou=&limit=50  — the actual URLs
-// engines pulled from, the receipts. (list_citations)
+// GET /api/v1/citations?window=30d&citesYou=&limit=50 — citation/link receipts
+// with provenance. Only provider_citation means the provider supplied it.
 function domainOf(url: string): string {
   try {
     return new URL(url).hostname.replace(/^www\./, '');
@@ -27,7 +27,11 @@ export async function GET(request: Request) {
       .gte('created_at', since)
       .limit(500);
 
-    const out: Array<{ url: string; domain: string; title: string; citesYou: boolean; engine: string; prompt: string }> = [];
+    const out: Array<{
+      url: string; domain: string; title: string; citesYou: boolean;
+      engine: string; prompt: string; provenance: string; sampleId: string | null;
+      fetchValidation: string;
+    }> = [];
     for (const r of data || []) {
       const cites = Array.isArray(r.citations) ? r.citations : [];
       for (const c of cites) {
@@ -35,7 +39,17 @@ export async function GET(request: Request) {
         // Records vary: newer scans store is_own_domain, older ones isOwnDomain.
         const isOwn = Boolean(c.is_own_domain ?? c.isOwnDomain);
         if (citesYou !== undefined && isOwn !== citesYou) continue;
-        out.push({ url: c.url, domain: domainOf(c.url), title: c.title || '', citesYou: isOwn, engine: r.platform, prompt: r.prompt });
+        out.push({
+          url: c.url,
+          domain: domainOf(c.url),
+          title: c.title || '',
+          citesYou: isOwn,
+          engine: r.platform,
+          prompt: r.prompt,
+          provenance: typeof c.provenance === 'string' ? c.provenance : 'unverified',
+          sampleId: typeof c.sample_id === 'string' ? c.sample_id : null,
+          fetchValidation: typeof c.fetch_validation === 'string' ? c.fetch_validation : 'not_checked',
+        });
       }
     }
     return { window: w, count: out.length, citations: out.slice(0, limit) };

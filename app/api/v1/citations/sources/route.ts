@@ -26,6 +26,7 @@ export async function GET(request: Request) {
       const cites = Array.isArray(r.citations) ? r.citations : [];
       for (const c of cites) {
         if (!c || typeof c.url !== 'string') continue;
+        if (c.provenance !== 'provider_citation') continue;
         const d = domainOf(c.url);
         const rec = domains[d] || (domains[d] = { citations: 0, citesYou: false });
         rec.citations++;
@@ -40,7 +41,7 @@ export async function GET(request: Request) {
       .slice(0, limit);
 
     return {
-      note: 'The domains AI reads to answer your category, most-cited first. The ones marked isYou:false and near the top are where to earn a mention next. Aelo shows you where to earn a citation; it does not sell you one.',
+      note: 'Provider-backed citation domains for your category, most-cited first. Links merely mentioned in generated prose and unverified legacy rows are excluded.',
       sources,
     };
   });

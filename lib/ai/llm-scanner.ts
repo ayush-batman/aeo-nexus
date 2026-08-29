@@ -1,7 +1,15 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
-import OpenAI from 'openai';
-import { analyzeWithAI, findBrandMentions, findListPosition, parseListItems } from './ai-analyzer';
+import { randomUUID } from 'node:crypto';
+import { analyzeWithAI, findBrandMentions } from './ai-analyzer';
+import {
+    collectCitationEvidence,
+    extractAnthropicCitationReferences,
+    extractGeminiCitationReferences,
+    extractOpenAICitationReferences,
+    extractPerplexityCitationReferences,
+} from './citation-provenance';
 import { getOpenAIClient, isOpenAIProviderAvailable } from './openai-client';
+import type { CitationEvidence } from '@/lib/types';
 
 export type LLMPlatform = 'chatgpt' | 'perplexity' | 'claude' | 'gemini' | 'google_ai' | 'google_ai_overview' | 'bing_copilot' | 'mock';
 
@@ -17,10 +25,9 @@ export interface ScanResult {
     sentimentReason: string;
     competitorsMentioned: string[];
     competitorPositions: { name: string; position: number | null; sentiment: string }[];
-    // snake_case for is_own_domain so the shape matches how this object is
-    // persisted into llm_scans.citations (jsonb) and read by all downstream
-    // consumers (alerts, analytics, dashboard, llm-tracker).
-    citations: { url: string; title: string; is_own_domain: boolean }[];
+    // Legacy keys remain on CitationEvidence for existing JSONB/API consumers.
+    citations: CitationEvidence[];
+    sampleId: string;
     listItems: string[];
     confidence: number;
     timestamp: string;
@@ -40,31 +47,13 @@ export interface BattleResult extends ScanResult {
     winnerReason: string;
 }
 
-// Extract citations from response (URLs)
-function extractCitations(response: string, brandDomain?: string): ScanResult['citations'] {
-    const urlPattern = /https?:\/\/[^\s)>\]]+/g;
-    const urls = response.match(urlPattern) || [];
-
-    return urls.map(url => {
-        try {
-            const domain = new URL(url).hostname;
-            return {
-                url,
-                title: domain,
-                is_own_domain: brandDomain ? domain.includes(brandDomain) : false,
-            };
-        } catch {
-            return {
-                url,
-                title: url,
-                is_own_domain: false,
-            };
-        }
-    });
+interface ProviderScanResponse {
+    text: string;
+    providerCitations: unknown[];
 }
 
 // Scan with Gemini
-async function scanWithGemini(prompt: string): Promise<string> {
+async function scanWithGemini(prompt: string): Promise<ProviderScanResponse> {
     const apiKey = process.env.GOOGLE_API_KEY || process.env.GEMINI_API_KEY;
     if (!apiKey) throw new Error('GOOGLE_API_KEY not configured');
 
@@ -72,35 +61,39 @@ async function scanWithGemini(prompt: string): Promise<string> {
     const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
 
     const result = await model.generateContent(prompt);
-    return result.response.text();
+    return {
+        text: result.response.text(),
+        providerCitations: extractGeminiCitationReferences(result.response),
+    };
 }
 
 // Scan with OpenAI (ChatGPT), routes through Azure OpenAI when
 // AZURE_OPENAI_API_KEY + AZURE_OPENAI_ENDPOINT are set (Founders Hub),
 // falls back to direct OpenAI when only OPENAI_API_KEY is set.
-async function scanWithOpenAI(prompt: string): Promise<string> {
+async function scanWithOpenAI(prompt: string): Promise<ProviderScanResponse> {
     const { client, model } = getOpenAIClient('default');
 
     const isReasoning = /^gpt-5|^o[0-9]/.test(model);
-    const params: Record<string, unknown> = {
+    const baseParams = {
         model,
-        messages: [{ role: 'user', content: prompt }],
+        messages: [{ role: 'user' as const, content: prompt }],
     };
-    if (isReasoning) {
-        params.max_completion_tokens = 4000;
-        params.reasoning_effort = 'minimal';
-    } else {
-        params.max_tokens = 1024;
-    }
-    const completion = await client.chat.completions.create(
-        params as Parameters<typeof client.chat.completions.create>[0] & { stream?: false }
-    );
+    const completion = isReasoning
+        ? await client.chat.completions.create({
+            ...baseParams,
+            max_completion_tokens: 4000,
+            reasoning_effort: 'minimal',
+        })
+        : await client.chat.completions.create({ ...baseParams, max_tokens: 1024 });
 
-    return completion.choices[0]?.message?.content || '';
+    return {
+        text: completion.choices[0]?.message?.content || '',
+        providerCitations: extractOpenAICitationReferences(completion),
+    };
 }
 
 // Scan with Claude (Anthropic)
-async function scanWithClaude(prompt: string): Promise<string> {
+async function scanWithClaude(prompt: string): Promise<ProviderScanResponse> {
     const apiKey = process.env.ANTHROPIC_API_KEY;
     if (!apiKey) throw new Error('ANTHROPIC_API_KEY not configured');
 
@@ -125,12 +118,15 @@ async function scanWithClaude(prompt: string): Promise<string> {
         throw new Error(`Claude API error: ${response.statusText} - ${errorText}`);
     }
 
-    const data = await response.json();
-    return data.content?.[0]?.text || '';
+    const data = await response.json() as { content?: Array<{ text?: string }> };
+    return {
+        text: data.content?.map((block) => block.text || '').join('') || '',
+        providerCitations: extractAnthropicCitationReferences(data),
+    };
 }
 
 // Scan with Perplexity
-async function scanWithPerplexity(prompt: string): Promise<string> {
+async function scanWithPerplexity(prompt: string): Promise<ProviderScanResponse> {
     const apiKey = process.env.PERPLEXITY_API_KEY;
     if (!apiKey) throw new Error('PERPLEXITY_API_KEY not configured');
 
@@ -150,8 +146,15 @@ async function scanWithPerplexity(prompt: string): Promise<string> {
         throw new Error(`Perplexity API error: ${response.statusText}`);
     }
 
-    const data = await response.json();
-    return data.choices?.[0]?.message?.content || '';
+    const data = await response.json() as {
+        choices?: Array<{ message?: { content?: string } }>;
+        citations?: unknown[];
+        search_results?: unknown[];
+    };
+    return {
+        text: data.choices?.[0]?.message?.content || '',
+        providerCitations: extractPerplexityCitationReferences(data),
+    };
 }
 
 async function scanWithMock(prompt: string): Promise<string> {
@@ -201,7 +204,7 @@ Sources:
 
 // Scan simulating Google AI Overview
 // Uses Gemini with a system prompt that mimics how Google generates AI Overviews
-async function scanWithGoogleAIOverview(prompt: string): Promise<string> {
+async function scanWithGoogleAIOverview(prompt: string): Promise<ProviderScanResponse> {
     const apiKey = process.env.GOOGLE_API_KEY || process.env.GEMINI_API_KEY;
     if (!apiKey) throw new Error('GOOGLE_API_KEY not configured');
 
@@ -222,7 +225,10 @@ Search query: "${prompt}"
 Provide the AI Overview response:`;
 
     const result = await model.generateContent(systemPrompt);
-    return result.response.text();
+    return {
+        text: result.response.text(),
+        providerCitations: extractGeminiCitationReferences(result.response),
+    };
 }
 
 export interface ScanOutput {
@@ -238,32 +244,34 @@ export async function scanLLM(options: ScanOptions): Promise<ScanOutput> {
 
     for (const platform of platforms) {
         try {
-            let response = '';
+            let providerResult: ProviderScanResponse;
 
             switch (platform) {
                 case 'gemini':
                 case 'google_ai':
-                    response = await scanWithGemini(prompt);
+                    providerResult = await scanWithGemini(prompt);
                     break;
                 case 'chatgpt':
-                    response = await scanWithOpenAI(prompt);
+                    providerResult = await scanWithOpenAI(prompt);
                     break;
                 case 'claude':
-                    response = await scanWithClaude(prompt);
+                    providerResult = await scanWithClaude(prompt);
                     break;
                 case 'perplexity':
-                    response = await scanWithPerplexity(prompt);
+                    providerResult = await scanWithPerplexity(prompt);
                     break;
                 case 'google_ai_overview':
-                    response = await scanWithGoogleAIOverview(prompt);
+                    providerResult = await scanWithGoogleAIOverview(prompt);
                     break;
                 case 'mock':
-                    response = await scanWithMock(prompt);
+                    providerResult = { text: await scanWithMock(prompt), providerCitations: [] };
                     break;
                 default:
                     console.log(`Platform ${platform} not yet implemented`);
                     continue;
             }
+            const response = providerResult.text;
+            const sampleId = randomUUID();
 
             // Use AI-powered analysis
             const analysis = await analyzeWithAI({
@@ -273,7 +281,13 @@ export async function scanLLM(options: ScanOptions): Promise<ScanOutput> {
                 brandDomain,
             });
 
-            const citations = extractCitations(response, brandDomain);
+            const citations = collectCitationEvidence({
+                text: response,
+                providerCitations: providerResult.providerCitations,
+                provider: platform,
+                sampleId,
+                brandDomain,
+            });
 
             const scanResult: ScanResult = {
                 platform,
@@ -290,6 +304,7 @@ export async function scanLLM(options: ScanOptions): Promise<ScanOutput> {
                     .map(c => c.name),
                 competitorPositions: analysis.competitorPositions,
                 citations,
+                sampleId,
                 listItems: analysis.listItems,
                 confidence: analysis.confidence,
                 timestamp: new Date().toISOString(),
@@ -308,8 +323,8 @@ export async function scanLLM(options: ScanOptions): Promise<ScanOutput> {
 
                 // 2. If lists didn't work (both 999), check raw text index
                 if (myPos === 999 && compPos === 999 && compName) {
-                    const myIndex = response.toLowerCase().indexOf(brandName.toLowerCase());
-                    const compIndex = response.toLowerCase().indexOf(compName.toLowerCase());
+                    const myIndex = findBrandMentions(response, brandName, brandDomain).positions[0] ?? -1;
+                    const compIndex = findBrandMentions(response, compName).positions[0] ?? -1;
                     
                     if (myIndex !== -1) myPos = myIndex;
                     if (compIndex !== -1) compPos = compIndex;

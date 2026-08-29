@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect } from "react";
 import { UpgradeModal, isPlanGate } from '@/components/billing/upgrade-modal';
 import { Header } from "@/components/dashboard/header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -23,7 +23,6 @@ import {
     Minus,
     RefreshCw,
     Eye,
-    MessageSquare,
     AlertCircle,
     Radio,
     Link2,
@@ -59,7 +58,13 @@ interface LLMScan {
     mention_position: number | null;
     sentiment: 'positive' | 'neutral' | 'negative' | null;
     competitors_mentioned: string[];
-    citations: { url: string; title: string; is_own_domain: boolean }[] | null;
+    citations: Array<{
+        url: string;
+        title: string;
+        is_own_domain: boolean;
+        provenance?: 'provider_citation' | 'link_mentioned' | 'unverified';
+        fetch_validation?: 'not_checked' | 'valid' | 'invalid' | 'blocked';
+    }> | null;
     created_at: string;
 }
 
@@ -68,6 +73,17 @@ interface PlatformVisibility {
     score: number;
     change: number;
     scanCount: number;
+}
+
+interface WorkspaceSummary {
+    id: string;
+    name?: string;
+    settings?: { competitors?: string[] };
+}
+
+interface PlatformError {
+    platform: string;
+    error: string;
 }
 
 export default function LLMTrackerPage() {
@@ -134,8 +150,8 @@ export default function LLMTrackerPage() {
             let activeId = null;
             if (activeRes.ok) activeId = (await activeRes.json()).workspaceId;
             if (wsRes.ok && activeId) {
-                const data = await wsRes.json();
-                const activeWs = data.workspaces?.find((ws: any) => ws.id === activeId);
+                const data = await wsRes.json() as { workspaces?: WorkspaceSummary[] };
+                const activeWs = data.workspaces?.find((ws) => ws.id === activeId);
                 if (activeWs) {
                     if (activeWs.name) setBrandName(activeWs.name);
                     if (activeWs.settings?.competitors) setCompetitors(activeWs.settings.competitors);
@@ -200,7 +216,11 @@ export default function LLMTrackerPage() {
                 }),
             });
 
-            const data = await response.json();
+            const data = await response.json() as {
+                message?: string;
+                error?: string;
+                platformErrors?: PlatformError[];
+            };
 
             if (!response.ok) {
                 // Plan gate: show the human message with an upgrade nudge, not the raw code.
@@ -210,14 +230,14 @@ export default function LLMTrackerPage() {
                     return;
                 }
                 const errMsg = data.platformErrors
-                    ? `Some platforms failed: ${data.platformErrors.map((e: any) => `${e.platform} (${e.error})`).join(', ')}`
+                    ? `Some platforms failed: ${data.platformErrors.map((e) => `${e.platform} (${e.error})`).join(', ')}`
                     : data.message || data.error || 'Scan failed';
                 throw new Error(errMsg);
             }
 
             // Show partial failures as warnings
             if (data.platformErrors && data.platformErrors.length > 0) {
-                setScanError(`Partial success, ${data.platformErrors.map((e: any) => `${e.platform} failed`).join(', ')}`);
+                setScanError(`Partial success, ${data.platformErrors.map((e) => `${e.platform} failed`).join(', ')}`);
             }
 
             setNewPrompt("");
@@ -256,7 +276,7 @@ export default function LLMTrackerPage() {
                 mentionPosition: null as number | null,
                 sentiment: null as string | null,
                 competitors: [] as string[],
-                citations: [] as { url: string; title: string; is_own_domain: boolean }[],
+                citations: [] as NonNullable<LLMScan['citations']>,
                 scannedAt: scan.created_at,
             };
         }
@@ -283,7 +303,7 @@ export default function LLMTrackerPage() {
             }
         }
         return acc;
-    }, {} as Record<string, { prompt: string; platforms: string[]; brandMentioned: boolean; mentionPosition: number | null; sentiment: string | null; competitors: string[]; citations: { url: string; title: string; is_own_domain: boolean }[]; scannedAt: string }>);
+    }, {} as Record<string, { prompt: string; platforms: string[]; brandMentioned: boolean; mentionPosition: number | null; sentiment: string | null; competitors: string[]; citations: NonNullable<LLMScan['citations']>; scannedAt: string }>);
 
     const scanGroups = Object.values(groupedScans).slice(0, 10);
 
@@ -302,6 +322,11 @@ export default function LLMTrackerPage() {
             />
 
             <div className="p-6">
+                {error && (
+                    <div className="mb-4 rounded-md border border-[var(--data-red)]/30 bg-[var(--data-red-muted)] px-4 py-3 text-sm text-[var(--data-red)]">
+                        {error}
+                    </div>
+                )}
                 <Tabs defaultValue="manual" className="space-y-6">
                     <div className="flex items-center justify-between">
                         <TabsList className="bg-[var(--bg-raised)] border-[var(--border-default)]">
@@ -551,7 +576,7 @@ export default function LLMTrackerPage() {
                                                         <div className="flex items-center gap-2 mb-2">
                                                             <Bot className="w-4 h-4 text-[var(--text-ghost)]" />
                                                             <p className="font-medium text-[var(--text-primary)] truncate">
-                                                                "{scan.prompt}"
+                                                                &ldquo;{scan.prompt}&rdquo;
                                                             </p>
                                                         </div>
 
@@ -634,23 +659,36 @@ export default function LLMTrackerPage() {
                                                         {scan.citations.length > 0 && (
                                                             <div>
                                                                 <p className="text-xs font-medium text-[var(--text-secondary)] mb-2 flex items-center gap-1">
-                                                                    <Link2 className="w-3 h-3" /> Cited Sources
+                                                                    <Link2 className="w-3 h-3" /> Evidence links
                                                                 </p>
                                                                 <div className="space-y-1">
                                                                     {scan.citations.map((citation, ci) => (
                                                                         <div key={ci} className="flex items-center gap-2 text-xs">
                                                                             <Globe className="w-3 h-3 text-[var(--text-ghost)] flex-shrink-0" />
-                                                                            <a
-                                                                                href={citation.url}
-                                                                                target="_blank"
-                                                                                rel="noopener noreferrer"
-                                                                                className="text-[var(--accent-base)] hover:text-[var(--accent-base)] truncate"
-                                                                            >
-                                                                                {citation.title || citation.url}
-                                                                            </a>
+                                                                            {citation.fetch_validation === 'invalid' || citation.fetch_validation === 'blocked' ? (
+                                                                                <span className="text-[var(--text-tertiary)] truncate">
+                                                                                    {citation.title || citation.url}
+                                                                                </span>
+                                                                            ) : (
+                                                                                <a
+                                                                                    href={citation.url}
+                                                                                    target="_blank"
+                                                                                    rel="noopener noreferrer"
+                                                                                    className="text-[var(--accent-base)] hover:text-[var(--accent-base)] truncate"
+                                                                                >
+                                                                                    {citation.title || citation.url}
+                                                                                </a>
+                                                                            )}
                                                                             {citation.is_own_domain && (
                                                                                 <Badge variant="default" className="text-[10px] px-1.5 py-0">Your Site</Badge>
                                                                             )}
+                                                                            <Badge variant="outline" className="text-[10px] px-1.5 py-0">
+                                                                                {citation.provenance === 'provider_citation'
+                                                                                    ? 'Provider citation'
+                                                                                    : citation.provenance === 'link_mentioned'
+                                                                                        ? 'Link mentioned'
+                                                                                        : 'Unverified'}
+                                                                            </Badge>
                                                                         </div>
                                                                     ))}
                                                                 </div>
@@ -797,7 +835,7 @@ export default function LLMTrackerPage() {
                                                             <RefreshCw className="w-4 h-4" />
                                                         </Button>
                                                     </div>
-                                                    <p className="text-sm text-[var(--text-secondary)] mb-1 line-clamp-2">"{item.prompt}"</p>
+                                                    <p className="text-sm text-[var(--text-secondary)] mb-1 line-clamp-2">&ldquo;{item.prompt}&rdquo;</p>
                                                     <p className="text-xs text-[var(--text-ghost)]">
                                                         Last scan: {formatDistanceToNow(new Date(item.scannedAt), { addSuffix: true })}
                                                     </p>

@@ -1,4 +1,5 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
+import { matchesBrand, normalizeBrandHostname } from './brand-matching';
 
 export interface AnalysisResult {
     brandMentioned: boolean;
@@ -20,38 +21,15 @@ interface AIAnalysisInput {
 }
 
 /**
- * Generate brand name variations for fuzzy matching
+ * Build explicit aliases only. We intentionally do not generate deletion or
+ * substring variants because those corrupt visibility scores.
  */
 export function generateBrandVariants(brandName: string, brandDomain?: string): string[] {
     const variants = new Set<string>();
-
-    // Original
-    variants.add(brandName);
-    variants.add(brandName.toLowerCase());
-    variants.add(brandName.toUpperCase());
-
-    // CamelCase variations
-    variants.add(brandName.charAt(0).toUpperCase() + brandName.slice(1).toLowerCase());
-
-    // With/without spaces
-    const noSpaces = brandName.replace(/\s+/g, '');
-    variants.add(noSpaces);
-    variants.add(noSpaces.toLowerCase());
-
-    // Domain variations
-    if (brandDomain) {
-        variants.add(brandDomain);
-        variants.add(brandDomain.replace('www.', ''));
-        variants.add(brandDomain.replace('.com', '').replace('.in', '').replace('.co', ''));
-    }
-
-    // Common misspellings (single character variations)
-    const common = brandName.toLowerCase();
-    for (let i = 0; i < common.length; i++) {
-        // Missing character
-        variants.add(common.slice(0, i) + common.slice(i + 1));
-    }
-
+    const name = brandName.trim();
+    if (name) variants.add(name);
+    const hostname = normalizeBrandHostname(brandDomain);
+    if (hostname) variants.add(hostname);
     return Array.from(variants);
 }
 
@@ -63,27 +41,12 @@ export function findBrandMentions(
     brandName: string,
     brandDomain?: string
 ): { found: boolean; variants: string[]; positions: number[] } {
-    const variants = generateBrandVariants(brandName, brandDomain);
-    const lowerResponse = response.toLowerCase();
-    const foundVariants: string[] = [];
-    const positions: number[] = [];
-
-    for (const variant of variants) {
-        const lowerVariant = variant.toLowerCase();
-        let index = lowerResponse.indexOf(lowerVariant);
-        while (index !== -1) {
-            if (!foundVariants.includes(variant)) {
-                foundVariants.push(variant);
-            }
-            positions.push(index);
-            index = lowerResponse.indexOf(lowerVariant, index + 1);
-        }
-    }
+    const match = matchesBrand(response, generateBrandVariants(brandName, brandDomain));
 
     return {
-        found: foundVariants.length > 0,
-        variants: foundVariants,
-        positions: positions.sort((a, b) => a - b),
+        found: match.matched,
+        variants: match.aliases,
+        positions: match.positions,
     };
 }
 
@@ -130,14 +93,9 @@ export function findListPosition(
     const items = parseListItems(response);
     if (items.length === 0) return null;
 
-    const variants = generateBrandVariants(brandName, brandDomain);
-
     for (let i = 0; i < items.length; i++) {
-        const lowerItem = items[i].toLowerCase();
-        for (const variant of variants) {
-            if (lowerItem.includes(variant.toLowerCase())) {
-                return i + 1; // 1-indexed position
-            }
+        if (matchesBrand(items[i], generateBrandVariants(brandName, brandDomain)).matched) {
+            return i + 1; // 1-indexed position
         }
     }
 
@@ -157,7 +115,6 @@ export async function analyzeWithAI(input: AIAnalysisInput): Promise<AnalysisRes
 
     // Find competitor positions
     const competitorPositions = competitors.map(comp => {
-        const compMentions = findBrandMentions(response, comp);
         const compPosition = findListPosition(response, comp);
         return {
             name: comp,

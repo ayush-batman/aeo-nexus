@@ -87,6 +87,22 @@ export interface Citation {
     url: string;
     title: string;
     is_own_domain: boolean;
+    provenance?: CitationProvenance;
+    provider?: string;
+    sample_id?: string;
+    raw_provider_reference?: unknown;
+    fetch_validation?: CitationFetchValidation;
+}
+
+export type CitationProvenance = 'provider_citation' | 'link_mentioned' | 'unverified';
+export type CitationFetchValidation = 'not_checked' | 'valid' | 'invalid' | 'blocked';
+
+export interface CitationEvidence extends Citation {
+    provenance: CitationProvenance;
+    provider: string;
+    sample_id: string;
+    raw_provider_reference: unknown;
+    fetch_validation: CitationFetchValidation;
 }
 
 // Forum Types

@@ -7,7 +7,13 @@ import { createAdminClient } from '@/lib/supabase/admin';
 // their answers *for their category*, not everyone's, the Sage improvement
 // over generic 'go post on Reddit' advice.
 
-type Citation = { url: string; title: string; isOwnDomain?: boolean };
+type Citation = {
+    url: string;
+    title: string;
+    isOwnDomain?: boolean;
+    is_own_domain?: boolean;
+    provenance?: string;
+};
 type ScanRow  = { platform: string; citations: Citation[] | null; created_at: string };
 
 interface SourceRow {
@@ -138,7 +144,9 @@ export async function GET() {
     }
 
     const rows = (scans ?? []) as ScanRow[];
-    const totalScansWithCites = rows.filter(r => (r.citations?.length ?? 0) > 0).length;
+    const totalScansWithCites = rows.filter(r =>
+        r.citations?.some(citation => citation.provenance === 'provider_citation'),
+    ).length;
 
     // Aggregate.
     const byDomain = new Map<string, {
@@ -155,6 +163,7 @@ export async function GET() {
         const cites = scan.citations ?? [];
         const dedupedForThisScan = new Set<string>();
         for (const c of cites) {
+            if (c.provenance !== 'provider_citation') continue;
             const domain = normalizeDomain(c.url);
             if (!domain) continue;
             let entry = byDomain.get(domain);
@@ -179,7 +188,7 @@ export async function GET() {
             const sub = extractSubSource(domain, c.url);
             if (sub) entry.subs.set(sub, (entry.subs.get(sub) ?? 0) + 1);
             if (entry.examples.size < 3) entry.examples.add(c.url);
-            if (c.isOwnDomain) entry.isOwnDomain = true;
+            if (c.is_own_domain ?? c.isOwnDomain) entry.isOwnDomain = true;
         }
     });
 
