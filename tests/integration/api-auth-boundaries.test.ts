@@ -75,12 +75,28 @@ test('service-role mutation routes enforce owner or admin role', async () => {
   }
 });
 
-test('new workspace activation also uses a canonical four-sample measurement', async () => {
-  const route = await source('app/api/workspaces/route.ts');
-  assert.match(route, /runVisibilityMeasurement/);
-  assert.match(route, /samples: 4/);
-  assert.match(route, /reserveScanQuota/);
-  assert.doesNotMatch(route, /scanLLM\(/);
+test('new workspace activation is atomically queued instead of awaited in the request', async () => {
+  const [route, worker, jobs, migration, vercel] = await Promise.all([
+    source('app/api/workspaces/route.ts'),
+    source('app/api/cron/process-measurement-jobs/route.ts'),
+    source('lib/measurement/jobs.ts'),
+    source('supabase/migrations/036_activation_jobs.sql'),
+    source('vercel.json'),
+  ]);
+  assert.match(route, /measurementStatus:\s*'queued'/);
+  assert.match(route, /create_workspace_with_plan_limit/);
+  assert.doesNotMatch(route, /runVisibilityMeasurement|reserveScanQuota|getAvailablePlatforms/);
+  assert.match(migration, /CREATE TABLE IF NOT EXISTS public\.measurement_jobs/i);
+  assert.match(migration, /UNIQUE\s*\(workspace_id, purpose\)/i);
+  assert.match(migration, /INSERT INTO public\.measurement_jobs/i);
+  assert.match(migration, /FOR UPDATE SKIP LOCKED/i);
+  assert.match(jobs, /claim_measurement_jobs/);
+  assert.match(jobs, /finish_measurement_job/);
+  assert.match(worker, /runVisibilityMeasurement/);
+  assert.match(worker, /samples:\s*4/);
+  assert.match(worker, /reserveScanQuota/);
+  assert.match(worker, /cron_not_configured/);
+  assert.match(vercel, /process-measurement-jobs/);
 });
 
 test('workspace brand limits are enforced under an organization lock', async () => {
