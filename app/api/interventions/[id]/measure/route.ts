@@ -139,36 +139,26 @@ export async function POST(
     const summary = compareVisibilitySnapshots(interv.baseline_snapshot ?? {}, impactSnapshot);
 
     // 5. Persist
-    const { data: updated, error: updErr } = await db
-        .from('interventions')
-        .update({
+    const changes = {
             impact_snapshot: impactSnapshot,
             impact_summary: summary,
             status: 'measured',
-        })
-        .eq('id', id)
-        .select()
-        .single();
-
-    if (updErr) {
+    };
+    const { data, error: updErr } = await db.rpc('update_action_with_event', {
+        p_workspace_id: context.workspaceId,
+        p_action_id: id,
+        p_actor_id: context.userId,
+        p_changes: changes,
+        p_event_type: 'measured',
+        p_from_status: interv.status,
+        p_to_status: 'measured',
+        p_idempotency_key: `measured:${requestKey}`,
+    });
+    const result = data as { status?: 'updated' | 'duplicate' | 'not_found'; action?: Record<string, unknown> } | null;
+    if (updErr || !result?.action) {
         console.error('[interventions/measure] update failed:', updErr);
-        return NextResponse.json({ error: 'Failed to save impact' }, { status: 500 });
+        return NextResponse.json({ error: 'Failed to save impact' }, { status: result?.status === 'not_found' ? 404 : 500 });
     }
 
-    const { error: eventError } = await db.from('action_events').upsert({
-        action_id: id,
-        workspace_id: context.workspaceId,
-        actor_id: context.userId,
-        event_type: 'measured',
-        from_status: interv.status,
-        to_status: 'measured',
-        changes: { impact_summary: summary },
-        idempotency_key: `measured:${requestKey}`,
-    }, { onConflict: 'action_id,idempotency_key', ignoreDuplicates: true });
-    if (eventError) {
-        console.error('[interventions/measure-event] insert failed:', eventError);
-        return NextResponse.json({ error: 'Measurement was saved, but its audit event failed. Retry safely.' }, { status: 500 });
-    }
-
-    return NextResponse.json({ intervention: updated, summary, successfulSamples, failedSamples });
+    return NextResponse.json({ intervention: result.action, summary, successfulSamples, failedSamples });
 }

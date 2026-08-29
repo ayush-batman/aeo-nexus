@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { randomUUID } from 'node:crypto';
 import { actionFromInsight, normalizeActionInput } from '@/lib/actions';
 import { requireWorkspaceRole } from '@/lib/authorization';
 import { getCurrentWorkspaceContext } from '@/lib/data-access';
@@ -105,38 +106,28 @@ export async function POST(request: NextRequest) {
     ? await snapshotVisibility(db, context.workspaceId, input.target_prompts)
     : {};
   const insert = {
-    workspace_id: context.workspaceId,
     action_type: type,
     ...input,
     action_taken_at: input.status === 'completed' ? new Date().toISOString() : null,
     baseline_snapshot: baselineSnapshot,
   };
 
-  let { data, error } = await db.from('interventions').insert(insert).select().single();
-  if (error?.code === '23505' && input.insight_key) {
-    const existing = await db.from('interventions').select('*')
-      .eq('workspace_id', context.workspaceId).eq('insight_key', input.insight_key).single();
-    data = existing.data;
-    error = existing.error;
-  }
-  if (error || !data) {
+  const requestKey = request.headers.get('idempotency-key')?.trim().slice(0, 180)
+    || (input.insight_key ? `created:${input.insight_key}` : `created:${randomUUID()}`);
+  const { data, error } = await db.rpc('create_action_with_event', {
+    p_workspace_id: context.workspaceId,
+    p_actor_id: context.userId,
+    p_action: insert,
+    p_idempotency_key: requestKey,
+  });
+  const result = data as { status?: 'created' | 'existing'; action?: Record<string, unknown> } | null;
+  if (error || !result?.action) {
     console.error('[actions/create] db error:', error);
     return NextResponse.json({ error: 'Failed to save action.' }, { status: 500 });
   }
 
-  const { error: eventError } = await db.from('action_events').upsert({
-    action_id: data.id,
-    workspace_id: context.workspaceId,
-    actor_id: context.userId,
-    event_type: 'created',
-    to_status: data.status,
-    changes: { owner_id: data.owner_id, priority: data.priority, insight_key: data.insight_key },
-    idempotency_key: `created:${data.id}`,
-  }, { onConflict: 'action_id,idempotency_key', ignoreDuplicates: true });
-  if (eventError) {
-    console.error('[actions/create-event] db error:', eventError);
-    return NextResponse.json({ error: 'Action saved, but its audit event failed. Retry safely.' }, { status: 500 });
-  }
-
-  return NextResponse.json({ intervention: data }, { status: 201 });
+  return NextResponse.json(
+    { intervention: result.action },
+    { status: result.status === 'existing' ? 200 : 201 },
+  );
 }

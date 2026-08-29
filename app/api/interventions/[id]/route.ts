@@ -73,28 +73,25 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     action_taken_at: completing ? new Date().toISOString() : existing.action_taken_at,
   };
 
-  const { data: updated, error: updateError } = await db.from('interventions').update(changes)
-    .eq('id', id).eq('workspace_id', context.workspaceId).select().single();
-  if (updateError || !updated) {
-    console.error('[actions/update] db error:', updateError);
-    return NextResponse.json({ error: 'Failed to update action.' }, { status: 500 });
-  }
-
   const idempotencyKey = request.headers.get('idempotency-key')?.slice(0, 180) || randomUUID();
-  const { error: eventError } = await db.from('action_events').upsert({
-    action_id: id,
-    workspace_id: context.workspaceId,
-    actor_id: context.userId,
-    event_type: statusChanged ? 'status_changed' : 'updated',
-    from_status: existing.status,
-    to_status: input.status,
-    changes,
-    idempotency_key: idempotencyKey,
-  }, { onConflict: 'action_id,idempotency_key', ignoreDuplicates: true });
-  if (eventError) {
-    console.error('[actions/update-event] db error:', eventError);
-    return NextResponse.json({ error: 'Action updated, but its audit event failed. Retry safely.' }, { status: 500 });
+  const { data, error: updateError } = await db.rpc('update_action_with_event', {
+    p_workspace_id: context.workspaceId,
+    p_action_id: id,
+    p_actor_id: context.userId,
+    p_changes: changes,
+    p_event_type: statusChanged ? 'status_changed' : 'updated',
+    p_from_status: existing.status,
+    p_to_status: input.status,
+    p_idempotency_key: idempotencyKey,
+  });
+  const result = data as { status?: 'updated' | 'duplicate' | 'not_found'; action?: Record<string, unknown> } | null;
+  if (updateError || !result?.action) {
+    console.error('[actions/update] db error:', updateError);
+    return NextResponse.json(
+      { error: result?.status === 'not_found' ? 'Action not found.' : 'Failed to update action.' },
+      { status: result?.status === 'not_found' ? 404 : 500 },
+    );
   }
 
-  return NextResponse.json({ intervention: updated });
+  return NextResponse.json({ intervention: result.action });
 }

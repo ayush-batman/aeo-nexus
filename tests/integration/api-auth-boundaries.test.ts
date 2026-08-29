@@ -83,6 +83,19 @@ test('new workspace activation also uses a canonical four-sample measurement', a
   assert.doesNotMatch(route, /scanLLM\(/);
 });
 
+test('workspace brand limits are enforced under an organization lock', async () => {
+  const [route, sql] = await Promise.all([
+    source('app/api/workspaces/route.ts'),
+    source('supabase/migrations/034_atomic_actions_and_workspace_limits.sql'),
+  ]);
+  assert.match(sql, /CREATE OR REPLACE FUNCTION public\.create_workspace_with_plan_limit/i);
+  assert.match(sql, /FROM public\.organizations[\s\S]*FOR UPDATE/i);
+  assert.match(sql, /COUNT\(\*\)[\s\S]*FROM public\.workspaces/i);
+  assert.match(sql, /GRANT EXECUTE ON FUNCTION public\.create_workspace_with_plan_limit[\s\S]*TO service_role/i);
+  assert.match(route, /\.rpc\(['"]create_workspace_with_plan_limit['"]/);
+  assert.doesNotMatch(route, /select\(['"]\*['"], \{ count: ['"]exact['"]/);
+});
+
 test('MCP preserves measurement and API failure detail', async () => {
   const [server, client] = await Promise.all([
     source('mcp-server/src/index.ts'),

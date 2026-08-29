@@ -43,7 +43,6 @@ export async function POST(request: NextRequest) {
         }
 
         const db = createAdminClient();
-        const profile = { org_id: context.orgId };
         const entitlements = await getEntitlements(context.orgId, db);
 
         const body = await request.json().catch(() => null) as Record<string, unknown> | null;
@@ -61,30 +60,21 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ error: 'Brand name is required' }, { status: 400 });
         }
 
-        // Enforce the server-owned plan limit before using the service role.
-        const { count } = await db
-            .from('workspaces')
-            .select('*', { count: 'exact', head: true })
-            .eq('org_id', profile.org_id);
-
-        if (entitlements.brands !== null && (count || 0) >= entitlements.brands) {
-            return NextResponse.json({ error: `This plan allows ${entitlements.brands} brand workspace(s)` }, { status: 403 });
+        const { data, error } = await db.rpc('create_workspace_with_plan_limit', {
+            p_org_id: context.orgId,
+            p_name: name,
+            p_settings: { website: website || null, competitors },
+        });
+        const result = data as {
+            status?: 'created' | 'denied' | 'organization_not_found';
+            limit?: number;
+            workspace?: { id: string; name: string; settings: Record<string, unknown>; created_at: string };
+        } | null;
+        if (result?.status === 'denied') {
+            return NextResponse.json({ error: `This plan allows ${result.limit} brand workspace(s)` }, { status: 403 });
         }
-
-        const { data: workspace, error } = await db
-            .from('workspaces')
-            .insert({
-                org_id: profile.org_id,
-                name,
-                settings: {
-                    website: website || null,
-                    competitors,
-                },
-            })
-            .select('id, name, settings, created_at')
-            .single();
-
-        if (error) {
+        const workspace = result?.workspace;
+        if (error || !workspace) {
             console.error('Error creating workspace:', error);
             return NextResponse.json({ error: 'Failed to create workspace' }, { status: 500 });
         }
