@@ -85,3 +85,32 @@ test('persistence failure makes an otherwise successful run partial', async () =
   assert.equal(run.status, 'partial');
   assert.equal(run.persistence.status, 'failed');
 });
+
+test('a timed-out executor becomes recorded sample failures instead of hanging the run', async () => {
+  const run = await runVisibilityMeasurement({
+    prompt: 'best tools', brandName: 'Aelo', platforms: ['gemini'], samples: 1,
+  }, {
+    execute: async () => new Promise<ScanOutput>(() => undefined),
+    executeTimeoutMs: 10,
+  });
+
+  assert.equal(run.status, 'all_failed');
+  assert.equal(run.visibilityScore, null);
+  assert.equal(run.failures.length, 1);
+  assert.match(run.failures[0].error, /timed out/i);
+});
+
+test('successful sample batches persist incrementally', async () => {
+  let call = 0;
+  const persistedBatchSizes: number[] = [];
+  const run = await runVisibilityMeasurement({
+    prompt: 'best tools', brandName: 'Aelo', platforms: ['gemini'], samples: 2,
+  }, {
+    execute: async () => ({ results: [result('gemini', true, `s${++call}`)], errors: [] }),
+    persist: async (results) => { persistedBatchSizes.push(results.length); },
+  });
+
+  assert.deepEqual(persistedBatchSizes, [1, 1]);
+  assert.equal(run.persistence.status, 'stored');
+  assert.equal(run.persistence.rows, 2);
+});

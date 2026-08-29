@@ -25,7 +25,10 @@ test('scheduled scan claims are leased atomically and service-role only', async 
 });
 
 test('scan cron fails closed and consumes only atomically claimed schedules', async () => {
-  const route = await source('app/api/cron/process-scans/route.ts');
+  const [route, leaseSql] = await Promise.all([
+    source('app/api/cron/process-scans/route.ts'),
+    source('supabase/migrations/035_reliable_scan_leases.sql'),
+  ]);
   assert.match(route, /cron_not_configured/);
   assert.match(route, /claim_due_scheduled_scans/);
   assert.match(route, /reserveScanQuota/);
@@ -34,6 +37,11 @@ test('scan cron fails closed and consumes only atomically claimed schedules', as
   assert.match(route, /samples: 4/);
   assert.match(route, /measurement\.persistence\.status/);
   assert.match(route, /claim_token/);
+  assert.match(route, /p_limit:\s*1/);
+  assert.match(route, /renew_scheduled_scan_claim/);
+  assert.match(leaseSql, /CREATE OR REPLACE FUNCTION public\.renew_scheduled_scan_claim/i);
+  assert.match(leaseSql, /claim_token = p_claim_token/i);
+  assert.match(leaseSql, /TO service_role/i);
   assert.doesNotMatch(route, /scanLLM\(/);
   assert.doesNotMatch(route, /\.from\('scheduled_scans'\)\s*\.select/);
 });

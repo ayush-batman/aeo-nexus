@@ -20,6 +20,12 @@ interface AIAnalysisInput {
     brandDomain?: string;
 }
 
+const ANALYZER_TIMEOUT_MS = 10_000;
+
+function analyzerSignal(): AbortSignal {
+    return AbortSignal.timeout(ANALYZER_TIMEOUT_MS);
+}
+
 /**
  * Build explicit aliases only. We intentionally do not generate deletion or
  * substring variants because those corrupt visibility scores.
@@ -169,7 +175,7 @@ Return this exact JSON structure:
             const genAI = new GoogleGenerativeAI(geminiKey);
             const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
 
-            const result = await model.generateContent(analysisPrompt);
+            const result = await model.generateContent(analysisPrompt, { signal: analyzerSignal() });
             const text = result.response.text();
 
             const jsonMatch = text.match(/\{[\s\S]*\}/);
@@ -208,6 +214,7 @@ Return this exact JSON structure:
                     max_tokens: 256,
                     messages: [{ role: 'user', content: analysisPrompt }],
                 }),
+                signal: analyzerSignal(),
             });
 
             if (claudeRes.ok) {

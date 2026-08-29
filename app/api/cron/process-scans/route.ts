@@ -41,8 +41,8 @@ export async function GET(request: NextRequest) {
     try {
         const admin = createAdminClient();
         const { data, error } = await admin.rpc('claim_due_scheduled_scans', {
-            p_limit: 10,
-            p_lease_seconds: 300,
+            p_limit: 1,
+            p_lease_seconds: 240,
         });
         if (error) {
             console.error('[process-scans] failed to claim schedules:', error);
@@ -98,6 +98,15 @@ export async function GET(request: NextRequest) {
                     await finish(status);
                     details.push({ id: schedule.schedule_id, status: 'skipped', reason: reservation });
                     continue;
+                }
+
+                const { data: renewed, error: renewError } = await admin.rpc('renew_scheduled_scan_claim', {
+                    p_schedule_id: schedule.schedule_id,
+                    p_claim_token: schedule.claim_token,
+                    p_lease_seconds: 240,
+                });
+                if (renewError || renewed !== true) {
+                    throw new Error(`Could not renew schedule claim: ${renewError?.message ?? 'claim no longer owned'}`);
                 }
 
                 const measurement = await runVisibilityMeasurement({

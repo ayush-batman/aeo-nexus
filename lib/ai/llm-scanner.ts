@@ -61,6 +61,13 @@ interface ProviderScanResponse {
     providerModel: string;
 }
 
+const PROVIDER_TIMEOUT_MS = 20_000;
+const MAX_ENGINE_CONCURRENCY = 4;
+
+function providerSignal(): AbortSignal {
+    return AbortSignal.timeout(PROVIDER_TIMEOUT_MS);
+}
+
 // Scan with Gemini
 async function scanWithGemini(prompt: string): Promise<ProviderScanResponse> {
     const apiKey = process.env.GOOGLE_API_KEY || process.env.GEMINI_API_KEY;
@@ -70,7 +77,7 @@ async function scanWithGemini(prompt: string): Promise<ProviderScanResponse> {
     const providerModel = 'gemini-2.5-flash';
     const model = genAI.getGenerativeModel({ model: providerModel });
 
-    const result = await model.generateContent(prompt);
+    const result = await model.generateContent(prompt, { signal: providerSignal() });
     return {
         text: result.response.text(),
         providerCitations: extractGeminiCitationReferences(result.response),
@@ -94,8 +101,11 @@ async function scanWithOpenAI(prompt: string): Promise<ProviderScanResponse> {
             ...baseParams,
             max_completion_tokens: 4000,
             reasoning_effort: 'minimal',
-        })
-        : await client.chat.completions.create({ ...baseParams, max_tokens: 1024 });
+        }, { signal: providerSignal(), timeout: PROVIDER_TIMEOUT_MS, maxRetries: 0 })
+        : await client.chat.completions.create(
+            { ...baseParams, max_tokens: 1024 },
+            { signal: providerSignal(), timeout: PROVIDER_TIMEOUT_MS, maxRetries: 0 },
+        );
 
     return {
         text: completion.choices[0]?.message?.content || '',
@@ -122,6 +132,7 @@ async function scanWithClaude(prompt: string): Promise<ProviderScanResponse> {
             max_tokens: 1024,
             messages: [{ role: 'user', content: prompt }],
         }),
+        signal: providerSignal(),
     });
 
     if (!response.ok) {
@@ -153,6 +164,7 @@ async function scanWithPerplexity(prompt: string): Promise<ProviderScanResponse>
             model: 'llama-3.1-sonar-small-128k-online',
             messages: [{ role: 'user', content: prompt }],
         }),
+        signal: providerSignal(),
     });
 
     if (!response.ok) {
@@ -239,7 +251,7 @@ Search query: "${prompt}"
 
 Provide the AI Overview response:`;
 
-    const result = await model.generateContent(systemPrompt);
+    const result = await model.generateContent(systemPrompt, { signal: providerSignal() });
     return {
         text: result.response.text(),
         providerCitations: extractGeminiCitationReferences(result.response),
@@ -258,8 +270,11 @@ export async function scanLLM(options: ScanOptions): Promise<ScanOutput> {
     const results: (ScanResult | BattleResult)[] = [];
     const errors: { platform: LLMPlatform; error: string }[] = [];
 
-    for (const platform of platforms) {
-        try {
+    const requestedPlatforms = [...new Set(platforms)];
+    for (let offset = 0; offset < requestedPlatforms.length; offset += MAX_ENGINE_CONCURRENCY) {
+        const batch = requestedPlatforms.slice(offset, offset + MAX_ENGINE_CONCURRENCY);
+        await Promise.all(batch.map(async (platform) => {
+          try {
             let providerResult: ProviderScanResponse;
 
             switch (platform) {
@@ -284,7 +299,7 @@ export async function scanLLM(options: ScanOptions): Promise<ScanOutput> {
                     break;
                 default:
                     console.log(`Platform ${platform} not yet implemented`);
-                    continue;
+                    return;
             }
             const response = providerResult.text;
             const sampleId = randomUUID();
@@ -383,11 +398,12 @@ export async function scanLLM(options: ScanOptions): Promise<ScanOutput> {
             }
 
             results.push(scanResult);
-        } catch (error) {
+          } catch (error) {
             const errMsg = error instanceof Error ? error.message : String(error);
             console.error(`Error scanning ${platform}:`, errMsg);
             errors.push({ platform, error: errMsg });
-        }
+          }
+        }));
     }
 
     // HONEST DATA POLICY: if every requested platform failed, we return empty

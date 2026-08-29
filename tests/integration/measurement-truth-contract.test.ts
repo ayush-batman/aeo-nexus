@@ -105,6 +105,22 @@ test('all active visibility surfaces use mention rate and preserve unmeasured st
   assert.match(methodology, /successful_samples_where_brand_named/);
 });
 
+test('provider work has deadlines and bounded engine concurrency', async () => {
+  const [scanner, analyzer, service] = await Promise.all([
+    source('lib/ai/llm-scanner.ts'),
+    source('lib/ai/ai-analyzer.ts'),
+    source('lib/measurement/service.ts'),
+  ]);
+  assert.match(scanner, /PROVIDER_TIMEOUT_MS/);
+  assert.match(scanner, /AbortSignal\.timeout/);
+  assert.match(scanner, /MAX_ENGINE_CONCURRENCY/);
+  assert.match(scanner, /Promise\.all\(batch\.map/);
+  assert.match(analyzer, /ANALYZER_TIMEOUT_MS/);
+  assert.match(analyzer, /AbortSignal\.timeout/);
+  assert.match(service, /DEFAULT_EXECUTE_TIMEOUT_MS/);
+  assert.match(service, /dependencies\.persist\(sampleResults\)/);
+});
+
 test('activation packet persists three-to-five prompt measurements and one ranked action', async () => {
   const [route, packet, onboarding, migration] = await Promise.all([
     source('app/api/onboarding/decision-packet/route.ts'),

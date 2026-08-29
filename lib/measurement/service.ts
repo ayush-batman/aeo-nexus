@@ -21,7 +21,24 @@ export type VisibilityMeasurementInput = Omit<ScanOptions, 'platforms'> & {
 type MeasurementDependencies = {
   execute?: (options: ScanOptions) => Promise<ScanOutput>;
   persist?: (results: ScanResult[]) => Promise<void>;
+  executeTimeoutMs?: number;
 };
+
+const DEFAULT_EXECUTE_TIMEOUT_MS = 35_000;
+
+async function withDeadline<T>(operation: Promise<T>, timeoutMs: number): Promise<T> {
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  try {
+    return await Promise.race([
+      operation,
+      new Promise<T>((_, reject) => {
+        timer = setTimeout(() => reject(new Error(`Measurement executor timed out after ${timeoutMs}ms.`)), timeoutMs);
+      }),
+    ]);
+  } finally {
+    if (timer) clearTimeout(timer);
+  }
+}
 
 function mode(values: string[]): string | null {
   if (values.length === 0) return null;
@@ -93,10 +110,24 @@ export async function runVisibilityMeasurement(
   const samples: MeasurementSample[] = [];
   const failures: MeasurementFailure[] = [];
   const successfulResults: ScanResult[] = [];
+  let persistence: MeasurementPersistence = { status: 'not_applicable', rows: 0, error: null };
 
   for (let sampleNumber = 1; sampleNumber <= input.samples; sampleNumber++) {
     if (requestedEngines.length === 0) break;
-    const output = await execute({ ...input, platforms: requestedEngines });
+    let output: ScanOutput;
+    try {
+      output = await withDeadline(
+        execute({ ...input, platforms: requestedEngines }),
+        dependencies.executeTimeoutMs ?? DEFAULT_EXECUTE_TIMEOUT_MS,
+      );
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Measurement executor failed.';
+      output = {
+        results: [],
+        errors: requestedEngines.map((engine) => ({ platform: engine, error: message })),
+      };
+    }
+    const sampleResults: ScanResult[] = [];
     for (const engine of requestedEngines) {
       const result = output.results.find((candidate) => candidate.platform === engine);
       if (result) {
@@ -107,6 +138,7 @@ export async function runVisibilityMeasurement(
         result.measurementRegion = result.measurementRegion || region;
         result.measurementMode = result.measurementMode || mode;
         successfulResults.push(result);
+        sampleResults.push(result);
         samples.push({
           sampleNumber,
           engine,
@@ -147,19 +179,22 @@ export async function runVisibilityMeasurement(
         error,
       });
     }
-  }
 
-  let persistence: MeasurementPersistence = { status: 'not_applicable', rows: 0, error: null };
-  if (successfulResults.length > 0 && dependencies.persist) {
-    try {
-      await dependencies.persist(successfulResults);
-      persistence = { status: 'stored', rows: successfulResults.length, error: null };
-    } catch (error) {
-      persistence = {
-        status: 'failed',
-        rows: 0,
-        error: error instanceof Error ? error.message : 'Unknown persistence error',
-      };
+    if (sampleResults.length > 0 && dependencies.persist) {
+      try {
+        await dependencies.persist(sampleResults);
+        persistence = {
+          status: persistence.status === 'failed' ? 'failed' : 'stored',
+          rows: persistence.rows + sampleResults.length,
+          error: persistence.error,
+        };
+      } catch (error) {
+        persistence = {
+          status: 'failed',
+          rows: persistence.rows,
+          error: persistence.error ?? (error instanceof Error ? error.message : 'Unknown persistence error'),
+        };
+      }
     }
   }
 
