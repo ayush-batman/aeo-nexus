@@ -108,4 +108,57 @@ None.
 
 ### Commit hash
 
-Pending Batch 1A commit; will be recorded in the next progress update.
+`351542f` — `build: establish rescue verification gates`
+
+## Batch 1B — Tenant identity and billing-field lock
+
+### Problem addressed
+
+RLS limited which user/organization row could be updated but did not limit columns. An authenticated user could therefore attempt to change their tenant, role, super-admin flag, or organization plan/payment identifiers directly.
+
+### User impact
+
+Tenant membership, privileges, and paid entitlements become server-owned. Existing profile-name, avatar, onboarding-completion, and organization-name updates remain allowed.
+
+### Files changed
+
+- `supabase/migrations/025_lock_sensitive_identity_and_billing_fields.sql`
+- `tests/integration/rls-sensitive-fields.test.ts`
+- `docs/product-rescue/IMPLEMENTATION_PROGRESS.md`
+
+### Tests added
+
+- Authenticated user updates are limited to `full_name`, `avatar_url`, and `onboarding_completed`.
+- Authenticated organization updates are limited to `name`.
+- Future broad grants are caught by defense-in-depth triggers.
+- Update policies constrain both old and new rows.
+
+### Commands run and results
+
+- `npm run test:integration` before migration → 4 expected failures because migration `025` did not exist.
+- `npm run test:integration` after migration → 4 passed.
+- `npm test` → 6 passed across all current unit/integration tests.
+- targeted ESLint on the TypeScript regression test → passed; SQL was ignored because ESLint has no SQL parser.
+- `npm run typecheck` → still fails only on the 9 previously recorded scanner/alerts/data-access errors.
+- `npx next build --webpack` → application compiled, then Next’s type worker failed with `invalid type: unit value, expected usize`; native SWC remains unavailable. Generated 651 MB cache was removed afterward.
+
+### Evidence
+
+- Static migration-contract regression tests are passing.
+- No `supabase` CLI or Docker runtime is installed, so the migration was not executed against a disposable database in this environment.
+
+### Migration considerations
+
+- Apply after migration 024.
+- Before applying, run the read-only audit queries included at the end of migration 025 and investigate unexpected privileged/paid rows.
+- The migration uses column grants, explicit `WITH CHECK` policies, and triggers. Service-role writes remain permitted.
+- Preferred rollback is correcting an omitted safe allowlist column. Restoring broad table UPDATE grants reopens the vulnerability and is not a safe rollback.
+
+### Remaining risks
+
+- Database behavior must still be verified in a clean Supabase test project and an upgraded staging copy.
+- Billing webhooks still need fail-closed provider validation and idempotency.
+
+### Commit hash
+
+Pending Batch 1B commit; will be recorded in the next progress update.
