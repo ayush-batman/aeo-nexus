@@ -1,11 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { scanLLM, getAvailablePlatforms, calculateVisibilityScore, LLMPlatform } from '@/lib/ai/llm-scanner';
-import rateLimit from '@/lib/rate-limit';
+import { scanLLM, getAvailablePlatforms, calculateVisibilityScore, LLMPlatform, type ScanOutput } from '@/lib/ai/llm-scanner';
+import rateLimit, { isRateLimitUnavailableError } from '@/lib/rate-limit';
 
 // Rate limit: 3 scans per IP per hour
 const limiter = rateLimit({
     interval: 60 * 60 * 1000, // 1 hour
     uniqueTokenPerInterval: 500,
+    namespace: 'free-scan',
 });
 
 export async function POST(request: NextRequest) {
@@ -17,7 +18,10 @@ export async function POST(request: NextRequest) {
         // Check rate limit (3 scans per hour)
         try {
             await limiter.check(3, ip);
-        } catch {
+        } catch (error) {
+            if (isRateLimitUnavailableError(error)) {
+                return NextResponse.json({ error: 'Scan protection is temporarily unavailable.' }, { status: 503 });
+            }
             console.warn(`Rate limit exceeded for IP: ${ip}`);
             return NextResponse.json(
                 { error: 'Rate limit exceeded. Sign up for unlimited scans!' },
@@ -50,8 +54,8 @@ export async function POST(request: NextRequest) {
         }
 
         const scanPrompt = `What is ${cleanBrandName}? Tell me about this company/product. If you do not have specific, verifiable information about this company or it does not exist, explicitly state "I do not have information about this brand."`;
-        let scanResult: any = null;
-        let scanOutput: any = null;
+        let scanResult: ScanOutput['results'][number] | undefined;
+        let scanOutput: ScanOutput | undefined;
         let platform: LLMPlatform = availablePlatforms[0].platform;
 
         // Try each available platform until one succeeds
@@ -72,7 +76,7 @@ export async function POST(request: NextRequest) {
         }
 
         // Final fallback to mock in dev
-        if (!scanResult) {
+        if (!scanResult || !scanOutput) {
             const allowMock = process.env.ALLOW_MOCK_LLM === 'true' || process.env.NODE_ENV !== 'production';
             if (allowMock) {
                 platform = 'mock';
@@ -85,7 +89,7 @@ export async function POST(request: NextRequest) {
             }
         }
 
-        if (!scanResult) {
+        if (!scanResult || !scanOutput) {
             console.error(`Scan failed for brand: ${cleanBrandName} - All platforms failed`);
             return NextResponse.json(
                 { error: 'All AI platforms are currently unavailable. Please try again later.' },

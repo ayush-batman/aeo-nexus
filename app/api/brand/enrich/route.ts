@@ -1,11 +1,12 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { enrichBrandFromUrl } from '@/lib/services/brand-enrichment';
-import rateLimit from '@/lib/rate-limit';
+import rateLimit, { isRateLimitUnavailableError } from '@/lib/rate-limit';
 
 const limiter = rateLimit({
     interval: 60 * 60 * 1000, // 1 hour
     uniqueTokenPerInterval: 500,
+    namespace: 'brand-enrichment',
 });
 
 export async function POST(request: NextRequest) {
@@ -19,7 +20,10 @@ export async function POST(request: NextRequest) {
 
         try {
             await limiter.check(5, ip);
-        } catch {
+        } catch (error) {
+            if (isRateLimitUnavailableError(error)) {
+                return NextResponse.json({ error: 'Request protection is temporarily unavailable.' }, { status: 503 });
+            }
             return NextResponse.json(
                 { error: 'Rate limit exceeded (5 requests per hour).' },
                 { status: 429 }

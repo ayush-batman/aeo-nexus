@@ -1,14 +1,11 @@
 import { NextResponse } from 'next/server';
 import { resolveApiKey, hasScope, type ApiKeyContext } from '@/lib/api-auth';
 import { createAdminClient } from '@/lib/supabase/admin';
-import rateLimit from '@/lib/rate-limit';
+import rateLimit, { isRateLimitUnavailableError } from '@/lib/rate-limit';
 
 type AdminClient = ReturnType<typeof createAdminClient>;
 
-// Per-key rate limiting (in-memory, per server instance, same primitive the
-// signup route uses). Default is a generous read budget; expensive endpoints
-// (a live multi-sample scan) pass a much lower limit via a separate bucket.
-const limiter = rateLimit({ interval: 60_000, uniqueTokenPerInterval: 5000 });
+const limiter = rateLimit({ interval: 60_000, uniqueTokenPerInterval: 5000, namespace: 'api-v1' });
 const DEFAULT_PER_MINUTE = 120;
 
 interface WithKeyOptions {
@@ -53,7 +50,13 @@ export async function withKey(
   const token = opts.bucket ? `${ctx.keyId}:${opts.bucket}` : ctx.keyId;
   try {
     await limiter.check(limit, token);
-  } catch {
+  } catch (error) {
+    if (isRateLimitUnavailableError(error)) {
+      return NextResponse.json(
+        { error: 'Rate limiting is temporarily unavailable.' },
+        { status: 503, headers: { 'Retry-After': '60' } },
+      );
+    }
     return NextResponse.json(
       { error: `Rate limit exceeded (${limit}/min). Slow down and retry shortly.` },
       { status: 429, headers: { 'Retry-After': '60' } },

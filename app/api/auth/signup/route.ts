@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/supabase/admin';
-import rateLimit from '@/lib/rate-limit';
+import rateLimit, { isRateLimitUnavailableError } from '@/lib/rate-limit';
 
 const limiter = rateLimit({
     interval: 60 * 60 * 1000, // 1 hour
     uniqueTokenPerInterval: 500,
+    namespace: 'signup',
 });
 
 export async function POST(request: NextRequest) {
@@ -17,7 +18,10 @@ export async function POST(request: NextRequest) {
 
         try {
             await limiter.check(20, ip); // Max 20 signups per IP per hour (shared office/VPN IPs were tripping the old limit of 5)
-        } catch {
+        } catch (error) {
+            if (isRateLimitUnavailableError(error)) {
+                return NextResponse.json({ error: 'Signup protection is temporarily unavailable.' }, { status: 503 });
+            }
             return NextResponse.json(
                 { error: 'Too many signup attempts. Please try again later.' },
                 { status: 429 }

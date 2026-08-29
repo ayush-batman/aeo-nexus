@@ -3,12 +3,13 @@ import { createAdminClient } from '@/lib/supabase/admin';
 import { createClient } from '@/lib/supabase/server';
 import { getLLMScans, getCurrentWorkspaceId } from '@/lib/data-access';
 import { scanLLM, getAvailablePlatforms, type LLMPlatform } from '@/lib/ai/llm-scanner';
-import rateLimit from '@/lib/rate-limit';
+import rateLimit, { isRateLimitUnavailableError } from '@/lib/rate-limit';
 
 // Rate limit: 20 scans per user per hour
 const scanLimiter = rateLimit({
     interval: 60 * 60 * 1000, // 1 hour
     uniqueTokenPerInterval: 500,
+    namespace: 'dashboard-scans',
 });
 // GET: Fetch recent LLM scans
 export async function GET(request: NextRequest) {
@@ -53,7 +54,10 @@ export async function POST(request: NextRequest) {
         // Rate limit: 20 scans per workspace per hour
         try {
             await scanLimiter.check(20, `scan-${workspaceId}`);
-        } catch {
+        } catch (error) {
+            if (isRateLimitUnavailableError(error)) {
+                return NextResponse.json({ error: 'Scan protection is temporarily unavailable.' }, { status: 503 });
+            }
             return NextResponse.json(
                 { error: 'Rate limit exceeded. Maximum 20 scans per hour.' },
                 { status: 429 }
@@ -176,8 +180,8 @@ export async function POST(request: NextRequest) {
                     citations: result.citations,
                     list_items: result.listItems,
                     confidence: result.confidence,
-                    winner: (result as any).winner || null,
-                    winner_reason: (result as any).winnerReason || null,
+                    winner: 'winner' in result ? result.winner : null,
+                    winner_reason: 'winnerReason' in result ? result.winnerReason : null,
                 })
                 .select()
                 .single();

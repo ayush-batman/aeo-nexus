@@ -1,11 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { GoogleGenerativeAI } from '@google/generative-ai';
-import rateLimit from '@/lib/rate-limit';
+import rateLimit, { isRateLimitUnavailableError } from '@/lib/rate-limit';
 
 // Rate limit: 10 discovers per IP per hour
 const discoverLimiter = rateLimit({
     interval: 60 * 60 * 1000,
     uniqueTokenPerInterval: 500,
+    namespace: 'prompt-discovery',
 });
 
 // Google Autocomplete suggestions (unofficial but widely-used endpoint)
@@ -71,7 +72,10 @@ export async function POST(req: NextRequest) {
         const ip = req.headers.get('x-forwarded-for') || req.headers.get('x-real-ip') || 'unknown';
         try {
             await discoverLimiter.check(10, `discover-${ip}`);
-        } catch {
+        } catch (error) {
+            if (isRateLimitUnavailableError(error)) {
+                return NextResponse.json({ error: 'Request protection is temporarily unavailable.' }, { status: 503 });
+            }
             return NextResponse.json(
                 { error: 'Rate limit exceeded. Try again later.' },
                 { status: 429 }

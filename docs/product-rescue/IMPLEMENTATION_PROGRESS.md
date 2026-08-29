@@ -439,4 +439,61 @@ New API schedules contain at least one configured engine allowed by the customer
 
 ### Commit hash
 
-Pending Batch 1F commit; will be recorded in the next progress update.
+`8436873` — `fix: make scheduled scans single-run safe`
+
+## Batch 1G — Shared production rate limiting
+
+### Problem addressed
+
+Request limits lived only in each server process, so traffic spread across serverless instances could bypass them. The old counter also rejected the final allowed request: a limit of three permitted only two.
+
+### User impact
+
+Production request limits now use one shared Upstash Redis counter across instances. If that shared protection is missing or unreachable, protected production routes return 503 instead of running unprotected. Local development keeps a clearly named `memory-local-only` fallback, and declared limits now allow exactly the stated number of requests.
+
+### Files changed
+
+- `lib/rate-limit.ts`
+- `lib/api-v1.ts`
+- `app/api/auth/signup/route.ts`
+- `app/api/free-scan/route.ts`
+- `app/api/prompts/discover/route.ts`
+- `app/api/llm/scans/route.ts`
+- `app/api/brand/enrich/route.ts`
+- `tests/unit/rate-limit.test.ts`
+- `docs/product-rescue/IMPLEMENTATION_PROGRESS.md`
+
+### Tests added
+
+- Local boundary test permits exactly the configured number and rejects the next request.
+- Production without shared Redis credentials fails closed.
+- Source contract requires both existing Upstash packages and their standard environment variables.
+
+### Commands run and results
+
+- Focused tests before implementation → expected boundary and Upstash-wiring failures.
+- `npm test` after implementation → 36 passed.
+- `npm run typecheck` → passed.
+- `npm run typecheck:mcp` → passed.
+- Targeted ESLint across the limiter and every changed caller → passed. Four older `any` errors in touched scan routes were removed.
+- Full `npm run lint` → 70 existing errors and 83 warnings remain, down from 74 errors before this sub-batch; changed files are clean.
+- `npm run build -- --webpack` → passed: compilation, TypeScript, 133 static pages, and traces completed.
+- `git diff --check` → passed before the progress update.
+- Removed the generated `.next` cache after the successful build; source and user data were not affected.
+
+### Configuration and rollout
+
+- Production now requires `UPSTASH_REDIS_REST_URL` and `UPSTASH_REDIS_REST_TOKEN`.
+- Configure both values before deploying this code. Partial or absent configuration fails protected requests closed with HTTP 503.
+- Each route has a separate Redis namespace so signup, free scans, discovery, dashboard scans, enrichment, and API-key traffic do not consume one another's limits.
+- No live Redis request was run because disposable Upstash credentials are not available in this environment. Verify allow/deny boundaries and a simulated Redis outage in staging.
+
+### Remaining risks
+
+- Client-IP parsing still relies on deployment-provided forwarding headers; the hosting layer must overwrite untrusted inbound forwarding values.
+- SSRF-safe crawling and protected analytics ingestion remain in the reliability batch.
+- Full repository lint still fails with 70 pre-existing errors.
+
+### Commit hash
+
+Pending Batch 1G commit; will be recorded in the next progress update.
