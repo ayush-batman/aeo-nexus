@@ -3,29 +3,11 @@ import { createAdminClient } from '@/lib/supabase/admin';
 import { getCurrentWorkspaceContext } from '@/lib/data-access';
 import { requireWorkspaceRole } from '@/lib/authorization';
 import { getEntitlements, reserveScanQuota } from '@/lib/entitlements';
-import { getAvailablePlatforms, type LLMPlatform, type ScanResult } from '@/lib/ai/llm-scanner';
+import { getAvailablePlatforms, type LLMPlatform } from '@/lib/ai/llm-scanner';
 import { runVisibilityMeasurement } from '@/lib/measurement/service';
+import { scanResultPersistenceRow } from '@/lib/measurement/persistence';
 
 export const maxDuration = 300;
-
-function persistenceRow(workspaceId: string, result: ScanResult): Record<string, unknown> {
-    return {
-        workspace_id: workspaceId,
-        platform: result.platform,
-        prompt: result.prompt,
-        response: result.response,
-        brand_mentioned: result.brandMentioned,
-        brand_variants: result.brandVariants,
-        mention_position: result.mentionPosition,
-        sentiment: result.sentiment,
-        sentiment_score: result.sentimentScore,
-        sentiment_reason: result.sentimentReason,
-        competitors_mentioned: result.competitorsMentioned,
-        citations: result.citations,
-        list_items: result.listItems,
-        confidence: result.confidence,
-    };
-}
 
 // GET: List all workspaces for the current user's org
 export async function GET() {
@@ -126,7 +108,7 @@ export async function POST(request: NextRequest) {
             }, {
                 persist: async (results) => {
                     const { error: insertError } = await db.from('llm_scans').insert(
-                        results.map(result => persistenceRow(workspace.id, result)),
+                        results.map(result => scanResultPersistenceRow(workspace.id, result)),
                     );
                     if (insertError) throw new Error(`Could not save initial measurement: ${insertError.message}`);
                 },

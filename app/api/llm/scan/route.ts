@@ -1,31 +1,13 @@
 import { randomUUID } from 'node:crypto';
 import { NextRequest, NextResponse } from 'next/server';
-import { getAvailablePlatforms, type LLMPlatform, type ScanResult } from '@/lib/ai/llm-scanner';
+import { getAvailablePlatforms, type LLMPlatform } from '@/lib/ai/llm-scanner';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { getCurrentWorkspaceContext } from '@/lib/data-access';
 import { getEntitlements, reserveScanQuota } from '@/lib/entitlements';
 import { runVisibilityMeasurement } from '@/lib/measurement/service';
+import { scanResultPersistenceRow } from '@/lib/measurement/persistence';
 
 export const maxDuration = 300;
-
-function persistenceRow(workspaceId: string, result: ScanResult): Record<string, unknown> {
-    return {
-        workspace_id: workspaceId,
-        platform: result.platform,
-        prompt: result.prompt,
-        response: result.response,
-        brand_mentioned: result.brandMentioned,
-        brand_variants: result.brandVariants,
-        mention_position: result.mentionPosition,
-        sentiment: result.sentiment,
-        sentiment_score: result.sentimentScore,
-        sentiment_reason: result.sentimentReason,
-        competitors_mentioned: result.competitorsMentioned,
-        citations: result.citations,
-        list_items: result.listItems,
-        confidence: result.confidence,
-    };
-}
 
 export async function POST(request: NextRequest) {
     try {
@@ -85,7 +67,7 @@ export async function POST(request: NextRequest) {
             mode: body?.mode === 'battle' ? 'battle' : 'standard',
         }, {
             persist: async (results) => {
-                const { error } = await admin.from('llm_scans').insert(results.map(result => persistenceRow(context.workspaceId, result)));
+                const { error } = await admin.from('llm_scans').insert(results.map(result => scanResultPersistenceRow(context.workspaceId, result)));
                 if (error) throw new Error('Failed to store measurement samples.');
             },
         });

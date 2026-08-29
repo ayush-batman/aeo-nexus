@@ -10,6 +10,10 @@ export type ComparableSnapshotPoint = {
   position_sample_count?: number;
   measured_at?: string;
   contract_version?: string;
+  provider_model?: string;
+  measurement_region?: string;
+  measurement_mode?: string;
+  scorer_version?: string;
 };
 
 export type ComparableSnapshot = Record<string, Record<string, ComparableSnapshotPoint>>;
@@ -30,6 +34,11 @@ export type InterventionImpactSummary = {
 };
 
 const MIN_SAMPLES_PER_COHORT = 4;
+
+function compatibleMetadata(baseline: ComparableSnapshotPoint, followup: ComparableSnapshotPoint): boolean {
+  const keys = ['contract_version', 'provider_model', 'measurement_region', 'measurement_mode', 'scorer_version'] as const;
+  return keys.every(key => Boolean(baseline[key]) && baseline[key] === followup[key]);
+}
 
 function validCount(value: unknown): value is number {
   return Number.isSafeInteger(value) && Number(value) >= 0;
@@ -57,6 +66,7 @@ export function compareVisibilitySnapshots(
     for (const [engine, followupPoint] of Object.entries(followupEngines)) {
       const baselinePoint = baselineEngines[engine];
       if (!baselinePoint) continue;
+      if (!compatibleMetadata(baselinePoint, followupPoint)) continue;
 
       const baselineCount = baselinePoint.sample_count;
       const baselineMentionCount = baselinePoint.mention_count;
@@ -102,7 +112,7 @@ export function compareVisibilitySnapshots(
 
   let verdict: InterventionVerdict = 'inconclusive';
   let reason = comparablePairs === 0
-    ? 'No matching prompt and engine cohorts have at least 4 successful samples before and after the action.'
+    ? 'No matching prompt, engine, model, region, mode, and scorer cohorts have at least 4 successful samples before and after the action.'
     : 'The 95% confidence intervals overlap, so the measured change is not yet conclusive.';
 
   if (baselineConfidence.interval && followupConfidence.interval) {

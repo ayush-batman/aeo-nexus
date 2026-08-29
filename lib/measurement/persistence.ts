@@ -16,5 +16,12 @@ export function scanResultPersistenceRow(workspaceId: string, result: ScanResult
     citations: result.citations,
     list_items: result.listItems,
     confidence: result.confidence,
+    measurement_run_id: result.measurementRunId ?? null,
+    measurement_contract_version: result.measurementContractVersion ?? null,
+    sample_number: result.sampleNumber ?? null,
+    provider_model: result.providerModel ?? null,
+    measurement_region: result.measurementRegion ?? null,
+    measurement_mode: result.measurementMode ?? null,
+    scorer_version: result.scorerVersion ?? null,
   };
 }

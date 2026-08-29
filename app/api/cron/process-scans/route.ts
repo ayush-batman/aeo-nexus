@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getAvailablePlatforms, type LLMPlatform, type ScanResult } from '@/lib/ai/llm-scanner';
+import { getAvailablePlatforms, type LLMPlatform } from '@/lib/ai/llm-scanner';
 import { getEntitlements, reserveScanQuota } from '@/lib/entitlements';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { runVisibilityMeasurement } from '@/lib/measurement/service';
+import { scanResultPersistenceRow } from '@/lib/measurement/persistence';
 
 export const maxDuration = 300;
 
@@ -18,25 +19,6 @@ type ClaimedSchedule = {
     scheduled_for: string;
     claim_token: string;
 };
-
-function persistenceRow(workspaceId: string, result: ScanResult): Record<string, unknown> {
-    return {
-        workspace_id: workspaceId,
-        platform: result.platform,
-        prompt: result.prompt,
-        response: result.response,
-        brand_mentioned: result.brandMentioned,
-        brand_variants: result.brandVariants,
-        mention_position: result.mentionPosition,
-        sentiment: result.sentiment,
-        sentiment_score: result.sentimentScore,
-        sentiment_reason: result.sentimentReason,
-        competitors_mentioned: result.competitorsMentioned,
-        citations: result.citations,
-        list_items: result.listItems,
-        confidence: result.confidence,
-    };
-}
 
 function nextRunAt(frequency: ClaimedSchedule['frequency']): string {
     const next = new Date();
@@ -128,7 +110,7 @@ export async function GET(request: NextRequest) {
                 }, {
                     persist: async (results) => {
                         const { error } = await admin.from('llm_scans').insert(
-                            results.map(result => persistenceRow(schedule.workspace_id, result)),
+                            results.map(result => scanResultPersistenceRow(schedule.workspace_id, result)),
                         );
                         if (error) throw new Error(`Could not save measurement samples: ${error.message}`);
                     },

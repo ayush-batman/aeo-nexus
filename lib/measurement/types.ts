@@ -2,6 +2,7 @@ import type { LLMPlatform } from '@/lib/ai/llm-scanner';
 import type { CitationEvidence } from '@/lib/types';
 
 export const MEASUREMENT_CONTRACT_VERSION = 'measurement.v1' as const;
+export const MEASUREMENT_SCORER_VERSION = 'aelo-brand-scorer.v1' as const;
 
 export type MeasurementRunStatus = 'complete' | 'partial' | 'all_failed' | 'untracked';
 export type MeasurementConfidenceLevel = 'none' | 'low' | 'medium' | 'high';
@@ -22,6 +23,10 @@ export type MeasurementConfidence = {
 export type MeasurementSample = {
   sampleNumber: number;
   engine: LLMPlatform;
+  providerModel: string | null;
+  region: string;
+  mode: 'standard' | 'battle';
+  scorerVersion: typeof MEASUREMENT_SCORER_VERSION;
   status: 'succeeded' | 'failed';
   sampleId: string | null;
   mentioned: boolean | null;
@@ -35,6 +40,7 @@ export type MeasurementSample = {
 
 export type EngineMeasurement = {
   engine: LLMPlatform;
+  providerModels: string[];
   requestedSamples: number;
   successfulSamples: number;
   failedSamples: number;
@@ -63,6 +69,9 @@ export type MeasurementPersistence = {
 export type VisibilityMeasurementRun = {
   contractVersion: typeof MEASUREMENT_CONTRACT_VERSION;
   runId: string;
+  scorerVersion: typeof MEASUREMENT_SCORER_VERSION;
+  region: string;
+  mode: 'standard' | 'battle';
   prompt: string;
   brandName: string;
   requestedEngines: LLMPlatform[];

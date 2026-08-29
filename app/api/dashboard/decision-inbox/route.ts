@@ -11,7 +11,7 @@ export async function GET() {
   const db = createAdminClient();
   const since = new Date(Date.now() - 14 * 86400000).toISOString();
   const [scans, actions, members] = await Promise.all([
-    db.from('llm_scans').select('prompt, platform, brand_mentioned, citations, created_at').eq('workspace_id', context.workspaceId).gte('created_at', since),
+    db.from('llm_scans').select('prompt, platform, brand_mentioned, citations, created_at, provider_model, measurement_region, measurement_mode, scorer_version, measurement_contract_version').eq('workspace_id', context.workspaceId).gte('created_at', since),
     db.from('interventions').select('id, title, owner_id, target_prompts, status').eq('workspace_id', context.workspaceId),
     db.from('users').select('id, full_name, email').eq('org_id', context.orgId),
   ]);

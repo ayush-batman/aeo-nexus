@@ -2,32 +2,14 @@ import { randomUUID } from 'node:crypto';
 import { NextRequest, NextResponse } from 'next/server';
 import { getCurrentWorkspaceContext } from '@/lib/data-access';
 import { createAdminClient } from '@/lib/supabase/admin';
-import { getAvailablePlatforms, type LLMPlatform, type ScanResult } from '@/lib/ai/llm-scanner';
+import { getAvailablePlatforms, type LLMPlatform } from '@/lib/ai/llm-scanner';
 import { getEntitlements, reserveScanQuota } from '@/lib/entitlements';
 import { runVisibilityMeasurement } from '@/lib/measurement/service';
 import { compareVisibilitySnapshots, type ComparableSnapshot } from '@/lib/measurement/comparison';
 import { MEASUREMENT_CONTRACT_VERSION } from '@/lib/measurement/types';
+import { scanResultPersistenceRow } from '@/lib/measurement/persistence';
 
 export const maxDuration = 300;
-
-function persistenceRow(workspaceId: string, result: ScanResult): Record<string, unknown> {
-    return {
-        workspace_id: workspaceId,
-        platform: result.platform,
-        prompt: result.prompt,
-        response: result.response,
-        brand_mentioned: result.brandMentioned,
-        brand_variants: result.brandVariants,
-        mention_position: result.mentionPosition,
-        sentiment: result.sentiment,
-        sentiment_score: result.sentimentScore,
-        sentiment_reason: result.sentimentReason,
-        competitors_mentioned: result.competitorsMentioned,
-        citations: result.citations,
-        list_items: result.listItems,
-        confidence: result.confidence,
-    };
-}
 
 // POST /api/interventions/:id/measure
 // Runs a fresh scan for each target_prompt on the currently-configured LLM
@@ -117,7 +99,7 @@ export async function POST(
             samples: 4,
         }, {
             persist: async (results) => {
-                const { error } = await db.from('llm_scans').insert(results.map(result => persistenceRow(context.workspaceId, result)));
+                const { error } = await db.from('llm_scans').insert(results.map(result => scanResultPersistenceRow(context.workspaceId, result)));
                 if (error) throw new Error('Failed to store intervention measurement samples.');
             },
         });

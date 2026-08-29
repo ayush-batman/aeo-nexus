@@ -10,6 +10,7 @@ import {
 } from './citation-provenance';
 import { getOpenAIClient, isOpenAIProviderAvailable } from './openai-client';
 import type { CitationEvidence } from '@/lib/types';
+import { MEASUREMENT_CONTRACT_VERSION, MEASUREMENT_SCORER_VERSION } from '@/lib/measurement/types';
 
 export type LLMPlatform = 'chatgpt' | 'perplexity' | 'claude' | 'gemini' | 'google_ai' | 'google_ai_overview' | 'bing_copilot' | 'mock';
 
@@ -31,6 +32,13 @@ export interface ScanResult {
     listItems: string[];
     confidence: number;
     timestamp: string;
+    providerModel?: string;
+    measurementRegion?: string;
+    measurementMode?: 'standard' | 'battle';
+    scorerVersion?: string;
+    measurementContractVersion?: string;
+    measurementRunId?: string;
+    sampleNumber?: number;
 }
 
 export interface ScanOptions {
@@ -50,6 +58,7 @@ export interface BattleResult extends ScanResult {
 interface ProviderScanResponse {
     text: string;
     providerCitations: unknown[];
+    providerModel: string;
 }
 
 // Scan with Gemini
@@ -58,12 +67,14 @@ async function scanWithGemini(prompt: string): Promise<ProviderScanResponse> {
     if (!apiKey) throw new Error('GOOGLE_API_KEY not configured');
 
     const genAI = new GoogleGenerativeAI(apiKey);
-    const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
+    const providerModel = 'gemini-2.5-flash';
+    const model = genAI.getGenerativeModel({ model: providerModel });
 
     const result = await model.generateContent(prompt);
     return {
         text: result.response.text(),
         providerCitations: extractGeminiCitationReferences(result.response),
+        providerModel,
     };
 }
 
@@ -89,6 +100,7 @@ async function scanWithOpenAI(prompt: string): Promise<ProviderScanResponse> {
     return {
         text: completion.choices[0]?.message?.content || '',
         providerCitations: extractOpenAICitationReferences(completion),
+        providerModel: model,
     };
 }
 
@@ -122,6 +134,7 @@ async function scanWithClaude(prompt: string): Promise<ProviderScanResponse> {
     return {
         text: data.content?.map((block) => block.text || '').join('') || '',
         providerCitations: extractAnthropicCitationReferences(data),
+        providerModel: 'claude-3-5-sonnet-20241022',
     };
 }
 
@@ -154,6 +167,7 @@ async function scanWithPerplexity(prompt: string): Promise<ProviderScanResponse>
     return {
         text: data.choices?.[0]?.message?.content || '',
         providerCitations: extractPerplexityCitationReferences(data),
+        providerModel: 'llama-3.1-sonar-small-128k-online',
     };
 }
 
@@ -209,7 +223,8 @@ async function scanWithGoogleAIOverview(prompt: string): Promise<ProviderScanRes
     if (!apiKey) throw new Error('GOOGLE_API_KEY not configured');
 
     const genAI = new GoogleGenerativeAI(apiKey);
-    const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
+    const providerModel = 'gemini-2.5-flash';
+    const model = genAI.getGenerativeModel({ model: providerModel });
 
     const systemPrompt = `You are simulating a Google AI Overview (the AI-generated summary that appears at the top of Google Search results). 
 Respond as if you are Google's AI Overview feature:
@@ -228,6 +243,7 @@ Provide the AI Overview response:`;
     return {
         text: result.response.text(),
         providerCitations: extractGeminiCitationReferences(result.response),
+        providerModel,
     };
 }
 
@@ -264,7 +280,7 @@ export async function scanLLM(options: ScanOptions): Promise<ScanOutput> {
                     providerResult = await scanWithGoogleAIOverview(prompt);
                     break;
                 case 'mock':
-                    providerResult = { text: await scanWithMock(prompt), providerCitations: [] };
+                    providerResult = { text: await scanWithMock(prompt), providerCitations: [], providerModel: 'mock.v1' };
                     break;
                 default:
                     console.log(`Platform ${platform} not yet implemented`);
@@ -308,6 +324,11 @@ export async function scanLLM(options: ScanOptions): Promise<ScanOutput> {
                 listItems: analysis.listItems,
                 confidence: analysis.confidence,
                 timestamp: new Date().toISOString(),
+                providerModel: providerResult.providerModel,
+                measurementRegion: process.env.AELO_MEASUREMENT_REGION?.trim() || 'global-unspecified',
+                measurementMode: mode,
+                scorerVersion: MEASUREMENT_SCORER_VERSION,
+                measurementContractVersion: MEASUREMENT_CONTRACT_VERSION,
             };
 
             if (mode === 'battle') {

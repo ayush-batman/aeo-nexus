@@ -33,7 +33,7 @@ export async function snapshotVisibility(
 
     const { data: scans, error } = await db
         .from('llm_scans')
-        .select('platform, prompt, brand_mentioned, mention_position, sentiment, created_at')
+        .select('platform, prompt, brand_mentioned, mention_position, sentiment, created_at, provider_model, measurement_region, measurement_mode, scorer_version, measurement_contract_version')
         .eq('workspace_id', workspaceId)
         .in('prompt', prompts)
         .gte('created_at', cutoff.toISOString())
@@ -47,7 +47,7 @@ export async function snapshotVisibility(
 
     const grouped = new Map<string, typeof scans>();
     for (const scan of scans) {
-        const key = `${scan.prompt}\u0000${scan.platform}`;
+        const key = [scan.prompt, scan.platform, scan.provider_model, scan.measurement_region, scan.measurement_mode, scan.scorer_version, scan.measurement_contract_version].join('\u0000');
         const rows = grouped.get(key) ?? [];
         if (rows.length < SNAPSHOT_SAMPLES_PER_ENGINE) rows.push(scan);
         grouped.set(key, rows);
@@ -62,6 +62,7 @@ export async function snapshotVisibility(
         const positions = rows.flatMap((row) => typeof row.mention_position === 'number' ? [row.mention_position] : []);
         const sentiments = rows.flatMap((row) => typeof row.sentiment === 'string' ? [row.sentiment] : []);
         const bucket = out[first.prompt] ?? (out[first.prompt] = {});
+        if (bucket[first.platform]) continue;
         bucket[first.platform] = {
             mentioned: mentions / rows.length >= 0.5,
             position: positions.length > 0
@@ -73,7 +74,11 @@ export async function snapshotVisibility(
             mention_rate: Math.round((mentions / rows.length) * 10_000) / 10_000,
             position_sample_count: positions.length,
             measured_at: first.created_at,
-            contract_version: MEASUREMENT_CONTRACT_VERSION,
+            contract_version: first.measurement_contract_version ?? MEASUREMENT_CONTRACT_VERSION,
+            provider_model: first.provider_model ?? undefined,
+            measurement_region: first.measurement_region ?? undefined,
+            measurement_mode: first.measurement_mode ?? undefined,
+            scorer_version: first.scorer_version ?? undefined,
         };
     }
     return out;

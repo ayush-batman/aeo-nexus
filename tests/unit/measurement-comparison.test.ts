@@ -13,6 +13,11 @@ function snapshot(prompt: string, engine: string, mentions: number, samples: num
         mention_count: mentions,
         mention_rate: mentions / samples,
         position_sample_count: mentions,
+        contract_version: 'measurement.v1',
+        provider_model: 'gemini-2.5-flash',
+        measurement_region: 'global-unspecified',
+        measurement_mode: 'standard',
+        scorer_version: 'aelo-brand-scorer.v1',
       },
     },
   };
@@ -42,6 +47,14 @@ test('mismatched prompts and engines are excluded', () => {
   assert.equal(result.verdict, 'inconclusive');
   assert.equal(result.comparable_pairs, 0);
   assert.equal(result.baseline_sample_count, 0);
+});
+
+test('mismatched model or scorer cohorts are explicitly inconclusive', () => {
+  const baseline = snapshot('p', 'gemini', 0, 8);
+  const followup = snapshot('p', 'gemini', 8, 8);
+  followup.p.gemini.provider_model = 'gemini-2.0-flash';
+  assert.equal(compareVisibilitySnapshots(baseline, followup).verdict, 'inconclusive');
+  assert.equal(compareVisibilitySnapshots(baseline, followup).comparable_pairs, 0);
 });
 
 test('overlapping confidence intervals remain inconclusive', () => {

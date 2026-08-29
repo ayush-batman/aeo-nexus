@@ -1,29 +1,11 @@
 import { randomUUID } from 'node:crypto';
-import { getAvailablePlatforms, type LLMPlatform, type ScanResult } from '@/lib/ai/llm-scanner';
+import { getAvailablePlatforms, type LLMPlatform } from '@/lib/ai/llm-scanner';
 import { ApiV1Error, getWorkspaceBrand, withKey } from '@/lib/api-v1';
 import { getEntitlements, reserveScanQuota } from '@/lib/entitlements';
 import { runVisibilityMeasurement } from '@/lib/measurement/service';
+import { scanResultPersistenceRow } from '@/lib/measurement/persistence';
 
 export const maxDuration = 60;
-
-function persistenceRow(workspaceId: string, result: ScanResult): Record<string, unknown> {
-  return {
-    workspace_id: workspaceId,
-    platform: result.platform,
-    prompt: result.prompt,
-    response: result.response,
-    brand_mentioned: result.brandMentioned,
-    brand_variants: result.brandVariants,
-    mention_position: result.mentionPosition,
-    sentiment: result.sentiment,
-    sentiment_score: result.sentimentScore,
-    sentiment_reason: result.sentimentReason,
-    competitors_mentioned: result.competitorsMentioned,
-    citations: result.citations,
-    list_items: result.listItems,
-    confidence: result.confidence,
-  };
-}
 
 // POST /api/v1/scan — a fresh, versioned multi-sample visibility measurement.
 export async function POST(request: Request) {
@@ -71,7 +53,7 @@ export async function POST(request: Request) {
       mode: body.mode === 'battle' ? 'battle' : 'standard',
     }, {
       persist: async (results) => {
-        const { error } = await admin.from('llm_scans').insert(results.map((result) => persistenceRow(ctx.workspaceId, result)));
+        const { error } = await admin.from('llm_scans').insert(results.map((result) => scanResultPersistenceRow(ctx.workspaceId, result)));
         if (error) {
           console.error('[v1/scan] failed to persist samples:', error);
           throw new Error('Failed to store measurement samples.');

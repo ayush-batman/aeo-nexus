@@ -7,6 +7,9 @@ function run(overrides: Partial<VisibilityMeasurementRun> = {}): VisibilityMeasu
   return {
     contractVersion: 'measurement.v1',
     runId: 'run-1',
+    scorerVersion: 'aelo-brand-scorer.v1',
+    region: 'global-unspecified',
+    mode: 'standard',
     prompt: 'best answer engine tracker',
     brandName: 'Aelo',
     requestedEngines: ['gemini'],
@@ -14,7 +17,7 @@ function run(overrides: Partial<VisibilityMeasurementRun> = {}): VisibilityMeasu
     status: 'complete',
     visibilityScore: 50,
     engines: [{
-      engine: 'gemini', requestedSamples: 4, successfulSamples: 4, failedSamples: 0,
+      engine: 'gemini', providerModels: ['gemini-2.5-flash'], requestedSamples: 4, successfulSamples: 4, failedSamples: 0,
       mentions: 1, mentionRate: 0.25, mentioned: false, avgPosition: 3, sentiment: 'neutral',
       confidence: { level: 'medium', sampleCount: 4, mentions: 1, mentionRate: 0.25, interval: { lower: 0.0456, upper: 0.6994, confidence: 0.95, method: 'wilson' } },
       citations: [{ url: 'https://example.com/list', title: 'List', is_own_domain: false, provenance: 'provider_citation', provider: 'gemini', sample_id: 's1', raw_provider_reference: {}, fetch_validation: 'not_checked' }],

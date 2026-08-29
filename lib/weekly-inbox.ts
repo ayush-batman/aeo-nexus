@@ -6,6 +6,11 @@ export type WeeklyScanRow = {
   brand_mentioned: boolean;
   citations: Array<{ url?: string; provenance?: string }> | null;
   created_at: string;
+  provider_model?: string | null;
+  measurement_region?: string | null;
+  measurement_mode?: string | null;
+  scorer_version?: string | null;
+  measurement_contract_version?: string | null;
 };
 export type WeeklyActionRow = {
   id: string;
@@ -45,7 +50,17 @@ export function buildWeeklyDecisionInbox(rows: WeeklyScanRow[], actions: WeeklyA
     const date = new Date(row.created_at);
     const target = date >= currentStart && date <= now ? current : date >= previousStart && date < currentStart ? previous : null;
     if (!target) continue;
-    const key = `${row.prompt}\u0000${row.platform}`;
+    const compatibility = [
+      row.provider_model,
+      row.measurement_region,
+      row.measurement_mode,
+      row.scorer_version,
+      row.measurement_contract_version,
+    ];
+    // Legacy or partially tagged rows remain visible elsewhere, but they cannot
+    // support a defensible week-over-week claim.
+    if (compatibility.some(value => !value)) continue;
+    const key = [row.prompt, row.platform, ...compatibility].join('\u0000');
     const cohort = target.get(key) ?? { samples: 0, mentions: 0, sources: new Set<string>() };
     cohort.samples += 1;
     if (row.brand_mentioned) cohort.mentions += 1;

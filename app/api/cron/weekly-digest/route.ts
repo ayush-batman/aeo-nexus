@@ -27,7 +27,7 @@ export async function GET(request: NextRequest) {
       const [users, preference, scans, actions] = await Promise.all([
         db.from('users').select('email').eq('org_id', workspace.org_id),
         db.from('alert_preferences').select('enabled').eq('workspace_id', workspace.id).eq('alert_type', 'weekly_digest').maybeSingle(),
-        db.from('llm_scans').select('prompt, platform, brand_mentioned, citations, created_at').eq('workspace_id', workspace.id).gte('created_at', new Date(Date.now() - 14 * 86400000).toISOString()),
+        db.from('llm_scans').select('prompt, platform, brand_mentioned, citations, created_at, provider_model, measurement_region, measurement_mode, scorer_version, measurement_contract_version').eq('workspace_id', workspace.id).gte('created_at', new Date(Date.now() - 14 * 86400000).toISOString()),
         db.from('interventions').select('id, title, owner_id, target_prompts, status').eq('workspace_id', workspace.id),
       ]);
       const emails = (users.data ?? []).map(user => user.email).filter((email): email is string => Boolean(email));

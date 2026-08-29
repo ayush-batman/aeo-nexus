@@ -4,6 +4,7 @@ import type { CitationEvidence } from '@/lib/types';
 import { estimateMentionConfidence } from './confidence';
 import {
   MEASUREMENT_CONTRACT_VERSION,
+  MEASUREMENT_SCORER_VERSION,
   type EngineMeasurement,
   type MeasurementFailure,
   type MeasurementPersistence,
@@ -49,6 +50,7 @@ function engineMeasurement(engine: LLMPlatform, requestedSamples: number, sample
   const confidence = estimateMentionConfidence(mentions, succeeded.length);
   return {
     engine,
+    providerModels: [...new Set(succeeded.flatMap((sample) => sample.providerModel ? [sample.providerModel] : []))],
     requestedSamples,
     successfulSamples: succeeded.length,
     failedSamples: evidence.length - succeeded.length,
@@ -89,6 +91,9 @@ export async function runVisibilityMeasurement(
   }
   const requestedEngines = [...new Set(input.platforms)];
   const execute = dependencies.execute ?? scanLLM;
+  const runId = randomUUID();
+  const region = process.env.AELO_MEASUREMENT_REGION?.trim() || 'global-unspecified';
+  const mode = input.mode ?? 'standard';
   const startedAt = new Date().toISOString();
   const samples: MeasurementSample[] = [];
   const failures: MeasurementFailure[] = [];
@@ -100,10 +105,20 @@ export async function runVisibilityMeasurement(
     for (const engine of requestedEngines) {
       const result = output.results.find((candidate) => candidate.platform === engine);
       if (result) {
+        result.measurementRunId = runId;
+        result.sampleNumber = sampleNumber;
+        result.measurementContractVersion = MEASUREMENT_CONTRACT_VERSION;
+        result.scorerVersion = MEASUREMENT_SCORER_VERSION;
+        result.measurementRegion = result.measurementRegion || region;
+        result.measurementMode = result.measurementMode || mode;
         successfulResults.push(result);
         samples.push({
           sampleNumber,
           engine,
+          providerModel: result.providerModel ?? null,
+          region: result.measurementRegion,
+          mode: result.measurementMode,
+          scorerVersion: MEASUREMENT_SCORER_VERSION,
           status: 'succeeded',
           sampleId: result.sampleId,
           mentioned: result.brandMentioned,
@@ -122,6 +137,10 @@ export async function runVisibilityMeasurement(
       samples.push({
         sampleNumber,
         engine,
+        providerModel: null,
+        region,
+        mode,
+        scorerVersion: MEASUREMENT_SCORER_VERSION,
         status: 'failed',
         sampleId: null,
         mentioned: null,
@@ -160,7 +179,10 @@ export async function runVisibilityMeasurement(
 
   return {
     contractVersion: MEASUREMENT_CONTRACT_VERSION,
-    runId: randomUUID(),
+    runId,
+    scorerVersion: MEASUREMENT_SCORER_VERSION,
+    region,
+    mode,
     prompt: input.prompt,
     brandName: input.brandName,
     requestedEngines,
