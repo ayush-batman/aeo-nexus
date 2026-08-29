@@ -947,9 +947,104 @@ Overview now includes a weekly decision inbox. It compares the last seven days w
 
 - Action row update and audit-event insert are two server calls rather than one database transaction. An event failure is surfaced as a retryable 500 and never presented as success, but a database RPC should make the pair atomic in a later reliability pass.
 - Action measurement now reuses a caller-provided retry key for quota and event deduplication. A worker crash before the receipt is saved still returns a clear 409 on retry because the quota reservation cannot yet distinguish running from abandoned work; durable measurement jobs remain future work.
-- Weekly comparison currently uses stored prompt/platform/time cohorts. Model/version/region/scorer compatibility must be added to stored scan run metadata before those dimensions can be enforced in the inbox.
+- Model/version/region/scorer compatibility is completed in Batch 3C; older rows without those fields are intentionally excluded from change claims.
 - Email delivery remains blocked in environments without `RESEND_API_KEY`; the new delivery row and notification make that failure visible.
 
 ### Commit hash
 
-Pending Batch 3A commit; will be recorded in the next progress update.
+`04cf945` — `feat: persist team actions and weekly decisions`
+
+## Batch 3B — Responsive, accessible product shell and honest states
+
+### User impact
+
+The dashboard now uses one shared shell for the mobile drawer and desktop sidebar offset. The drawer traps focus, closes with Escape or route change, locks background scrolling, and returns focus to its trigger. A keyboard skip link reaches dashboard content. Shared buttons meet the 44px mobile and 40px dense-desktop target, reduced-motion preferences disable decorative movement, and the product modal now uses the existing Radix dialog so focus is trapped and restored.
+
+Login, password recovery, onboarding, and the public free scan have programmatic labels in the core journey. Dashboard loading, onboarding failure, notification failure, retry, and route error states no longer silently masquerade as empty data. The duplicate onboarding request on every dashboard navigation was removed. Production cannot enable the development auth bypass.
+
+### Verification
+
+- Full `npm run lint` passed with 0 errors and 67 pre-existing warnings.
+- App and MCP type checks passed.
+- Full suite passed after this batch; the final count is recorded below.
+- Browser checks at 390, 768, 1024, and 1440 found no horizontal overflow or unlabeled login inputs. At 390, both sign-in controls measured 44px. `/dashboard` redirected an unauthenticated browser to `/login`, and no browser console warnings/errors were recorded.
+- Evidence: `docs/product-rescue/evidence/batch-3b-login-390.png` and `batch-3b-login-1440.png`.
+- Authenticated drawer/actions/settings checks were not run because no authorized test login was supplied. Axe was not run because the repository has no axe dependency. Keyboard semantics are covered by the shell/dialog implementation and static contracts, but the in-app browser did not advance focus when sending Tab, so that browser assertion remains open.
+
+### Files and contracts
+
+- Added `components/dashboard/dashboard-shell.tsx`, `app/(dashboard)/loading.tsx`, and `tests/integration/dashboard-shell-contract.test.ts`.
+- Reworked sidebar/header/onboarding/error/auth/free-scan/dialog behavior and shared target sizes.
+- Removed the unused browser-only `insights-board.tsx` implementation after the route became a server redirect.
+- Corrected TypeScript/React lint failures across the audited product surfaces; warnings that do not fail the gate remain listed by the full lint command.
+
+### Commit hash
+
+`03afc17` — `fix: make product shell responsive and accessible`
+
+## Batch 3C — Comparable measurement metadata
+
+### Problem addressed
+
+Prompt and engine equality alone cannot prove two cohorts are comparable when a provider changes models, the measurement region changes, or Aelo changes its scorer. The weekly inbox and action receipt previously lacked those dimensions.
+
+### Change
+
+Migration 032 adds additive nullable receipt fields for measurement run ID, contract version, sample number, provider model, configured region, measurement mode, and scorer version. Every canonical sample now populates those fields through one persistence adapter. Weekly and intervention comparisons require matching model, region, mode, scorer, and contract metadata plus the existing prompt, engine, sample-count, and confidence rules. Legacy or partially tagged cohorts become inconclusive instead of supporting a change claim.
+
+`AELO_MEASUREMENT_REGION` is the deploy-time region label. If it is unset, receipts say `global-unspecified`; Aelo does not infer location.
+
+### Verification and rollout limit
+
+- Full test suite: 85 passed, 0 failed.
+- Focused lint and app type-check passed.
+- Migration 032 has static contract coverage but was not executed against Supabase because Supabase CLI/Docker is unavailable in this workspace.
+- Code that selects these columns must not deploy before migration 032.
+
+### Commit hash
+
+`04316fe` — `fix: require comparable measurement metadata`
+
+## Final local verification and handoff
+
+### Passed
+
+- `npm run lint` exited successfully with 0 errors. It reports 67 non-blocking warnings, mainly unused imports plus three legacy hook-dependency warnings and one unoptimized marketing image.
+- `npm run typecheck` passed.
+- `npm run typecheck:mcp` passed.
+- `npm test` passed: 85 tests, 0 failures.
+- `npm run build -- --webpack` passed from a clean `.next`: compilation, TypeScript, 136 pages/routes, optimization, and traces completed. Next used its WebAssembly compiler because the optional native SWC package is absent.
+- `git diff --check` passed.
+- Public/auth browser checks passed at 390, 768, 1024, and 1440 with no horizontal overflow, no unlabeled login fields, 44px mobile sign-in controls, correct unauthenticated dashboard redirect, and no console warnings/errors.
+- Read-only live check on 2026-08-29: `https://aelohq.com/` returned 200 HTML, and `https://aelohq.com/api/v1/visibility/overview` returned the expected 401 JSON (`Invalid or missing API key`). This confirms the domain and protected API are deployed, not provider-engine liveness.
+
+### Not run or not claimed
+
+- No deployment and no production database mutation.
+- Migrations 025–032 were not executed because this workspace has no Supabase CLI/Docker. Static SQL contracts passed; staging must exercise the real migration chain.
+- No clean dependency reinstall was attempted: the existing lockfile install was used, and the machine has constrained disk space.
+- No authenticated multi-role E2E, real cross-device Actions assignment, axe scan, 200% zoom matrix, live engine liveness matrix, or provider test-mode billing webhook run was possible without an authorized staging account/database and provider test setup.
+- The in-app browser did not move focus when Tab was sent, so keyboard behavior is supported by semantic controls, Radix, and static contracts but still needs manual staging confirmation.
+
+### Ordered commits
+
+1. `1012d9b` baseline and plan
+2. `351542f` release gates
+3. `3a952b4` tenant/billing authority
+4. `8c8f53e` billing idempotency
+5. `298f531` honest measurement evidence
+6. `71709ff` API authorization and quota
+7. `8436873` scheduled-scan claims
+8. `022e1ce` shared production limits
+9. `bcae09c` outbound-fetch/SSRF controls
+10. `8c5b3b3` signed analytics ingestion
+11. `3c8a935` canonical measurement contract
+12. `d3e9653` comparable intervention evidence
+13. `24b0b47` canonical product measurement paths
+14. `a9d2396` honest evidence context
+15. `a8664b5` activation decision packets
+16. `04cf945` persisted Actions and weekly decisions
+17. `03afc17` responsive/accessibility shell
+18. `04316fe` model/region/scorer-compatible cohorts
+
+The final documentation commit follows these implementation commits.
