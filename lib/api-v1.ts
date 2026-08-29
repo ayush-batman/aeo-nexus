@@ -18,6 +18,17 @@ interface WithKeyOptions {
   bucket?: string;
 }
 
+export class ApiV1Error extends Error {
+  constructor(
+    public readonly status: number,
+    public readonly code: string,
+    message: string,
+  ) {
+    super(message);
+    this.name = 'ApiV1Error';
+  }
+}
+
 /**
  * Guard for /api/v1/* endpoints that back the Aelo MCP server.
  * Authenticates the Bearer API key, checks scope, hands the handler a
@@ -54,7 +65,10 @@ export async function withKey(
     return NextResponse.json(data);
   } catch (e) {
     console.error('[api/v1] handler error:', e);
-    return NextResponse.json({ error: (e as Error).message || 'Server error' }, { status: 500 });
+    if (e instanceof ApiV1Error) {
+      return NextResponse.json({ error: e.message, code: e.code }, { status: e.status });
+    }
+    return NextResponse.json({ error: e instanceof Error ? e.message : 'Server error' }, { status: 500 });
   }
 }
 

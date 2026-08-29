@@ -1,5 +1,6 @@
 import { createHash, randomBytes } from 'crypto';
 import { createAdminClient } from '@/lib/supabase/admin';
+import { normalizeWorkspaceRole, type WorkspaceRole } from '@/lib/authorization';
 
 export interface ApiKeyContext {
   workspaceId: string;
@@ -7,6 +8,7 @@ export interface ApiKeyContext {
   userId: string;
   keyId: string;
   scopes: string[];
+  role: WorkspaceRole;
 }
 
 /** sha256 hex of the presented secret; only the hash is ever stored. */
@@ -45,6 +47,22 @@ export async function resolveApiKey(request: Request): Promise<ApiKeyContext | n
 
   if (error || !data) return null;
 
+  const [{ data: workspace }, { data: user }] = await Promise.all([
+    admin
+      .from('workspaces')
+      .select('id')
+      .eq('id', data.workspace_id)
+      .eq('org_id', data.org_id)
+      .maybeSingle(),
+    admin
+      .from('users')
+      .select('id, role')
+      .eq('id', data.created_by)
+      .eq('org_id', data.org_id)
+      .maybeSingle(),
+  ]);
+  if (!workspace || !user) return null;
+
   // Best-effort last-used stamp; never block the request on it.
   admin.from('api_keys').update({ last_used_at: new Date().toISOString() }).eq('id', data.id).then(
     () => {},
@@ -57,6 +75,7 @@ export async function resolveApiKey(request: Request): Promise<ApiKeyContext | n
     userId: data.created_by,
     keyId: data.id,
     scopes: data.scopes || ['read'],
+    role: normalizeWorkspaceRole(user.role),
   };
 }
 

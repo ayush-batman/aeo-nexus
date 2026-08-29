@@ -1,4 +1,4 @@
-import { createClient } from '@supabase/supabase-js';
+import { createAdminClient } from '@/lib/supabase/admin';
 
 /**
  * Alert Evaluation Engine
@@ -22,27 +22,24 @@ interface ScanData {
     mention_position: number | null;
     sentiment: string | null;
     competitors_mentioned: string[] | null;
-    citations: Array<{ url: string; is_own_domain?: boolean }> | null;
+    citations: Array<{
+        url: string;
+        is_own_domain?: boolean;
+        provenance?: 'provider_citation' | 'link_mentioned' | 'unverified';
+    }> | null;
     platform: string;
 }
 
 // Lazy singleton, instantiating at module load breaks Next 16 page-data
 // collection on projects that don't have env vars set yet.
-let _supabaseAdmin: ReturnType<typeof createClient> | null = null;
+let _supabaseAdmin: ReturnType<typeof createAdminClient> | null = null;
 function getSupabaseAdmin() {
     if (_supabaseAdmin) return _supabaseAdmin;
-    const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-    const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
-    if (!url || !key) {
-        throw new Error('Supabase env vars missing at runtime (NEXT_PUBLIC_SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY)');
-    }
-    _supabaseAdmin = createClient(url, key, {
-        auth: { autoRefreshToken: false, persistSession: false },
-    });
+    _supabaseAdmin = createAdminClient();
     return _supabaseAdmin;
 }
 // Proxy so existing `supabaseAdmin.from(…)` call sites keep working.
-const supabaseAdmin = new Proxy({} as ReturnType<typeof createClient>, {
+const supabaseAdmin = new Proxy({} as ReturnType<typeof createAdminClient>, {
     get(_target, prop) {
         return (getSupabaseAdmin() as unknown as Record<string | symbol, unknown>)[prop];
     },
@@ -75,7 +72,7 @@ async function createNotification(
     type: AlertType,
     title: string,
     message: string,
-    metadata?: Record<string, any>
+    metadata?: Record<string, unknown>
 ) {
     const { error } = await supabaseAdmin
         .from('notifications')
@@ -127,9 +124,6 @@ export async function evaluateAlerts(
 
         // 3. Competitor overtake check
         if (previousScans && previousScans.length > 0 && await isAlertEnabled(workspaceId, 'competitor_overtake')) {
-            const prevMentionRate = previousScans.filter(s => s.brand_mentioned).length / previousScans.length;
-            const currMentionRate = currentScans.filter(s => s.brand_mentioned).length / currentScans.length;
-
             // Check if any competitor is mentioned more than the brand
             const competitorCounts: Record<string, number> = {};
             currentScans.forEach(s => {
@@ -173,7 +167,9 @@ export async function evaluateAlerts(
         // 5. New citation earned
         if (await isAlertEnabled(workspaceId, 'new_citation')) {
             const ownCitations = currentScans
-                .flatMap(s => (s.citations || []).filter(c => c.is_own_domain))
+                .flatMap(s => (s.citations || []).filter(c =>
+                    c.is_own_domain && c.provenance === 'provider_citation',
+                ))
                 .map(c => c.url);
 
             if (ownCitations.length > 0) {

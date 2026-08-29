@@ -313,4 +313,76 @@ No schema migration is required because `llm_scans.citations` is JSONB and new f
 
 ### Commit hash
 
-Pending Batch 1D commit; will be recorded in the next progress update.
+`298f531` — `fix: make measurement evidence honest`
+
+## Batch 1E — API authorization, quota, and dangerous-route removal
+
+### Problem addressed
+
+An unauthenticated GET route could delete and recreate a fixed test user with the service role. API scans required only read scope, loaded entitlements through cookie auth, did not reserve weekly quota atomically, and hid partial provider/persistence failures. API-key and workspace mutations used the service role without centralized owner/admin checks.
+
+### User impact
+
+The destructive route is absent. Measurement requires a `measure`-scoped API key whose user and workspace are revalidated against its organization. Free-plan weekly runs reserve atomically, duplicate request keys stop before provider calls, partial engine failures are explicit, and only owners/admins can manage API keys or create brand workspaces.
+
+### Files changed
+
+- deleted `app/api/setup-test-user/route.ts`
+- `lib/authorization.ts`
+- `lib/api-auth.ts`
+- `lib/api-v1.ts`
+- `lib/entitlements.ts`
+- `lib/data-access.ts`
+- `lib/alerts/evaluate.ts`
+- `app/api/v1/scan/route.ts`
+- `app/api/keys/route.ts`
+- `app/api/keys/[id]/route.ts`
+- `app/api/workspaces/route.ts`
+- `supabase/migrations/027_create_scan_quota_reservations.sql`
+- `tests/integration/api-auth-boundaries.test.ts`
+- `docs/product-rescue/IMPLEMENTATION_PROGRESS.md`
+
+### Tests added
+
+- Production source tree excludes `/api/setup-test-user`.
+- API-key resolution revalidates both workspace→organization and creator→organization bindings and carries current role.
+- Scan route requires `measure`, reserves quota, reports requested/succeeded/failed engines and persistence state, and rejects duplicate request keys.
+- Service-role API-key/workspace mutations require owner/admin.
+- Quota migration has an organization row lock, trailing-seven-day count, unique request identity, explicit reserved/duplicate/denied outcomes, and service-role-only execution.
+
+### Commands run and results
+
+- Focused tests before implementation → 5 expected failures.
+- `npm test` after implementation → 30 passed.
+- targeted ESLint across all changed TypeScript routes/modules/tests → passed.
+- `npm run typecheck` → passed. This batch also fixed the 8 pre-existing scanner/alerts/data-access failures recorded at baseline.
+- `npm run typecheck:mcp` → passed.
+- `npm run lint -- --quiet` → 76 existing repository errors remain, down from 87 at baseline; changed files are clean.
+- `npm run build -- --webpack` → passed: compiled, TypeScript passed, 133 static pages generated, traces collected, and the final route manifest excluded `/api/setup-test-user`.
+- Removed the 660 MB successful-build `.next` cache afterward; source and user data were not affected.
+
+### Browser/runtime evidence
+
+- `http://localhost:3001/api/setup-test-user` rendered Aelo's 404 page with no console warnings/errors.
+- An unauthenticated POST to `/api/v1/scan` returned HTTP 401 with `Invalid or missing API key`; the server log showed no provider request.
+- Authenticated 403/429/partial-result runtime checks require a disposable migrated database and test API keys, which are not available locally.
+
+### Migration considerations
+
+- Apply migration 027 after 024–026.
+- The reservation table is additive and does not rewrite scans or plans.
+- Apply 027 before deploying the updated scan/workspace routes; without the RPC, measurement fails closed instead of running unmetered.
+- Keep reservations during rollback as an audit record. Revoke service-role function execution before disabling the route caller.
+- Verify three allowed free runs, the fourth denied run, concurrent reservations, duplicate request rejection, and paid-plan behavior in staging.
+
+### Remaining risks
+
+- Migration 027 has static contract coverage only; Supabase CLI/Docker is still unavailable for a disposable database run.
+- API-key 403 and quota 429 runtime fixtures still need authorized test keys after migration.
+- A quota reservation is intentionally consumed once provider work begins, including an all-provider-failed run; product/support policy for refunds is not yet defined.
+- Full repository lint still fails with 76 pre-existing errors even though type-check, tests, and build pass.
+- The in-memory per-instance minute limiter remains until the later Upstash reliability batch.
+
+### Commit hash
+
+Pending Batch 1E commit; will be recorded in the next progress update.

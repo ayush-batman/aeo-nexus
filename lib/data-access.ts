@@ -2,7 +2,8 @@ import { createClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { randomUUID } from 'crypto';
 import { cookies } from 'next/headers';
-import type { LLMScan, ForumThread, VisibilityMetric } from './types';
+import type { LLMScan, ForumThread } from './types';
+import { normalizeWorkspaceRole, type WorkspaceRole } from './authorization';
 
 // ── Dev Auth Bypass ─────────────────────────────────────────────────────────
 // Guarded by NEXT_PUBLIC_ENABLE_DEV_AUTH_BYPASS=true AND a `dev-auth-bypass=true`
@@ -83,6 +84,7 @@ export async function getCurrentWorkspaceContext(): Promise<{
     orgId: string;
     workspaceId: string;
     onboardingCompleted: boolean;
+    role: WorkspaceRole;
 } | null> {
     const supabase = await createClient();
 
@@ -135,15 +137,11 @@ export async function getCurrentWorkspaceContext(): Promise<{
         const orgName = (user.user_metadata?.full_name || user.email?.split('@')[0] || 'User') + "'s Organization";
         const orgId = useManualIds ? randomUUID() : undefined;
 
-        const orgInsert = useManualIds
-            ? { id: orgId, name: orgName }
-            : { name: orgName };
-
         let createdOrgId = orgId;
         if (useManualIds) {
             const { error: orgError } = await db
                 .from('organizations')
-                .insert(orgInsert);
+                .insert({ id: orgId, name: orgName });
             if (orgError || !createdOrgId) {
                 console.error('[getCurrentWorkspaceContext] Failed to create org:', orgError);
                 return null;
@@ -151,7 +149,7 @@ export async function getCurrentWorkspaceContext(): Promise<{
         } else {
             const { data: newOrg, error: orgError } = await db
                 .from('organizations')
-                .insert(orgInsert)
+                .insert({ name: orgName })
                 .select('id')
                 .single();
             createdOrgId = newOrg?.id;
@@ -179,15 +177,11 @@ export async function getCurrentWorkspaceContext(): Promise<{
         }
 
         const workspaceId = useManualIds ? randomUUID() : undefined;
-        const wsInsert = useManualIds
-            ? { id: workspaceId, org_id: createdOrgId, name: 'My Brand' }
-            : { org_id: createdOrgId, name: 'My Brand' };
-
         let createdWorkspaceId = workspaceId;
         if (useManualIds) {
             const { error: wsError } = await db
                 .from('workspaces')
-                .insert(wsInsert);
+                .insert({ id: workspaceId, org_id: createdOrgId, name: 'My Brand' });
             if (wsError || !createdWorkspaceId) {
                 console.error('[getCurrentWorkspaceContext] Failed to create workspace:', wsError);
                 return null;
@@ -195,7 +189,7 @@ export async function getCurrentWorkspaceContext(): Promise<{
         } else {
             const { data: newWorkspace, error: wsError } = await db
                 .from('workspaces')
-                .insert(wsInsert)
+                .insert({ org_id: createdOrgId, name: 'My Brand' })
                 .select('id')
                 .single();
             createdWorkspaceId = newWorkspace?.id;
@@ -210,11 +204,11 @@ export async function getCurrentWorkspaceContext(): Promise<{
             orgId: createdOrgId,
             workspaceId: createdWorkspaceId,
             onboardingCompleted: false,
+            role: 'owner',
         };
     }
 
     // Ensure workspace exists, check for active workspace cookie first
-    let workspaceSelectQuery;
     let activeWsId: string | undefined;
     
     try {
@@ -239,6 +233,7 @@ export async function getCurrentWorkspaceContext(): Promise<{
                 orgId: profile.org_id,
                 workspaceId: workspace.id,
                 onboardingCompleted: profile.onboarding_completed ?? false,
+                role: normalizeWorkspaceRole(profile.role),
             };
         }
     }
@@ -253,15 +248,11 @@ export async function getCurrentWorkspaceContext(): Promise<{
 
     if (!workspace?.id) {
         const workspaceId = useManualIds ? randomUUID() : undefined;
-        const wsInsert = useManualIds
-            ? { id: workspaceId, org_id: profile.org_id, name: 'My Brand' }
-            : { org_id: profile.org_id, name: 'My Brand' };
-
         let createdWorkspaceId = workspaceId;
         if (useManualIds) {
             const { error: createError } = await db
                 .from('workspaces')
-                .insert(wsInsert);
+                .insert({ id: workspaceId, org_id: profile.org_id, name: 'My Brand' });
             if (createError || !createdWorkspaceId) {
                 console.error('[getCurrentWorkspaceContext] Failed to create workspace:', createError);
                 return null;
@@ -269,7 +260,7 @@ export async function getCurrentWorkspaceContext(): Promise<{
         } else {
             const { data: newWs, error: createError } = await db
                 .from('workspaces')
-                .insert(wsInsert)
+                .insert({ org_id: profile.org_id, name: 'My Brand' })
                 .select('id')
                 .single();
             createdWorkspaceId = newWs?.id;
@@ -284,6 +275,7 @@ export async function getCurrentWorkspaceContext(): Promise<{
             orgId: profile.org_id,
             workspaceId: createdWorkspaceId!,
             onboardingCompleted: profile.onboarding_completed ?? false,
+            role: normalizeWorkspaceRole(profile.role),
         };
     }
 
@@ -292,6 +284,7 @@ export async function getCurrentWorkspaceContext(): Promise<{
         orgId: profile.org_id,
         workspaceId: workspace.id,
         onboardingCompleted: profile.onboarding_completed ?? false,
+        role: normalizeWorkspaceRole(profile.role),
     };
 }
 
@@ -546,7 +539,7 @@ export async function getDashboardStats(
 
     // ── Share of Voice: brand mentions vs competitor mentions ──
     let shareOfVoice = 0;
-    let shareOfVoiceChange = 0;
+    const shareOfVoiceChange = 0;
 
     const sevenDaysAgo = new Date();
     sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
@@ -653,15 +646,6 @@ export async function createScheduledScan(scan: {
     frequency: 'daily' | 'weekly' | 'monthly';
 }): Promise<ScheduledScan | null> {
     const supabase = await createClient();
-
-    // Calculate next run immediately
-    const nextRun = new Date();
-    // For demo purposes, set it to run in 1 minute so user can see it work? 
-    // No, strictly follow frequency. But daily means "tomorrow same time".
-    // Let's default to "tomorrow" for daily, or just "now" if we want to run immediately?
-    // Usually schedules start immediately or at next interval. Let's say next interval.
-    // Actually, user probably wants first run immediately. 
-    // I'll set next_run_at to NOW() so the cron picks it up quickly.
 
     const { data, error } = await supabase
         .from('scheduled_scans')

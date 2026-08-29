@@ -1,6 +1,7 @@
 import { scanLLM, getAvailablePlatforms, type LLMPlatform } from '@/lib/ai/llm-scanner';
-import { getEntitlements } from '@/lib/entitlements';
-import { withKey, getWorkspaceBrand } from '@/lib/api-v1';
+import { randomUUID } from 'node:crypto';
+import { getEntitlements, reserveScanQuota } from '@/lib/entitlements';
+import { ApiV1Error, withKey, getWorkspaceBrand } from '@/lib/api-v1';
 import type { CitationEvidence } from '@/lib/types';
 
 export const maxDuration = 60;
@@ -41,10 +42,12 @@ function dedupeCitations(cites: EngineAgg['citations']): EngineAgg['citations'] 
 // mention rate, confidence, and the raw passes as evidence. (run_visibility_scan)
 export async function POST(request: Request) {
   const body = await request.json().catch(() => ({} as Record<string, unknown>));
-  return withKey(request, 'read', async (ctx, admin) => {
+  return withKey(request, 'measure', async (ctx, admin) => {
     const prompt = typeof body.prompt === 'string' ? body.prompt.trim() : '';
     const brandName = typeof body.brandName === 'string' ? body.brandName.trim() : '';
-    if (!prompt || !brandName) throw new Error('prompt and brandName are required');
+    if (!prompt || !brandName) {
+      throw new ApiV1Error(400, 'invalid_scan_request', 'prompt and brandName are required');
+    }
 
     const samples = Math.min(8, Math.max(1, Number(body.samples) || 4));
     const brandDomain = typeof body.brandDomain === 'string' ? body.brandDomain : undefined;
@@ -53,17 +56,31 @@ export async function POST(request: Request) {
       : (await getWorkspaceBrand(admin, ctx.workspaceId)).competitors;
 
     const available = getAvailablePlatforms().filter((p) => p.available).map((p) => p.platform);
-    const ent = await getEntitlements(ctx.orgId);
+    const ent = await getEntitlements(ctx.orgId, admin);
     const platforms = available.filter((p) => ent.engines.includes(p)) as LLMPlatform[];
     if (platforms.length === 0) {
-      throw new Error('No engines available on this plan. Upgrade to scan more engines.');
+      throw new ApiV1Error(503, 'no_engines_available', 'No entitled engines are currently configured.');
+    }
+
+    const idempotencyKey = request.headers.get('idempotency-key')?.trim();
+    if (idempotencyKey && idempotencyKey.length > 100) {
+      throw new ApiV1Error(400, 'invalid_idempotency_key', 'Idempotency-Key must be 100 characters or fewer.');
+    }
+    const requestId = `${ctx.keyId}:${idempotencyKey || randomUUID()}`;
+    const reservation = await reserveScanQuota(ctx.orgId, requestId, admin);
+    if (reservation === 'denied') {
+      throw new ApiV1Error(429, 'weekly_scan_quota_exceeded', 'Weekly scan quota exceeded.');
+    }
+    if (reservation === 'duplicate') {
+      throw new ApiV1Error(409, 'duplicate_scan_request', 'This Idempotency-Key has already been used.');
     }
 
     const agg: Record<string, EngineAgg> = {};
     const inserts: Record<string, unknown>[] = [];
+    const failures: Array<{ sample: number; platform: LLMPlatform; error: string }> = [];
 
     for (let i = 0; i < samples; i++) {
-      const { results } = await scanLLM({
+      const { results, errors } = await scanLLM({
         prompt,
         brandName,
         brandDomain,
@@ -71,6 +88,7 @@ export async function POST(request: Request) {
         platforms,
         mode: typeof body.mode === 'string' ? body.mode : undefined,
       });
+      failures.push(...errors.map((error) => ({ sample: i + 1, ...error })));
       for (const r of results) {
         const a = agg[r.platform] || (agg[r.platform] = { mentions: 0, positions: [], sentiments: [], citations: [], evidence: [] });
         if (r.brandMentioned) a.mentions++;
@@ -104,9 +122,18 @@ export async function POST(request: Request) {
       }
     }
 
+    let persistence: { status: 'stored' | 'failed' | 'not_applicable'; rows: number } = {
+      status: 'not_applicable',
+      rows: 0,
+    };
     if (inserts.length) {
       const { error } = await admin.from('llm_scans').insert(inserts);
-      if (error) console.error('[v1/scan] failed to persist scans:', error);
+      if (error) {
+        console.error('[v1/scan] failed to persist scans:', error);
+        persistence = { status: 'failed', rows: 0 };
+      } else {
+        persistence = { status: 'stored', rows: inserts.length };
+      }
     }
 
     const engines = Object.entries(agg).map(([engine, a]) => {
@@ -139,6 +166,13 @@ export async function POST(request: Request) {
           }, 0) / engines.length,
         )
       : 0;
+    const succeededEngines = Object.keys(agg);
+    const failedEngines = platforms.filter((platform) => !succeededEngines.includes(platform));
+    const runStatus = succeededEngines.length === 0
+      ? 'all_failed'
+      : failures.length > 0
+        ? 'partial'
+        : 'complete';
 
     return {
       prompt,
@@ -146,6 +180,13 @@ export async function POST(request: Request) {
       samples,
       visibility,
       engines,
+      requestedEngines: platforms,
+      succeededEngines,
+      failedEngines,
+      failures,
+      runStatus,
+      persistence,
+      requestId,
       note: 'Each engine was asked the same question `samples` times. mentionRate and confidence reflect agreement across samples; evidence holds every raw pass so the number is defensible.',
     };
   }, { limitPerMinute: 10, bucket: 'scan' });

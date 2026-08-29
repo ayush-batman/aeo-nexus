@@ -2,11 +2,15 @@ import { NextResponse } from 'next/server';
 import { getCurrentWorkspaceContext } from '@/lib/data-access';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { generateApiKey } from '@/lib/api-auth';
+import { requireWorkspaceRole } from '@/lib/authorization';
 
 // GET /api/keys  — list the current workspace's API keys (never the secret).
 export async function GET() {
   const ctx = await getCurrentWorkspaceContext();
   if (!ctx) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  if (!requireWorkspaceRole(ctx, ['owner', 'admin'])) {
+    return NextResponse.json({ error: 'Owner or admin role required' }, { status: 403 });
+  }
 
   const admin = createAdminClient();
   const { data, error } = await admin
@@ -23,6 +27,9 @@ export async function GET() {
 export async function POST(request: Request) {
   const ctx = await getCurrentWorkspaceContext();
   if (!ctx) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  if (!requireWorkspaceRole(ctx, ['owner', 'admin'])) {
+    return NextResponse.json({ error: 'Owner or admin role required' }, { status: 403 });
+  }
 
   const body = await request.json().catch(() => ({} as Record<string, unknown>));
   const name = typeof body.name === 'string' && body.name.trim() ? body.name.trim().slice(0, 60) : 'API key';
