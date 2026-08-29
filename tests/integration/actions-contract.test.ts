@@ -41,4 +41,8 @@ test('action measurement retries reuse quota and audit idempotency keys', async 
   assert.match(route, /event_type:\s*['"]measured['"]/);
   assert.match(route, /action_events/);
   assert.match(route, /measured:\$\{requestKey\}/);
+  for (const field of ['provider_model', 'measurement_region', 'measurement_mode', 'scorer_version', 'contract_version']) {
+    assert.match(route, new RegExp(field));
+  }
+  assert.match(route, /engine\.providerModels\.length === 1/);
 });

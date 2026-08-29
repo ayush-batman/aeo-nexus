@@ -7,7 +7,6 @@ import { getAvailablePlatforms, type LLMPlatform } from '@/lib/ai/llm-scanner';
 import { getEntitlements, reserveScanQuota } from '@/lib/entitlements';
 import { runVisibilityMeasurement } from '@/lib/measurement/service';
 import { compareVisibilitySnapshots, type ComparableSnapshot } from '@/lib/measurement/comparison';
-import { MEASUREMENT_CONTRACT_VERSION } from '@/lib/measurement/types';
 import { scanResultPersistenceRow } from '@/lib/measurement/persistence';
 
 export const maxDuration = 300;
@@ -120,7 +119,11 @@ export async function POST(
                 mention_rate: engine.mentionRate,
                 position_sample_count: engine.evidence.filter(sample => sample.status === 'succeeded' && sample.position !== null).length,
                 measured_at: measurement.completedAt,
-                contract_version: MEASUREMENT_CONTRACT_VERSION,
+                contract_version: measurement.contractVersion,
+                provider_model: engine.providerModels.length === 1 ? engine.providerModels[0] : undefined,
+                measurement_region: measurement.region,
+                measurement_mode: measurement.mode,
+                scorer_version: measurement.scorerVersion,
             };
         }
     }
