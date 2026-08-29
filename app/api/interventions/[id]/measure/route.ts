@@ -1,9 +1,33 @@
+import { randomUUID } from 'node:crypto';
 import { NextRequest, NextResponse } from 'next/server';
 import { getCurrentWorkspaceContext } from '@/lib/data-access';
 import { createAdminClient } from '@/lib/supabase/admin';
-import { scanLLM, getAvailablePlatforms, type LLMPlatform } from '@/lib/ai/llm-scanner';
+import { getAvailablePlatforms, type LLMPlatform, type ScanResult } from '@/lib/ai/llm-scanner';
+import { getEntitlements, reserveScanQuota } from '@/lib/entitlements';
+import { runVisibilityMeasurement } from '@/lib/measurement/service';
+import { compareVisibilitySnapshots, type ComparableSnapshot } from '@/lib/measurement/comparison';
+import { MEASUREMENT_CONTRACT_VERSION } from '@/lib/measurement/types';
 
-export const maxDuration = 60;
+export const maxDuration = 300;
+
+function persistenceRow(workspaceId: string, result: ScanResult): Record<string, unknown> {
+    return {
+        workspace_id: workspaceId,
+        platform: result.platform,
+        prompt: result.prompt,
+        response: result.response,
+        brand_mentioned: result.brandMentioned,
+        brand_variants: result.brandVariants,
+        mention_position: result.mentionPosition,
+        sentiment: result.sentiment,
+        sentiment_score: result.sentimentScore,
+        sentiment_reason: result.sentimentReason,
+        competitors_mentioned: result.competitorsMentioned,
+        citations: result.citations,
+        list_items: result.listItems,
+        confidence: result.confidence,
+    };
+}
 
 // POST /api/interventions/:id/measure
 // Runs a fresh scan for each target_prompt on the currently-configured LLM
@@ -40,11 +64,20 @@ export async function POST(
     }
 
     // 2. Figure out which platforms we can actually call today
+    const entitlements = await getEntitlements(context.orgId, db);
     const platforms = getAvailablePlatforms()
         .filter(p => p.available && p.platform !== 'mock')
-        .map(p => p.platform);
+        .map(p => p.platform)
+        .filter(platform => entitlements.engines.includes(platform)) as LLMPlatform[];
     if (platforms.length === 0) {
-        return NextResponse.json({ error: 'No LLM providers configured' }, { status: 503 });
+        return NextResponse.json({ error: 'No entitled LLM providers are configured' }, { status: 503 });
+    }
+
+    // One intervention measurement is one user-requested batch, even when it
+    // contains several target prompts. The database reservation is atomic.
+    const reservation = await reserveScanQuota(context.orgId, `intervention:${id}:${randomUUID()}`, db);
+    if (reservation === 'denied') {
+        return NextResponse.json({ error: 'Weekly scan quota exceeded' }, { status: 429 });
     }
 
     // Brand name comes off the workspace
@@ -57,49 +90,53 @@ export async function POST(
     const brandDomain: string | undefined = ws?.settings?.website;
     const competitors: string[] = ws?.settings?.competitors ?? [];
 
-    // 3. Scan each prompt on each platform; also persist the scans so the
-    //    dashboard reflects the follow-up.
-    const impactSnapshot: Record<string, Record<string, { mentioned: boolean; position: number | null; sentiment: string | null }>> = {};
+    // 3. Measure each prompt four times per engine. Four is the minimum cohort
+    //    allowed to support an impact verdict; every successful sample is stored.
+    const impactSnapshot: ComparableSnapshot = {};
+    let successfulSamples = 0;
+    let failedSamples = 0;
     for (const prompt of prompts) {
         impactSnapshot[prompt] = {};
-        const { results } = await scanLLM({
+        const measurement = await runVisibilityMeasurement({
             prompt,
             brandName,
             brandDomain,
             competitors,
-            platforms: platforms as LLMPlatform[],
+            platforms,
+            samples: 4,
+        }, {
+            persist: async (results) => {
+                const { error } = await db.from('llm_scans').insert(results.map(result => persistenceRow(context.workspaceId, result)));
+                if (error) throw new Error('Failed to store intervention measurement samples.');
+            },
         });
-        for (const r of results) {
-            impactSnapshot[prompt][r.platform] = {
-                mentioned: r.brandMentioned,
-                position: r.mentionPosition,
-                sentiment: r.sentiment,
+        for (const engine of measurement.engines) {
+            successfulSamples += engine.successfulSamples;
+            failedSamples += engine.failedSamples;
+            if (engine.successfulSamples === 0) continue;
+            impactSnapshot[prompt][engine.engine] = {
+                mentioned: engine.mentioned === true,
+                position: engine.avgPosition,
+                sentiment: engine.sentiment,
+                sample_count: engine.successfulSamples,
+                mention_count: engine.mentions,
+                mention_rate: engine.mentionRate,
+                position_sample_count: engine.evidence.filter(sample => sample.status === 'succeeded' && sample.position !== null).length,
+                measured_at: measurement.completedAt,
+                contract_version: MEASUREMENT_CONTRACT_VERSION,
             };
-        }
-        if (results.length > 0) {
-            const scanInserts = results.map(r => ({
-                workspace_id: context.workspaceId,
-                platform: r.platform,
-                prompt: r.prompt,
-                response: r.response,
-                brand_mentioned: r.brandMentioned,
-                brand_variants: r.brandVariants,
-                mention_position: r.mentionPosition,
-                sentiment: r.sentiment,
-                sentiment_score: r.sentimentScore,
-                sentiment_reason: r.sentimentReason,
-                competitors_mentioned: r.competitorsMentioned,
-                citations: r.citations,
-                list_items: r.listItems,
-                confidence: r.confidence,
-            }));
-            const { error: insertErr } = await db.from('llm_scans').insert(scanInserts);
-            if (insertErr) console.error('[interventions/measure] scan insert failed:', insertErr);
         }
     }
 
+    if (successfulSamples === 0) {
+        return NextResponse.json({
+            error: 'All measurement samples failed. The intervention was not marked as measured.',
+            failedSamples,
+        }, { status: 502 });
+    }
+
     // 4. Compute a summary delta vs baseline.
-    const summary = summarizeDelta(interv.baseline_snapshot ?? {}, impactSnapshot);
+    const summary = compareVisibilitySnapshots(interv.baseline_snapshot ?? {}, impactSnapshot);
 
     // 5. Persist
     const { data: updated, error: updErr } = await db
@@ -118,60 +155,5 @@ export async function POST(
         return NextResponse.json({ error: 'Failed to save impact' }, { status: 500 });
     }
 
-    return NextResponse.json({ intervention: updated, summary });
-}
-
-// ── delta helper ────────────────────────────────────────────────────────────
-// Averages across (prompt, platform) pairs present in both snapshots.
-// visibility_change: percentage-point change of "mention rate"
-// position_change: change in average mention_position (negative = moved up)
-// verdict: improved | no_change | regressed
-function summarizeDelta(
-    baseline: Record<string, Record<string, { mentioned: boolean; position: number | null; sentiment: string | null }>>,
-    followup: Record<string, Record<string, { mentioned: boolean; position: number | null; sentiment: string | null }>>,
-): { visibility_change: number; position_change: number | null; verdict: 'improved' | 'no_change' | 'regressed'; measured_at: string } {
-    let baseMentions = 0, baseTotal = 0, basePosSum = 0, basePosCount = 0;
-    let followMentions = 0, followTotal = 0, followPosSum = 0, followPosCount = 0;
-
-    for (const prompt of Object.keys(followup)) {
-        const bMap = baseline[prompt] ?? {};
-        const fMap = followup[prompt] ?? {};
-        const platforms = new Set([...Object.keys(bMap), ...Object.keys(fMap)]);
-        for (const plat of platforms) {
-            const b = bMap[plat], f = fMap[plat];
-            if (b) {
-                baseTotal++;
-                if (b.mentioned) baseMentions++;
-                if (typeof b.position === 'number') { basePosSum += b.position; basePosCount++; }
-            }
-            if (f) {
-                followTotal++;
-                if (f.mentioned) followMentions++;
-                if (typeof f.position === 'number') { followPosSum += f.position; followPosCount++; }
-            }
-        }
-    }
-
-    const basePct = baseTotal > 0 ? (baseMentions / baseTotal) * 100 : 0;
-    const followPct = followTotal > 0 ? (followMentions / followTotal) * 100 : 0;
-    const visibilityChange = Math.round(followPct - basePct);
-
-    const baseAvgPos = basePosCount > 0 ? basePosSum / basePosCount : null;
-    const followAvgPos = followPosCount > 0 ? followPosSum / followPosCount : null;
-    let positionChange: number | null = null;
-    if (baseAvgPos !== null && followAvgPos !== null) {
-        positionChange = Math.round((followAvgPos - baseAvgPos) * 10) / 10;
-    }
-
-    // Verdict: mention rate up OR position moved up (lower number) = improved
-    let verdict: 'improved' | 'no_change' | 'regressed' = 'no_change';
-    if (visibilityChange > 5 || (positionChange !== null && positionChange < -0.5)) verdict = 'improved';
-    else if (visibilityChange < -5 || (positionChange !== null && positionChange > 0.5)) verdict = 'regressed';
-
-    return {
-        visibility_change: visibilityChange,
-        position_change: positionChange,
-        verdict,
-        measured_at: new Date().toISOString(),
-    };
+    return NextResponse.json({ intervention: updated, summary, successfulSamples, failedSamples });
 }

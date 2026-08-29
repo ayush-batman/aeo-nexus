@@ -38,3 +38,21 @@ test('source aggregates require provider evidence and receipts expose labels', a
     assert.match(display, /Unverified/);
   }
 });
+
+test('intervention receipts use multi-sample matched cohorts and allow inconclusive verdicts', async () => {
+  const [measureRoute, comparison, snapshot, page] = await Promise.all([
+    source('app/api/interventions/[id]/measure/route.ts'),
+    source('lib/measurement/comparison.ts'),
+    source('lib/interventions.ts'),
+    source('app/(dashboard)/dashboard/interventions/page.tsx'),
+  ]);
+
+  assert.match(measureRoute, /runVisibilityMeasurement/);
+  assert.match(measureRoute, /samples: 4/);
+  assert.match(measureRoute, /reserveScanQuota/);
+  assert.doesNotMatch(measureRoute, /scanLLM\(/);
+  assert.match(comparison, /followupConfidence\.interval\.lower > baselineConfidence\.interval\.upper/);
+  assert.match(comparison, /'inconclusive'/);
+  assert.match(snapshot, /SNAPSHOT_SAMPLES_PER_ENGINE = 8/);
+  assert.match(page, /"inconclusive"/);
+});

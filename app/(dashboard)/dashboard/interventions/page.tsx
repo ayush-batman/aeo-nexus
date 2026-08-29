@@ -13,7 +13,6 @@ import {
     Layers,
     Loader2,
     MessageSquare,
-    Plus,
     Sparkles,
     Zap,
 } from "lucide-react";
@@ -21,7 +20,6 @@ import {
 import { Header } from "@/components/dashboard/header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 
 // ── Types (shape mirrored from /api/interventions) ──────────────────────────
@@ -31,13 +29,17 @@ type ActionType =
 
 type Status = "planned" | "in_progress" | "completed" | "measured";
 
-type Verdict = "improved" | "no_change" | "regressed";
+type Verdict = "improved" | "no_change" | "regressed" | "inconclusive";
 
 interface ImpactSummary {
     visibility_change: number;
     position_change: number | null;
     verdict: Verdict;
     measured_at: string;
+    reason?: string;
+    comparable_pairs?: number;
+    baseline_sample_count?: number;
+    followup_sample_count?: number;
 }
 
 interface Intervention {
@@ -84,10 +86,10 @@ export default function InterventionsPage() {
 
     const fetchAll = useCallback(async () => {
         try {
-            setError(null);
             const r = await fetch("/api/interventions", { cache: "no-store" });
             if (!r.ok) throw new Error(`Failed to load (${r.status})`);
             const d = await r.json();
+            setError(null);
             setItems(d.interventions ?? []);
         } catch (e) {
             setError(e instanceof Error ? e.message : "Failed to load");
@@ -95,7 +97,8 @@ export default function InterventionsPage() {
     }, []);
 
     useEffect(() => {
-        fetchAll();
+        const timer = window.setTimeout(() => { void fetchAll(); }, 0);
+        return () => window.clearTimeout(timer);
     }, [fetchAll]);
 
     const measure = useCallback(async (id: string) => {
@@ -341,6 +344,16 @@ function Receipt({ summary }: { summary: ImpactSummary }) {
                     measured {formatDistanceToNow(new Date(summary.measured_at), { addSuffix: true })}
                 </div>
             </div>
+            {summary.reason && (
+                <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-[12px] text-[var(--text-secondary)]">
+                    <span>{summary.reason}</span>
+                    {typeof summary.baseline_sample_count === "number" && typeof summary.followup_sample_count === "number" && (
+                        <span className="font-mono text-[var(--text-tertiary)]">
+                            n={summary.baseline_sample_count} before · n={summary.followup_sample_count} after
+                        </span>
+                    )}
+                </div>
+            )}
         </div>
     );
 }

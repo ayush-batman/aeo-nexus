@@ -679,4 +679,45 @@ Every new API-key scan now includes a `measurement.v1` receipt with one run ID, 
 
 ### Commit hash
 
-Pending Batch 2A commit; will be recorded in the next progress update.
+`3c8a935` — `feat: establish canonical measurement contract`
+
+## Batch 2B — Honest intervention measurement
+
+### Problem addressed
+
+Intervention receipts compared one answer before an action with one answer after it. Different prompts or engines could be mixed, small samples could be called improved or regressed, and the follow-up scan bypassed the canonical measurement service and atomic quota.
+
+### User impact
+
+New intervention baselines keep up to eight recent samples per exact prompt-and-engine pair. Follow-ups collect four samples per entitled, configured engine and compare only matching cohorts. Aelo now says `improved` or `regressed` only when the two 95% confidence intervals do not overlap; small, mismatched, legacy, or overlapping evidence is shown as `inconclusive` with the reason and before/after sample counts.
+
+### Files changed
+
+- `lib/measurement/comparison.ts`
+- `lib/interventions.ts`
+- `app/api/interventions/[id]/measure/route.ts`
+- `app/(dashboard)/dashboard/interventions/page.tsx`
+- `tests/unit/measurement-comparison.test.ts`
+- `tests/integration/measurement-truth-contract.test.ts`
+- `docs/product-rescue/IMPLEMENTATION_PROGRESS.md`
+
+### Tests and checks
+
+- Extreme matched cohorts produce improved/regressed verdicts only with non-overlapping intervals.
+- Cohorts below four samples, legacy single points, mismatched prompts/engines, and overlapping intervals remain inconclusive.
+- Route contract requires the canonical measurement service, four samples, atomic quota, and no direct one-shot scanner call.
+- Full `npm test` after implementation → 55 passed.
+- `npm run typecheck` passed.
+- Targeted ESLint across the comparison, snapshot, route, UI, and tests passed.
+- `git diff --check` passed before this progress update.
+
+### Compatibility and limits
+
+- Existing JSONB snapshot fields remain; sample counts, rates, timestamps, and contract version are additive.
+- The UI still understands legacy `no_change` receipts, but new measurements emit `inconclusive` instead.
+- One intervention click reserves one scan unit for the whole target-prompt batch. Failed provider samples are reported, and an all-failed batch does not overwrite the intervention as measured.
+- Live provider and authenticated browser checks were not run because no authorized test login was supplied.
+
+### Commit hash
+
+Pending Batch 2B commit; will be recorded in the next progress update.
