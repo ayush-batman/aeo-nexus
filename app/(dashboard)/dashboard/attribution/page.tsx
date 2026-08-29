@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Header } from "@/components/dashboard/header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -49,11 +49,7 @@ export default function AttributionPage() {
     const [copied, setCopied] = useState(false);
     const [activeTab, setActiveTab] = useState<"dashboard" | "widget">("dashboard");
 
-    useEffect(() => {
-        fetchAttribution();
-    }, []);
-
-    const fetchAttribution = async () => {
+    const fetchAttribution = useCallback(async () => {
         try {
             const res = await fetch("/api/attribution/survey");
             if (res.ok) {
@@ -65,7 +61,12 @@ export default function AttributionPage() {
         } finally {
             setLoading(false);
         }
-    };
+    }, []);
+
+    useEffect(() => {
+        const timer = window.setTimeout(() => { void fetchAttribution(); }, 0);
+        return () => window.clearTimeout(timer);
+    }, [fetchAttribution]);
 
     const widgetCode = `<!-- Aelo Attribution Survey Widget -->
 <script>

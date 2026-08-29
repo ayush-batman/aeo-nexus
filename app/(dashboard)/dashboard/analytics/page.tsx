@@ -41,11 +41,11 @@ import {
     Cell,
     Legend,
 } from "recharts";
-import { motion } from "framer-motion";
+import { motion, type Variants } from "framer-motion";
 import { CitationMap } from "@/components/dashboard/analytics/citation-map";
 
 // Framer Motion Variants
-const containerVariants: any = {
+const containerVariants: Variants = {
     hidden: { opacity: 0 },
     show: {
         opacity: 1,
@@ -53,9 +53,9 @@ const containerVariants: any = {
     }
 };
 
-const itemVariants: any = {
+const itemVariants: Variants = {
     hidden: { opacity: 0, y: 20 },
-    show: { opacity: 1, y: 0, transition: { type: "spring", stiffness: 300, damping: 24 } }
+    show: { opacity: 1, y: 0, transition: { type: "spring" as const, stiffness: 300, damping: 24 } }
 };
 
 interface PlatformVisibility {
@@ -93,6 +93,22 @@ type TimeRange = "7d" | "30d" | "90d" | "all";
 
 const DONUT_COLORS = ["#8b5cf6", "#3b82f6", "#10b981", "#f59e0b", "#ef4444", "#ec4899", "#6366f1"];
 const TREND_COLORS = ["#10b981", "#3b82f6", "#f59e0b", "#ef4444", "#8b5cf6", "#ec4899"];
+
+type ChartTooltipProps = {
+    active?: boolean;
+    payload?: ReadonlyArray<{ color?: string; name?: string; value?: string | number }>;
+    label?: string | number;
+};
+
+function ChartTooltip({ active, payload, label }: ChartTooltipProps) {
+    if (!active || !payload?.length) return null;
+    return <div className="bg-[var(--bg-surface)] border border-[var(--border-default)] rounded-lg p-3 shadow-xl">
+        <p className="text-xs text-[var(--text-secondary)] mb-1">{label}</p>
+        {payload.map((entry, index) => <p key={`${entry.name ?? 'value'}-${index}`} className="text-sm font-medium" style={{ color: entry.color }}>
+            {entry.name}: {entry.value}%
+        </p>)}
+    </div>;
+}
 
 export default function AnalyticsPage() {
     const [loading, setLoading] = useState(true);
@@ -132,7 +148,8 @@ export default function AnalyticsPage() {
     }, []);
 
     useEffect(() => {
-        fetchData();
+        const timer = window.setTimeout(() => { void fetchData(); }, 0);
+        return () => window.clearTimeout(timer);
     }, [fetchData]);
 
     // Filter scans by time range
@@ -181,7 +198,7 @@ export default function AnalyticsPage() {
         return Object.values(dayMap)
             .sort((a, b) => a.date.localeCompare(b.date))
             .map(day => {
-                const row: Record<string, any> = {
+                const row: Record<string, string | number> = {
                     date: new Date(day.date).toLocaleDateString("en-US", { month: "short", day: "numeric" }),
                     rawDate: day.date,
                     visibility: day.totalScans > 0 ? Math.round((day.mentions / day.totalScans) * 100) : 0,
@@ -407,23 +424,6 @@ export default function AnalyticsPage() {
         }
     };
 
-    // Custom tooltip for recharts
-    const CustomTooltip = ({ active, payload, label }: any) => {
-        if (active && payload && payload.length) {
-            return (
-                <div className="bg-[var(--bg-surface)] border border-[var(--border-default)] rounded-lg p-3 shadow-xl">
-                    <p className="text-xs text-[var(--text-secondary)] mb-1">{label}</p>
-                    {payload.map((entry: any, i: number) => (
-                        <p key={i} className="text-sm font-medium" style={{ color: entry.color }}>
-                            {entry.name}: {entry.value}%
-                        </p>
-                    ))}
-                </div>
-            );
-        }
-        return null;
-    };
-
     if (loading) {
         return (
             <>
@@ -645,7 +645,7 @@ export default function AnalyticsPage() {
                                                     tickFormatter={(val) => `${val}%`}
                                                     dx={-10}
                                                 />
-                                                <Tooltip content={<CustomTooltip />} cursor={{ stroke: '#3f3f46', strokeWidth: 1, strokeDasharray: '5 5' }} />
+                                                <Tooltip content={<ChartTooltip />} cursor={{ stroke: '#3f3f46', strokeWidth: 1, strokeDasharray: '5 5' }} />
                                                 <Area
                                                     type="monotone"
                                                     dataKey="visibility"
@@ -719,7 +719,7 @@ export default function AnalyticsPage() {
                                                     tickFormatter={(val) => `${val}%`}
                                                     dx={-10}
                                                 />
-                                                <Tooltip content={<CustomTooltip />} cursor={{ stroke: '#3f3f46', strokeWidth: 1, strokeDasharray: '5 5' }} />
+                                                <Tooltip content={<ChartTooltip />} cursor={{ stroke: '#3f3f46', strokeWidth: 1, strokeDasharray: '5 5' }} />
                                                 {trendPlatforms.map((platform, i) => (
                                                     <Line
                                                         key={platform}

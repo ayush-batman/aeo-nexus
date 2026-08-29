@@ -150,22 +150,22 @@ export async function getOrgUsage(): Promise<{
         supabase.from('llm_scans').select('workspace_id, created_at'),
     ]);
 
-    const orgs = orgsRes.data || [];
-    const workspaces = wsRes.data || [];
-    const users = usersRes.data || [];
-    const scans = scansRes.data || [];
+    const orgs = (orgsRes.data || []) as Array<{ id: string; name: string; plan: string; created_at: string }>;
+    const workspaces = (wsRes.data || []) as Array<{ id: string; org_id: string }>;
+    const users = (usersRes.data || []) as Array<{ id: string; org_id: string | null }>;
+    const scans = (scansRes.data || []) as Array<{ workspace_id: string; created_at: string }>;
 
     const wsToOrg = new Map<string, string>();
-    workspaces.forEach((w: any) => wsToOrg.set(w.id, w.org_id));
+    workspaces.forEach((w) => wsToOrg.set(w.id, w.org_id));
 
     const usersByOrg = new Map<string, number>();
-    users.forEach((u: any) => {
+    users.forEach((u) => {
         if (u.org_id) usersByOrg.set(u.org_id, (usersByOrg.get(u.org_id) || 0) + 1);
     });
 
     const scanCountByOrg = new Map<string, number>();
     const lastActiveByOrg = new Map<string, string>();
-    scans.forEach((s: any) => {
+    scans.forEach((s) => {
         const org = wsToOrg.get(s.workspace_id);
         if (!org) return;
         scanCountByOrg.set(org, (scanCountByOrg.get(org) || 0) + 1);
@@ -174,7 +174,7 @@ export async function getOrgUsage(): Promise<{
     });
 
     const rows: OrgUsageRow[] = orgs
-        .map((o: any) => ({
+        .map((o) => ({
             id: o.id,
             name: o.name,
             plan: o.plan,

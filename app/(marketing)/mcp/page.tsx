@@ -121,7 +121,7 @@ export default function McpPage() {
                         ))}
                     </div>
                     <p className="mt-4 text-[13px] text-zinc-500">
-                        There is no <code className="font-mono text-zinc-400">send_upvotes</code>, no "order citations", no
+                        There is no <code className="font-mono text-zinc-400">send_upvotes</code>, no &ldquo;order citations,&rdquo; no
                         posting on your behalf. By design.
                     </p>
                 </div>

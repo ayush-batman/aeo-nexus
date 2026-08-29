@@ -110,11 +110,14 @@ interface TeamMember {
 export default function SettingsPage() {
     const router = useRouter();
     const searchParams = useSearchParams();
-    const [activeTab, setActiveTab] = useState("general");
+    const [activeTab, setActiveTab] = useState(() => {
+        const tab = searchParams.get("tab");
+        return tab && tabs.some(item => item.id === tab) ? tab : "general";
+    });
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
     const [upgrading, setUpgrading] = useState<string | null>(null);
-    const [paymentSuccess, setPaymentSuccess] = useState(false);
+    const [paymentSuccess, setPaymentSuccess] = useState(() => Boolean(searchParams.get("success")));
 
     // Data states
     const [user, setUser] = useState<UserProfile | null>(null);
@@ -136,20 +139,6 @@ export default function SettingsPage() {
     const [alertPrefs, setAlertPrefs] = useState<Record<string, boolean>>({});
     const [savingAlerts, setSavingAlerts] = useState(false);
     const [alertsSaved, setAlertsSaved] = useState(false);
-
-    // Check for payment redirect status + deep-link tab.
-    useEffect(() => {
-        const success = searchParams.get("success");
-        if (success) {
-            setPaymentSuccess(true);
-            fetchData();
-            setTimeout(() => setPaymentSuccess(false), 5000);
-        }
-        const tab = searchParams.get("tab");
-        if (tab && tabs.some(t => t.id === tab)) {
-            setActiveTab(tab);
-        }
-    }, [searchParams]);
 
     async function fetchData() {
         try {
@@ -230,7 +219,14 @@ export default function SettingsPage() {
     }
 
     useEffect(() => {
-        fetchData();
+        const loadTimer = window.setTimeout(() => { void fetchData(); }, 0);
+        const successTimer = paymentSuccess
+            ? window.setTimeout(() => setPaymentSuccess(false), 5000)
+            : undefined;
+        return () => {
+            window.clearTimeout(loadTimer);
+            if (successTimer !== undefined) window.clearTimeout(successTimer);
+        };
     }, []);
 
     async function saveAlertPrefs() {

@@ -63,8 +63,8 @@ export async function POST(request: NextRequest) {
         }
 
         return NextResponse.json({ schedule: newSchedule });
-    } catch (error: any) {
+    } catch (error: unknown) {
         console.error('Error creating scheduled scan:', error);
-        return NextResponse.json({ error: 'Failed to create scheduled scan', details: error.message || error }, { status: 500 });
+        return NextResponse.json({ error: 'Failed to create scheduled scan' }, { status: 500 });
     }
 }

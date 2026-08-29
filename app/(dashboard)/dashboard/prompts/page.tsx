@@ -28,6 +28,12 @@ interface GeneratedPrompt {
     prompt: string;
 }
 
+interface WorkspaceSummary {
+    id: string;
+    name?: string;
+    settings?: { industry?: string; target_audience?: string };
+}
+
 const LLM_LINKS = [
     { name: 'ChatGPT', url: 'https://chat.openai.com', color: 'bg-green-500' },
     { name: 'Gemini', url: 'https://gemini.google.com', color: 'bg-blue-500' },
@@ -69,10 +75,6 @@ export default function PromptResearchPage() {
         relatedQueries: string[];
     } | null>(null);
 
-    useEffect(() => {
-        fetchData();
-    }, []);
-
     async function fetchData() {
         try {
             const supabase = createClient();
@@ -93,7 +95,7 @@ export default function PromptResearchPage() {
                     if (activeRes.ok) activeId = (await activeRes.json()).workspaceId;
                     if (wsRes.ok && activeId) {
                         const wsData = await wsRes.json();
-                        const workspace = wsData.workspaces?.find((ws: any) => ws.id === activeId);
+                        const workspace = (wsData.workspaces as WorkspaceSummary[] | undefined)?.find((ws) => ws.id === activeId);
 
                         if (workspace) {
                             setBrandName(workspace.name || '');
@@ -123,6 +125,11 @@ export default function PromptResearchPage() {
             console.error('Error fetching library:', error);
         }
     }
+
+    useEffect(() => {
+        const timer = window.setTimeout(() => { void fetchData(); }, 0);
+        return () => window.clearTimeout(timer);
+    }, []);
 
     async function handleGenerate() {
         if (!topic.trim()) return;
@@ -451,7 +458,7 @@ export default function PromptResearchPage() {
                                     Generate Research Prompts
                                 </CardTitle>
                                 <CardDescription>
-                                    Use AI to simulate your customer's journey and find the questions they ask at each stage.
+                                    Use AI to simulate your customer&apos;s journey and find the questions they ask at each stage.
                                 </CardDescription>
                             </CardHeader>
                             <CardContent>

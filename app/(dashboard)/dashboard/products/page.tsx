@@ -254,6 +254,7 @@ export default function ProductsPage() {
             {/* Add/Edit Product Modal */}
             {workspaceId && (
                 <AddProductModal
+                    key={showAddModal ? productToEdit?.id ?? "new" : "closed"}
                     isOpen={showAddModal}
                     onClose={handleCloseModal}
                     onSuccess={fetchProducts}

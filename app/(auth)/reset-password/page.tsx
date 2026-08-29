@@ -111,10 +111,11 @@ export default function ResetPasswordPage() {
 
                             <form onSubmit={handleSubmit} className="space-y-4">
                                 <div>
-                                    <label className="block text-sm font-medium text-[var(--text-secondary)] mb-2">
+                                    <label htmlFor="new-password" className="block text-sm font-medium text-[var(--text-secondary)] mb-2">
                                         New Password
                                     </label>
                                     <Input
+                                        id="new-password"
                                         type="password"
                                         placeholder="••••••••"
                                         value={password}
@@ -125,10 +126,11 @@ export default function ResetPasswordPage() {
                                 </div>
 
                                 <div>
-                                    <label className="block text-sm font-medium text-[var(--text-secondary)] mb-2">
+                                    <label htmlFor="confirm-password" className="block text-sm font-medium text-[var(--text-secondary)] mb-2">
                                         Confirm Password
                                     </label>
                                     <Input
+                                        id="confirm-password"
                                         type="password"
                                         placeholder="••••••••"
                                         value={confirmPassword}

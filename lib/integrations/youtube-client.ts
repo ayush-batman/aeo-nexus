@@ -6,12 +6,12 @@
  * - YOUTUBE_API_KEY
  */
 
-interface YouTubeVideo {
+export interface YouTubeVideo {
     id: string;
     title: string;
     description: string;
     url: string;
-    thumbnail: string;
+    thumbnail?: string;
     channelTitle: string;
     publishedAt: string;
     viewCount?: number;
@@ -65,13 +65,13 @@ export async function searchYouTube(
             return { videos: [] };
         }
 
-        const data = await response.json();
-        const videoIds = data.items.map((item: any) => item.id.videoId).join(',');
+        const data = await response.json() as YouTubeSearchResponse;
+        const videoIds = (data.items ?? []).map((item) => item.id.videoId).join(',');
 
         // Fetch statistics for these videos to get view counts
         const stats = await getVideoStatistics(videoIds);
 
-        const videos: YouTubeVideo[] = data.items.map((item: any) => {
+        const videos: YouTubeVideo[] = (data.items ?? []).map((item) => {
             const id = item.id.videoId;
             const stat = stats.get(id);
             return {
@@ -102,7 +102,14 @@ export async function searchYouTube(
 /**
  * Helper to batch fetch video statistics
  */
-async function getVideoStatistics(videoIds: string): Promise<Map<string, any>> {
+type YouTubeStatistic = { viewCount?: string; likeCount?: string; commentCount?: string };
+type YouTubeSearchItem = {
+    id: { videoId: string };
+    snippet: { title: string; description: string; thumbnails: { high?: { url: string }; default?: { url: string } }; channelTitle: string; publishedAt: string };
+};
+type YouTubeSearchResponse = { items?: YouTubeSearchItem[]; nextPageToken?: string };
+
+async function getVideoStatistics(videoIds: string): Promise<Map<string, YouTubeStatistic>> {
     const apiKey = process.env.YOUTUBE_API_KEY;
     if (!apiKey || !videoIds) return new Map();
 
@@ -116,10 +123,10 @@ async function getVideoStatistics(videoIds: string): Promise<Map<string, any>> {
         const response = await fetch(`https://www.googleapis.com/youtube/v3/videos?${params}`);
         if (!response.ok) return new Map();
 
-        const data = await response.json();
-        const statsMap = new Map();
+        const data = await response.json() as { items?: Array<{ id: string; statistics: YouTubeStatistic }> };
+        const statsMap = new Map<string, YouTubeStatistic>();
 
-        data.items.forEach((item: any) => {
+        (data.items ?? []).forEach((item) => {
             statsMap.set(item.id, item.statistics);
         });
 
@@ -138,10 +145,6 @@ export function calculateYouTubeOpportunityScore(video: YouTubeVideo, keywords: 
     let score = 0;
 
     // Recency (newer is better for "news" but older high-authority is also good)
-    const published = new Date(video.publishedAt).getTime();
-    const now = Date.now();
-    const ageDays = (now - published) / (1000 * 60 * 60 * 24);
-
     // Engagement
     const views = video.viewCount || 0;
     const comments = video.commentCount || 0;

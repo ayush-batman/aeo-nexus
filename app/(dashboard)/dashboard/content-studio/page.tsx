@@ -278,7 +278,7 @@ export default function ContentStudioPage() {
                                         </div>
                                         <h3 className="text-xl font-semibold text-[var(--text-primary)] mb-2">Ready to optimize your content?</h3>
                                         <p className="text-[var(--text-secondary)] mb-8">
-                                            Enter a URL above to get a comprehensive audit of your page's "Answer Engine Optimization" readiness.
+                                            Enter a URL above to audit your page&apos;s Answer Engine Optimization readiness.
                                         </p>
                                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-left">
                                             {[

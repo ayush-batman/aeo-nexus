@@ -51,7 +51,8 @@ export function ApiKeysTab({ workspaceId: _workspaceId }: { workspaceId: string 
     }
 
     useEffect(() => {
-        load();
+        const timer = window.setTimeout(() => { void load(); }, 0);
+        return () => window.clearTimeout(timer);
     }, []);
 
     async function createKey() {

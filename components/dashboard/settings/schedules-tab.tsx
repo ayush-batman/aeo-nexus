@@ -27,10 +27,6 @@ export function SchedulesTab({ workspaceId }: SchedulesTabProps) {
 
     const API_PLATFORMS = ['gemini', 'chatgpt', 'claude', 'perplexity'];
 
-    useEffect(() => {
-        fetchSchedules();
-    }, []);
-
     async function fetchSchedules() {
         try {
             const res = await fetch('/api/llm/schedules');
@@ -44,6 +40,11 @@ export function SchedulesTab({ workspaceId }: SchedulesTabProps) {
             setLoading(false);
         }
     }
+
+    useEffect(() => {
+        const timer = window.setTimeout(() => { void fetchSchedules(); }, 0);
+        return () => window.clearTimeout(timer);
+    }, []);
 
     async function handleCreate() {
         if (!prompt.trim()) return;

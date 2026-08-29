@@ -23,7 +23,7 @@ export async function POST(request: NextRequest) {
         const genAI = new GoogleGenerativeAI(apiKey);
         const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
 
-        let prompt = `You are a helpful expert engaging in an online forum discussion.
+        const prompt = `You are a helpful expert engaging in an online forum discussion.
         
 Thread Title: "${threadTitle}"
 ${threadContext ? `Context: "${threadContext}"` : ''}

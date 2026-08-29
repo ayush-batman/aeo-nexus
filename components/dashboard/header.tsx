@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import {
-    Bell, Search, ChevronDown, X,
+    Bell, ChevronDown, X, Menu,
     TrendingDown, Zap, Flame, Sparkles, Link2, AlertTriangle, Bell as BellDot,
     ShieldAlert, LogOut, Settings,
 } from "lucide-react";
@@ -10,6 +10,7 @@ import type { LucideIcon } from "lucide-react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
+import { useDashboardShell } from "@/components/dashboard/dashboard-shell";
 
 interface HeaderProps {
     title: string;
@@ -31,13 +32,30 @@ export function Header({ title, description }: HeaderProps) {
     const [showDropdown, setShowDropdown] = useState(false);
     const dropdownRef = useRef<HTMLDivElement>(null);
     const [showUserMenu, setShowUserMenu] = useState(false);
+    const [notificationError, setNotificationError] = useState<string | null>(null);
+    const [notificationClock, setNotificationClock] = useState(0);
     const userMenuRef = useRef<HTMLDivElement>(null);
+    const { openNavigation, navigationButtonRef } = useDashboardShell();
+
+    const fetchNotifications = useCallback(async () => {
+        try {
+            const res = await fetch("/api/alerts/notifications", { cache: "no-store" });
+            const data = await res.json().catch(() => ({}));
+            if (!res.ok) throw new Error(data.error || "Notifications could not be loaded.");
+            setNotifications(data.notifications || []);
+            setUnreadCount(data.unreadCount || 0);
+            setNotificationClock(Date.now());
+            setNotificationError(null);
+        } catch (error) {
+            setNotificationError(error instanceof Error ? error.message : "Notifications could not be loaded.");
+        }
+    }, []);
 
     useEffect(() => {
-        fetchNotifications();
-        const interval = setInterval(fetchNotifications, 60000);
-        return () => clearInterval(interval);
-    }, []);
+        const initial = window.setTimeout(() => { void fetchNotifications(); }, 0);
+        const interval = window.setInterval(() => { void fetchNotifications(); }, 60000);
+        return () => { window.clearTimeout(initial); window.clearInterval(interval); };
+    }, [fetchNotifications]);
 
     useEffect(() => {
         function handleClickOutside(e: MouseEvent) {
@@ -52,35 +70,24 @@ export function Header({ title, description }: HeaderProps) {
         return () => document.removeEventListener("mousedown", handleClickOutside);
     }, []);
 
-    async function fetchNotifications() {
-        try {
-            const res = await fetch("/api/alerts/notifications");
-            if (res.ok) {
-                const data = await res.json();
-                setNotifications(data.notifications || []);
-                setUnreadCount(data.unreadCount || 0);
-            }
-        } catch {
-            // Silently fail
-        }
-    }
-
     async function markAllRead() {
         try {
-            await fetch("/api/alerts/notifications", {
+            const response = await fetch("/api/alerts/notifications", {
                 method: "PATCH",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ markAllRead: true }),
             });
+            if (!response.ok) throw new Error("Notifications could not be updated.");
             setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
             setUnreadCount(0);
-        } catch {
-            // fail silently
+            setNotificationError(null);
+        } catch (error) {
+            setNotificationError(error instanceof Error ? error.message : "Notifications could not be updated.");
         }
     }
 
     function timeAgo(dateStr: string) {
-        const diff = Date.now() - new Date(dateStr).getTime();
+        const diff = Math.max(0, notificationClock - new Date(dateStr).getTime());
         const mins = Math.floor(diff / 60000);
         if (mins < 60) return `${mins}m ago`;
         const hrs = Math.floor(mins / 60);
@@ -98,6 +105,7 @@ export function Header({ title, description }: HeaderProps) {
         negative_sentiment:  AlertTriangle,
         sentiment_drift:     TrendingDown,
         accuracy_alert:      ShieldAlert,
+        weekly_digest_failed: AlertTriangle,
     };
     const notifTypeColor: Record<string, string> = {
         visibility_drop:     "text-[var(--data-red)]",
@@ -108,6 +116,7 @@ export function Header({ title, description }: HeaderProps) {
         negative_sentiment:  "text-[var(--data-red)]",
         sentiment_drift:     "text-[var(--data-amber)]",
         accuracy_alert:      "text-[var(--data-red)]",
+        weekly_digest_failed: "text-[var(--data-red)]",
     };
     const notifTypeHref: Record<string, string> = {
         sentiment_drift:     "/dashboard/drift",
@@ -118,6 +127,7 @@ export function Header({ title, description }: HeaderProps) {
         new_citation:        "/dashboard/attribution",
         citation_lost:       "/dashboard/attribution",
         negative_sentiment:  "/dashboard/drift",
+        weekly_digest_failed: "/dashboard",
     };
     const router = useRouter();
 
@@ -130,15 +140,19 @@ export function Header({ title, description }: HeaderProps) {
         }
         // Hard navigation so the server + middleware re-evaluate with cookies cleared.
         // router.push() is a soft nav and leaves the stale session, so logout "does nothing".
-        window.location.href = "/login";
+        window.location.assign("/login");
     }
     async function openNotification(n: Notification) {
         if (!n.read) {
-            await fetch("/api/alerts/notifications", {
+            const response = await fetch("/api/alerts/notifications", {
                 method: "PATCH",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ ids: [n.id] }),
-            }).catch(() => {});
+            });
+            if (!response.ok) {
+                setNotificationError("This notification could not be marked as read.");
+                return;
+            }
             setNotifications(prev => prev.map(x => x.id === n.id ? { ...x, read: true } : x));
             setUnreadCount(prev => Math.max(0, prev - 1));
         }
@@ -151,35 +165,33 @@ export function Header({ title, description }: HeaderProps) {
 
     return (
         <header className="h-14 sticky top-0 z-30 bg-[rgba(0,0,0,0.8)] border-b border-[var(--border-subtle)] backdrop-blur-xl">
-            <div className="flex items-center justify-between h-full px-6">
+            <div className="flex items-center justify-between h-full gap-3 px-3 sm:px-6">
                 {/* Title */}
-                <div>
+                <div className="flex min-w-0 items-center gap-2.5">
+                    <button ref={navigationButtonRef} type="button" onClick={openNavigation} aria-label="Open navigation" className="flex min-h-11 min-w-11 items-center justify-center rounded-md text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] hover:text-[var(--text-primary)] lg:hidden">
+                        <Menu className="h-5 w-5" />
+                    </button>
+                    <div className="min-w-0">
                     <h1 className="text-lg font-semibold tracking-tight text-[var(--text-primary)] leading-tight">
                         {title}
                     </h1>
                     {description && (
-                        <p className="text-xs text-[var(--text-secondary)] mt-0.5">
+                        <p className="hidden truncate text-xs text-[var(--text-secondary)] mt-0.5 sm:block">
                             {description}
                         </p>
                     )}
+                    </div>
                 </div>
 
                 {/* Right side actions */}
                 <div className="flex items-center gap-3">
-                    {/* Search */}
-                    <div className="relative hidden md:block">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-[var(--text-secondary)] pointer-events-none" />
-                        <input
-                            placeholder="Search..."
-                            className="input-base w-56 h-8 pl-9 pr-3 text-sm transition-all"
-                        />
-                    </div>
-
                     {/* Notifications */}
                     <div className="relative" ref={dropdownRef}>
                         <button
                             onClick={() => setShowDropdown(!showDropdown)}
-                            className="relative p-2 rounded-md transition-all text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] hover:text-[var(--text-primary)]"
+                            aria-label="Notifications"
+                            aria-expanded={showDropdown}
+                            className="relative flex min-h-11 min-w-11 items-center justify-center rounded-md text-[var(--text-secondary)] transition-colors hover:bg-[var(--bg-hover)] hover:text-[var(--text-primary)]"
                         >
                             <Bell className="w-[18px] h-[18px]" strokeWidth={1.5} />
                             {unreadCount > 0 && (
@@ -190,7 +202,7 @@ export function Header({ title, description }: HeaderProps) {
                         </button>
 
                         {showDropdown && (
-                            <div className="tooltip absolute right-0 top-11 w-[340px] z-50 animate-fade-in origin-top-right p-0">
+                            <div className="tooltip absolute right-0 top-11 z-50 w-[min(340px,calc(100vw-1.5rem))] animate-fade-in origin-top-right p-0">
                                 {/* Header */}
                                 <div className="flex items-center justify-between px-4 py-3 border-b border-[var(--border-subtle)] bg-[var(--bg-surface)] rounded-t-md">
                                     <div className="flex items-center gap-2">
@@ -207,14 +219,15 @@ export function Header({ title, description }: HeaderProps) {
                                         {unreadCount > 0 && (
                                             <button
                                                 onClick={markAllRead}
-                                                className="text-[10px] font-medium text-[var(--accent-base)] hover:text-white transition-colors"
+                                                className="min-h-10 px-2 text-[10px] font-medium text-[var(--accent-base)] hover:text-white transition-colors"
                                             >
                                                 Mark all read
                                             </button>
                                         )}
                                         <button
                                             onClick={() => setShowDropdown(false)}
-                                            className="p-1 rounded text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
+                                            aria-label="Close notifications"
+                                            className="flex min-h-10 min-w-10 items-center justify-center rounded text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
                                         >
                                             <X className="w-3.5 h-3.5" />
                                         </button>
@@ -222,7 +235,9 @@ export function Header({ title, description }: HeaderProps) {
                                 </div>
 
                                 <div className="max-h-80 overflow-y-auto bg-[var(--bg-raised)] rounded-b-md">
-                                    {notifications.length === 0 ? (
+                                    {notificationError ? (
+                                        <div role="alert" className="px-4 py-6 text-center"><p className="text-xs text-[var(--data-red)]">{notificationError}</p><button type="button" onClick={() => void fetchNotifications()} className="mt-3 min-h-10 px-3 text-xs text-[var(--accent-base)]">Retry</button></div>
+                                    ) : notifications.length === 0 ? (
                                         <div className="px-4 py-10 text-center">
                                             <Bell className="w-6 h-6 mx-auto mb-3 text-[var(--text-tertiary)]" />
                                             <p className="text-xs text-[var(--text-secondary)]">
@@ -231,10 +246,11 @@ export function Header({ title, description }: HeaderProps) {
                                         </div>
                                     ) : (
                                         notifications.slice(0, 10).map((n) => (
-                                            <div
+                                            <button
+                                                type="button"
                                                 key={n.id}
                                                 onClick={() => openNotification(n)}
-                                                className={`px-4 py-3 transition-colors cursor-pointer border-b border-[var(--border-default)] last:border-0 hover:bg-[rgba(255,255,255,0.03)] ${
+                                                className={`w-full min-h-11 px-4 py-3 text-left transition-colors cursor-pointer border-b border-[var(--border-default)] last:border-0 hover:bg-[rgba(255,255,255,0.03)] ${
                                                     !n.read ? "border-l-2 border-l-[var(--accent-base)]" : ""
                                                 }`}
                                                 style={!n.read ? { backgroundColor: 'color-mix(in srgb, var(--accent-base) 6%, transparent)' } : undefined}
@@ -258,7 +274,7 @@ export function Header({ title, description }: HeaderProps) {
                                                         </p>
                                                     </div>
                                                 </div>
-                                            </div>
+                                            </button>
                                         ))
                                     )}
                                 </div>
@@ -270,7 +286,9 @@ export function Header({ title, description }: HeaderProps) {
                     <div className="relative ml-1" ref={userMenuRef}>
                         <button
                             onClick={() => setShowUserMenu((v) => !v)}
-                            className="flex items-center gap-1.5 p-1 rounded-md transition-all hover:bg-[var(--bg-hover)]"
+                            aria-label="Account menu"
+                            aria-expanded={showUserMenu}
+                            className="flex min-h-11 min-w-11 items-center justify-center gap-1 rounded-md transition-colors hover:bg-[var(--bg-hover)]"
                         >
                             <div className="w-7 h-7 rounded-md bg-[var(--accent-base)] flex items-center justify-center text-white text-xs font-semibold">
                                U
@@ -282,13 +300,13 @@ export function Header({ title, description }: HeaderProps) {
                                 <Link
                                     href="/dashboard/settings"
                                     onClick={() => setShowUserMenu(false)}
-                                    className="flex items-center gap-2.5 px-3 py-2 text-sm text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] hover:text-[var(--text-primary)] transition-colors"
+                                    className="flex min-h-11 items-center gap-2.5 px-3 py-2 text-sm text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] hover:text-[var(--text-primary)] transition-colors"
                                 >
                                     <Settings className="w-4 h-4" /> Settings
                                 </Link>
                                 <button
                                     onClick={() => { setShowUserMenu(false); handleSignOut(); }}
-                                    className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-[var(--text-secondary)] hover:bg-[var(--data-red-muted)] hover:text-[var(--data-red)] transition-colors"
+                                    className="min-h-11 w-full flex items-center gap-2.5 px-3 py-2 text-sm text-[var(--text-secondary)] hover:bg-[var(--data-red-muted)] hover:text-[var(--data-red)] transition-colors"
                                 >
                                     <LogOut className="w-4 h-4" /> Sign out
                                 </button>

@@ -29,8 +29,10 @@ import {
     Lock,
     Target,
     Bot,
+    X,
 } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
+import type { RefObject } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { AeloMark, AeloWordmark } from "@/components/brand/logo";
 
@@ -71,9 +73,20 @@ const legacyNav = [
             { name: "Settings", href: "/dashboard/settings", icon: Settings },
 ];
 
-export function Sidebar() {
+export function Sidebar({
+    collapsed,
+    mobileOpen,
+    onCollapsedChange,
+    onMobileClose,
+    returnFocusRef,
+}: {
+    collapsed: boolean;
+    mobileOpen: boolean;
+    onCollapsedChange: (collapsed: boolean) => void;
+    onMobileClose: () => void;
+    returnFocusRef: RefObject<HTMLButtonElement | null>;
+}) {
     const pathname = usePathname();
-    const [collapsed, setCollapsed] = useState(false);
     const [showMoreTools, setShowMoreTools] = useState(false);
     // null = unknown (avoid flashing a lock before we know the plan)
     const [paid, setPaid] = useState<boolean | null>(null);
@@ -96,6 +109,50 @@ export function Sidebar() {
     const [creating, setCreating] = useState(false);
     const [createError, setCreateError] = useState<string | null>(null);
     const wsRef = useRef<HTMLDivElement>(null);
+    const sidebarRef = useRef<HTMLElement>(null);
+    const closeButtonRef = useRef<HTMLButtonElement>(null);
+    const previousPathnameRef = useRef(pathname);
+
+    useEffect(() => {
+        if (!mobileOpen) return;
+        const previousOverflow = document.body.style.overflow;
+        document.body.style.overflow = "hidden";
+        closeButtonRef.current?.focus();
+
+        function handleKeyDown(event: KeyboardEvent) {
+            if (event.key === "Escape") {
+                event.preventDefault();
+                onMobileClose();
+                returnFocusRef.current?.focus();
+                return;
+            }
+            if (event.key !== "Tab" || !sidebarRef.current) return;
+            const focusable = [...sidebarRef.current.querySelectorAll<HTMLElement>(
+                'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])',
+            )];
+            if (!focusable.length) return;
+            const first = focusable[0];
+            const last = focusable[focusable.length - 1];
+            if (event.shiftKey && document.activeElement === first) {
+                event.preventDefault(); last.focus();
+            } else if (!event.shiftKey && document.activeElement === last) {
+                event.preventDefault(); first.focus();
+            }
+        }
+        document.addEventListener("keydown", handleKeyDown);
+        return () => {
+            document.body.style.overflow = previousOverflow;
+            document.removeEventListener("keydown", handleKeyDown);
+        };
+    }, [mobileOpen, onMobileClose, returnFocusRef]);
+
+    useEffect(() => {
+        if (previousPathnameRef.current === pathname) return;
+        previousPathnameRef.current = pathname;
+        if (!mobileOpen) return;
+        const timer = window.setTimeout(onMobileClose, 0);
+        return () => window.clearTimeout(timer);
+    }, [mobileOpen, onMobileClose, pathname]);
 
     // Load workspaces
     useEffect(() => {
@@ -217,11 +274,17 @@ export function Sidebar() {
         window.location.assign("/login");
     };
 
-    return (
+    return (<>
+        {mobileOpen && <button type="button" aria-label="Close navigation" className="fixed inset-0 z-40 bg-black/70 backdrop-blur-[2px] lg:hidden" onClick={() => { onMobileClose(); returnFocusRef.current?.focus(); }} />}
         <aside
+            ref={sidebarRef}
+            role={mobileOpen ? "dialog" : undefined}
+            aria-modal={mobileOpen ? "true" : undefined}
+            aria-label="Product navigation"
             className={cn(
-                "fixed left-0 top-0 z-40 h-screen flex flex-col transition-all duration-200 bg-[var(--bg-base)] border-r border-[var(--border-subtle)]",
-                collapsed ? "w-16" : "w-60"
+                "fixed left-0 top-0 z-50 h-dvh flex w-[min(15rem,calc(100vw-2rem))] flex-col border-r border-[var(--border-subtle)] bg-[var(--bg-base)] transition-transform duration-200 lg:z-40 lg:h-screen lg:translate-x-0 lg:transition-[width]",
+                mobileOpen ? "translate-x-0" : "-translate-x-full",
+                collapsed ? "lg:w-16" : "lg:w-60"
             )}
         >
             {/* Logo */}
@@ -238,10 +301,8 @@ export function Sidebar() {
                     </div>
                 )}
 
-                <button
-                    onClick={() => setCollapsed(!collapsed)}
-                    className="p-1.5 text-[var(--text-tertiary)] hover:text-[var(--text-primary)] transition-colors flex-shrink-0"
-                >
+                <button ref={closeButtonRef} onClick={() => { onMobileClose(); returnFocusRef.current?.focus(); }} aria-label="Close navigation" className="flex min-h-11 min-w-11 items-center justify-center text-[var(--text-tertiary)] hover:text-[var(--text-primary)] lg:hidden"><X className="h-5 w-5" /></button>
+                <button onClick={() => onCollapsedChange(!collapsed)} aria-label={collapsed ? "Expand navigation" : "Collapse navigation"} className="hidden min-h-10 min-w-10 flex-shrink-0 items-center justify-center text-[var(--text-tertiary)] transition-colors hover:text-[var(--text-primary)] lg:flex">
                     <ChevronLeft className={cn("w-4 h-4 transition-transform duration-200", collapsed && "rotate-180")} />
                 </button>
             </div>
@@ -413,5 +474,5 @@ export function Sidebar() {
                 </button>
             </div>
         </aside>
-    );
+    </>);
 }

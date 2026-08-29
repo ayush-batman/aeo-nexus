@@ -19,6 +19,18 @@ interface SearchResponse {
     totalResults: number;
 }
 
+type GoogleCustomSearchItem = {
+    title: string;
+    link: string;
+    snippet?: string;
+    displayLink: string;
+    formattedUrl: string;
+};
+type GoogleCustomSearchResponse = {
+    items?: GoogleCustomSearchItem[];
+    searchInformation?: { totalResults?: string };
+};
+
 // Expanded source list, includes tier-1 B2B review sites, long-form
 // content platforms, and product-discovery hubs that LLMs actually cite.
 // See docs/citation-sources.md for the ranking rationale.
@@ -122,9 +134,9 @@ export async function searchForums(
             return { results: [], totalResults: 0 };
         }
 
-        const data = await response.json();
+        const data = await response.json() as GoogleCustomSearchResponse;
 
-        const results: GoogleSearchResult[] = (data.items || []).map((item: any) => ({
+        const results: GoogleSearchResult[] = (data.items || []).map((item) => ({
             title: item.title,
             link: item.link,
             snippet: item.snippet || '',

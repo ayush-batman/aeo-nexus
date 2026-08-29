@@ -20,7 +20,7 @@ export async function GET() {
 
         if (error) {
             console.error('Error fetching notifications:', error);
-            return NextResponse.json({ notifications: [], unreadCount: 0 });
+            return NextResponse.json({ error: 'Failed to load notifications' }, { status: 500 });
         }
 
         const unreadCount = (data || []).filter(n => !n.read).length;
@@ -48,17 +48,21 @@ export async function PATCH(req: NextRequest) {
         const supabase = await createClient();
 
         if (markAllRead) {
-            await supabase
+            const { error } = await supabase
                 .from('notifications')
                 .update({ read: true })
                 .eq('workspace_id', workspaceId)
                 .eq('read', false);
+            if (error) throw error;
         } else if (Array.isArray(ids) && ids.length > 0) {
-            await supabase
+            const { error } = await supabase
                 .from('notifications')
                 .update({ read: true })
                 .eq('workspace_id', workspaceId)
                 .in('id', ids);
+            if (error) throw error;
+        } else {
+            return NextResponse.json({ error: 'No notification IDs supplied' }, { status: 400 });
         }
 
         return NextResponse.json({ success: true });

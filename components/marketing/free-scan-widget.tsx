@@ -88,10 +88,11 @@ export function FreeScanWidget() {
             ) : (
                 <form onSubmit={submit} className="space-y-3">
                     <div>
-                        <label className="block text-[11px] font-mono uppercase tracking-[0.12em] text-zinc-500 mb-1.5">
+                        <label htmlFor="free-scan-brand" className="block text-[11px] font-mono uppercase tracking-[0.12em] text-zinc-500 mb-1.5">
                             Your brand
                         </label>
                         <input
+                            id="free-scan-brand"
                             type="text"
                             value={brand}
                             onChange={(e) => setBrand(e.target.value)}
@@ -100,10 +101,11 @@ export function FreeScanWidget() {
                         />
                     </div>
                     <div>
-                        <label className="block text-[11px] font-mono uppercase tracking-[0.12em] text-zinc-500 mb-1.5">
+                        <label htmlFor="free-scan-prompt" className="block text-[11px] font-mono uppercase tracking-[0.12em] text-zinc-500 mb-1.5">
                             A high-intent question your buyers ask
                         </label>
                         <input
+                            id="free-scan-prompt"
                             type="text"
                             value={prompt}
                             onChange={(e) => setPrompt(e.target.value)}
@@ -113,7 +115,7 @@ export function FreeScanWidget() {
                     </div>
 
                     {errMsg && (
-                        <div className="flex items-start gap-2 text-[12.5px] text-[var(--data-red)]">
+                        <div role="alert" className="flex items-start gap-2 text-[12.5px] text-[var(--data-red)]">
                             <AlertCircle className="w-3.5 h-3.5 flex-shrink-0 mt-0.5" />
                             <span>{errMsg}</span>
                         </div>
@@ -122,7 +124,7 @@ export function FreeScanWidget() {
                     <button
                         type="submit"
                         disabled={disabled}
-                        className="w-full inline-flex items-center justify-center gap-1.5 px-4 py-2.5 text-[14px] bg-[var(--accent-base)] text-[var(--text-on-accent)] rounded-md hover:bg-[var(--accent-hover)] transition-colors font-medium disabled:opacity-40 disabled:cursor-not-allowed"
+                        className="inline-flex min-h-11 w-full items-center justify-center gap-1.5 rounded-md bg-[var(--accent-base)] px-4 py-2.5 text-[14px] font-medium text-[var(--text-on-accent)] transition-colors hover:bg-[var(--accent-hover)] disabled:cursor-not-allowed disabled:opacity-40"
                     >
                         Run free scan
                         <ArrowRight className="w-3.5 h-3.5" />

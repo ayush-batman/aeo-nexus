@@ -13,6 +13,13 @@ test('the destructive setup-test-user route is absent', async () => {
   );
 });
 
+test('development auth bypass is impossible in production', async () => {
+  const dataAccess = await source('lib/data-access.ts');
+  const login = await source('app/(auth)/login/page.tsx');
+  assert.match(dataAccess, /NODE_ENV !== ['"]production['"][\s\S]*NEXT_PUBLIC_ENABLE_DEV_AUTH_BYPASS/);
+  assert.match(login, /NODE_ENV !== ['"]production['"][\s\S]*NEXT_PUBLIC_ENABLE_DEV_AUTH_BYPASS/);
+});
+
 test('API key resolution revalidates user and workspace tenant bindings', async () => {
   const auth = await source('lib/api-auth.ts');
   assert.match(auth, /\.from\('workspaces'\)/);

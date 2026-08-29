@@ -47,7 +47,7 @@ export function GoogleSignInButton({ label = "Continue with Google", selectedPla
                 type="button"
                 onClick={signIn}
                 disabled={loading}
-                className="w-full inline-flex items-center justify-center gap-2.5 px-4 py-2.5 rounded-lg border border-[var(--border-default)] bg-[var(--bg-surface)] text-sm font-medium text-[var(--text-primary)] hover:bg-[var(--bg-hover)] transition-colors disabled:opacity-60"
+                className="inline-flex min-h-11 w-full items-center justify-center gap-2.5 rounded-lg border border-[var(--border-default)] bg-[var(--bg-surface)] px-4 py-2.5 text-sm font-medium text-[var(--text-primary)] transition-colors hover:bg-[var(--bg-hover)] disabled:opacity-60"
             >
                 {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <GoogleIcon />}
                 {label}

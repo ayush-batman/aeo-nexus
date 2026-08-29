@@ -8,6 +8,7 @@ import {
     calculateOpportunityScore,
     isRedditConfigured
 } from '@/lib/integrations/reddit-client';
+import type { RedditPost } from '@/lib/integrations/reddit-client';
 import { searchYouTube, calculateYouTubeOpportunityScore } from '@/lib/integrations/youtube-client';
 import { searchForums, isGoogleSearchConfigured, convertToThreadFormat } from '@/lib/integrations/google-search-client';
 import { searchStackExchange, convertSOToThreadFormat } from '@/lib/integrations/stackexchange-client';
@@ -68,7 +69,7 @@ export async function POST(request: NextRequest) {
 
         // 1. Reddit (if configured and requested)
         if (redditConfigured && shouldSearch('reddit')) {
-            let redditPromise: Promise<any[]> = Promise.resolve([]);
+            let redditPromise: Promise<RedditPost[]> = Promise.resolve([]);
 
             if (query) {
                 redditPromise = searchReddit(query, { subreddits, sort, time, limit })
@@ -92,8 +93,8 @@ export async function POST(request: NextRequest) {
             searchPromises.push(
                 redditPromise.then(redditPosts => {
                     const processed = redditPosts
-                        .filter((post: any) => !post.isLocked && !post.over18)
-                        .map((post: any) => ({
+                        .filter((post) => !post.isLocked && !post.over18)
+                        .map((post) => ({
                             platform: 'reddit',
                             external_id: post.id,
                             title: post.title,
@@ -119,7 +120,7 @@ export async function POST(request: NextRequest) {
             searchPromises.push(
                 searchYouTube(searchQuery, { maxResults: limit })
                     .then(res => {
-                        const processed = res.videos.map((video: any) => ({
+                        const processed = res.videos.map((video) => ({
                             platform: 'youtube',
                             external_id: video.id,
                             title: video.title,
@@ -174,15 +175,6 @@ export async function POST(request: NextRequest) {
                         if (processed.length > 0) sourceStatus['google'] = 'ok';
                     })
                     .catch(e => { sourceStatus['google'] = `Error: ${e.message}`; })
-            );
-        }
-
-        // Check if at least one source is available
-        const anySourceAvailable = youtubeConfigured || googleSearchConfigured || true; // SE + HN always available
-        if (!anySourceAvailable) {
-            return NextResponse.json(
-                { error: 'No forum sources available.' },
-                { status: 503 }
             );
         }
 

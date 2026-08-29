@@ -14,7 +14,6 @@ export async function getOrgUsage(orgId: string) {
         .single();
 
     const plan = org?.plan || 'free';
-    // @ts-ignore
     const limits = PLAN_LIMITS[plan] || PLAN_LIMITS.free;
 
     // 2. Get Workspace IDs for this Org
@@ -73,9 +72,7 @@ export async function getOrgUsage(orgId: string) {
 
 export async function checkUsageLimit(orgId: string, resource: 'scans' | 'threads' | 'members') {
     const { limits, usage } = await getOrgUsage(orgId);
-    // @ts-ignore
     const limit = limits[resource];
-    // @ts-ignore
     const current = usage[resource];
 
     if (limit === -1) return { allowed: true, limit, current };

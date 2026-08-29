@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, Suspense } from "react";
+import { useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -15,15 +15,10 @@ function LoginForm() {
     const searchParams = useSearchParams();
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
-    const [error, setError] = useState<string | null>(null);
+    const [error, setError] = useState<string | null>(() => searchParams.get('error') === 'callback_failed'
+        ? 'Login link expired or invalid. Please try again.'
+        : null);
     const [loading, setLoading] = useState(false);
-
-    useEffect(() => {
-        const errorParam = searchParams.get('error');
-        if (errorParam === 'callback_failed') {
-            setError('Login link expired or invalid. Please try again.');
-        }
-    }, [searchParams]);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -100,10 +95,11 @@ function LoginForm() {
 
                     <form onSubmit={handleSubmit} className="space-y-4">
                         <div>
-                            <label className="block text-sm font-medium text-[var(--text-secondary)] mb-2">
+                            <label htmlFor="login-email" className="block text-sm font-medium text-[var(--text-secondary)] mb-2">
                                 Email
                             </label>
                             <Input
+                                id="login-email"
                                 type="email"
                                 placeholder="you@example.com"
                                 value={email}
@@ -113,10 +109,11 @@ function LoginForm() {
                         </div>
 
                         <div>
-                            <label className="block text-sm font-medium text-[var(--text-secondary)] mb-2">
+                            <label htmlFor="login-password" className="block text-sm font-medium text-[var(--text-secondary)] mb-2">
                                 Password
                             </label>
                             <Input
+                                id="login-password"
                                 type="password"
                                 placeholder="••••••••"
                                 value={password}
@@ -157,7 +154,7 @@ function LoginForm() {
                         </Link>
                     </div>
 
-                    {process.env.NEXT_PUBLIC_ENABLE_DEV_AUTH_BYPASS === 'true' && (
+                    {process.env.NODE_ENV !== 'production' && process.env.NEXT_PUBLIC_ENABLE_DEV_AUTH_BYPASS === 'true' && (
                         <div className="mt-6 pt-6 border-t border-[var(--border-default)]">
                             <Button
                                 variant="outline"

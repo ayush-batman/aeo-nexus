@@ -12,7 +12,7 @@ interface RedditAuthToken {
     expiresAt: number;
 }
 
-interface RedditPost {
+export interface RedditPost {
     id: string;
     title: string;
     selftext: string;
@@ -151,7 +151,7 @@ export async function searchReddit(
     const { subreddits = [], sort = 'relevance', time = 'year', limit = 25, after } = options;
 
     let endpoint = '/search.json';
-    let combinedSubreddits = subreddits.join('+');
+    const combinedSubreddits = subreddits.join('+');
 
     // If specific subreddits, use subreddit search
     if (combinedSubreddits.length > 0) {
@@ -176,7 +176,7 @@ export async function searchReddit(
             data: { children: { data: Record<string, unknown> }[]; after: string | null };
         };
 
-        let posts = data.data.children.map(transformPost);
+        const posts = data.data.children.map(transformPost);
 
         // dylect-bot strategy: If targeted subreddits return very few, also search globally
         if (combinedSubreddits.length > 0 && posts.length < limit / 2) {
