@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -23,9 +23,12 @@ import {
 
 interface ScanResult {
     platform: string;
-    mentioned: boolean;
+    mentioned: boolean | null;
     sentiment: string;
     score: number;
+    samples: number;
+    requestedSamples: number;
+    confidence: "none" | "low" | "medium" | "high";
 }
 
 const steps = [
@@ -88,8 +91,6 @@ export default function OnboardingPage() {
     const [industry, setIndustry] = useState("");
     const [description, setDescription] = useState("");
     const [targetAudience, setTargetAudience] = useState("");
-    const [userId, setUserId] = useState<string | null>(null);
-    const [orgId, setOrgId] = useState<string | null>(null);
     const [workspaceId, setWorkspaceId] = useState<string | null>(null);
 
     useEffect(() => {
@@ -102,8 +103,6 @@ export default function OnboardingPage() {
                     throw new Error(data?.error || 'Failed to load onboarding context');
                 }
 
-                setUserId(data.userId);
-                setOrgId(data.orgId);
                 setWorkspaceId(data.workspaceId);
             } catch (err) {
                 console.error('Onboarding context error:', err);
@@ -117,11 +116,12 @@ export default function OnboardingPage() {
     // higher when the receipt is already there when the user arrives.
     // The manual "Run First Scan" button stays as a fallback if the
     // auto-scan errors out (e.g. no LLM keys), so we only trigger once.
-    const [autoScanTried, setAutoScanTried] = useState(false);
+    const autoScanTried = useRef(false);
     useEffect(() => {
-        if (currentStep === 3 && brandName && workspaceId && scanResults.length === 0 && !scanning && !autoScanTried) {
-            setAutoScanTried(true);
-            runFirstScan();
+        if (currentStep === 3 && brandName && workspaceId && scanResults.length === 0 && !scanning && !autoScanTried.current) {
+            autoScanTried.current = true;
+            const timer = window.setTimeout(() => { void runFirstScan(); }, 0);
+            return () => window.clearTimeout(timer);
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [currentStep, brandName, workspaceId]);
@@ -177,15 +177,25 @@ export default function OnboardingPage() {
             const data = await response.json();
 
             if (!response.ok) {
-                throw new Error(data?.error || 'Scan failed');
+                throw new Error(data?.message || data?.error || 'Scan failed');
             }
 
-            // Format results
-            const results: ScanResult[] = (data.results || []).map((r: { platform: string; brandMentioned: boolean; sentiment: string; confidence: number }) => ({
+            const results: ScanResult[] = (data.results || []).map((r: {
+                platform: string;
+                brandMentioned: boolean | null;
+                sentiment: string | null;
+                mentionRate: number | null;
+                samples: number;
+                requestedSamples: number;
+                confidence: { level: ScanResult["confidence"] };
+            }) => ({
                 platform: r.platform,
                 mentioned: r.brandMentioned,
                 sentiment: r.sentiment || 'neutral',
-                score: Math.round((r.confidence ?? 0.6) * 100),
+                score: Math.round((r.mentionRate ?? 0) * 100),
+                samples: r.samples,
+                requestedSamples: r.requestedSamples,
+                confidence: r.confidence.level,
             }));
 
             if (results.length === 0) {
@@ -351,7 +361,7 @@ export default function OnboardingPage() {
                                         </Button>
                                     </div>
                                     <p className="text-xs text-[var(--text-ghost)] mt-2">
-                                        Enter your URL and we'll auto-detect your brand details.
+                                        Enter your URL and we&apos;ll auto-detect your brand details.
                                     </p>
                                 </div>
 
@@ -418,7 +428,7 @@ export default function OnboardingPage() {
                                     </div>
                                     <p className="text-[var(--text-secondary)] mb-6">
                                         {scanning
-                                            ? <>Scanning ChatGPT, Gemini, Claude and Perplexity for &ldquo;{brandName}&rdquo;… this takes ~15 seconds.</>
+                                            ? <>Sampling your available AI engines four times for &ldquo;{brandName}&rdquo;… this can take about a minute.</>
                                             : error
                                                 ? <>The auto-scan hit a snag. Try again, the receipt&apos;s worth the wait.</>
                                                 : <>Getting your first receipt ready…</>}
@@ -457,7 +467,12 @@ export default function OnboardingPage() {
                                                             {result.platform}
                                                         </p>
                                                         <p className="text-sm text-[var(--text-ghost)]">
-                                                            {result.mentioned ? "Brand mentioned" : "Not mentioned"}
+                                                            {result.mentioned === null
+                                                                ? "No successful samples"
+                                                                : result.mentioned ? "Brand mentioned" : "Not mentioned"}
+                                                        </p>
+                                                        <p className="text-xs text-[var(--text-tertiary)]">
+                                                            {result.samples}/{result.requestedSamples} samples · {result.confidence} confidence
                                                         </p>
                                                     </div>
                                                 </div>

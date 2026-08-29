@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { scanLLM, type LLMPlatform } from '@/lib/ai/llm-scanner';
-import { reserveScanQuota } from '@/lib/entitlements';
+import { getAvailablePlatforms, type LLMPlatform, type ScanResult } from '@/lib/ai/llm-scanner';
+import { getEntitlements, reserveScanQuota } from '@/lib/entitlements';
 import { createAdminClient } from '@/lib/supabase/admin';
+import { runVisibilityMeasurement } from '@/lib/measurement/service';
 
-export const maxDuration = 60;
+export const maxDuration = 300;
 
 type ClaimedSchedule = {
     schedule_id: string;
@@ -17,6 +18,25 @@ type ClaimedSchedule = {
     scheduled_for: string;
     claim_token: string;
 };
+
+function persistenceRow(workspaceId: string, result: ScanResult): Record<string, unknown> {
+    return {
+        workspace_id: workspaceId,
+        platform: result.platform,
+        prompt: result.prompt,
+        response: result.response,
+        brand_mentioned: result.brandMentioned,
+        brand_variants: result.brandVariants,
+        mention_position: result.mentionPosition,
+        sentiment: result.sentiment,
+        sentiment_score: result.sentimentScore,
+        sentiment_reason: result.sentimentReason,
+        competitors_mentioned: result.competitorsMentioned,
+        citations: result.citations,
+        list_items: result.listItems,
+        confidence: result.confidence,
+    };
+}
 
 function nextRunAt(frequency: ClaimedSchedule['frequency']): string {
     const next = new Date();
@@ -77,6 +97,18 @@ export async function GET(request: NextRequest) {
                     continue;
                 }
 
+                const entitlements = await getEntitlements(schedule.org_id, admin);
+                const available = getAvailablePlatforms()
+                    .filter(platform => platform.available && platform.platform !== 'mock')
+                    .map(platform => platform.platform);
+                const platforms = schedule.platforms
+                    .filter(platform => entitlements.engines.includes(platform) && available.includes(platform as LLMPlatform)) as LLMPlatform[];
+                if (platforms.length === 0) {
+                    await finish('skipped_no_engines');
+                    details.push({ id: schedule.schedule_id, status: 'skipped', reason: 'no_entitled_configured_engines' });
+                    continue;
+                }
+
                 const reservationId = `schedule:${schedule.schedule_id}:${schedule.scheduled_for}`;
                 const reservation = await reserveScanQuota(schedule.org_id, reservationId, admin);
                 if (reservation !== 'reserved') {
@@ -86,41 +118,32 @@ export async function GET(request: NextRequest) {
                     continue;
                 }
 
-                const { results, errors } = await scanLLM({
+                const measurement = await runVisibilityMeasurement({
                     prompt: schedule.prompt,
                     brandName: schedule.workspace_name || 'My Brand',
                     competitors: schedule.competitors || [],
-                    platforms: schedule.platforms as LLMPlatform[],
+                    platforms,
+                    samples: 4,
                     mode: 'standard',
+                }, {
+                    persist: async (results) => {
+                        const { error } = await admin.from('llm_scans').insert(
+                            results.map(result => persistenceRow(schedule.workspace_id, result)),
+                        );
+                        if (error) throw new Error(`Could not save measurement samples: ${error.message}`);
+                    },
                 });
 
-                if (results.length > 0) {
-                    const { error: insertError } = await admin.from('llm_scans').insert(results.map((result) => ({
-                        workspace_id: schedule.workspace_id,
-                        platform: result.platform,
-                        prompt: result.prompt,
-                        response: result.response,
-                        brand_mentioned: result.brandMentioned,
-                        brand_variants: result.brandVariants,
-                        mention_position: result.mentionPosition,
-                        sentiment: result.sentiment,
-                        sentiment_score: result.sentimentScore,
-                        sentiment_reason: result.sentimentReason,
-                        competitors_mentioned: result.competitorsMentioned,
-                        citations: result.citations,
-                        list_items: result.listItems,
-                        confidence: result.confidence,
-                    })));
-                    if (insertError) throw new Error(`Could not save scan results: ${insertError.message}`);
-                }
-
-                const status = results.length === 0 ? 'all_failed' : errors.length > 0 ? 'partial' : 'complete';
+                const status = measurement.status;
                 await finish(status);
                 details.push({
                     id: schedule.schedule_id,
                     status,
-                    scans_count: results.length,
-                    errors_count: errors.length,
+                    run_id: measurement.runId,
+                    contract_version: measurement.contractVersion,
+                    successful_samples: measurement.samples.filter(sample => sample.status === 'succeeded').length,
+                    failed_samples: measurement.failures.length,
+                    persistence: measurement.persistence.status,
                 });
             } catch (error) {
                 console.error(`[process-scans] schedule ${schedule.schedule_id} failed:`, error);

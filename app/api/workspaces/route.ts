@@ -3,9 +3,29 @@ import { createAdminClient } from '@/lib/supabase/admin';
 import { getCurrentWorkspaceContext } from '@/lib/data-access';
 import { requireWorkspaceRole } from '@/lib/authorization';
 import { getEntitlements, reserveScanQuota } from '@/lib/entitlements';
-import { getAvailablePlatforms, type LLMPlatform } from '@/lib/ai/llm-scanner';
+import { getAvailablePlatforms, type LLMPlatform, type ScanResult } from '@/lib/ai/llm-scanner';
+import { runVisibilityMeasurement } from '@/lib/measurement/service';
 
-export const maxDuration = 60; // Extend Vercel timeout for initial LLMs scale
+export const maxDuration = 300;
+
+function persistenceRow(workspaceId: string, result: ScanResult): Record<string, unknown> {
+    return {
+        workspace_id: workspaceId,
+        platform: result.platform,
+        prompt: result.prompt,
+        response: result.response,
+        brand_mentioned: result.brandMentioned,
+        brand_variants: result.brandVariants,
+        mention_position: result.mentionPosition,
+        sentiment: result.sentiment,
+        sentiment_score: result.sentimentScore,
+        sentiment_reason: result.sentimentReason,
+        competitors_mentioned: result.competitorsMentioned,
+        citations: result.citations,
+        list_items: result.listItems,
+        confidence: result.confidence,
+    };
+}
 
 // GET: List all workspaces for the current user's org
 export async function GET() {
@@ -89,7 +109,6 @@ export async function POST(request: NextRequest) {
 
         // Run an automatic initial background scan to populate the dashboard!
         try {
-            const { scanLLM } = await import('@/lib/ai/llm-scanner');
             const available = getAvailablePlatforms().filter((item) => item.available).map((item) => item.platform);
             const platforms = available.filter((platform) => entitlements.engines.includes(platform)) as LLMPlatform[];
             const reservation = platforms.length > 0 ? await reserveScanQuota(
@@ -97,35 +116,21 @@ export async function POST(request: NextRequest) {
                 `workspace:${workspace.id}:initial`,
                 db,
             ) : 'denied';
-            const { results } = reservation === 'reserved' ? await scanLLM({
+            if (reservation === 'reserved') await runVisibilityMeasurement({
                 prompt: `What is ${name}?`,
                 brandName: name,
                 brandDomain: website || undefined,
                 competitors,
                 platforms,
-            }) : { results: [] };
-
-            if (results && results.length > 0) {
-                const scanInserts = results.map(r => ({
-                    workspace_id: workspace.id,
-                    platform: r.platform,
-                    prompt: r.prompt,
-                    response: r.response,
-                    brand_mentioned: r.brandMentioned,
-                    brand_variants: r.brandVariants,
-                    mention_position: r.mentionPosition,
-                    sentiment: r.sentiment,
-                    sentiment_score: r.sentimentScore,
-                    sentiment_reason: r.sentimentReason,
-                    competitors_mentioned: r.competitorsMentioned,
-                    citations: r.citations,
-                    list_items: r.listItems,
-                    confidence: r.confidence,
-                }));
-                if (scanInserts.length > 0) {
-                    await db.from('llm_scans').insert(scanInserts);
-                }
-            }
+                samples: 4,
+            }, {
+                persist: async (results) => {
+                    const { error: insertError } = await db.from('llm_scans').insert(
+                        results.map(result => persistenceRow(workspace.id, result)),
+                    );
+                    if (insertError) throw new Error(`Could not save initial measurement: ${insertError.message}`);
+                },
+            });
         } catch (scanError) {
             console.error('Initial background scan failed:', scanError);
             // We do not fail the workspace creation if the scan fails

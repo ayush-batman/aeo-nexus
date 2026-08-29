@@ -720,4 +720,46 @@ New intervention baselines keep up to eight recent samples per exact prompt-and-
 
 ### Commit hash
 
-Pending Batch 2B commit; will be recorded in the next progress update.
+`d3e9653` — `fix: make intervention evidence comparable`
+
+## Batch 2C — Canonical first-run and scheduled scans
+
+### Problem addressed
+
+The signed-in scan route, onboarding result cards, automatic workspace scan, and cron worker still used one provider answer per engine. Onboarding displayed the analyzer's self-rating as a visibility percentage, the signed-in route checked quota with a read-then-act race, and recurring scans could keep using engines after a plan downgrade.
+
+### User impact
+
+First-run, manual signed-in, workspace-creation, and recurring measurements now collect four samples per entitled, configured engine through `measurement.v1`. Onboarding shows mention rate as visibility and separately names the successful sample count and confidence level. All-provider failure returns an explicit failed state instead of zero visibility, persistence failure makes a run partial, and scheduled work rechecks current plan access before calling providers.
+
+### Files changed
+
+- `app/api/llm/scan/route.ts`
+- `app/api/workspaces/route.ts`
+- `app/api/cron/process-scans/route.ts`
+- `app/(dashboard)/onboarding/page.tsx`
+- `tests/integration/api-auth-boundaries.test.ts`
+- `tests/integration/scheduled-scan-contract.test.ts`
+- `docs/product-rescue/IMPLEMENTATION_PROGRESS.md`
+
+### Tests and checks
+
+- Route contracts require four-sample canonical measurement, atomic quota, failure/persistence state, and current entitlements.
+- Tests reject the former read-then-act quota check, direct one-shot scanner call, and analyzer-confidence visibility shortcut.
+- Full `npm test` after implementation → 57 passed.
+- `npm run typecheck` → passed.
+- `npm run typecheck:mcp` → passed.
+- Targeted ESLint across all changed routes, onboarding, and tests → passed.
+- `npm run build -- --webpack` → passed: compilation, TypeScript, 134 static pages, and traces completed.
+- Generated `.next` build output was removed afterward to recover disk space; source and user data were not affected.
+
+### Compatibility and limits
+
+- The signed-in route keeps its compact `results`, `visibilityScore`, `scannedAt`, and `platformErrors` fields while adding the canonical receipt. The compact result is now an aggregate, not a raw answer.
+- A user-requested scan or scheduled run consumes one quota unit while collecting four samples per engine.
+- Existing stored rows remain readable. Each new successful sample is stored as its own `llm_scans` row.
+- Authenticated onboarding and live provider execution were not browser-tested because no authorized test login was supplied.
+
+### Commit hash
+
+Pending Batch 2C commit; will be recorded in the next progress update.

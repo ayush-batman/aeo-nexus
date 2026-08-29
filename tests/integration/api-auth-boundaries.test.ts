@@ -33,6 +33,21 @@ test('measurement requires measure scope, atomic quota, and honest partial state
   assert.match(scan, /persistence/);
 });
 
+test('signed-in app scans use the same canonical multi-sample and quota contract', async () => {
+  const [route, onboarding] = await Promise.all([
+    source('app/api/llm/scan/route.ts'),
+    source('app/(dashboard)/onboarding/page.tsx'),
+  ]);
+  assert.match(route, /runVisibilityMeasurement/);
+  assert.match(route, /samples: 4/);
+  assert.match(route, /reserveScanQuota/);
+  assert.match(route, /measurement\.status === 'all_failed'/);
+  assert.doesNotMatch(route, /scansThisWeek/);
+  assert.doesNotMatch(route, /calculateVisibilityScore/);
+  assert.match(onboarding, /r\.mentionRate/);
+  assert.doesNotMatch(onboarding, /r\.confidence \?\? 0\.6/);
+});
+
 test('service-role mutation routes enforce owner or admin role', async () => {
   const [keys, revoke, workspaces] = await Promise.all([
     source('app/api/keys/route.ts'),
@@ -44,6 +59,14 @@ test('service-role mutation routes enforce owner or admin role', async () => {
     assert.match(route, /'owner'/);
     assert.match(route, /'admin'/);
   }
+});
+
+test('new workspace activation also uses a canonical four-sample measurement', async () => {
+  const route = await source('app/api/workspaces/route.ts');
+  assert.match(route, /runVisibilityMeasurement/);
+  assert.match(route, /samples: 4/);
+  assert.match(route, /reserveScanQuota/);
+  assert.doesNotMatch(route, /scanLLM\(/);
 });
 
 test('scan quota reservation is serialized, idempotent, and service-role only', async () => {

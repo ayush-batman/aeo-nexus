@@ -29,6 +29,11 @@ test('scan cron fails closed and consumes only atomically claimed schedules', as
   assert.match(route, /cron_not_configured/);
   assert.match(route, /claim_due_scheduled_scans/);
   assert.match(route, /reserveScanQuota/);
+  assert.match(route, /getEntitlements/);
+  assert.match(route, /runVisibilityMeasurement/);
+  assert.match(route, /samples: 4/);
+  assert.match(route, /measurement\.persistence\.status/);
   assert.match(route, /claim_token/);
+  assert.doesNotMatch(route, /scanLLM\(/);
   assert.doesNotMatch(route, /\.from\('scheduled_scans'\)\s*\.select/);
 });
