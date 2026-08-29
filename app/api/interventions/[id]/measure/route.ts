@@ -1,6 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import { NextRequest, NextResponse } from 'next/server';
 import { getCurrentWorkspaceContext } from '@/lib/data-access';
+import { requireWorkspaceRole } from '@/lib/authorization';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { getAvailablePlatforms, type LLMPlatform } from '@/lib/ai/llm-scanner';
 import { getEntitlements, reserveScanQuota } from '@/lib/entitlements';
@@ -25,6 +26,9 @@ export async function POST(
     const { id } = await params;
     const context = await getCurrentWorkspaceContext();
     if (!context) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    if (!requireWorkspaceRole(context, ['owner', 'admin', 'editor'])) {
+        return NextResponse.json({ error: 'Viewer role cannot measure actions.' }, { status: 403 });
+    }
 
     const db = createAdminClient();
 

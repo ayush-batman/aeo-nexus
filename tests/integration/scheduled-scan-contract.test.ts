@@ -37,3 +37,21 @@ test('scan cron fails closed and consumes only atomically claimed schedules', as
   assert.doesNotMatch(route, /scanLLM\(/);
   assert.doesNotMatch(route, /\.from\('scheduled_scans'\)\s*\.select/);
 });
+
+test('cookie schedule mutations require an editor role and validate entitled engines', async () => {
+  const [collection, member, migration] = await Promise.all([
+    source('app/api/llm/scheduled/route.ts'),
+    source('app/api/llm/scheduled/[id]/route.ts'),
+    source('supabase/migrations/033_secure_scheduled_scan_mutations.sql'),
+  ]);
+  for (const route of [collection, member]) {
+    assert.match(route, /getCurrentWorkspaceContext/);
+    assert.match(route, /requireWorkspaceRole/);
+    assert.match(route, /createAdminClient/);
+  }
+  assert.match(collection, /getEntitlements/);
+  assert.match(collection, /getAvailablePlatforms/);
+  assert.match(collection, /engine_not_entitled/);
+  assert.match(collection, /prompt\.length > 2_000/);
+  assert.match(migration, /REVOKE INSERT, UPDATE, DELETE ON TABLE public\.scheduled_scans FROM authenticated/i);
+});

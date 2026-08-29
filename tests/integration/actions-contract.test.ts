@@ -34,6 +34,8 @@ test('action mutations bind rows to the authenticated workspace and validate rol
 
 test('action measurement retries reuse quota and audit idempotency keys', async () => {
   const route = await readFile(`${root}/app/api/interventions/[id]/measure/route.ts`, 'utf8');
+  assert.match(route, /requireWorkspaceRole/);
+  assert.match(route, /Viewer role cannot measure actions/);
   assert.match(route, /request\.headers\.get\(['"]idempotency-key['"]\)/);
   assert.match(route, /reservation === ['"]duplicate['"]/);
   assert.match(route, /event_type:\s*['"]measured['"]/);
