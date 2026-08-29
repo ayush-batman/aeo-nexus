@@ -25,6 +25,8 @@ test('measurement requires measure scope, atomic quota, and honest partial state
   const scan = await source('app/api/v1/scan/route.ts');
   assert.match(scan, /withKey\(request, 'measure'/);
   assert.match(scan, /reserveScanQuota/);
+  assert.match(scan, /runVisibilityMeasurement/);
+  assert.match(scan, /contractVersion/);
   assert.match(scan, /duplicate_scan_request/);
   assert.match(scan, /requestedEngines/);
   assert.match(scan, /failedEngines/);

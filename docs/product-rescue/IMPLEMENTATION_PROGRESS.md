@@ -621,4 +621,62 @@ Pixel events now require a workspace-bound HMAC signature issued only through an
 
 ### Commit hash
 
-Pending Batch 1I commit; will be recorded in the next progress update.
+`8c5b3b3` — `security: protect analytics ingestion`
+
+## Batch 2A — Canonical measurement contract and service
+
+### Problem addressed
+
+Multi-sample execution, aggregation, confidence labels, run status, and persistence state were calculated directly inside one API route. Confidence used an agreement heuristic that could label only four unanimous samples as high confidence, and persistence failure did not affect the run status.
+
+### User impact
+
+Every new API-key scan now includes a `measurement.v1` receipt with one run ID, requested engines/samples, every successful or failed sample, per-engine evidence, citations, a 95% Wilson confidence interval, persistence state, and an honest complete/partial/all-failed/untracked status. Existing response fields remain for API and MCP compatibility.
+
+### Files changed
+
+- `lib/measurement/types.ts`
+- `lib/measurement/confidence.ts`
+- `lib/measurement/service.ts`
+- `app/api/v1/scan/route.ts`
+- `tests/unit/measurement-confidence.test.ts`
+- `tests/unit/measurement-service.test.ts`
+- `tests/integration/api-auth-boundaries.test.ts`
+- `docs/product-rescue/IMPLEMENTATION_PROGRESS.md`
+
+### Tests added
+
+- No evidence produces `none`; one sample is `low`; four unanimous samples remain `medium`; eight unanimous samples can become `high`.
+- Invalid mention/sample counts fail rather than producing a misleading interval.
+- Full, partial, all-provider-failed, and untracked run fixtures retain every engine/sample outcome.
+- Persistence failure changes an otherwise successful run to `partial`.
+- API contract requires the shared measurement service and contract version while preserving earlier authorization/quota fields.
+
+### Commands run and results
+
+- Focused tests before implementation → expected missing-module failures.
+- `npm test` after implementation → 49 passed.
+- `npm run typecheck` → passed.
+- `npm run typecheck:mcp` → passed.
+- Targeted ESLint across contract/service, API adapter, and tests → passed.
+- Full `npm run lint` → the same 64 existing errors and 79 warnings remain; changed files are clean.
+- `npm run build -- --webpack` → passed: compilation, TypeScript, 134 static pages, and traces completed.
+- `git diff --check` → passed before the progress update.
+- Removed the generated `.next` cache after the successful build; source and user data were not affected.
+
+### Compatibility and evidence
+
+- Legacy `visibility`, `engines`, `requestedEngines`, `succeededEngines`, `failedEngines`, `failures`, `runStatus`, `persistence`, and `requestId` fields remain.
+- New clients can prefer `contractVersion`, `runId`, and the nested canonical `measurement` receipt.
+- Visibility is `null` inside the canonical contract when no engine succeeds, so provider outage is not represented as invisibility; the legacy field remains `0` for compatibility and is paired with `runStatus: all_failed`.
+- No user-facing UI changed in this sub-batch. Authenticated runtime execution requires migrated quota tables and an authorized API key, unavailable here; provider/persistence states use deterministic injected fixtures instead of paid live calls.
+
+### Remaining risks
+
+- Onboarding, scheduled scans, dashboard summaries, interventions, and MCP descriptions still need adapters over this contract.
+- The maximum eight samples can produce high confidence only when the interval is sufficiently narrow; this deliberately lowers some existing labels.
+- The contract is additive JSON today; durable run/sample database tables and model-version capture may be needed in a later schema version.
+
+### Commit hash
+
+Pending Batch 2A commit; will be recorded in the next progress update.
