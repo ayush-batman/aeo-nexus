@@ -496,4 +496,62 @@ Production request limits now use one shared Upstash Redis counter across instan
 
 ### Commit hash
 
-Pending Batch 1G commit; will be recorded in the next progress update.
+`022e1ce` — `fix: share production rate limits`
+
+## Batch 1H — SSRF-safe website fetching
+
+### Problem addressed
+
+Crawler, audit, enrichment, and accuracy features fetched workspace/user URLs directly. A crafted URL or redirect could therefore reach loopback services, private networks, link-local cloud metadata, or an oversized response.
+
+### User impact
+
+Website checks now accept only credential-free HTTP(S) URLs on standard ports. Every initial host and redirect is resolved and rejected if any DNS answer is private or reserved, then the outbound connection is pinned to the validated address. Redirect count, headers, response bytes, compression, and request time are bounded.
+
+### Files changed
+
+- `lib/security/safe-fetch.ts`
+- `lib/crawlers.ts`
+- `lib/services/brand-enrichment.ts`
+- `lib/ai/content-analyzer.ts`
+- `lib/ai/claim-verifier.ts`
+- `app/api/audit/help-center/route.ts`
+- `app/api/audit/technical/route.ts`
+- `tests/unit/safe-fetch.test.ts`
+- `docs/product-rescue/IMPLEMENTATION_PROGRESS.md`
+
+### Tests added
+
+- IPv4/IPv6 fixtures cover loopback, private, carrier-grade NAT, link-local metadata, multicast, reserved, mapped IPv4, and known public addresses.
+- Unsafe literal URLs and URL credentials are rejected before a network request.
+- Source contract requires DNS resolution, address pinning, manual redirect handling, and response-size enforcement.
+
+### Commands run and results
+
+- Focused tests before implementation → expected missing-module failure.
+- `npm test` after implementation → 39 passed.
+- `npm run typecheck` → passed.
+- `npm run typecheck:mcp` → passed.
+- Targeted ESLint across the shared helper and all six callers → passed. Five older lint errors in touched audit/content files were removed.
+- Full `npm run lint` → 65 existing errors and 79 warnings remain, down from 70 errors before this sub-batch; changed files are clean.
+- `npm run build -- --webpack` → passed: compilation, TypeScript, 133 static pages, and traces completed.
+- `git diff --check` → passed before the progress update.
+- Removed the generated `.next` cache after the successful build; source and user data were not affected.
+
+### Security behavior and rollout
+
+- Redirects are followed manually up to three hops, with URL and DNS validation repeated at each hop.
+- DNS answers are rejected as a set if any answer is non-public, reducing mixed public/private rebinding risk; the selected public address is used directly for the connection.
+- Default limits are 8 seconds and 512 KB; HTML analysis callers opt into at most 10 seconds and 1 MB. Robots files use 256 KB.
+- Compressed bodies are refused to avoid decompression bombs. Only ports 80 and 443 are accepted.
+- No live external crawl was run in this environment. Verify representative customer sites, IPv6-only sites, redirects, large pages, and blocked metadata/private fixtures in staging.
+
+### Remaining risks
+
+- Sites that require non-standard ports or compressed-only responses now fail closed and may need a reviewed allowlist, not a blanket bypass.
+- Analytics ingestion protection remains in the reliability batch.
+- Full repository lint still fails with 65 pre-existing errors.
+
+### Commit hash
+
+Pending Batch 1H commit; will be recorded in the next progress update.

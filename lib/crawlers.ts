@@ -1,5 +1,6 @@
 import robotsParser from 'robots-parser';
 import { createAdminClient } from '@/lib/supabase/admin';
+import { safeFetchText } from '@/lib/security/safe-fetch';
 
 // AI crawlers that matter, grouped by the assistant they feed. If these are
 // blocked in robots.txt, the brand cannot be cited there no matter what it
@@ -37,9 +38,10 @@ export async function checkCrawlerAccess(website?: string | null): Promise<Crawl
     if (!origin) return empty;
 
     try {
-        const res = await fetch(`${origin}/robots.txt`, {
+        const res = await safeFetchText(`${origin}/robots.txt`, {
             headers: { 'User-Agent': 'Aelo-Crawler-Check/1.0' },
-            signal: AbortSignal.timeout(8000),
+            timeoutMs: 8_000,
+            maxBytes: 256_000,
         });
 
         // No robots.txt (or error status) means nothing is disallowed: all allowed.
@@ -50,7 +52,7 @@ export async function checkCrawlerAccess(website?: string | null): Promise<Crawl
             };
         }
 
-        const txt = await res.text();
+        const txt = res.text;
         const robots = robotsParser(`${origin}/robots.txt`, txt);
         const probe = `${origin}/`;
         let blocked = 0;

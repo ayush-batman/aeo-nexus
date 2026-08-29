@@ -1,4 +1,5 @@
 import * as cheerio from 'cheerio';
+import { safeFetchText } from '@/lib/security/safe-fetch';
 
 export interface AuditResult {
     url: string;
@@ -24,17 +25,19 @@ export interface AuditResult {
 
 export async function auditContent(url: string): Promise<AuditResult> {
     try {
-        const response = await fetch(url, {
+        const response = await safeFetchText(url, {
             headers: {
                 'User-Agent': 'AEO-Nexus-Bot/1.0',
             },
+            timeoutMs: 10_000,
+            maxBytes: 1_000_000,
         });
 
         if (!response.ok) {
-            throw new Error(`Failed to fetch URL: ${response.statusText}`);
+            throw new Error(`Failed to fetch URL: HTTP ${response.status}`);
         }
 
-        const html = await response.text();
+        const html = response.text;
         const $ = cheerio.load(html);
 
         // 1. Structure Analysis
@@ -56,7 +59,7 @@ export async function auditContent(url: string): Promise<AuditResult> {
                         schemas.push(type);
                     }
                 }
-            } catch (e) {
+            } catch {
                 // Ignore invalid JSON
             }
         });

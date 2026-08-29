@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getCurrentWorkspaceId } from '@/lib/data-access';
 import Anthropic from '@anthropic-ai/sdk';
+import { safeFetchText } from '@/lib/security/safe-fetch';
 
 interface HelpCenterAuditResult {
     url: string;
@@ -27,7 +28,7 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
-        const { url, brandDomain } = await request.json();
+        const { url } = await request.json();
 
         if (!url) {
             return NextResponse.json({ error: 'url is required' }, { status: 400 });
@@ -36,12 +37,14 @@ export async function POST(request: NextRequest) {
         // Attempt to fetch the page to analyze it
         let pageContent = '';
         try {
-            const res = await fetch(url, {
+            const normalizedUrl = /^https?:\/\//i.test(url) ? url : `https://${url}`;
+            const res = await safeFetchText(normalizedUrl, {
                 headers: { 'User-Agent': 'AeloBot/1.0 (Help Center Audit)' },
-                signal: AbortSignal.timeout(10000),
+                timeoutMs: 10_000,
+                maxBytes: 1_000_000,
             });
             if (res.ok) {
-                pageContent = await res.text();
+                pageContent = res.text;
             }
         } catch {
             // Ignore fetch error, we'll analyze based on URL
@@ -140,7 +143,7 @@ Ensure the output is pure JSON.`;
             const cleanText = text.replace(/^```json\s*/i, '').replace(/\s*```$/i, '').trim();
             const aiResult = JSON.parse(cleanText);
             return NextResponse.json(aiResult);
-        } catch (e) {
+        } catch {
             console.error('Failed to parse AI JSON response:', text);
             return NextResponse.json({ error: 'Failed to process AI analysis result' }, { status: 500 });
         }

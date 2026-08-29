@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-// @ts-ignore
 import robotsParser from 'robots-parser';
 import * as cheerio from 'cheerio';
+import { safeFetchText } from '@/lib/security/safe-fetch';
 
 export async function POST(request: NextRequest) {
     try {
@@ -11,7 +11,7 @@ export async function POST(request: NextRequest) {
         let targetUrl;
         try {
             targetUrl = new URL(url.startsWith('http') ? url : `https://${url}`);
-        } catch (e) {
+        } catch {
             return NextResponse.json({ error: 'Invalid URL' }, { status: 400 });
         }
 
@@ -22,18 +22,19 @@ export async function POST(request: NextRequest) {
         const robotsUrl = `${domain}/robots.txt`;
         let robotsStatus = 'missing'; // 'found', 'missing', 'error'
         let aiBotsBlocked = false;
-        let details: any[] = [];
+        const details: Array<{ bot: string; allowed: boolean }> = [];
         let sitemaps: string[] = [];
 
         try {
-            const robotsRes = await fetch(robotsUrl, {
-                next: { revalidate: 3600 },
-                headers: { 'User-Agent': 'Aelo-Nexus-Audit/1.0' }
+            const robotsRes = await safeFetchText(robotsUrl, {
+                headers: { 'User-Agent': 'Aelo-Nexus-Audit/1.0' },
+                timeoutMs: 8_000,
+                maxBytes: 256_000,
             });
 
             if (robotsRes.ok) {
                 robotsStatus = 'found';
-                const robotsTxt = await robotsRes.text();
+                const robotsTxt = robotsRes.text;
                 const robots = robotsParser(robotsUrl, robotsTxt);
 
                 sitemaps = robots.getSitemaps();
@@ -66,14 +67,16 @@ export async function POST(request: NextRequest) {
         }
 
         // 2. Check Meta Tags
-        let metaTags: any[] = [];
+        const metaTags: Array<{ name: string; content: string }> = [];
         try {
-            const pageRes = await fetch(fullUrl, {
-                headers: { 'User-Agent': 'Aelo-Nexus-Audit-Bot/1.0' }
+            const pageRes = await safeFetchText(fullUrl, {
+                headers: { 'User-Agent': 'Aelo-Nexus-Audit-Bot/1.0' },
+                timeoutMs: 10_000,
+                maxBytes: 1_000_000,
             });
 
             if (pageRes.ok) {
-                const html = await pageRes.text();
+                const html = pageRes.text;
                 const $ = cheerio.load(html);
 
                 $('meta').each((i, el) => {

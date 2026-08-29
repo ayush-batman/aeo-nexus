@@ -1,5 +1,6 @@
 import { getOpenAIClient } from './openai-client';
 import type { ExtractedClaim } from './claim-extractor';
+import { safeFetchText } from '@/lib/security/safe-fetch';
 
 // Fact-check each extracted claim against the brand's own website.
 // Fetches the site (best-effort, one-page GET, no crawl) and feeds
@@ -134,12 +135,13 @@ function normalizeVerdict(v: string): VerifiedClaim['verdict'] {
 async function fetchSourceText(url: string): Promise<string | null> {
     try {
         const normalized = url.startsWith('http') ? url : `https://${url}`;
-        const res = await fetch(normalized, {
+        const res = await safeFetchText(normalized, {
             headers: { 'User-Agent': 'Aelo-AccuracyBot/1.0 (+https://aelohq.com)' },
-            signal:  AbortSignal.timeout(10_000),
+            timeoutMs: 10_000,
+            maxBytes: 1_000_000,
         });
         if (!res.ok) return null;
-        const html = await res.text();
+        const html = res.text;
         // Strip tags for a rough plain-text pass. Not perfect but cheap.
         return html
             .replace(/<script[\s\S]*?<\/script>/gi, ' ')

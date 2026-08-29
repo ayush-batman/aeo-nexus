@@ -1,6 +1,7 @@
 
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import * as cheerio from 'cheerio';
+import { safeFetchText } from '@/lib/security/safe-fetch';
 
 interface EnrichedBrand {
     name: string;
@@ -13,17 +14,19 @@ interface EnrichedBrand {
 export async function enrichBrandFromUrl(url: string): Promise<EnrichedBrand> {
     try {
         // 1. Fetch Page Content
-        const response = await fetch(url, {
+        const response = await safeFetchText(url, {
             headers: {
                 'User-Agent': 'AEO-Nexus-Bot/1.0',
             },
+            timeoutMs: 10_000,
+            maxBytes: 1_000_000,
         });
 
         if (!response.ok) {
-            throw new Error(`Failed to fetch URL: ${response.statusText}`);
+            throw new Error(`Failed to fetch URL: HTTP ${response.status}`);
         }
 
-        const html = await response.text();
+        const html = response.text;
         const $ = cheerio.load(html);
 
         // Clean up
