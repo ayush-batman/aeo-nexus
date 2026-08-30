@@ -553,4 +553,16 @@ export default defineSchema({
   })
     .index('by_public_id', ['publicId'])
     .index('by_manifest_hash', ['manifestHash']),
+
+  importStaging: defineTable({
+    manifestHash: v.string(),
+    sourceTable: v.string(),
+    sourcePublicId: v.string(),
+    payload: v.any(),
+  })
+    .index('by_manifest_table_public_id', [
+      'manifestHash',
+      'sourceTable',
+      'sourcePublicId',
+    ]),
 });

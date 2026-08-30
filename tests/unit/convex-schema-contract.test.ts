@@ -46,8 +46,8 @@ test('security and idempotency lookup indexes remain declared', async () => {
     'by_key_hash',
     'by_workspace_id_and_insight_key',
     'by_workspace_id_and_measurement_run_id',
+    'by_manifest_table_public_id',
   ]) {
     assert.match(source, new RegExp(`index\\('${index}'`), `${index} is required`);
   }
 });
-
