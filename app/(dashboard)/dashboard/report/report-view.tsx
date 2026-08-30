@@ -14,9 +14,10 @@ function downloadCsv(report: Report) {
     lines.push(`Aelo AI Visibility Report,${report.brand}`);
     lines.push(`Period,${report.from} to ${report.to}`);
     lines.push("");
-    lines.push("Engine,Mention rate %,Mentioned,Tested,Avg position");
+    lines.push("Engine,Mention rate %,Mentioned,Tested,Confidence,95% interval,Avg position");
     for (const e of report.engines) {
-        lines.push([e.label, e.mentionRate, e.mentioned, e.tested, e.avgPosition ?? ""].map(csvEscape).join(","));
+        const interval = e.confidenceInterval ? `${Math.round(e.confidenceInterval.lower * 100)}-${Math.round(e.confidenceInterval.upper * 100)}%` : "";
+        lines.push([e.label, e.mentionRate, e.mentioned, e.tested, e.confidence, interval, e.avgPosition ?? ""].map(csvEscape).join(","));
     }
     lines.push("");
     lines.push("Prompt,Mentioned,Tested,Best position,Engines");
@@ -61,6 +62,9 @@ export default function ReportView({ paid, brand, report }: { paid: boolean; bra
 
     const s = report;
     const empty = s.totalScans === 0;
+    const overallInterval = s.overallConfidenceInterval
+        ? `${Math.round(s.overallConfidenceInterval.lower * 100)}–${Math.round(s.overallConfidenceInterval.upper * 100)}%`
+        : null;
 
     return (
         <div className="report-root p-6 md:p-8 max-w-4xl mx-auto">
@@ -102,7 +106,11 @@ export default function ReportView({ paid, brand, report }: { paid: boolean; bra
                     <>
                         {/* Summary */}
                         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-                            <Tile label="Mention rate" value={s.overallMentionRate === null ? "—" : `${s.overallMentionRate}%`} />
+                            <Tile
+                                label="Mention rate"
+                                value={s.overallMentionRate === null ? "—" : `${s.overallMentionRate}%`}
+                                detail={s.overallMentionRate === null ? "Unmeasured" : `${s.overallConfidence} confidence · 95% range ${overallInterval} · n=${s.totalScans}`}
+                            />
                             <Tile label="Avg position" value={s.avgPosition != null ? String(s.avgPosition) : "–"} />
                             <Tile label="Scans" value={String(s.totalScans)} />
                             <Tile label="Prompts" value={String(s.uniquePrompts)} />
@@ -116,6 +124,7 @@ export default function ReportView({ paid, brand, report }: { paid: boolean; bra
                                     <th className="text-left font-medium py-2">Engine</th>
                                     <th className="text-right font-medium py-2">Mention rate</th>
                                     <th className="text-right font-medium py-2">Mentioned</th>
+                                    <th className="text-right font-medium py-2">Confidence</th>
                                     <th className="text-right font-medium py-2">Avg position</th>
                                 </tr>
                             </thead>
@@ -125,6 +134,10 @@ export default function ReportView({ paid, brand, report }: { paid: boolean; bra
                                         <td className="py-2.5 text-[var(--text-primary)] font-medium">{e.label}</td>
                                         <td className="py-2.5 text-right"><span className="font-semibold text-[var(--accent-base)]">{e.mentionRate}%</span></td>
                                         <td className="py-2.5 text-right text-[var(--text-secondary)]">{e.mentioned} / {e.tested}</td>
+                                        <td className="py-2.5 text-right text-[var(--text-secondary)]">
+                                            {e.confidence}
+                                            {e.confidenceInterval && <span className="block text-[10px] text-[var(--text-tertiary)]">{Math.round(e.confidenceInterval.lower * 100)}–{Math.round(e.confidenceInterval.upper * 100)}%</span>}
+                                        </td>
                                         <td className="py-2.5 text-right text-[var(--text-secondary)]">{e.avgPosition ?? "–"}</td>
                                     </tr>
                                 ))}
@@ -188,11 +201,12 @@ export default function ReportView({ paid, brand, report }: { paid: boolean; bra
     );
 }
 
-function Tile({ label, value }: { label: string; value: string }) {
+function Tile({ label, value, detail }: { label: string; value: string; detail?: string }) {
     return (
         <div className="rounded-xl border border-[var(--border-default)] bg-[var(--bg-base)]/40 p-4">
             <div className="text-[var(--text-secondary)] text-xs font-medium">{label}</div>
             <div className="text-2xl font-bold text-[var(--text-primary)] mt-1">{value}</div>
+            {detail && <div className="mt-1 text-[10px] text-[var(--text-tertiary)]">{detail}</div>}
         </div>
     );
 }

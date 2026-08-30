@@ -345,7 +345,7 @@ export async function getLLMScans(
 
     if (error) {
         console.error('Error fetching LLM scans:', error);
-        return [];
+        throw new Error('Failed to fetch LLM scans', { cause: error });
     }
 
     return (data || []).map(scan => ({
@@ -359,6 +359,14 @@ export async function getLLMScans(
         sentiment: scan.sentiment,
         competitors_mentioned: scan.competitors_mentioned || [],
         citations: scan.citations || [],
+        sample_id: scan.sample_id ?? null,
+        measurement_run_id: scan.measurement_run_id ?? null,
+        sample_index: scan.sample_index ?? null,
+        provider_model: scan.provider_model ?? null,
+        measurement_region: scan.measurement_region ?? null,
+        measurement_mode: scan.measurement_mode ?? null,
+        scorer_version: scan.scorer_version ?? null,
+        measurement_contract_version: scan.measurement_contract_version ?? null,
         created_at: scan.created_at,
     }));
 }
@@ -397,6 +405,7 @@ export async function getVisibilityMetrics(
 
     if (recentError || previousError) {
         console.error('Error fetching visibility metrics:', recentError || previousError);
+        throw new Error('Failed to fetch visibility metrics', { cause: recentError || previousError });
     }
 
     const platforms = ['chatgpt', 'gemini', 'perplexity', 'claude'];
@@ -482,17 +491,16 @@ export async function getForumThreads(
 
     if (error) {
         console.error('Error fetching forum threads:', error);
-        return [];
+        throw new Error('Failed to fetch forum threads', { cause: error });
     }
 
     return data || [];
 }
 
 // Calculate AEO Health Score
-export async function getAEOHealthScore(
-    workspaceId: string
-): Promise<{ score: number | null; change: number | null }> {
-    const visibilityMetrics = await getVisibilityMetrics(workspaceId);
+function healthScoreFromVisibilityMetrics(
+    visibilityMetrics: PlatformVisibility[],
+): { score: number | null; change: number | null } {
     const visibilitySamples = visibilityMetrics.reduce((sum, metric) => sum + metric.scanCount, 0);
     const visibilityMentions = visibilityMetrics.reduce((sum, metric) => sum + metric.mentionCount, 0);
     const visibility = mentionMetricFromCounts(visibilityMentions, visibilitySamples).visibilityPercent;
@@ -506,9 +514,16 @@ export async function getAEOHealthScore(
     };
 }
 
+export async function getAEOHealthScore(
+    workspaceId: string
+): Promise<{ score: number | null; change: number | null }> {
+    return healthScoreFromVisibilityMetrics(await getVisibilityMetrics(workspaceId));
+}
+
 // Get dashboard stats
 export async function getDashboardStats(
-    workspaceId: string
+    workspaceId: string,
+    suppliedVisibilityMetrics?: PlatformVisibility[],
 ): Promise<DashboardStats> {
     {
         const { DEMO_SEED_ACTIVE, demoDashboardStats } = await import('./analytics/demo-seed');
@@ -516,11 +531,11 @@ export async function getDashboardStats(
     }
     const supabase = await createAdminClient();
 
-    const [healthScore, visibilityMetrics, threads] = await Promise.all([
-        getAEOHealthScore(workspaceId),
-        getVisibilityMetrics(workspaceId),
+    const [visibilityMetrics, threads] = await Promise.all([
+        suppliedVisibilityMetrics ?? getVisibilityMetrics(workspaceId),
         getForumThreads(workspaceId, { limit: 100 }),
     ]);
+    const healthScore = healthScoreFromVisibilityMetrics(visibilityMetrics);
 
     const llmVisibilitySamples = visibilityMetrics.reduce((sum, metric) => sum + metric.scanCount, 0);
     const llmVisibilityMentions = visibilityMetrics.reduce((sum, metric) => sum + metric.mentionCount, 0);
@@ -545,11 +560,15 @@ export async function getDashboardStats(
     const sevenDaysAgo = new Date();
     sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
 
-    const { data: recentScans } = await supabase
+    const { data: recentScans, error: recentScansError } = await supabase
         .from('llm_scans')
         .select('brand_mentioned, competitors_mentioned')
         .eq('workspace_id', workspaceId)
         .gte('created_at', sevenDaysAgo.toISOString());
+
+    if (recentScansError) {
+        throw new Error('Failed to fetch share-of-voice scans', { cause: recentScansError });
+    }
 
     if (recentScans && recentScans.length > 0) {
         shareOfVoice = shareOfVoiceMetric(recentScans.map((scan) => ({
@@ -562,10 +581,14 @@ export async function getDashboardStats(
     let contentScore: number | null = null;
     let pagesNeedingOptimization = 0;
 
-    const { data: contentAnalyses } = await supabase
+    const { data: contentAnalyses, error: contentAnalysesError } = await supabase
         .from('content_analyses')
         .select('aeo_score')
         .eq('workspace_id', workspaceId);
+
+    if (contentAnalysesError) {
+        throw new Error('Failed to fetch content analyses', { cause: contentAnalysesError });
+    }
 
     if (contentAnalyses && contentAnalyses.length > 0) {
         contentScore = Math.round(

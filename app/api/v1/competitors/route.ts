@@ -15,11 +15,15 @@ export async function GET(request: Request) {
   return withKey(request, 'read', async (ctx, admin) => {
     const since = new Date(Date.now() - days * 86400000).toISOString();
     const brand = await getWorkspaceBrand(admin, ctx.workspaceId);
-    const { data } = await admin
+    const { data, error } = await admin
       .from('llm_scans')
       .select('brand_mentioned, competitors_mentioned')
       .eq('workspace_id', ctx.workspaceId)
       .gte('created_at', since);
+
+    if (error) {
+      throw new Error('Failed to fetch competitor visibility', { cause: error });
+    }
 
     const rows = data || [];
     const counts = new Map<string, { name: string; mentions: number }>();

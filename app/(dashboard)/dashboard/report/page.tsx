@@ -12,11 +12,12 @@ export default async function ReportPage() {
     if (!ctx) redirect("/login");
 
     const supabase = await createClient();
-    const { data: ws } = await supabase
+    const { data: ws, error: workspaceError } = await supabase
         .from("workspaces")
         .select("name")
         .eq("id", ctx.workspaceId)
         .single();
+    if (workspaceError) throw new Error(`Could not load report workspace: ${workspaceError.message}`);
     const brand = ws?.name ?? "Your brand";
 
     const ent = await getEntitlements(ctx.orgId);

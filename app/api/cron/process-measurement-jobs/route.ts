@@ -5,6 +5,7 @@ import { claimMeasurementJobs, finishMeasurementJob } from '@/lib/measurement/jo
 import { scanResultPersistenceRow } from '@/lib/measurement/persistence';
 import { runVisibilityMeasurement } from '@/lib/measurement/service';
 import { createAdminClient } from '@/lib/supabase/admin';
+import { evaluateMeasurementAlerts } from '@/lib/alerts/evaluate';
 
 export const maxDuration = 300;
 
@@ -76,6 +77,9 @@ export async function GET(request: NextRequest) {
       failed_samples: measurement.failures.length,
       persistence: measurement.persistence.status,
     };
+    if (measurement.persistence.rows > 0) {
+      await evaluateMeasurementAlerts(job.workspace_id, measurement.runId);
+    }
     if (measurement.status === 'all_failed' || measurement.persistence.status === 'failed') {
       const willRetry = job.attempts < job.max_attempts;
       await finishMeasurementJob(admin, job, 'failed', {

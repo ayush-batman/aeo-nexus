@@ -3,6 +3,8 @@
 // share, sentiment, over a window. This is the productized version of the
 // spreadsheet operators build by hand.
 import { createClient } from '@/lib/supabase/server';
+import { estimateMentionConfidence } from '@/lib/measurement/confidence';
+import type { MeasurementConfidenceLevel } from '@/lib/measurement/types';
 
 const ENGINE_LABEL: Record<string, string> = {
     chatgpt: 'ChatGPT',
@@ -19,6 +21,8 @@ export type ReportEngine = {
     tested: number;
     mentioned: number;
     mentionRate: number;      // 0-100
+    confidence: MeasurementConfidenceLevel;
+    confidenceInterval: { lower: number; upper: number } | null;
     avgPosition: number | null;
 };
 
@@ -38,6 +42,8 @@ export type Report = {
     totalScans: number;
     uniquePrompts: number;
     overallMentionRate: number | null;    // 0-100, null when unmeasured
+    overallConfidence: MeasurementConfidenceLevel;
+    overallConfidenceInterval: { lower: number; upper: number } | null;
     avgPosition: number | null;
     engines: ReportEngine[];
     prompts: ReportPrompt[];
@@ -61,12 +67,14 @@ export async function buildReport(workspaceId: string, brand: string, days = 30)
     const sinceDate = new Date(Date.now() - days * 86400000);
     const since = sinceDate.toISOString();
 
-    const { data } = await supabase
+    const { data, error } = await supabase
         .from('llm_scans')
         .select('platform, prompt, brand_mentioned, mention_position, sentiment, competitors_mentioned, created_at')
         .eq('workspace_id', workspaceId)
         .gte('created_at', since)
         .order('created_at', { ascending: false });
+
+    if (error) throw new Error(`Failed to build report: ${error.message}`);
 
     const scans = (data ?? []) as Row[];
 
@@ -74,7 +82,7 @@ export async function buildReport(workspaceId: string, brand: string, days = 30)
     const byEngine = new Map<string, { tested: number; mentioned: number; positions: number[] }>();
     // Per prompt
     const byPrompt = new Map<string, { engines: Set<string>; mentioned: number; tested: number; positions: number[] }>();
-    const competitors = new Map<string, number>();
+    const competitors = new Map<string, { name: string; count: number }>();
     const sentiment = { positive: 0, neutral: 0, negative: 0 };
     let mentionedTotal = 0;
     const allPositions: number[] = [];
@@ -99,23 +107,33 @@ export async function buildReport(workspaceId: string, brand: string, days = 30)
         else if (s.sentiment === 'negative') sentiment.negative += 1;
         else if (s.sentiment === 'neutral') sentiment.neutral += 1;
 
+        const seenCompetitors = new Set<string>();
         for (const c of s.competitors_mentioned ?? []) {
             const name = (c || '').trim();
-            if (name) competitors.set(name, (competitors.get(name) ?? 0) + 1);
+            const key = name.toLocaleLowerCase();
+            if (!key || seenCompetitors.has(key)) continue;
+            seenCompetitors.add(key);
+            const current = competitors.get(key);
+            competitors.set(key, { name: current?.name ?? name, count: (current?.count ?? 0) + 1 });
         }
     }
 
     const avg = (arr: number[]) => arr.length ? +(arr.reduce((a, b) => a + b, 0) / arr.length).toFixed(1) : null;
 
     const engines: ReportEngine[] = [...byEngine.entries()]
-        .map(([platform, v]) => ({
-            platform,
-            label: ENGINE_LABEL[platform] ?? platform,
-            tested: v.tested,
-            mentioned: v.mentioned,
-            mentionRate: v.tested ? Math.round((v.mentioned / v.tested) * 100) : 0,
-            avgPosition: avg(v.positions),
-        }))
+        .map(([platform, v]) => {
+            const confidence = estimateMentionConfidence(v.mentioned, v.tested);
+            return {
+                platform,
+                label: ENGINE_LABEL[platform] ?? platform,
+                tested: v.tested,
+                mentioned: v.mentioned,
+                mentionRate: Math.round((confidence.mentionRate ?? 0) * 100),
+                confidence: confidence.level,
+                confidenceInterval: confidence.interval,
+                avgPosition: avg(v.positions),
+            };
+        })
         .sort((a, b) => b.mentionRate - a.mentionRate);
 
     const prompts: ReportPrompt[] = [...byPrompt.entries()]
@@ -128,11 +146,11 @@ export async function buildReport(workspaceId: string, brand: string, days = 30)
         }))
         .sort((a, b) => (b.mentioned / b.tested) - (a.mentioned / a.tested));
 
-    const topCompetitors = [...competitors.entries()]
-        .map(([name, count]) => ({ name, count }))
+    const topCompetitors = [...competitors.values()]
         .sort((a, b) => b.count - a.count)
         .slice(0, 8);
 
+    const overallConfidence = estimateMentionConfidence(mentionedTotal, scans.length);
     return {
         brand,
         periodDays: days,
@@ -140,7 +158,9 @@ export async function buildReport(workspaceId: string, brand: string, days = 30)
         to: new Date().toISOString().slice(0, 10),
         totalScans: scans.length,
         uniquePrompts: byPrompt.size,
-        overallMentionRate: scans.length ? Math.round((mentionedTotal / scans.length) * 100) : null,
+        overallMentionRate: overallConfidence.mentionRate === null ? null : Math.round(overallConfidence.mentionRate * 100),
+        overallConfidence: overallConfidence.level,
+        overallConfidenceInterval: overallConfidence.interval,
         avgPosition: avg(allPositions),
         engines,
         prompts,

@@ -7,12 +7,17 @@ export const DRIFT_THRESHOLD = 0.3;
 
 // Minimum scans in a week for the average to be trusted. Below this we
 // silently skip, one grumpy scan shouldn't page a marketing team.
-export const MIN_SAMPLE_SIZE = 2;
+export const MIN_SAMPLE_SIZE = 4;
 
 export type DriftSnapshot = {
     workspace_id: string;
     prompt:       string;
     platform:     string;
+    provider_model: string;
+    measurement_region: string;
+    measurement_mode: string;
+    scorer_version: string;
+    measurement_contract_version: string;
     week_start:   string; // YYYY-MM-DD
     avg_sentiment: number;
     sample_size:   number;
@@ -28,6 +33,8 @@ export type DriftAlert = {
     delta:    number;
     direction: 'up' | 'down';
     sample_size: number;
+    prior_sample_size: number;
+    week_start: string;
 };
 
 // Monday 00:00 UTC of the week containing `d`. All snapshots align to this
@@ -55,7 +62,7 @@ export async function computeAndStoreSnapshots(targetWeekStart: Date) {
 
     const { data: scans, error } = await db
         .from('llm_scans')
-        .select('workspace_id, prompt, platform, sentiment_score')
+        .select('workspace_id, prompt, platform, sentiment_score, provider_model, measurement_region, measurement_mode, scorer_version, measurement_contract_version')
         .gte('created_at', start)
         .lt('created_at', end)
         .not('sentiment_score', 'is', null);
@@ -63,9 +70,10 @@ export async function computeAndStoreSnapshots(targetWeekStart: Date) {
     if (error) throw new Error(`Failed to load scans for ${start}: ${error.message}`);
     if (!scans?.length) return { snapshots: [] as DriftSnapshot[] };
 
-    const buckets = new Map<string, { sum: number; n: number; workspace_id: string; prompt: string; platform: string }>();
+    const buckets = new Map<string, { sum: number; n: number; workspace_id: string; prompt: string; platform: string; provider_model: string; measurement_region: string; measurement_mode: string; scorer_version: string; measurement_contract_version: string }>();
     for (const s of scans) {
-        const key = `${s.workspace_id}|${s.prompt}|${s.platform}`;
+        if (!s.provider_model || !s.measurement_region || !s.measurement_mode || !s.scorer_version || !s.measurement_contract_version) continue;
+        const key = JSON.stringify([s.workspace_id, s.prompt, s.platform, s.provider_model, s.measurement_region, s.measurement_mode, s.scorer_version, s.measurement_contract_version]);
         const b = buckets.get(key);
         if (b) { b.sum += Number(s.sentiment_score); b.n++; }
         else buckets.set(key, {
@@ -74,6 +82,11 @@ export async function computeAndStoreSnapshots(targetWeekStart: Date) {
             workspace_id: s.workspace_id,
             prompt:       s.prompt,
             platform:     s.platform,
+            provider_model: s.provider_model,
+            measurement_region: s.measurement_region,
+            measurement_mode: s.measurement_mode,
+            scorer_version: s.scorer_version,
+            measurement_contract_version: s.measurement_contract_version,
         });
     }
 
@@ -83,6 +96,11 @@ export async function computeAndStoreSnapshots(targetWeekStart: Date) {
             workspace_id:  b.workspace_id,
             prompt:        b.prompt,
             platform:      b.platform,
+            provider_model: b.provider_model,
+            measurement_region: b.measurement_region,
+            measurement_mode: b.measurement_mode,
+            scorer_version: b.scorer_version,
+            measurement_contract_version: b.measurement_contract_version,
             week_start:    start,
             avg_sentiment: b.sum / b.n,
             sample_size:   b.n,
@@ -91,7 +109,7 @@ export async function computeAndStoreSnapshots(targetWeekStart: Date) {
 
     const { error: upsertErr } = await db
         .from('sentiment_drift_snapshots')
-        .upsert(snapshots, { onConflict: 'workspace_id,prompt,platform,week_start' });
+        .upsert(snapshots, { onConflict: 'workspace_id,prompt,platform,provider_model,measurement_region,measurement_mode,scorer_version,measurement_contract_version,week_start' });
 
     if (upsertErr) throw new Error(`Upsert failed: ${upsertErr.message}`);
     return { snapshots };
@@ -105,7 +123,7 @@ export async function detectDrift(currentWeekStart: Date): Promise<DriftAlert[]>
 
     const { data: rows, error } = await db
         .from('sentiment_drift_snapshots')
-        .select('workspace_id, prompt, platform, week_start, avg_sentiment, sample_size, workspaces(name)')
+        .select('workspace_id, prompt, platform, provider_model, measurement_region, measurement_mode, scorer_version, measurement_contract_version, week_start, avg_sentiment, sample_size, workspaces(name)')
         .in('week_start', [isoDate(currentWeekStart), isoDate(priorWeekStart)]);
 
     if (error) throw new Error(`Snapshot read failed: ${error.message}`);
@@ -114,7 +132,8 @@ export async function detectDrift(currentWeekStart: Date): Promise<DriftAlert[]>
     const current = new Map<string, typeof rows[0]>();
     const prior   = new Map<string, typeof rows[0]>();
     for (const r of rows) {
-        const key = `${r.workspace_id}|${r.prompt}|${r.platform}`;
+        if (!r.provider_model || !r.measurement_region || !r.measurement_mode || !r.scorer_version || !r.measurement_contract_version) continue;
+        const key = JSON.stringify([r.workspace_id, r.prompt, r.platform, r.provider_model, r.measurement_region, r.measurement_mode, r.scorer_version, r.measurement_contract_version]);
         if (r.week_start === isoDate(currentWeekStart)) current.set(key, r);
         else prior.set(key, r);
     }
@@ -137,6 +156,8 @@ export async function detectDrift(currentWeekStart: Date): Promise<DriftAlert[]>
             delta,
             direction:      delta > 0 ? 'up' : 'down',
             sample_size:    c.sample_size,
+            prior_sample_size: p.sample_size,
+            week_start:     c.week_start,
         });
     }
 
@@ -155,7 +176,7 @@ export async function loadDriftHistory(workspaceId: string) {
 
     const { data, error } = await db
         .from('sentiment_drift_snapshots')
-        .select('prompt, platform, week_start, avg_sentiment, sample_size')
+        .select('prompt, platform, provider_model, measurement_region, measurement_mode, scorer_version, measurement_contract_version, week_start, avg_sentiment, sample_size')
         .eq('workspace_id', workspaceId)
         .gte('week_start', isoDate(weekStart(twelveWeeksAgo)))
         .order('week_start', { ascending: true });

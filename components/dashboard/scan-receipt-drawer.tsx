@@ -23,6 +23,14 @@ interface Scan {
         provenance?: 'provider_citation' | 'link_mentioned' | 'unverified';
         fetch_validation?: 'not_checked' | 'valid' | 'invalid' | 'blocked';
     }> | null;
+    sample_id?:                       string | null;
+    measurement_run_id?:              string | null;
+    sample_index?:                    number | null;
+    provider_model?:                  string | null;
+    measurement_region?:              string | null;
+    measurement_mode?:                string | null;
+    scorer_version?:                  string | null;
+    measurement_contract_version?:    string | null;
     created_at:            string;
 }
 
@@ -232,6 +240,26 @@ function ScanRow({ scan, expanded, onToggle }: { scan: Scan; expanded: boolean; 
 
             {expanded && (
                 <div className="border-t border-[var(--border-default)] bg-[var(--bg-raised)]/30 px-4 py-4 space-y-3">
+                    <dl className="grid grid-cols-2 gap-x-4 gap-y-2 rounded-md border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-3 text-[10px] font-mono sm:grid-cols-4">
+                        <div>
+                            <dt className="uppercase tracking-[0.12em] text-[var(--text-tertiary)]">Model</dt>
+                            <dd className="mt-0.5 break-all text-[var(--text-secondary)]">{scan.provider_model ?? "Legacy · unknown"}</dd>
+                        </div>
+                        <div>
+                            <dt className="uppercase tracking-[0.12em] text-[var(--text-tertiary)]">Region</dt>
+                            <dd className="mt-0.5 text-[var(--text-secondary)]">{scan.measurement_region ?? "Unknown"}</dd>
+                        </div>
+                        <div>
+                            <dt className="uppercase tracking-[0.12em] text-[var(--text-tertiary)]">Sample</dt>
+                            <dd className="mt-0.5 text-[var(--text-secondary)]">{scan.sample_index ?? "Legacy"}</dd>
+                        </div>
+                        <div>
+                            <dt className="uppercase tracking-[0.12em] text-[var(--text-tertiary)]">Run</dt>
+                            <dd className="mt-0.5 break-all text-[var(--text-secondary)]" title={scan.measurement_run_id ?? undefined}>
+                                {scan.measurement_run_id?.slice(0, 8) ?? "Legacy"}
+                            </dd>
+                        </div>
+                    </dl>
                     <div>
                         <div className="flex items-center justify-between mb-1">
                             <span className="text-[10px] font-mono uppercase tracking-[0.14em] text-[var(--text-tertiary)]">

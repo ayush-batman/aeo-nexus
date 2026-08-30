@@ -63,16 +63,32 @@ test('signed-in app scans use the same canonical multi-sample and quota contract
 });
 
 test('service-role mutation routes enforce owner or admin role', async () => {
-  const [keys, revoke, workspaces] = await Promise.all([
+  const [keys, revoke, workspaces, alertPreferences] = await Promise.all([
     source('app/api/keys/route.ts'),
     source('app/api/keys/[id]/route.ts'),
     source('app/api/workspaces/route.ts'),
+    source('app/api/alerts/preferences/route.ts'),
   ]);
-  for (const route of [keys, revoke, workspaces]) {
+  for (const route of [keys, revoke, workspaces, alertPreferences]) {
     assert.match(route, /requireWorkspaceRole/);
     assert.match(route, /'owner'/);
     assert.match(route, /'admin'/);
   }
+});
+
+test('alert settings reject direct member writes and unsupported alert types', async () => {
+  const [route, migration, settings] = await Promise.all([
+    source('app/api/alerts/preferences/route.ts'),
+    source('supabase/migrations/20260830050607_restrict_alert_preferences.sql'),
+    source('app/(dashboard)/dashboard/settings/page.tsx'),
+  ]);
+  assert.match(migration, /REVOKE INSERT, UPDATE, DELETE[\s\S]*FROM authenticated/i);
+  assert.match(migration, /FOR SELECT[\s\S]*TO authenticated/i);
+  assert.match(route, /ALERT_TYPES\.has/);
+  assert.match(route, /unsupported or duplicate alert types/);
+  assert.match(route, /createAdminClient/);
+  assert.doesNotMatch(settings, /citation_lost|daily_report|brand_forum_mention|hot_thread/);
+  assert.match(settings, /sentiment_drift/);
 });
 
 test('new workspace activation is atomically queued instead of awaited in the request', async () => {

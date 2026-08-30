@@ -3,6 +3,7 @@ import { getAvailablePlatforms, type LLMPlatform } from '@/lib/ai/llm-scanner';
 import { getEntitlements, reserveScanQuota } from '@/lib/entitlements';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { runVisibilityMeasurement } from '@/lib/measurement/service';
+import { evaluateMeasurementAlerts } from '@/lib/alerts/evaluate';
 import { scanResultPersistenceRow } from '@/lib/measurement/persistence';
 
 export const maxDuration = 300;
@@ -126,6 +127,9 @@ export async function GET(request: NextRequest) {
                 });
 
                 const status = measurement.status;
+                if (measurement.persistence.rows > 0) {
+                    await evaluateMeasurementAlerts(schedule.workspace_id, measurement.runId);
+                }
                 await finish(status);
                 details.push({
                     id: schedule.schedule_id,

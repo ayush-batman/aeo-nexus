@@ -139,6 +139,7 @@ export default function SettingsPage() {
     const [alertPrefs, setAlertPrefs] = useState<Record<string, boolean>>({});
     const [savingAlerts, setSavingAlerts] = useState(false);
     const [alertsSaved, setAlertsSaved] = useState(false);
+    const [alertError, setAlertError] = useState<string | null>(null);
 
     async function fetchData() {
         try {
@@ -212,9 +213,13 @@ export default function SettingsPage() {
                     prefsMap[p.alert_type] = p.enabled;
                 });
                 setAlertPrefs(prefsMap);
+            } else {
+                const payload = await alertRes.json().catch(() => null) as { error?: string } | null;
+                setAlertError(payload?.error || 'Could not load alert preferences');
             }
         } catch (err) {
             console.error('Error loading alert preferences:', err);
+            setAlertError('Could not load alert preferences');
         }
     }
 
@@ -232,20 +237,24 @@ export default function SettingsPage() {
     async function saveAlertPrefs() {
         setSavingAlerts(true);
         setAlertsSaved(false);
+        setAlertError(null);
         try {
             const preferences = Object.entries(alertPrefs).map(([alert_type, enabled]) => ({
                 alert_type,
                 enabled,
             }));
-            await fetch('/api/alerts/preferences', {
+            const response = await fetch('/api/alerts/preferences', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ preferences }),
             });
+            const payload = await response.json().catch(() => null) as { error?: string } | null;
+            if (!response.ok) throw new Error(payload?.error || 'Could not save alert preferences');
             setAlertsSaved(true);
             setTimeout(() => setAlertsSaved(false), 3000);
         } catch (err) {
             console.error('Error saving alert preferences:', err);
+            setAlertError(err instanceof Error ? err.message : 'Could not save alert preferences');
         } finally {
             setSavingAlerts(false);
         }
@@ -732,9 +741,9 @@ export default function SettingsPage() {
                                                 </h3>
                                                 <div className="space-y-2">
                                                     {[
-                                                        { key: "visibility_drop", label: "Visibility drop detected", description: "Alert when your brand mention rate drops >10% week-over-week" },
+                                                        { key: "visibility_drop", label: "Visibility drop detected", description: "Alert after a 10+ point drop with non-overlapping 95% confidence ranges" },
                                                         { key: "competitor_overtake", label: "Competitor overtake", description: "Alert when a competitor surpasses your brand in AI responses" },
-                                                        { key: "zero_visibility", label: "Zero visibility warning", description: "Alert if your brand gets 0 mentions across all scans in a day" },
+                                                        { key: "zero_visibility", label: "Zero visibility warning", description: "Alert if your brand gets 0 mentions in a completed measurement run" },
                                                     ].map((item) => (
                                                         <div key={item.key} className="flex items-center justify-between p-3 rounded-lg bg-[var(--bg-raised)]">
                                                             <div>
@@ -743,6 +752,7 @@ export default function SettingsPage() {
                                                             </div>
                                                             <input
                                                                 type="checkbox"
+                                                                disabled={Boolean(user && !['owner', 'admin'].includes(user.role))}
                                                                 checked={alertPrefs[item.key] ?? true}
                                                                 onChange={(e) => setAlertPrefs(prev => ({ ...prev, [item.key]: e.target.checked }))}
                                                                 className="rounded accent-[var(--accent-base)]"
@@ -760,9 +770,9 @@ export default function SettingsPage() {
                                                 </h3>
                                                 <div className="space-y-2">
                                                     {[
-                                                        { key: "new_citation", label: "New citation earned", description: "Alert when an LLM cites your domain for the first time" },
-                                                        { key: "citation_lost", label: "Citation lost", description: "Alert when a previously-cited page stops being cited" },
-                                                        { key: "negative_sentiment", label: "Negative sentiment spike", description: "Alert when negative sentiment increases significantly" },
+                                                        { key: "new_citation", label: "New citation observed", description: "Alert when a provider cites one of your pages not seen in the prior 30 days" },
+                                                        { key: "negative_sentiment", label: "Negative sentiment detected", description: "Alert when a completed measurement contains negative brand sentiment" },
+                                                        { key: "sentiment_drift", label: "Weekly sentiment drift", description: "Alert when matched weekly sentiment moves by at least 0.3" },
                                                     ].map((item) => (
                                                         <div key={item.key} className="flex items-center justify-between p-3 rounded-lg bg-[var(--bg-raised)]">
                                                             <div>
@@ -771,33 +781,7 @@ export default function SettingsPage() {
                                                             </div>
                                                             <input
                                                                 type="checkbox"
-                                                                checked={alertPrefs[item.key] ?? false}
-                                                                onChange={(e) => setAlertPrefs(prev => ({ ...prev, [item.key]: e.target.checked }))}
-                                                                className="rounded accent-[var(--accent-base)]"
-                                                            />
-                                                        </div>
-                                                    ))}
-                                                </div>
-                                            </div>
-
-                                            {/* Community Alerts */}
-                                            <div>
-                                                <h3 className="text-sm font-semibold text-[var(--text-secondary)] mb-3 flex items-center gap-2">
-                                                    <div className="w-2 h-2 rounded-full bg-green-400" />
-                                                    Community Alerts
-                                                </h3>
-                                                <div className="space-y-2">
-                                                    {[
-                                                        { key: "hot_thread", label: "Hot forum opportunity", description: "Alert when a high-score thread is discovered in your niche" },
-                                                        { key: "brand_forum_mention", label: "Brand mentioned in forums", description: "Alert when someone mentions your brand on Reddit/Quora" },
-                                                    ].map((item) => (
-                                                        <div key={item.key} className="flex items-center justify-between p-3 rounded-lg bg-[var(--bg-raised)]">
-                                                            <div>
-                                                                <p className="font-medium text-[var(--text-primary)] text-sm">{item.label}</p>
-                                                                <p className="text-xs text-[var(--text-ghost)]">{item.description}</p>
-                                                            </div>
-                                                            <input
-                                                                type="checkbox"
+                                                                disabled={Boolean(user && !['owner', 'admin'].includes(user.role))}
                                                                 checked={alertPrefs[item.key] ?? false}
                                                                 onChange={(e) => setAlertPrefs(prev => ({ ...prev, [item.key]: e.target.checked }))}
                                                                 className="rounded accent-[var(--accent-base)]"
@@ -815,7 +799,6 @@ export default function SettingsPage() {
                                                 </h3>
                                                 <div className="space-y-2">
                                                     {[
-                                                        { key: "daily_report", label: "Daily visibility report", description: "Morning summary of LLM visibility metrics" },
                                                         { key: "weekly_digest", label: "Weekly Aelo digest", description: "Comprehensive weekly summary of all Aelo activity" },
                                                     ].map((item) => (
                                                         <div key={item.key} className="flex items-center justify-between p-3 rounded-lg bg-[var(--bg-raised)]">
@@ -825,6 +808,7 @@ export default function SettingsPage() {
                                                             </div>
                                                             <input
                                                                 type="checkbox"
+                                                                disabled={Boolean(user && !['owner', 'admin'].includes(user.role))}
                                                                 checked={alertPrefs[item.key] ?? false}
                                                                 onChange={(e) => setAlertPrefs(prev => ({ ...prev, [item.key]: e.target.checked }))}
                                                                 className="rounded accent-[var(--accent-base)]"
@@ -835,7 +819,7 @@ export default function SettingsPage() {
                                             </div>
 
                                             <div className="flex items-center gap-3">
-                                                <Button onClick={saveAlertPrefs} disabled={savingAlerts}>
+                                                <Button onClick={saveAlertPrefs} disabled={savingAlerts || Boolean(user && !['owner', 'admin'].includes(user.role))}>
                                                     {savingAlerts ? (
                                                         <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Saving...</>
                                                     ) : alertsSaved ? (
@@ -845,6 +829,12 @@ export default function SettingsPage() {
                                                     )}
                                                 </Button>
                                             </div>
+                                            {user && !['owner', 'admin'].includes(user.role) && (
+                                                <p className="text-xs text-[var(--text-secondary)]">Only workspace owners and admins can change organization-wide alerts.</p>
+                                            )}
+                                            {alertError && (
+                                                <p role="alert" className="text-xs text-[var(--data-red)]">{alertError}</p>
+                                            )}
                                             <p className="text-xs text-[var(--text-ghost)]">
                                                 Email notifications require Pro plan or above. In-app alerts are always free.
                                             </p>

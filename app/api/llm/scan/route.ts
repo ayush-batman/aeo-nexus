@@ -7,6 +7,7 @@ import { getCurrentWorkspaceContext } from '@/lib/data-access';
 import { getEntitlements, reserveScanQuota } from '@/lib/entitlements';
 import { runVisibilityMeasurement } from '@/lib/measurement/service';
 import { scanResultPersistenceRow } from '@/lib/measurement/persistence';
+import { evaluateMeasurementAlerts } from '@/lib/alerts/evaluate';
 
 export const maxDuration = 300;
 
@@ -81,6 +82,10 @@ export async function POST(request: NextRequest) {
                 if (error) throw new Error('Failed to store measurement samples.');
             },
         });
+
+        if (measurement.persistence.rows > 0) {
+            await evaluateMeasurementAlerts(context.workspaceId, measurement.runId);
+        }
 
         if (measurement.status === 'all_failed') {
             return NextResponse.json({

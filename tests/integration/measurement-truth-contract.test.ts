@@ -100,7 +100,7 @@ test('all active visibility surfaces use mention rate and preserve unmeasured st
   assert.doesNotMatch(dataAccess, /calculatePlatformScore/);
   assert.match(overview, /withKey\(request, 'read'/);
   assert.match(overview, /overall\.visibilityPercent/);
-  assert.match(gaps, /: null/);
+  assert.match(gaps, /mentionRate === null \? null/);
   assert.doesNotMatch(freeScan, /score \+= 40/);
   assert.match(methodology, /successful_samples_where_brand_named/);
 });
@@ -119,6 +119,25 @@ test('provider work has deadlines and bounded engine concurrency', async () => {
   assert.match(analyzer, /AbortSignal\.timeout/);
   assert.match(service, /DEFAULT_EXECUTE_TIMEOUT_MS/);
   assert.match(service, /dependencies\.persist\(sampleResults\)/);
+});
+
+test('measurement read failures stay visible and alerts run from every scan path', async () => {
+  const [dataAccess, alertEngine, manualScan, scheduledScan, activationScan] = await Promise.all([
+    source('lib/data-access.ts'),
+    source('lib/alerts/evaluate.ts'),
+    source('app/api/llm/scan/route.ts'),
+    source('app/api/cron/process-scans/route.ts'),
+    source('app/api/cron/process-measurement-jobs/route.ts'),
+  ]);
+
+  assert.match(dataAccess, /throw new Error\('Failed to fetch visibility metrics'/);
+  assert.match(dataAccess, /throw new Error\('Failed to fetch LLM scans'/);
+  assert.match(alertEngine, /ignoreDuplicates: true/);
+  assert.match(alertEngine, /current\.confidence\.interval\.upper < comparison\.previous\.confidence\.interval\.lower/);
+  assert.match(alertEngine, /selectPreviousAlertCohort/);
+  for (const scanPath of [manualScan, scheduledScan, activationScan]) {
+    assert.match(scanPath, /await evaluateMeasurementAlerts/);
+  }
 });
 
 test('activation packet persists three-to-five prompt measurements and one ranked action', async () => {

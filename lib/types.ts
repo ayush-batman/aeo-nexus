@@ -80,6 +80,14 @@ export interface LLMScan {
     sentiment: 'positive' | 'neutral' | 'negative' | null;
     competitors_mentioned: string[];
     citations: Citation[];
+    sample_id: string | null;
+    measurement_run_id: string | null;
+    sample_index: number | null;
+    provider_model: string | null;
+    measurement_region: string | null;
+    measurement_mode: string | null;
+    scorer_version: string | null;
+    measurement_contract_version: string | null;
     created_at: string;
 }
 

@@ -8,12 +8,16 @@ export async function GET(request: Request) {
   const days = w === '180d' ? 180 : w === '30d' ? 30 : 90;
   return withKey(request, 'read', async (ctx, admin) => {
     const since = new Date(Date.now() - days * 86400000).toISOString();
-    const { data } = await admin
+    const { data, error } = await admin
       .from('llm_scans')
       .select('brand_mentioned, created_at')
       .eq('workspace_id', ctx.workspaceId)
       .gte('created_at', since)
       .order('created_at', { ascending: true });
+
+    if (error) {
+      throw new Error('Failed to fetch visibility trend', { cause: error });
+    }
 
     const byDay: Record<string, { mentions: number; total: number }> = {};
     for (const r of data || []) {
@@ -36,7 +40,8 @@ export async function GET(request: Request) {
     return {
       window: w,
       points,
-      note: 'Daily visibility is the brand mention rate across successful samples; confidence uses a 95% Wilson interval.',
+      comparisonStatus: 'descriptive_only',
+      note: 'Daily visibility is the brand mention rate across successful samples; confidence uses a 95% Wilson interval. Prompt or model mix can differ by day, so these points do not by themselves prove a change.',
     };
   });
 }

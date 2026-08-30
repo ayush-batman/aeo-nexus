@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { createHash } from 'node:crypto';
 import { createAdminClient } from '@/lib/supabase/admin';
 import {
     computeAndStoreSnapshots,
@@ -54,22 +55,30 @@ async function fanOutAlerts(alerts: DriftAlert[]): Promise<number> {
     let count = 0;
 
     for (const a of alerts) {
-        const { data: pref } = await db
+        const { data: pref, error: prefError } = await db
             .from('alert_preferences')
             .select('enabled')
             .eq('workspace_id', a.workspace_id)
             .eq('alert_type', 'sentiment_drift')
             .maybeSingle();
 
+        if (prefError) {
+            console.error('[sentiment-drift] preference lookup failed:', prefError);
+            continue;
+        }
+
         // Opt-out only. Default = ON. Marketing teams want the signal
         // unless they've explicitly muted it.
         if (pref && pref.enabled === false) continue;
 
-        await db.from('notifications').insert({
+        const alertIdentity = JSON.stringify([a.week_start, a.prompt, a.platform]);
+        const dedupeKey = `sentiment-drift:${createHash('sha256').update(alertIdentity).digest('hex')}`;
+        const { data: notification, error: notificationError } = await db.from('notifications').upsert({
             workspace_id: a.workspace_id,
             type:  'sentiment_drift',
             title: driftHeadline(a),
             message: driftMessage(a),
+            dedupe_key: dedupeKey,
             metadata: {
                 prompt:   a.prompt,
                 platform: a.platform,
@@ -77,14 +86,26 @@ async function fanOutAlerts(alerts: DriftAlert[]): Promise<number> {
                 current:  a.current,
                 prior:    a.prior,
                 sample_size: a.sample_size,
+                prior_sample_size: a.prior_sample_size,
             },
-        });
+        }, { onConflict: 'workspace_id,dedupe_key', ignoreDuplicates: true }).select('id').maybeSingle();
 
-        const { data: members } = await db
+        if (notificationError) {
+            console.error('[sentiment-drift] notification insert failed:', notificationError);
+            continue;
+        }
+        if (!notification) continue;
+
+        const { data: members, error: membersError } = await db
             .from('workspaces')
             .select('org_id, users:users!users_org_id_fkey(email)')
             .eq('id', a.workspace_id)
             .maybeSingle();
+
+        if (membersError) {
+            console.error('[sentiment-drift] member lookup failed:', membersError);
+            continue;
+        }
 
         const emails: string[] = ((members as { users?: { email: string }[] } | null)?.users ?? [])
             .map(u => u.email).filter(Boolean);
@@ -105,7 +126,7 @@ function driftHeadline(a: DriftAlert): string {
 
 function driftMessage(a: DriftAlert): string {
     const dir = a.direction === 'up' ? 'improved' : 'worsened';
-    return `On "${a.prompt}", your ${platformLabel(a.platform)} sentiment ${dir} from ${a.prior.toFixed(2)} to ${a.current.toFixed(2)} this week (${a.sample_size} scans).`;
+    return `On "${a.prompt}", your ${platformLabel(a.platform)} sentiment ${dir} from ${a.prior.toFixed(2)} to ${a.current.toFixed(2)} this week (n=${a.prior_sample_size}/${a.sample_size}).`;
 }
 
 function platformLabel(p: string): string {
