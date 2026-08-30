@@ -164,7 +164,7 @@ export function Header({ title, description }: HeaderProps) {
     }
 
     return (
-        <header className="h-14 sticky top-0 z-30 bg-[rgba(0,0,0,0.8)] border-b border-[var(--border-subtle)] backdrop-blur-xl">
+        <header className="sticky top-0 z-30 h-14 border-b border-[var(--border-subtle)] bg-[rgba(0,0,0,0.96)]">
             <div className="flex items-center justify-between h-full gap-3 px-3 sm:px-6">
                 {/* Title */}
                 <div className="flex min-w-0 items-center gap-2.5">

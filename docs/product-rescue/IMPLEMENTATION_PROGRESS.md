@@ -1048,3 +1048,56 @@ Migration 032 adds additive nullable receipt fields for measurement run ID, cont
 18. `04316fe` model/region/scorer-compatible cohorts
 
 The final documentation commit follows these implementation commits.
+
+## Batch 4 — Evidence-first product interface and source contract
+
+### Problem addressed
+
+The authenticated product still looked like a generic analytics template. Overview gave a secondary composite health score more visual weight than the core visibility measurement, provider results appeared as unrelated rainbow cards, and Sources opened the legacy Analytics page before reaching citation evidence. The opt-in demo also reported 23 successful samples while exposing only eight receipt rows, which broke the product's central trust promise.
+
+### User impact
+
+Overview now leads with the successful-answer mention rate, sample count, confidence, engine coverage, and one-click receipts as a single evidence rail. Per-engine results sit beside the overall claim, qualified weekly decisions follow it, and secondary health/content/forum numbers are explicitly labeled as context rather than the score.
+
+Prompts & Scans now presents engines as one neutral, comparable evidence table instead of color-coded score cards. Its connection label reflects the actual realtime subscription state, its mobile form stacks without horizontal page overflow, and repeated samples no longer duplicate engine keys in recent prompt groups.
+
+Sources is now a first-class route at `/dashboard/sources`. It ranks domains only from structured provider citations, exposes exact observed URLs, separates owned-domain evidence, and labels missing source types as research leads rather than guaranteed ranking factors. Links found only in generated prose remain excluded.
+
+The local demo seed now generates exactly the 23 receipt rows behind its 23-sample visibility result, including provider model, run, sample, region, mode, scorer, and contract metadata.
+
+### Files changed
+
+- `app/(dashboard)/dashboard/page.tsx`
+- `app/(dashboard)/dashboard/llm-tracker/page.tsx`
+- `app/(dashboard)/dashboard/sources/page.tsx`
+- `app/api/analytics/citations/route.ts`
+- `components/dashboard/analytics/citation-map.tsx`
+- `components/dashboard/header.tsx`
+- `components/dashboard/sidebar.tsx`
+- `app/globals.css`
+- `app/layout.tsx`
+- `lib/analytics/demo-seed.ts`
+- `tests/unit/demo-seed.test.ts`
+- `tests/integration/measurement-truth-contract.test.ts`
+
+### Verification
+
+- `npm test` → 110 passed, 0 failed.
+- `npm run lint` → passed with 0 errors and 64 pre-existing warnings; changed interface files add no warnings.
+- `npm run typecheck` → passed.
+- `npm run typecheck:mcp` → passed.
+- `npm run build -- --webpack` → passed; compilation, TypeScript, 138 routes, page generation, optimization, and traces completed. Next used its WebAssembly compiler because the optional native SWC package is absent.
+- `git diff --check` passed before documentation was updated and must be rerun for final handoff.
+
+### Browser evidence and open gates
+
+- Overview was exercised at 1440×1000 and 390×844 using the development-only auth bypass and explicit `AELO_DEMO_SEED=1`; visibility, confidence, sample count, four-engine coverage, recent evidence, and supporting context rendered together.
+- Prompts & Scans was exercised at both widths. At mobile width, document and client width both measured 384px, proving no horizontal page overflow. The scan form stacks and the tab strip scrolls within its own container.
+- Opening ChatGPT's 83% row produced six receipts for the reported `n=6`; the new unit test enforces receipt/mention counts for every demo engine.
+- Sources rendered its honest no-provider-citations state. A contract test covers provider-only filtering, domain output, exact URL access, and the primary sidebar route.
+- Actions rendered its explicit action-history error because the local database lacks the required migration. No migration was applied and no action data was fabricated.
+- A final clean console/network-log rerun was interrupted by the browser controller after the visual and interaction checks had passed. Fresh console/network inspection, authenticated multi-role testing, 200% zoom, keyboard-only operation, and axe remain staging gates.
+
+### Migration and deployment limit
+
+No migration was applied and no deployment was attempted. The local database still lacks migration 032 fields and later action/job/alert objects, so demo mode was used only for non-production browser verification. Staging must apply 025–036 and both timestamped alert migrations before exercising the complete journey.

@@ -39,6 +39,23 @@ test('source aggregates require provider evidence and receipts expose labels', a
   }
 });
 
+test('the primary Sources job ranks domains from provider-backed citations', async () => {
+  const [route, page, sourceMap, sidebar] = await Promise.all([
+    source('app/api/analytics/citations/route.ts'),
+    source('app/(dashboard)/dashboard/sources/page.tsx'),
+    source('components/dashboard/analytics/citation-map.tsx'),
+    source('components/dashboard/sidebar.tsx'),
+  ]);
+
+  assert.match(route, /provenance !== 'provider_citation'/);
+  assert.match(route, /domains: Array\.from\(domainMap/);
+  assert.match(route, /isOwnDomain/);
+  assert.match(sourceMap, /Exact URLs|exact URLs|source\.urls/);
+  assert.match(sourceMap, /Links found only in answer prose are not counted/);
+  assert.match(page, /Provider-backed domains/);
+  assert.match(sidebar, /href: "\/dashboard\/sources"/);
+});
+
 test('intervention receipts use multi-sample matched cohorts and allow inconclusive verdicts', async () => {
   const [measureRoute, comparison, snapshot, page] = await Promise.all([
     source('app/api/interventions/[id]/measure/route.ts'),

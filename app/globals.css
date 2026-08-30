@@ -200,7 +200,7 @@ html { scroll-behavior: smooth; }
   justify-content: center;
   gap: 6px;
   cursor: pointer;
-  transition: all 150ms ease;
+  transition: background 150ms ease, border-color 150ms ease;
 }
 .btn-secondary:hover {
   background: var(--bg-hover);
@@ -229,7 +229,7 @@ html { scroll-behavior: smooth; }
   font-size: 14px;
   font-weight: 500;
   cursor: pointer;
-  transition: all 150ms ease;
+  transition: background 150ms ease;
 }
 .btn-danger:hover {
   background: rgba(239, 68, 68, 0.2);
@@ -277,7 +277,7 @@ html { scroll-behavior: smooth; }
   color: var(--text-secondary);
   padding: 8px 12px;
   border-radius: var(--radius-md);
-  transition: all 150ms ease;
+  transition: color 150ms ease, background 150ms ease, border-color 150ms ease;
   display: flex;
   align-items: center;
   gap: 10px;
@@ -293,7 +293,7 @@ html { scroll-behavior: smooth; }
 .nav-item.active {
   color: var(--text-primary);
   background: var(--accent-muted);
-  border-color: rgba(99, 102, 241, 0.15);
+  border-color: rgba(229, 211, 166, 0.16);
   font-weight: 500;
 }
 

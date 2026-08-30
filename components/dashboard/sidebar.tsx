@@ -46,7 +46,7 @@ interface Workspace {
 const primaryNav = [
     { name: "Overview", href: "/dashboard", icon: LayoutDashboard },
     { name: "Prompts & Scans", href: "/dashboard/llm-tracker", icon: Search },
-    { name: "Sources", href: "/dashboard/analytics#citation-sources", icon: BarChart3 },
+    { name: "Sources", href: "/dashboard/sources", icon: BarChart3 },
     { name: "Actions", href: "/dashboard/interventions", icon: Target },
     { name: "Reports & Settings", href: "/dashboard/report", icon: FileText },
 ];

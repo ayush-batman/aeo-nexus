@@ -18,9 +18,6 @@ import {
     Search,
     Sparkles,
     Bot,
-    TrendingUp,
-    TrendingDown,
-    Minus,
     RefreshCw,
     Eye,
     AlertCircle,
@@ -174,7 +171,6 @@ export default function LLMTrackerPage() {
             setLoading(true);
             await Promise.all([fetchData(), loadCompetitors()]);
             setLoading(false);
-            setIsLive(true);
         }
         init();
 
@@ -197,7 +193,7 @@ export default function LLMTrackerPage() {
                         .catch(console.error);
                 }
             )
-            .subscribe();
+            .subscribe((status) => setIsLive(status === "SUBSCRIBED"));
 
         return () => {
             supabase.removeChannel(channel);
@@ -286,7 +282,9 @@ export default function LLMTrackerPage() {
                 scannedAt: scan.created_at,
             };
         }
-        acc[key].platforms.push(scan.platform);
+        if (!acc[key].platforms.includes(scan.platform)) {
+            acc[key].platforms.push(scan.platform);
+        }
         if (scan.brand_mentioned) {
             acc[key].brandMentioned = true;
             if (!acc[key].mentionPosition || (scan.mention_position && scan.mention_position < acc[key].mentionPosition!)) {
@@ -323,19 +321,19 @@ export default function LLMTrackerPage() {
             />
 
             <Header
-                title="LLM Tracker"
-                description="Monitor your brand visibility across AI platforms"
+                title="Prompts & Scans"
+                description="Run repeatable measurements and inspect every answer"
             />
 
-            <div className="p-6">
+            <main className="mx-auto max-w-7xl p-4 sm:p-6 lg:p-8">
                 {error && (
                     <div className="mb-4 rounded-md border border-[var(--data-red)]/30 bg-[var(--data-red-muted)] px-4 py-3 text-sm text-[var(--data-red)]">
                         {error}
                     </div>
                 )}
                 <Tabs defaultValue="manual" className="space-y-6">
-                    <div className="flex items-center justify-between">
-                        <TabsList className="bg-[var(--bg-raised)] border-[var(--border-default)]">
+                    <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-center">
+                        <TabsList className="w-full max-w-full justify-start overflow-x-auto border-[var(--border-default)] bg-[var(--bg-raised)] sm:w-auto">
                             <TabsTrigger value="manual" className="data-[state=active]:bg-[var(--accent-base)] data-[state=active]:text-[var(--text-on-accent)]">
                                 <Search className="w-4 h-4 mr-2" />
                                 Manual Scan
@@ -354,7 +352,7 @@ export default function LLMTrackerPage() {
                         {isLive && (
                             <div className="flex items-center gap-2 text-xs text-[var(--data-green)] mt-2 sm:mt-0">
                                 <Radio className="w-3 h-3 animate-pulse" />
-                                <span>Live updates enabled</span>
+                                <span>Auto-refresh connected</span>
                             </div>
                         )}
                     </div>
@@ -362,19 +360,28 @@ export default function LLMTrackerPage() {
                     <TabsContent value="manual" className="space-y-6 mt-0">
 
                         {/* Visibility Overview */}
-                        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                        <section aria-labelledby="engine-measurements-title" className="overflow-hidden rounded-xl border border-[var(--border-default)] bg-[var(--bg-surface)]">
+                            <div className="flex flex-col justify-between gap-2 border-b border-[var(--border-default)] px-5 py-4 sm:flex-row sm:items-end">
+                                <div>
+                                    <p className="text-[10px] uppercase tracking-[0.14em] text-[var(--text-tertiary)]">Comparable engine evidence</p>
+                                    <h2 id="engine-measurements-title" className="mt-1 text-base font-medium text-[var(--text-primary)]">Visibility by engine</h2>
+                                </div>
+                                <p className="text-xs text-[var(--text-tertiary)]">Open any row to inspect its provider receipts</p>
+                            </div>
                             {loading ? (
-                                Array.from({ length: 4 }).map((_, i) => (
-                                    <Card key={i}>
-                                        <CardContent className="p-4">
-                                            <Skeleton className="h-4 w-20 mb-2" />
-                                            <Skeleton className="h-8 w-16 mb-2" />
-                                            <Skeleton className="h-1.5 w-full rounded-full" />
-                                        </CardContent>
-                                    </Card>
+                                <div className="divide-y divide-[var(--border-default)]">
+                                {Array.from({ length: 5 }).map((_, i) => (
+                                    <div key={i} className="grid min-h-16 grid-cols-[1fr_5rem] items-center gap-4 px-5 py-3 sm:grid-cols-[1fr_7rem_8rem_5rem]">
+                                        <Skeleton className="h-4 w-24" />
+                                        <Skeleton className="hidden h-3 w-16 sm:block" />
+                                        <Skeleton className="hidden h-3 w-24 sm:block" />
+                                        <Skeleton className="h-7 w-14" />
+                                    </div>
                                 ))
+                                }</div>
                             ) : (
-                                platforms.map((platform) => {
+                                <div className="divide-y divide-[var(--border-default)]">
+                                {platforms.map((platform) => {
                                     const metrics = visibilityMetrics.find(
                                         m => m.platform.toLowerCase() === platform.id
                                     );
@@ -382,63 +389,31 @@ export default function LLMTrackerPage() {
                                     const change = metrics?.change ?? null;
 
                                     return (
-                                        <Card
+                                        <button
+                                            type="button"
                                             key={platform.id}
-                                            className="cursor-pointer hover:border-[var(--border-active)] transition-colors group"
+                                            className="grid min-h-16 w-full grid-cols-[1fr_5rem] items-center gap-4 px-5 py-3 text-left transition-colors hover:bg-[var(--bg-raised)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[var(--accent-base)] sm:grid-cols-[1fr_7rem_8rem_5rem]"
                                             onClick={() => {
                                                 setReceiptPlatform({ id: platform.id, name: platform.name, score });
                                                 setReceiptOpen(true);
                                             }}
                                         >
-                                            <CardContent className="p-4">
-                                                <div className="flex items-center justify-between mb-2">
-                                                    <span className="text-sm text-[var(--text-secondary)]">{platform.name}</span>
-                                                    <div className={cn(
-                                                        "flex items-center gap-1 text-xs",
-                                                        (change ?? 0) > 0 && "text-[var(--data-green)]",
-                                                        (change ?? 0) < 0 && "text-[var(--data-red)]",
-                                                        (change ?? 0) === 0 && "text-[var(--text-ghost)]"
-                                                    )}>
-                                                        {(change ?? 0) > 0 ? <TrendingUp className="w-3 h-3" /> :
-                                                            (change ?? 0) < 0 ? <TrendingDown className="w-3 h-3" /> :
-                                                                <Minus className="w-3 h-3" />}
-                                                        {change === null ? "baseline needed" : `${change > 0 ? "+" : ""}${change}%`}
-                                                    </div>
-                                                </div>
-                                                <div className="flex items-end gap-2">
-                                                    <span className={cn("text-3xl font-bold", getScoreColor(score ?? 0))}>
-                                                        {score ?? "—"}
-                                                    </span>
-                                                    <span className="text-[var(--text-ghost)] text-sm mb-1">/100</span>
-                                                </div>
-                                                <div className="mt-2 h-1.5 bg-[var(--bg-raised)] rounded-full overflow-hidden">
-                                                    <div
-                                                        className={cn("h-full rounded-full transition-all",
-                                                            (score ?? 0) >= 70 ? "bg-[var(--data-green)]" :
-                                                                (score ?? 0) >= 50 ? "bg-[var(--data-amber)]" :
-                                                                    "bg-[var(--data-red)]"
-                                                        )}
-                                                        style={{ width: `${score ?? 0}%` }}
-                                                    />
-                                                </div>
-                                                <div className="mt-2 text-[10px] font-mono uppercase tracking-[0.12em] text-[var(--text-ghost)] opacity-0 group-hover:opacity-100 transition-opacity">
-                                                    See the receipt →
-                                                </div>
-                                                <div className="mt-2 text-[11px] text-[var(--text-secondary)]">
-                                                    {metrics?.scanCount ?? 0} samples · {metrics?.confidence.level ?? "none"} confidence
-                                                    {metrics?.mentionRate !== null && metrics?.mentionRate !== undefined
-                                                        ? ` · ${Math.round(metrics.mentionRate * 100)}% mention rate`
-                                                        : ""}
-                                                </div>
-                                            </CardContent>
-                                        </Card>
+                                            <span className="flex items-center gap-3 text-sm font-medium text-[var(--text-primary)]"><span className={metrics?.scanCount ? "h-1.5 w-1.5 rounded-full bg-[var(--data-green)]" : "h-1.5 w-1.5 rounded-full bg-[var(--text-ghost)]"} />{platform.name}</span>
+                                            <span className="hidden text-xs text-[var(--text-tertiary)] sm:block">n={metrics?.scanCount ?? 0}</span>
+                                            <span className="hidden text-xs text-[var(--text-secondary)] sm:block">{metrics?.confidence.level ?? "none"} confidence</span>
+                                            <span className="text-right text-2xl font-medium text-[var(--text-primary)]">{score === null ? "—" : `${score}%`}</span>
+                                            <span className="col-span-2 text-xs text-[var(--text-tertiary)] sm:col-span-4">
+                                                {change === null ? "Matched baseline needed" : `${change > 0 ? "+" : ""}${change} points vs matched baseline`}
+                                                {metrics?.mentionRate !== null && metrics?.mentionRate !== undefined ? ` · ${Math.round(metrics.mentionRate * 100)}% mention rate` : ""}
+                                            </span>
+                                        </button>
                                     );
-                                })
+                                })}</div>
                             )}
-                        </div>
+                        </section>
 
                         {/* New Scan */}
-                        <Card>
+                        <Card className="border-[var(--border-active)]">
                             <CardHeader>
                                 <CardTitle className="text-lg flex items-center gap-2">
                                     <Sparkles className="w-5 h-5 text-[var(--accent-base)]" />
@@ -446,7 +421,7 @@ export default function LLMTrackerPage() {
                                 </CardTitle>
                             </CardHeader>
                             <CardContent className="space-y-4">
-                                <div className="flex gap-2">
+                                <div className="grid gap-2 sm:grid-cols-[minmax(0,1fr)_10rem_auto]">
                                     <Input
                                         placeholder="Enter a prompt to test (e.g., 'best tyre inflator in India')"
                                         value={newPrompt}
@@ -457,7 +432,7 @@ export default function LLMTrackerPage() {
                                         placeholder="Brand name"
                                         value={brandName}
                                         onChange={(e) => setBrandName(e.target.value)}
-                                        className="w-40"
+                                        className="w-full"
                                     />
                                     <Button
                                         onClick={handleScan}
@@ -484,15 +459,15 @@ export default function LLMTrackerPage() {
                                     </div>
                                 )}
 
-                                <div className="flex items-center gap-2">
-                                    <span className="text-sm text-[var(--text-secondary)]">Platforms:</span>
-                                    <div className="flex gap-2">
+                                <div className="flex items-start gap-2">
+                                    <span className="pt-2 text-sm text-[var(--text-secondary)]">Platforms:</span>
+                                    <div className="flex flex-wrap gap-2">
                                         {platforms.map((platform) => (
                                             <button
                                                 key={platform.id}
                                                 onClick={() => togglePlatform(platform.id)}
                                                 className={cn(
-                                                    "flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm transition-all",
+                                                    "flex min-h-10 items-center gap-2 rounded-lg px-3 py-1.5 text-sm transition-colors",
                                                     selectedPlatforms.includes(platform.id)
                                                         ? "bg-[var(--bg-raised)] text-[var(--text-primary)] border border-[var(--border-hover)]"
                                                         : "bg-[var(--bg-raised)] text-[var(--text-ghost)] border border-transparent hover:border-[var(--border-default)]"
@@ -514,7 +489,7 @@ export default function LLMTrackerPage() {
                                                 key={region.id}
                                                 onClick={() => setScanRegion(region.id)}
                                                 className={cn(
-                                                    "px-2.5 py-1 rounded-lg text-xs transition-all",
+                                                    "min-h-10 rounded-lg px-2.5 py-1 text-xs transition-colors",
                                                     scanRegion === region.id
                                                         ? "bg-[var(--bg-raised)] text-[var(--text-primary)] border border-[var(--border-hover)]"
                                                         : "bg-[var(--bg-raised)] text-[var(--text-ghost)] border border-transparent hover:border-[var(--border-default)]"
@@ -754,7 +729,7 @@ export default function LLMTrackerPage() {
                             if (recs.length === 0) return null;
 
                             return (
-                                <Card className="border-[var(--accent-base)]/25 bg-gradient-to-br from-zinc-900 to-zinc-900/50">
+                                <Card className="border-[var(--accent-base)]/25 bg-[var(--bg-surface)]">
                                     <CardHeader className="flex flex-row items-center justify-between">
                                         <CardTitle className="text-lg flex items-center gap-2">
                                             <Lightbulb className="w-5 h-5 text-[var(--data-amber)]" />
@@ -769,7 +744,7 @@ export default function LLMTrackerPage() {
                                             <div
                                                 key={rec.id}
                                                 className={cn(
-                                                    "p-4 rounded-xl border transition-all",
+                                                    "rounded-xl border p-4 transition-colors",
                                                     PRIORITY_CONFIG[rec.priority].bgColor
                                                 )}
                                             >
@@ -868,7 +843,7 @@ export default function LLMTrackerPage() {
                         <QuestionVariants />
                     </TabsContent>
                 </Tabs>
-            </div>
+            </main>
 
             <ScanReceiptDrawer
                 open={receiptOpen}

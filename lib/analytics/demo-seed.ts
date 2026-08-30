@@ -142,30 +142,67 @@ function metric(platform: string, mentions: number, samples: number, previousMen
 export function demoScanRows() {
     const ago = (d: number, h = 0) =>
         new Date(Date.now() - (d * 24 + h) * 3600_000).toISOString();
+    const prompts = [
+        'best team wiki for startups in 2026',
+        'best note-taking apps for teams',
+        'notion vs confluence for enterprises',
+        'tools for async remote teams',
+    ];
+    const modelByPlatform: Record<string, string> = {
+        chatgpt: 'gpt-5-mini',
+        gemini: 'gemini-2.5-flash',
+        perplexity: 'sonar',
+        claude: 'claude-sonnet-4',
+    };
+    const competitorSets = [
+        ['Confluence', 'Slite'],
+        ['Obsidian', 'Evernote'],
+        ['Confluence'],
+        ['Slack'],
+    ];
     const mk = (id: string, platform: string, prompt: string, mentioned: boolean,
-                pos: number | null, sentiment: string | null, comps: string[], d: number, h = 0) => ({
+                pos: number | null, comps: string[], sampleIndex: number) => ({
         id: `demo-${id}`,
         workspace_id: 'demo',
         platform, prompt,
         response: `Representative demo answer naming Notion alongside ${comps.join(', ') || 'alternatives'} for "${prompt}".`,
         brand_mentioned: mentioned,
         mention_position: pos,
-        sentiment,
+        sentiment: mentioned ? (sampleIndex % 3 === 0 ? 'neutral' : 'positive') : null,
         competitors_mentioned: comps,
         citations: [],
-        created_at: ago(d, h),
+        sample_id: `demo-${platform}-sample-${sampleIndex}`,
+        measurement_run_id: `demo-${platform}-run`,
+        sample_index: sampleIndex,
+        provider_model: modelByPlatform[platform],
+        measurement_region: 'global',
+        measurement_mode: 'standard',
+        scorer_version: 'brand-match-v1',
+        measurement_contract_version: 'measurement-v1',
+        created_at: ago(Math.floor(sampleIndex / 4), sampleIndex % 4),
     });
 
-    return [
-        mk('1', 'chatgpt',            'best team wiki for startups in 2026',   true, 1, 'positive', ['Confluence', 'Slite'],   0, 2),
-        mk('2', 'gemini',             'best team wiki for startups in 2026',   true, 1, 'positive', ['Confluence'],            0, 5),
-        mk('3', 'perplexity',         'best note-taking apps for teams',       true, 2, 'positive', ['Obsidian'],              1),
-        mk('4', 'chatgpt',            'notion vs confluence for enterprises',  true, 2, 'neutral',  ['Confluence'],            1, 6),
-        mk('5', 'claude',             'best team wiki for startups in 2026',   true, 1, 'positive', ['Confluence', 'Slite'],   2),
-        mk('6', 'google_ai_overview', 'best note-taking apps for teams',       true, 2, 'positive', ['Obsidian', 'Evernote'],  2, 8),
-        mk('7', 'perplexity',         'tools for async remote teams',          true, 3, 'neutral',  ['Slack'],                 3),
-        mk('8', 'claude',             'best note-taking apps for teams',       false, null, null,   [],                        4),
+    const cohorts = [
+        { platform: 'chatgpt', samples: 6, mentions: 5 },
+        { platform: 'gemini', samples: 9, mentions: 8 },
+        { platform: 'perplexity', samples: 4, mentions: 3 },
+        { platform: 'claude', samples: 4, mentions: 2 },
     ];
+    return cohorts.flatMap(({ platform, samples, mentions }) =>
+        Array.from({ length: samples }, (_, index) => {
+            const mentioned = index < mentions;
+            const promptIndex = index % prompts.length;
+            return mk(
+                `${platform}-${index + 1}`,
+                platform,
+                prompts[promptIndex],
+                mentioned,
+                mentioned ? (index % 3) + 1 : null,
+                competitorSets[promptIndex],
+                index + 1,
+            );
+        }),
+    ).sort((a, b) => b.created_at.localeCompare(a.created_at));
 }
 
 export function demoDashboardStats() {

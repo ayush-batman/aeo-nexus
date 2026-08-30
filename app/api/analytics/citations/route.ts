@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
 import { getCurrentWorkspaceId } from '@/lib/data-access';
+import { createClient } from '@/lib/supabase/server';
+import { DEMO_SEED_ACTIVE, demoScanRows } from '@/lib/analytics/demo-seed';
 
 interface CitationSource {
     type: string;
@@ -12,6 +13,13 @@ interface CitationSource {
 
 interface CitationAnalysis {
     sources: CitationSource[];
+    domains: Array<{
+        domain: string;
+        urlCount: number;
+        totalMentions: number;
+        isOwnDomain: boolean;
+        urls: string[];
+    }>;
     totalCitations: number;
     ownDomainCitations: number;
     gaps: string[];
@@ -67,29 +75,34 @@ export async function GET() {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
-        const supabase = await createClient();
-
-        // Get all scans with citations
-        const { data: scans, error } = await supabase
-            .from('llm_scans')
-            .select('citations, platform')
-            .eq('workspace_id', workspaceId)
-            .not('citations', 'is', null)
-            .order('created_at', { ascending: false })
-            .limit(500);
-
-        if (error) {
-            console.error('Citations query error:', error);
-            return NextResponse.json({ error: 'Failed to fetch citations' }, { status: 500 });
+        let scans: Array<{ citations: unknown; platform: string }>;
+        if (DEMO_SEED_ACTIVE()) {
+            scans = demoScanRows();
+        } else {
+            const supabase = await createClient();
+            const { data, error } = await supabase
+                .from('llm_scans')
+                .select('citations, platform')
+                .eq('workspace_id', workspaceId)
+                .not('citations', 'is', null)
+                .order('created_at', { ascending: false })
+                .limit(500);
+            if (error) throw new Error('Failed to fetch citation evidence', { cause: error });
+            scans = data ?? [];
         }
 
         // Aggregate citations
         const sourceMap: Record<string, { count: number; urls: Set<string>; label: string }> = {};
         const urlCounts: Record<string, { count: number; type: string }> = {};
+        const domainMap = new Map<string, {
+            count: number;
+            urls: Set<string>;
+            isOwnDomain: boolean;
+        }>();
         let totalCitations = 0;
         let ownDomainCitations = 0;
 
-        for (const scan of (scans || [])) {
+        for (const scan of scans) {
             const citations = scan.citations as Array<{
                 url: string;
                 title?: string;
@@ -101,13 +114,15 @@ export async function GET() {
             for (const cit of citations) {
                 if (!cit.url) continue;
                 if (cit.provenance !== 'provider_citation') continue;
-                totalCitations++;
-
-                if (cit.is_own_domain) {
-                    ownDomainCitations++;
-                }
-
                 const classified = classifyUrl(cit.url);
+                let domain: string;
+                try {
+                    domain = new URL(cit.url).hostname.replace(/^www\./, '').toLowerCase();
+                } catch {
+                    continue;
+                }
+                totalCitations++;
+                if (cit.is_own_domain) ownDomainCitations++;
 
                 if (!sourceMap[classified.type]) {
                     sourceMap[classified.type] = { count: 0, urls: new Set(), label: classified.label };
@@ -120,6 +135,16 @@ export async function GET() {
                     urlCounts[cit.url] = { count: 0, type: classified.type };
                 }
                 urlCounts[cit.url].count++;
+
+                const domainEntry = domainMap.get(domain) ?? {
+                    count: 0,
+                    urls: new Set<string>(),
+                    isOwnDomain: false,
+                };
+                domainEntry.count++;
+                domainEntry.urls.add(cit.url);
+                domainEntry.isOwnDomain ||= Boolean(cit.is_own_domain);
+                domainMap.set(domain, domainEntry);
             }
         }
 
@@ -161,6 +186,13 @@ export async function GET() {
 
         const analysis: CitationAnalysis = {
             sources,
+            domains: Array.from(domainMap, ([domain, data]) => ({
+                domain,
+                urlCount: data.urls.size,
+                totalMentions: data.count,
+                isOwnDomain: data.isOwnDomain,
+                urls: Array.from(data.urls).slice(0, 8),
+            })).sort((a, b) => b.totalMentions - a.totalMentions || a.domain.localeCompare(b.domain)),
             totalCitations,
             ownDomainCitations,
             gaps,
