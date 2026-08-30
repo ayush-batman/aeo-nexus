@@ -1105,3 +1105,54 @@ No migration was applied and no deployment was attempted. The local database sti
 ### Commit hash
 
 `147b4b8` — `feat: make product evidence-first`
+
+## Batch 5 — Convex migration foundation (in progress)
+
+### Decision and boundary
+
+Aelo is moving all application data, authentication, tenant authorization, durable work, rate limits, billing state, and evidence storage from Supabase to Convex. Next.js remains the UI host and compatibility edge for `/api/v1`, MCP, and provider webhook URLs. Production export, import, routing, and deployment remain separate approval gates.
+
+The complete architecture and rollout rules are recorded in `CONVEX_MIGRATION_SPEC.md`; the executable task sequence is in `docs/superpowers/plans/2026-08-30-convex-backend-migration.md`.
+
+### Completed in this batch
+
+- Installed and pinned Convex, Better Auth, tenant helper, rate limiter, workflow, workpool, and Convex test packages.
+- Defined the full Convex application schema and indexes, including the previously referenced but never migrated `experiments` feature.
+- Validated the schema and components against an anonymous local Convex backend.
+- Added Better Auth with verified email/password and optional Google sign-in, plus local-only auth secrets.
+- Added normalized organization memberships and fail-closed role/workspace checks.
+- Added repeat-safe user provisioning, verified-email claiming for imported accounts, free-plan workspace limits, and atomic initial-measurement job creation.
+- Added a read-only, repeatable-read Supabase exporter with explicit remote-target approval, per-table JSONL, counts, and SHA-256 hashes.
+- Added a bounded staging importer for organizations, users, memberships, workspaces, products, scan evidence, API-key hashes, and billing event history.
+- Legacy citation rows without structured provider proof import as `unverified`; missing analyzer metadata stays null and therefore cannot support a comparison claim.
+- Historical billing events import without replaying plan changes. Current organization plan state comes from the organization record.
+
+### Verification
+
+- Convex schema/function validation passed on the local backend.
+- Convex tenant tests prove own-workspace access and cross-organization denial.
+- Import tests run the same tenant and critical-record batches twice and confirm no duplicate organizations, users, memberships, workspaces, scans, API keys, or billing events.
+- Full suite passed: 116 Node tests plus 2 Convex tests at the authentication checkpoint; later focused Convex import suite passes 4 tests.
+- App and MCP type-checks passed.
+- Lint passed with 0 errors and the same 64 pre-existing warnings.
+- Production build passed after repairing an incomplete local optional Next.js compiler package; the lockfile still points to the normal registry package and contains no machine-specific path.
+- No production data was read or written, no production Convex project was created, and no deployment was attempted.
+
+### Remaining before Supabase can be removed
+
+- Materialize the remaining source tables and add count/aggregate parity checks.
+- Move product queries/mutations, scan workflows, citations, Actions, alerts, analytics, crawlers, emails, and scheduled work to Convex functions.
+- Replace Upstash/in-memory rate limits with the registered Convex limiter.
+- Move Stripe and Razorpay webhook application to Convex while preserving exact replay and stale-event behavior.
+- Convert every Supabase-backed Next.js route and page; preserve `/api/v1` and MCP response/status contracts.
+- Exercise sign-up, verified-email claim, role boundaries, four-engine partial failures, billing replays, and browser journeys on an isolated staging deployment.
+- Run an approval-gated production export/import/cutover with a recoverable Supabase snapshot. Supabase must remain read-only during the rollback window.
+- Resolve the current production dependency advisories separately. `npm audit --omit=dev` reports 7 advisories (4 high, 3 moderate) in Next.js, PostCSS, Sharp, Undici, DOMPurify, and ProtobufJS chains; no blanket auto-fix was run inside this migration.
+
+### Convex commits so far
+
+- `01e4a05` — `build: establish convex migration foundation`
+- `ef29f64` — `feat: define convex data model`
+- `a13f09e` — `feat: establish convex tenant authentication`
+- `7bf4e06` — `feat: add safe convex migration pipeline`
+- `4ef4eaf` — `feat: preserve critical records in convex imports`
