@@ -12,7 +12,9 @@
     "convex:dev": "convex dev",
     "convex:codegen": "convex codegen",
     "convex:check": "CONVEX_AGENT_MODE=anonymous convex dev --once",
-    "test": "tsx --test tests/**/*.test.ts",
+    "test": "npm run test:node && npm run test:convex",
+    "test:node": "tsx --test tests/**/*.test.ts",
+    "test:convex": "vitest run --config vitest.convex.config.mts",
     "test:unit": "tsx --test tests/unit/**/*.test.ts",
     "test:integration": "tsx --test tests/integration/**/*.test.ts",
     "scan:dylect": "npx tsx scripts/run-dylect-scan.ts",
@@ -20,8 +22,10 @@
     "postinstall": "mkdir -p node_modules/iceberg-js/dist && echo 'exports.IcebergRestCatalog = class IcebergRestCatalog {}; module.exports.default = {};' > node_modules/iceberg-js/dist/index.cjs && echo 'export class IcebergRestCatalog {} export default {};' > node_modules/iceberg-js/dist/index.mjs && echo 'export declare class IcebergRestCatalog {}' > node_modules/iceberg-js/dist/index.d.ts && echo 'export declare class IcebergRestCatalog {}' > node_modules/iceberg-js/dist/index.d.cts"
   },
   "devDependencies": {
+    "@edge-runtime/vm": "^5.0.0",
     "@types/pg": "^8.20.0",
     "@types/react": "19.2.14",
+    "convex-test": "^0.0.56",
     "dotenv": "^17.4.2",
     "eslint": "^9.39.5",
     "eslint-config-next": "^16.2.9",
@@ -29,7 +33,8 @@
     "playwright": "^1.61.1",
     "postcss": "^8.5.8",
     "tsx": "^4.23.0",
-    "typescript": "5.9.3"
+    "typescript": "5.9.3",
+    "vitest": "^4.1.11"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.78.0",

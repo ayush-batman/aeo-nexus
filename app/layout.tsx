@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import { OrganizationJsonLd, WebSiteJsonLd } from "@/components/seo/structured-data";
+import { ConvexClientProvider } from "@/app/ConvexClientProvider";
 
 // NOTE: We intentionally do NOT use next/font/google here.
 // Fetching fonts from Google at compile time blocks the dev server in
@@ -66,7 +67,7 @@ export default function RootLayout({
       >
         <OrganizationJsonLd />
         <WebSiteJsonLd />
-        {children}
+        <ConvexClientProvider>{children}</ConvexClientProvider>
       </body>
     </html>
   );
