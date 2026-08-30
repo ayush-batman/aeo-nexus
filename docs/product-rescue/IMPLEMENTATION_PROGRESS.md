@@ -1101,3 +1101,7 @@ The local demo seed now generates exactly the 23 receipt rows behind its 23-samp
 ### Migration and deployment limit
 
 No migration was applied and no deployment was attempted. The local database still lacks migration 032 fields and later action/job/alert objects, so demo mode was used only for non-production browser verification. Staging must apply 025–036 and both timestamped alert migrations before exercising the complete journey.
+
+### Commit hash
+
+`147b4b8` — `feat: make product evidence-first`
