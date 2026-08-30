@@ -44,3 +44,8 @@ next-env.d.ts
 /.next.nosync/
 .env*.local
 /pitch/
+
+# Convex local state and migration scratch data
+/.convex/
+/.auth-keys.json
+/tmp/convex-migration/
