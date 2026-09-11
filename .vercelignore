@@ -1,4 +1,17 @@
 /.agents/
+/.claude/
+/.convex/
+/.git/
+/.next/
 /.interface-design/
+/node_modules/
+/pitch/
+/tmp/
+/experiments/
+/aelo-walkthrough.mp4
+/Aelo_Competitor_Analysis.xlsx
+/build_err.log
+/package-lock 2.json
+/tsconfig.tsbuildinfo
 /skills-lock.json
 /docs/superpowers/
