@@ -13,7 +13,6 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
-import { createClient } from "@/lib/supabase/client";
 import {
     Settings,
     User,
@@ -38,6 +37,7 @@ import {
     ExternalLink,
 } from "lucide-react";
 import { PLAN_LIMITS, PLAN_PRICES } from "@/lib/config";
+import { ReportsSettingsTabs } from "@/components/dashboard/reports-settings-tabs";
 
 
 declare global {
@@ -134,6 +134,7 @@ export default function SettingsPage() {
     const [newCompetitor, setNewCompetitor] = useState("");
     const [savingCompetitors, setSavingCompetitors] = useState(false);
     const [upgradeError, setUpgradeError] = useState<string | null>(null);
+    const [settingsError, setSettingsError] = useState<string | null>(null);
 
     // Alert preferences state
     const [alertPrefs, setAlertPrefs] = useState<Record<string, boolean>>({});
@@ -143,62 +144,20 @@ export default function SettingsPage() {
 
     async function fetchData() {
         try {
-            const supabase = createClient();
-
-            // Workspace fetch first, uses server-side context helpers that
-            // honor the dev-auth-bypass, so the Install tab always renders
-            // even when the client-side Supabase SDK can't see a session.
-            const [wsRes, activeRes] = await Promise.all([
-                fetch("/api/workspaces", { cache: "no-store" }),
-                fetch("/api/onboarding/context", { cache: "no-store" }),
-            ]);
-            let activeId: string | null = null;
-            if (activeRes.ok) activeId = (await activeRes.json()).workspaceId;
-            if (wsRes.ok && activeId) {
-                const wsData = await wsRes.json();
-                const activeWs = wsData.workspaces?.find((ws: Workspace) => ws.id === activeId);
-                if (activeWs) {
-                    setWorkspace(activeWs);
-                    setWorkspaceName(activeWs.name);
-                    setCompetitors(activeWs.settings?.competitors || []);
-                }
-            }
-
-            const { data: { user: authUser } } = await supabase.auth.getUser();
-            if (!authUser) return;
-
-            const { data: userData } = await supabase
-                .from('users')
-                .select('*')
-                .eq('id', authUser.id)
-                .single();
-
-            if (userData) {
-                setUser(userData);
-                setFullName(userData.full_name || '');
-                setEmail(userData.email);
-
-                const { data: orgData } = await supabase
-                    .from('organizations')
-                    .select('*')
-                    .eq('id', userData.org_id)
-                    .single();
-
-                if (orgData) {
-                    setOrganization(orgData);
-                }
-
-                const { data: teamData } = await supabase
-                    .from('users')
-                    .select('id, full_name, email, role')
-                    .eq('org_id', userData.org_id);
-
-                if (teamData) {
-                    setTeamMembers(teamData);
-                }
-            }
+            setSettingsError(null);
+            const response = await fetch('/api/settings', { cache: 'no-store' });
+            if (!response.ok) throw new Error('Could not load settings. Please retry.');
+            const data = await response.json();
+            setUser(data.user);
+            setFullName(data.user.full_name || '');
+            setEmail(data.user.email);
+            setOrganization(data.organization);
+            setTeamMembers(data.team);
+            setWorkspace({ id: data.workspace.publicId, name: data.workspace.name, settings: data.workspace.settings });
+            setWorkspaceName(data.workspace.name);
+            setCompetitors(data.workspace.settings?.competitors || []);
         } catch (error) {
-            console.error('Error fetching settings data:', error);
+            setSettingsError(error instanceof Error ? error.message : 'Could not load settings.');
         } finally {
             setLoading(false);
         }
@@ -266,16 +225,12 @@ export default function SettingsPage() {
         setSaveSuccess(false);
 
         try {
-            const supabase = createClient();
-            await supabase
-                .from('workspaces')
-                .update({ name: workspaceName })
-                .eq('id', workspace.id);
+            await saveSettings({ kind: 'workspace', name: workspaceName });
 
             setSaveSuccess(true);
             setTimeout(() => setSaveSuccess(false), 3000);
         } catch (error) {
-            console.error('Error saving workspace:', error);
+            setSettingsError(error instanceof Error ? error.message : 'Could not save workspace.');
         } finally {
             setSaving(false);
         }
@@ -287,16 +242,12 @@ export default function SettingsPage() {
         setSaveSuccess(false);
 
         try {
-            const supabase = createClient();
-            await supabase
-                .from('users')
-                .update({ full_name: fullName })
-                .eq('id', user.id);
+            await saveSettings({ kind: 'profile', fullName });
 
             setSaveSuccess(true);
             setTimeout(() => setSaveSuccess(false), 3000);
         } catch (error) {
-            console.error('Error saving profile:', error);
+            setSettingsError(error instanceof Error ? error.message : 'Could not save profile.');
         } finally {
             setSaving(false);
         }
@@ -386,20 +337,23 @@ export default function SettingsPage() {
         if (!workspace) return;
         setSavingCompetitors(true);
         try {
-            const supabase = createClient();
             const updatedSettings = { ...(workspace.settings || {}), competitors };
-            await supabase
-                .from('workspaces')
-                .update({ settings: updatedSettings })
-                .eq('id', workspace.id);
+            await saveSettings({ kind: 'workspace', competitors });
             setWorkspace({ ...workspace, settings: updatedSettings });
             setSaveSuccess(true);
             setTimeout(() => setSaveSuccess(false), 3000);
         } catch (error) {
-            console.error('Error saving competitors:', error);
+            setSettingsError(error instanceof Error ? error.message : 'Could not save competitors.');
         } finally {
             setSavingCompetitors(false);
         }
+    }
+
+    async function saveSettings(body: Record<string, unknown>) {
+        setSettingsError(null);
+        const response = await fetch('/api/settings', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+        const result = await response.json();
+        if (!response.ok) throw new Error(result.error || 'The change was not saved.');
     }
 
     const currentPlan = organization?.plan || 'free';
@@ -414,23 +368,25 @@ export default function SettingsPage() {
                 description="Manage your workspace settings"
             />
 
-            <div className="p-6">
+            <main className="mx-auto max-w-[1440px] px-5 py-10 sm:px-8 lg:px-16 lg:py-12">
+                <ReportsSettingsTabs />
+                {settingsError && <div role="alert" className="mb-4"><p>{settingsError}</p><Button variant="outline" onClick={() => void fetchData()}>Reload settings</Button></div>}
                 {paymentSuccess && (
                     <div className="mb-6 p-4 rounded-lg bg-[var(--data-green-muted)] border border-[var(--data-green)]/30 flex items-center gap-3">
                         <CheckCircle className="w-5 h-5 text-[var(--data-green)]" />
-                        <p className="text-[var(--data-green)]">Payment successful! Your plan has been upgraded.</p>
+                        <p className="text-[var(--data-green)]">Payment submitted. Your current plan below updates after provider confirmation.</p>
                     </div>
                 )}
 
-                <div className="flex gap-6">
+                <div className="mt-10 flex flex-col gap-8 lg:flex-row">
                     {/* Sidebar */}
-                    <div className="w-48 flex-shrink-0 space-y-1">
+                    <div className="flex w-full flex-shrink-0 gap-1 overflow-x-auto border-b border-[var(--border-default)] pb-3 lg:w-52 lg:flex-col lg:border-b-0 lg:border-r lg:pb-0 lg:pr-6">
                         {tabs.map((tab) => (
                             <button
                                 key={tab.id}
                                 onClick={() => setActiveTab(tab.id)}
                                 className={cn(
-                                    "w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-all text-left",
+                                    "flex min-h-11 shrink-0 items-center gap-2 px-3 py-2 text-left text-sm font-medium transition-all lg:w-full",
                                     activeTab === tab.id
                                         ? "bg-[var(--bg-raised)] text-[var(--text-primary)]"
                                         : "text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-raised)]"
@@ -853,7 +809,7 @@ export default function SettingsPage() {
                         )}
                     </div>
                 </div>
-            </div >
+            </main>
         </>
     );
 }

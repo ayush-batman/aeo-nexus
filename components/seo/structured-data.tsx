@@ -92,19 +92,13 @@ export function IndiaIndexDatasetJsonLd({ label, brandCount, categoriesTracked }
     return jsonLd({
         "@type":     "Dataset",
         name:        `India AI Visibility Index, ${label}`,
-        description: "Monthly measurement of how ChatGPT, Gemini, Claude, and Perplexity answer high-intent queries about Indian brands. Every number links to the raw scan behind it.",
+        description: "Reviewed samples of AI API answers about selected Indian brands. Published entries include observed mention rates, sample counts, uncertainty intervals and raw evidence; coverage varies by edition.",
         creator:     ORG,
-        distribution: [
-            {
-                "@type":       "DataDownload",
-                encodingFormat: "application/json",
-                contentUrl:    `${SITE_URL}/api/india-index`,
-            },
-        ],
         variableMeasured: [
             "Brand mention rate",
             "Average mention position",
-            "Visibility verdict",
+            "Sample count",
+            "95% Wilson interval",
         ],
         keywords: [
             "AI visibility",

@@ -15,7 +15,7 @@ export interface RazorpayOrderLike {
   amount: number | string;
   currency: string;
   status: string;
-  notes?: Record<string, string | number> | null;
+  notes?: Record<string, string | number | null> | null;
 }
 
 export interface ValidatedRazorpayPayment {
@@ -116,4 +116,3 @@ export function extractRazorpayPaymentId(payload: unknown): string | null {
   const id = (entity as Record<string, unknown>).id;
   return typeof id === 'string' && id ? id : null;
 }
-

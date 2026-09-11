@@ -1,4 +1,5 @@
 "use client";
+import { waitForMeasurementJob } from '@/lib/client/wait-for-measurement';
 
 import { useState, useEffect } from "react";
 import { UpgradeModal, isPlanGate } from '@/components/billing/upgrade-modal';
@@ -10,7 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn, getScoreColor, getScoreBgColor } from "@/lib/utils";
-import { createClient } from "@/lib/supabase/client";
+import { useWorkspaceLive } from "@/hooks/use-workspace-live";
 import { ScheduledScans } from "@/components/dashboard/llm-tracker/scheduled-scans";
 import { QuestionVariants } from "@/components/dashboard/llm-tracker/question-variants";
 import { ScanReceiptDrawer } from "@/components/dashboard/scan-receipt-drawer";
@@ -101,7 +102,7 @@ export default function LLMTrackerPage() {
     const [gateOpen, setGateOpen] = useState(false);
     const [gateMessage, setGateMessage] = useState<string | null>(null);
     const [scanError, setScanError] = useState<string | null>(null);
-    const [isLive, setIsLive] = useState(false);
+    const isLive = useWorkspaceLive(() => void fetchData());
     const [competitors, setCompetitors] = useState<string[]>([]);
     const [newCompetitor, setNewCompetitor] = useState("");
     const [expandedScan, setExpandedScan] = useState<number | null>(null);
@@ -174,30 +175,6 @@ export default function LLMTrackerPage() {
         }
         init();
 
-        // Setup Supabase Realtime subscription
-        const supabase = createClient();
-
-        const channel = supabase
-            .channel('llm-tracker-scans')
-            .on(
-                'postgres_changes',
-                { event: 'INSERT', schema: 'public', table: 'llm_scans' },
-                (payload) => {
-                    // Add new scan to top of list
-                    const newScan = payload.new as LLMScan;
-                    setScans(prev => [newScan, ...prev].slice(0, 20));
-                    // Also refresh visibility metrics
-                    fetch('/api/dashboard/stats')
-                        .then(res => res.json())
-                        .then(data => setVisibilityMetrics(data.visibilityMetrics || []))
-                        .catch(console.error);
-                }
-            )
-            .subscribe((status) => setIsLive(status === "SUBSCRIBED"));
-
-        return () => {
-            supabase.removeChannel(channel);
-        };
     }, []);
 
     const handleScan = async () => {
@@ -219,6 +196,7 @@ export default function LLMTrackerPage() {
             });
 
             const data = await response.json() as {
+                statusUrl?: string;
                 message?: string;
                 error?: string;
                 platformErrors?: PlatformError[];
@@ -235,6 +213,12 @@ export default function LLMTrackerPage() {
                     ? `Some platforms failed: ${data.platformErrors.map((e) => `${e.platform} (${e.error})`).join(', ')}`
                     : data.message || data.error || 'Scan failed';
                 throw new Error(errMsg);
+            }
+
+            if (response.status === 202) {
+                if (!data.statusUrl) throw new Error('Scan queued, but its progress link is missing. Reload to check saved results.');
+                const result = await waitForMeasurementJob(data.statusUrl);
+                if (result.status === 'partial') setScanError('Some engine samples failed. Review sample counts and saved evidence.');
             }
 
             // Show partial failures as warnings
@@ -325,7 +309,7 @@ export default function LLMTrackerPage() {
                 description="Run repeatable measurements and inspect every answer"
             />
 
-            <main className="mx-auto max-w-7xl p-4 sm:p-6 lg:p-8">
+            <main className="mx-auto max-w-[1440px] px-5 py-10 sm:px-8 lg:px-16 lg:py-12">
                 {error && (
                     <div className="mb-4 rounded-md border border-[var(--data-red)]/30 bg-[var(--data-red-muted)] px-4 py-3 text-sm text-[var(--data-red)]">
                         {error}

@@ -1,66 +1,21 @@
-
-import { NextRequest, NextResponse } from 'next/server';
-import { enrichBrandFromUrl } from '@/lib/services/brand-enrichment';
-import rateLimit, { isRateLimitUnavailableError } from '@/lib/rate-limit';
-
-const limiter = rateLimit({
-    interval: 60 * 60 * 1000, // 1 hour
-    uniqueTokenPerInterval: 500,
-    namespace: 'brand-enrichment',
-});
-
-export async function POST(request: NextRequest) {
-    try {
-        const body = await request.json();
-        const { url } = body;
-
-        const ip = request.headers.get('x-forwarded-for') ||
-            request.headers.get('x-real-ip') ||
-            'unknown';
-
-        try {
-            await limiter.check(5, ip);
-        } catch (error) {
-            if (isRateLimitUnavailableError(error)) {
-                return NextResponse.json({ error: 'Request protection is temporarily unavailable.' }, { status: 503 });
-            }
-            return NextResponse.json(
-                { error: 'Rate limit exceeded (5 requests per hour).' },
-                { status: 429 }
-            );
-        }
-
-        if (!url) {
-            return NextResponse.json(
-                { error: 'URL is required' },
-                { status: 400 }
-            );
-        }
-
-        // Add protocol if missing
-        let validUrl = url;
-        if (!validUrl.startsWith('http')) {
-            validUrl = `https://${validUrl}`;
-        }
-
-        // Validate URL format
-        try {
-            new URL(validUrl);
-        } catch {
-            return NextResponse.json(
-                { error: 'Invalid URL format' },
-                { status: 400 }
-            );
-        }
-
-        const data = await enrichBrandFromUrl(validUrl);
-
-        return NextResponse.json({ success: true, data });
-    } catch (error) {
-        console.error('Enrichment API Error:', error);
-        return NextResponse.json(
-            { error: 'Failed to enrich brand details' },
-            { status: 500 }
-        );
-    }
+import { NextResponse } from 'next/server';
+import { internal } from '@/convex/_generated/api';
+import { callInternal } from '@/lib/convex/admin';
+import { convexRouteError } from '@/lib/convex/http';
+export const maxDuration = 300;
+export async function POST(request: Request) {
+  try {
+    const text = await request.text();
+    if (text.length > 10000) return NextResponse.json({ error: 'Request too large' }, { status: 413 });
+    const body = JSON.parse(text);
+    if (!body || typeof body !== 'object' || Array.isArray(body) ||
+      typeof body.url !== 'string') return NextResponse.json({ error: 'Please check the supplied values.' }, { status: 400 });
+    const result = await callInternal('action', internal.discoveryActions.brand, {
+      ip: request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || request.headers.get('x-real-ip') || 'unknown',
+      url: body.url });
+    return NextResponse.json(JSON.parse(result));
+  } catch (error) {
+    if (error instanceof SyntaxError) return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 });
+    return convexRouteError(error);
+  }
 }

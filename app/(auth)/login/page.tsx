@@ -6,7 +6,7 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { AlertCircle, Loader2 } from "lucide-react";
-import { createClient } from "@/lib/supabase/client";
+import { authClient } from "@/lib/auth-client";
 import { AeloWordmark } from "@/components/brand/logo";
 import { GoogleSignInButton } from "@/components/auth/google-button";
 
@@ -26,18 +26,16 @@ function LoginForm() {
         setLoading(true);
 
         try {
-            const supabase = createClient();
-
-            const { data, error: signInError } = await supabase.auth.signInWithPassword({
+            const { data, error: signInError } = await authClient.signIn.email({
                 email: email.trim(),
                 password,
             });
 
             if (signInError) {
-                throw signInError;
+                throw new Error(signInError.message || 'Unable to sign in.');
             }
 
-            if (data.user) {
+            if (data?.user) {
                 router.push("/dashboard");
                 router.refresh();
             }
@@ -86,12 +84,6 @@ function LoginForm() {
                     )}
 
                     <GoogleSignInButton />
-
-                    <div className="flex items-center gap-3 my-6">
-                        <div className="flex-1 h-px bg-[var(--border-default)]" />
-                        <span className="text-xs text-[var(--text-tertiary)]">or</span>
-                        <div className="flex-1 h-px bg-[var(--border-default)]" />
-                    </div>
 
                     <form onSubmit={handleSubmit} className="space-y-4">
                         <div>

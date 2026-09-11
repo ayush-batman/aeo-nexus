@@ -1,7 +1,7 @@
 import { v } from 'convex/values';
 
 import { newPublicId } from './lib/publicIds';
-import { requireRole, tenantMutation, tenantQuery } from './lib/tenant';
+import { requireRole, requireWorkspace, tenantMutation, tenantQuery } from './lib/tenant';
 
 const workspaceValidator = v.object({
   publicId: v.string(),
@@ -10,6 +10,15 @@ const workspaceValidator = v.object({
   settings: v.any(),
   createdAt: v.number(),
   updatedAt: v.number(),
+});
+
+export const get = tenantQuery({
+  args: { workspaceId: v.string() }, returns: workspaceValidator,
+  handler: async (ctx, args) => {
+    const { publicId, name, logoUrl, settings, createdAt, updatedAt } =
+      await requireWorkspace(ctx, ctx.tenant, args.workspaceId);
+    return { publicId, name, logoUrl, settings, createdAt, updatedAt };
+  },
 });
 
 export const list = tenantQuery({
@@ -38,7 +47,7 @@ export const list = tenantQuery({
 export const create = tenantMutation({
   args: {
     name: v.string(),
-    settings: v.any(),
+    settings: v.object({ website: v.union(v.string(), v.null()), competitors: v.array(v.string()) }),
   },
   returns: v.union(
     v.object({ status: v.literal('denied'), limit: v.number() }),
@@ -53,6 +62,16 @@ export const create = tenantMutation({
     const name = args.name.trim();
     if (name.length < 1 || name.length > 100) {
       throw new Error('invalid_workspace_name');
+    }
+    if (args.settings.competitors.length > 20 || args.settings.competitors.some((value) => !value.trim() || value.length > 100)) {
+      throw new Error('invalid_workspace_settings');
+    }
+    if (args.settings.website) {
+      let url: URL;
+      try { url = new URL(args.settings.website); } catch { throw new Error('invalid_website'); }
+      if (!['http:', 'https:'].includes(url.protocol) || url.username || url.password || args.settings.website.length > 2048) {
+        throw new Error('invalid_website');
+      }
     }
 
     if (ctx.tenant.organization.plan === 'free') {

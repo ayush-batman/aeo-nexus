@@ -1,9 +1,6 @@
-import { createAdminClient } from '@/lib/supabase/admin';
-import { extractClaims } from '@/lib/ai/claim-extractor';
-import { verifyClaims } from '@/lib/ai/claim-verifier';
-
-// Cap Azure spend per verify run, the verifier uses gpt-5 (premium tier).
-const MAX_SCANS = 20;
+import { api } from '@/convex/_generated/api';
+import { fetchAuthQuery } from '@/lib/auth-server';
+import type { FunctionReturnType } from 'convex/server';
 
 export type AccuracyRow = {
     id: string;
@@ -26,99 +23,14 @@ export type AccuracySummary = {
     lastUpdated: string | null;
 };
 
-export async function regenerateAccuracy(params: {
-    workspaceId: string;
-    brandName:   string;
-    website:     string | null;
-}): Promise<{ processed: number; claims: number }> {
-    const db = createAdminClient();
-
-    const { data: scans, error } = await db
-        .from('llm_scans')
-        .select('id, response, brand_mentioned')
-        .eq('workspace_id', params.workspaceId)
-        .eq('brand_mentioned', true)
-        .order('created_at', { ascending: false })
-        .limit(MAX_SCANS);
-
-    if (error) throw new Error(`Scan load failed: ${error.message}`);
-    if (!scans?.length) return { processed: 0, claims: 0 };
-
-    await db.from('accuracy_claims').delete().in('scan_id', scans.map(s => s.id));
-
-    let claimCount = 0;
-    let processed  = 0;
-    for (const s of scans) {
-        if (!s.response) continue;
-        processed++;
-        const extracted = await extractClaims({ response: s.response as string, brandName: params.brandName });
-        if (!extracted.length) continue;
-
-        const verified = await verifyClaims({
-            claims:    extracted,
-            brandName: params.brandName,
-            website:   params.website,
-        });
-
-        const rows = verified.map(v => ({
-            workspace_id: params.workspaceId,
-            scan_id:      s.id,
-            claim_text:   v.claim_text,
-            verdict:      v.verdict,
-            confidence:   v.confidence,
-            evidence_url: v.evidence_url,
-            evidence_snippet: v.evidence_snippet,
-            reasoning:    v.reasoning,
-        }));
-
-        const { error: insertErr } = await db.from('accuracy_claims').insert(rows);
-        if (insertErr) { console.warn('[accuracy] insert failed:', insertErr); continue; }
-        claimCount += rows.length;
-    }
-
-    // Fan out an accuracy_alert notification if the batch surfaced any
-    // 'false' verdicts. Opt-out via alert_preferences.alert_type = 'accuracy_alert'.
-    const { count: falseCount } = await db
-        .from('accuracy_claims')
-        .select('id', { count: 'exact', head: true })
-        .eq('workspace_id', params.workspaceId)
-        .eq('verdict', 'false');
-
-    if (falseCount && falseCount > 0) {
-        const { data: pref } = await db
-            .from('alert_preferences')
-            .select('enabled')
-            .eq('workspace_id', params.workspaceId)
-            .eq('alert_type', 'accuracy_alert')
-            .maybeSingle();
-        if (!pref || pref.enabled !== false) {
-            await db.from('notifications').insert({
-                workspace_id: params.workspaceId,
-                type:  'accuracy_alert',
-                title: `${falseCount} false claim${falseCount === 1 ? '' : 's'} detected`,
-                message: `LLMs are stating claims about you that your own site contradicts. See the receipts.`,
-                metadata: { false_count: falseCount },
-            });
-        }
-    }
-
-    return { processed, claims: claimCount };
-}
-
 export async function loadAccuracySummary(workspaceId: string): Promise<AccuracySummary> {
-    const { DEMO_SEED_ACTIVE, demoAccuracySummary } = await import('./demo-seed');
-    if (DEMO_SEED_ACTIVE()) return demoAccuracySummary() as AccuracySummary;
-
-    const db = createAdminClient();
-    const { data, error } = await db
-        .from('accuracy_claims')
-        .select('id, scan_id, claim_text, verdict, confidence, evidence_url, evidence_snippet, reasoning, created_at, scan:llm_scans(platform, prompt, created_at)')
-        .eq('workspace_id', workspaceId)
-        .order('created_at', { ascending: false })
-        .limit(300);
-
-    if (error) throw new Error(`Accuracy load failed: ${error.message}`);
-    const rows = (data ?? []) as unknown as AccuracyRow[];
+    const rows: AccuracyRow[] = [];
+    let cursor: string | null = null;
+    do {
+        const result: FunctionReturnType<typeof api.analysis.claims> = await fetchAuthQuery(api.analysis.claims, { workspaceId, paginationOpts: { cursor, numItems: 100 } });
+        rows.push(...result.page);
+        cursor = result.isDone ? null : result.continueCursor;
+    } while (cursor);
 
     const counts = { true: 0, false: 0, outdated: 0, unverified: 0 };
     for (const r of rows) counts[r.verdict]++;

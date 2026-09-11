@@ -1,6 +1,6 @@
 import { Body, Button, Container, Head, Heading, Html, Preview, Section, Text } from "@react-email/components";
 import * as React from "react";
-import type { WeeklyDecisionInbox } from "@/lib/weekly-inbox";
+import type { WeeklyDecisionInbox } from "../../lib/weekly-inbox";
 
 const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "https://aelohq.com";
 
@@ -19,7 +19,7 @@ export default function WeeklyDigestEmail({ brand, inbox }: { brand: string; inb
               Weekly decision inbox · {brand}
             </Text>
             <Heading style={{ color: "#18181b", fontSize: "24px", lineHeight: "1.3" }}>
-              {inbox.items.length} change{inbox.items.length === 1 ? "" : "s"} strong enough to act on
+              {inbox.items.length} observed change{inbox.items.length === 1 ? "" : "s"} worth reviewing
             </Heading>
             <Text style={{ color: "#52525b", fontSize: "14px", lineHeight: "1.6" }}>
               Each item has at least four samples in both weeks and non-overlapping 95% confidence ranges. {losses ? `${losses} moved down and may need attention.` : "No confidence-qualified losses were found."}

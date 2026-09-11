@@ -1,89 +1,40 @@
 import Link from "next/link";
-import { AeloMark } from "@/components/brand/logo";
 
-// Sage footer: comprehensive, structured, quiet. All the links a serious
-// visitor would look for. No motivational copy.
+import { AeloWordmark } from "@/components/brand/logo";
 
-const COLS: { title: string; links: { href: string; label: string; external?: boolean }[] }[] = [
-    {
-        title: "Product",
-        links: [
-            { href: "/features",    label: "Features" },
-            { href: "/product",     label: "How Aelo works" },
-            { href: "/pricing",     label: "Pricing" },
-            { href: "/india-index", label: "India AI Visibility Index" },
-            { href: "/blog",        label: "Blog" },
-            { href: "/changelog",   label: "Changelog" },
-            { href: "/docs",        label: "Docs" },
-        ],
-    },
-    {
-        title: "Solutions",
-        links: [
-            { href: "/solutions/founders",  label: "SaaS Founders" },
-            { href: "/solutions/marketing", label: "Marketing Teams" },
-            { href: "/solutions/agencies",  label: "Agencies" },
-            { href: "/solutions/india",     label: "India-first Brands" },
-        ],
-    },
-    {
-        title: "Company",
-        links: [
-            { href: "/about",       label: "About" },
-            { href: "/manifesto",   label: "Manifesto" },
-            { href: "/methodology", label: "Methodology" },
-            { href: "/brand",       label: "Brand · Press" },
-            { href: "/customers",   label: "Customers" },
-            { href: "/contact",     label: "Contact" },
-        ],
-    },
-    {
-        title: "Legal",
-        links: [
-            { href: "/privacy",   label: "Privacy" },
-            { href: "/terms",     label: "Terms" },
-            { href: "/security",  label: "Security" },
-        ],
-    },
+const LINKS = [
+    { title: "Product", items: [["How it works", "/product"], ["Features", "/features"], ["Pricing", "/pricing"], ["Methodology", "/methodology"]] },
+    { title: "Explore", items: [["India index", "/india-index"], ["Field notes", "/blog"], ["MCP", "/mcp"], ["Changelog", "/changelog"]] },
+    { title: "Company", items: [["About", "/about"], ["Manifesto", "/manifesto"], ["Security", "/security"], ["Contact", "/contact"]] },
 ];
 
 export function MarketingFooter() {
     return (
-        <footer className="border-t border-white/5 bg-black">
-            <div className="mx-auto max-w-6xl px-6 py-16">
-                <div className="grid grid-cols-2 md:grid-cols-6 gap-8">
-                    {/* Brand column (spans 2 on desktop) */}
-                    <div className="col-span-2 md:col-span-2 space-y-4">
-                        <div className="flex items-center gap-2 text-white">
-                            <AeloMark size={22} />
-                            <span className="text-[15px] font-medium tracking-tight">aelo</span>
-                        </div>
-                        <p className="text-[13px] text-zinc-500 leading-relaxed max-w-[280px]">
-                            The instrument for measuring, and moving, your brand&apos;s presence in AI answers.
-                        </p>
-                        <div className="pt-2 flex items-center gap-3 text-[11px] text-zinc-600 font-mono">
-                            <span className="inline-flex items-center gap-1.5">
-                                <span className="w-1.5 h-1.5 rounded-full bg-zinc-600" />
-                                Engine availability is reported per scan
-                            </span>
-                        </div>
+        <footer className="bg-[#111936] px-4 pb-4 pt-16 text-white [--accent-base:#8de6d1] [--text-primary:#ffffff] md:px-6 md:pt-24">
+            <div className="mx-auto max-w-6xl">
+                <div className="mb-16 grid overflow-hidden rounded-3xl bg-[#f6e76b] text-[#111936] md:grid-cols-[1.4fr_0.6fr]">
+                    <div className="p-8 md:p-12">
+                        <p className="text-sm font-semibold uppercase tracking-widest text-[#5d5928]">One question. Real answers.</p>
+                        <h2 className="mt-4 max-w-2xl text-4xl font-semibold tracking-tight md:text-5xl">Find out what AI tells your next buyer.</h2>
                     </div>
+                    <div className="flex items-end bg-[#8de6d1] p-8 md:justify-end md:p-12">
+                        <Link href="/#scan" className="inline-flex rounded-full bg-[#111936] px-5 py-3 text-base font-semibold text-white transition-all duration-700 ease-[cubic-bezier(0.32,0.72,0,1)] hover:-translate-y-1">Run a real scan</Link>
+                    </div>
+                </div>
 
-                    {/* Link columns */}
-                    {COLS.map(col => (
-                        <div key={col.title}>
-                            <div className="text-[10px] font-mono uppercase tracking-[0.14em] text-zinc-500 mb-3">
-                                {col.title}
-                            </div>
-                            <ul className="space-y-2">
-                                {col.links.map(l => (
-                                    <li key={l.href}>
-                                        <Link
-                                            href={l.href}
-                                            className="text-[13px] text-zinc-400 hover:text-white transition-colors"
-                                        >
-                                            {l.label}
-                                        </Link>
+                <div className="grid gap-12 border-t border-white/15 py-12 md:grid-cols-[2fr_1fr_1fr_1fr]">
+                    <div>
+                        <AeloWordmark size="lg" />
+                        <p className="mt-5 max-w-sm text-base leading-relaxed text-white/60">Evidence for how ChatGPT, Gemini, Claude and Perplexity answer about your brand.</p>
+                        <p className="mt-5 inline-flex rounded-full bg-white/10 px-3 py-2 text-xs text-white/70">Engine availability is reported on every scan</p>
+                    </div>
+                    {LINKS.map((column) => (
+                        <div key={column.title}>
+                            <p className="text-xs font-semibold uppercase tracking-widest text-[#8de6d1]">{column.title}</p>
+                            <ul className="mt-4 space-y-3">
+                                {column.items.map(([label, href]) => (
+                                    <li key={href}>
+                                        <Link href={href} className="text-sm text-white/65 transition-all duration-700 ease-[cubic-bezier(0.32,0.72,0,1)] hover:text-white">{label}</Link>
                                     </li>
                                 ))}
                             </ul>
@@ -91,11 +42,9 @@ export function MarketingFooter() {
                     ))}
                 </div>
 
-                <div className="mt-12 pt-6 border-t border-white/5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-[12px] text-zinc-500">
-                    <div>© {new Date().getFullYear()} Aelo Inc. Instrument for AI answer engineering.</div>
-                    <div className="font-mono text-[11px] text-zinc-600">
-                        Made in India · Priced in ₹
-                    </div>
+                <div className="flex flex-col gap-3 border-t border-white/15 py-6 text-xs text-white/45 sm:flex-row sm:items-center sm:justify-between">
+                    <p>© {new Date().getFullYear()} Aelo. Built in India for teams everywhere.</p>
+                    <div className="flex gap-5"><Link href="/privacy" className="hover:text-white">Privacy</Link><Link href="/terms" className="hover:text-white">Terms</Link></div>
                 </div>
             </div>
         </footer>

@@ -1,207 +1,62 @@
-// Admin utility functions for super-admin panel
-
-import { createClient } from '@/lib/supabase/server';
-import { User, Organization } from '@/lib/types';
-
-/**
- * Check if the current user is a super admin
- */
-export async function isSuperAdmin(): Promise<boolean> {
-    const supabase = await createClient();
-
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return false;
-
-    const { data: userData } = await supabase
-        .from('users')
-        .select('is_super_admin')
-        .eq('id', user.id)
-        .single();
-
-    return userData?.is_super_admin === true;
-}
-
-/**
- * Get the current user's profile
- */
+import { cache } from 'react';
+import { api } from '@/convex/_generated/api';
+import { fetchAuthQuery, getToken } from '@/lib/auth-server';
+import { getConvexWorkspaceContext } from '@/lib/convex/session';
+import type { FunctionReturnType } from 'convex/server';
+import type { User, Organization } from './types';
 export async function getCurrentUser(): Promise<User | null> {
-    const supabase = await createClient();
-
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return null;
-
-    const { data: userData } = await supabase
-        .from('users')
-        .select('*')
-        .eq('id', user.id)
-        .single();
-
-    return userData;
+  if (!await getToken()) return null;
+  await getConvexWorkspaceContext();
+  return fetchAuthQuery(api.admin.profile, {});
 }
-
-/**
- * Get all organizations (super admin only - bypasses RLS via service role)
- */
-export async function getAllOrganizations(): Promise<Organization[]> {
-    const supabase = await createClient();
-
-    // Note: This requires service role or RLS policy that allows super admins
-    const { data, error } = await supabase
-        .from('organizations')
-        .select('*')
-        .order('created_at', { ascending: false });
-
-    if (error) {
-        console.error('Error fetching organizations:', error);
-        return [];
-    }
-
-    return data || [];
+export async function isSuperAdmin() { return (await getCurrentUser())?.is_super_admin === true; }
+async function allPages<T>(read: (cursor: string | null) => Promise<{ page: T[]; isDone: boolean; continueCursor: string }>): Promise<T[]> {
+  const out: T[] = []; let cursor: string | null = null;
+  do { const page = await read(cursor); out.push(...page.page); cursor = page.isDone ? null : page.continueCursor; } while (cursor);
+  return out;
 }
-
-/**
- * Get organization details with user count
- */
+export const getAllOrganizations = cache(async (): Promise<Organization[]> => allPages(cursor =>
+  fetchAuthQuery(api.admin.organizations, { paginationOpts: { numItems: 100, cursor } })));
+const getAllMembers = cache(async () => allPages(cursor => fetchAuthQuery(api.admin.members, { paginationOpts: { numItems: 100, cursor } })));
 export async function getOrganizationWithUsers(orgId: string) {
-    const supabase = await createClient();
-
-    const [orgResult, usersResult, workspacesResult] = await Promise.all([
-        supabase
-            .from('organizations')
-            .select('*')
-            .eq('id', orgId)
-            .single(),
-        supabase
-            .from('users')
-            .select('*')
-            .eq('org_id', orgId),
-        supabase
-            .from('workspaces')
-            .select('*')
-            .eq('org_id', orgId)
-    ]);
-
-    return {
-        organization: orgResult.data,
-        users: usersResult.data || [],
-        workspaces: workspacesResult.data || []
-    };
+  const organization = await fetchAuthQuery(api.admin.organization, { orgId });
+  if (!organization) return { organization: null, users: [], workspaces: [] };
+  const [users, workspaces] = await Promise.all([
+    allPages(cursor => fetchAuthQuery(api.admin.members, { orgId, paginationOpts: { numItems: 100, cursor } })),
+    allPages(cursor => fetchAuthQuery(api.admin.workspaces, { orgId, paginationOpts: { numItems: 100, cursor } })),
+  ]);
+  return { organization, users, workspaces };
 }
-
-/**
- * Get platform-wide statistics
- */
+const usageCounts = cache(async () => {
+  const pages = await allPages<FunctionReturnType<typeof api.admin.scanUsage>['page'][number]>(cursor =>
+    fetchAuthQuery(api.admin.scanUsage, { paginationOpts: { numItems: 50, cursor } }));
+  const groups = new Map<string, { count: number; lastActive: number }>();
+  for (const row of pages) {
+    const previous = groups.get(row.orgId);
+    groups.set(row.orgId, { count: (previous?.count || 0) + row.count, lastActive: Math.max(previous?.lastActive || 0, row.lastActive) });
+  }
+  return groups;
+});
 export async function getPlatformStats() {
-    const supabase = await createClient();
-
-    const [orgsResult, usersResult, scansResult] = await Promise.all([
-        supabase.from('organizations').select('id, plan', { count: 'exact' }),
-        supabase.from('users').select('id', { count: 'exact' }),
-        supabase.from('llm_scans').select('id', { count: 'exact' })
-    ]);
-
-    const planCounts = (orgsResult.data || []).reduce((acc, org) => {
-        acc[org.plan] = (acc[org.plan] || 0) + 1;
-        return acc;
-    }, {} as Record<string, number>);
-
-    return {
-        totalOrganizations: orgsResult.count || 0,
-        totalUsers: usersResult.count || 0,
-        totalScans: scansResult.count || 0,
-        planBreakdown: planCounts
-    };
+  const [orgs, members, usage] = await Promise.all([getAllOrganizations(), getAllMembers(), usageCounts()]);
+  const planBreakdown: Record<string, number> = {};
+  for (const org of orgs) planBreakdown[org.plan] = (planBreakdown[org.plan] || 0) + 1;
+  return { totalOrganizations: orgs.length, totalUsers: new Set(members.map(user => user.id)).size,
+    totalScans: [...usage.values()].reduce((sum, row) => sum + row.count, 0), planBreakdown };
 }
-
-const PAID_PLANS = new Set(['starter', 'pro', 'agency', 'enterprise']);
-
-export type OrgUsageRow = {
-    id: string;
-    name: string;
-    plan: string;
-    paid: boolean;
-    users: number;
-    scans: number;
-    lastActive: string | null;
-    createdAt: string;
-};
-
-/**
- * Per-organization usage: scans run, last-active, users, plan.
- * Scans link via workspace_id -> workspaces.org_id, so we map in JS.
- */
-export async function getOrgUsage(): Promise<{
-    rows: OrgUsageRow[];
-    summary: {
-        totalOrgs: number;
-        paidOrgs: number;
-        freeOrgs: number;
-        conversionRate: number;
-        activeLast7d: number;
-        totalScans: number;
-    };
-}> {
-    const supabase = await createClient();
-
-    const [orgsRes, wsRes, usersRes, scansRes] = await Promise.all([
-        supabase.from('organizations').select('id, name, plan, created_at'),
-        supabase.from('workspaces').select('id, org_id'),
-        supabase.from('users').select('id, org_id'),
-        supabase.from('llm_scans').select('workspace_id, created_at'),
-    ]);
-
-    const orgs = (orgsRes.data || []) as Array<{ id: string; name: string; plan: string; created_at: string }>;
-    const workspaces = (wsRes.data || []) as Array<{ id: string; org_id: string }>;
-    const users = (usersRes.data || []) as Array<{ id: string; org_id: string | null }>;
-    const scans = (scansRes.data || []) as Array<{ workspace_id: string; created_at: string }>;
-
-    const wsToOrg = new Map<string, string>();
-    workspaces.forEach((w) => wsToOrg.set(w.id, w.org_id));
-
-    const usersByOrg = new Map<string, number>();
-    users.forEach((u) => {
-        if (u.org_id) usersByOrg.set(u.org_id, (usersByOrg.get(u.org_id) || 0) + 1);
-    });
-
-    const scanCountByOrg = new Map<string, number>();
-    const lastActiveByOrg = new Map<string, string>();
-    scans.forEach((s) => {
-        const org = wsToOrg.get(s.workspace_id);
-        if (!org) return;
-        scanCountByOrg.set(org, (scanCountByOrg.get(org) || 0) + 1);
-        const prev = lastActiveByOrg.get(org);
-        if (!prev || s.created_at > prev) lastActiveByOrg.set(org, s.created_at);
-    });
-
-    const rows: OrgUsageRow[] = orgs
-        .map((o) => ({
-            id: o.id,
-            name: o.name,
-            plan: o.plan,
-            paid: PAID_PLANS.has(o.plan),
-            users: usersByOrg.get(o.id) || 0,
-            scans: scanCountByOrg.get(o.id) || 0,
-            lastActive: lastActiveByOrg.get(o.id) || null,
-            createdAt: o.created_at,
-        }))
-        .sort((a, b) => b.scans - a.scans);
-
-    const totalOrgs = rows.length;
-    const paidOrgs = rows.filter((r) => r.paid).length;
-    const weekAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
-    const activeLast7d = rows.filter(
-        (r) => r.lastActive && new Date(r.lastActive).getTime() >= weekAgo
-    ).length;
-
-    return {
-        rows,
-        summary: {
-            totalOrgs,
-            paidOrgs,
-            freeOrgs: totalOrgs - paidOrgs,
-            conversionRate: totalOrgs ? Math.round((paidOrgs / totalOrgs) * 100) : 0,
-            activeLast7d,
-            totalScans: scans.length,
-        },
-    };
+export type OrgUsageRow = { id: string; name: string; plan: string; paid: boolean; users: number; scans: number; lastActive: string | null; createdAt: string };
+export async function getOrgUsage() {
+  const [orgs, members, usage] = await Promise.all([getAllOrganizations(), getAllMembers(), usageCounts()]);
+  const counts = new Map<string, number>();
+  for (const member of members) counts.set(member.org_id, (counts.get(member.org_id) || 0) + 1);
+  const rows: OrgUsageRow[] = orgs.map(org => {
+    const scans = usage.get(org.id);
+    return { id: org.id, name: org.name, plan: org.plan, paid: org.plan !== 'free', users: counts.get(org.id) || 0,
+      scans: scans?.count || 0, lastActive: scans ? new Date(scans.lastActive).toISOString() : null, createdAt: org.created_at };
+  }).sort((a,b) => b.scans-a.scans);
+  const paidOrgs = rows.filter(row => row.paid).length;
+  return { rows, summary: { totalOrgs: rows.length, paidOrgs, freeOrgs: rows.length-paidOrgs,
+    conversionRate: rows.length ? Math.round(paidOrgs/rows.length*100) : 0,
+    activeLast7d: rows.filter(row => row.lastActive && Date.parse(row.lastActive) >= Date.now()-7*86400000).length,
+    totalScans: rows.reduce((sum,row) => sum+row.scans,0) } };
 }

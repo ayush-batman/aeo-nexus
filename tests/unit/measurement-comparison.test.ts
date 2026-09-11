@@ -13,11 +13,15 @@ function snapshot(prompt: string, engine: string, mentions: number, samples: num
         mention_count: mentions,
         mention_rate: mentions / samples,
         position_sample_count: mentions,
-        contract_version: 'measurement.v1',
+        contract_version: 'measurement.v2',
         provider_model: 'gemini-2.5-flash',
         measurement_region: 'global-unspecified',
         measurement_mode: 'standard',
-        scorer_version: 'aelo-brand-scorer.v1',
+        scorer_version: 'aelo-brand-scorer.v2',
+        search_mode: 'google_search_auto',
+        analyzer_method: 'deterministic-mentions+gemini-sentiment',
+        analyzer_model: 'gemini-2.5-flash',
+        analyzer_prompt_version: 'aelo-sentiment.v2',
       },
     },
   };
@@ -40,6 +44,7 @@ test('small or legacy single-point cohorts are inconclusive', () => {
   assert.equal(compareVisibilitySnapshots(snapshot('p', 'gemini', 3, 3), snapshot('p', 'gemini', 0, 3)).verdict, 'inconclusive');
   const legacy = { p: { gemini: { mentioned: true, position: 1, sentiment: null } } };
   assert.equal(compareVisibilitySnapshots(legacy, legacy).verdict, 'inconclusive');
+  assert.equal(compareVisibilitySnapshots(legacy, legacy).visibility_change, null);
 });
 
 test('mismatched prompts and engines are excluded', () => {

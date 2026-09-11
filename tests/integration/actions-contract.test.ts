@@ -22,46 +22,38 @@ test('legacy Insights is a server redirect to persisted Actions', async () => {
 });
 
 test('action mutations bind rows to the authenticated workspace and validate roles', async () => {
-  const collection = await readFile(`${root}/app/api/interventions/route.ts`, 'utf8');
-  const member = await readFile(`${root}/app/api/interventions/[id]/route.ts`, 'utf8');
-  assert.match(collection, /requireWorkspaceRole/);
-  assert.match(collection, /workspace_id:\s*context\.workspaceId/);
-  assert.match(collection, /insight_key/);
-  assert.match(member, /\.eq\(['"]workspace_id['"],\s*context\.workspaceId\)/);
-  assert.match(member, /update_action_with_event/);
-  assert.match(member, /canTransitionAction/);
+const backend = await readFile(new URL('../../convex/actions.ts', import.meta.url), 'utf8');
+  assert.match(backend, /requireRole\(ctx\.tenant, 'editor'\)/);
+  assert.match(backend, /requireWorkspace\(ctx, ctx\.tenant, args\.workspaceId\)/);
+  assert.match(backend, /existing\.workspaceId !== workspace\._id/);
+  assert.match(backend, /canTransitionAction/);
+  assert.match(backend, /normalizeActionInput/);
 });
 
 test('action measurement retries reuse quota and audit idempotency keys', async () => {
-  const route = await readFile(`${root}/app/api/interventions/[id]/measure/route.ts`, 'utf8');
-  assert.match(route, /requireWorkspaceRole/);
-  assert.match(route, /Viewer role cannot measure actions/);
-  assert.match(route, /request\.headers\.get\(['"]idempotency-key['"]\)/);
-  assert.match(route, /reservation === ['"]duplicate['"]/);
-  assert.match(route, /p_event_type:\s*['"]measured['"]/);
-  assert.match(route, /update_action_with_event/);
-  assert.match(route, /measured:\$\{requestKey\}/);
-  for (const field of ['provider_model', 'measurement_region', 'measurement_mode', 'scorer_version', 'contract_version']) {
-    assert.match(route, new RegExp(field));
-  }
-  assert.match(route, /engine\.providerModels\.length === 1/);
+const [route, backend, snapshots] = await Promise.all([
+    readFile(new URL('../../app/api/interventions/[id]/measure/route.ts', import.meta.url), 'utf8'),
+    readFile(new URL('../../convex/actionMeasurements.ts', import.meta.url), 'utf8'),
+    readFile(new URL('../../lib/interventions.ts', import.meta.url), 'utf8')]);
+  assert.match(route, /request\.headers\.get\('idempotency-key'\)/);
+  assert.match(backend, /requireRole\(ctx\.tenant, 'editor'\)/);
+  assert.match(backend, /by_action_request/);
+  assert.match(backend, /if \(duplicate\) return duplicate\.publicId/);
+  assert.match(backend, /samples: 4/);
+  assert.match(backend, /beginMeasurement/);
+  assert.match(backend, /idempotencyKey: .measured:/);
+  for (const field of ['provider_model','measurement_region','measurement_mode','scorer_version','measurement_contract_version','search_mode','analyzer_method','analyzer_model','analyzer_prompt_version']) assert.ok(snapshots.includes(field));
 });
 
 test('action rows and audit events mutate in one service-role database transaction', async () => {
-  const [sql, collection, member, measure] = await Promise.all([
-    readFile(`${root}/supabase/migrations/034_atomic_actions_and_workspace_limits.sql`, 'utf8'),
-    readFile(`${root}/app/api/interventions/route.ts`, 'utf8'),
-    readFile(`${root}/app/api/interventions/[id]/route.ts`, 'utf8'),
-    readFile(`${root}/app/api/interventions/[id]/measure/route.ts`, 'utf8'),
-  ]);
-  assert.match(sql, /CREATE OR REPLACE FUNCTION public\.create_action_with_event/i);
-  assert.match(sql, /CREATE OR REPLACE FUNCTION public\.update_action_with_event/i);
-  assert.match(sql, /INSERT INTO public\.action_events/i);
-  assert.match(sql, /REVOKE ALL ON FUNCTION public\.create_action_with_event/i);
-  assert.match(sql, /GRANT EXECUTE ON FUNCTION public\.create_action_with_event[\s\S]*TO service_role/i);
-  for (const route of [collection, member, measure]) {
-    assert.match(route, /\.rpc\(['"](?:create|update)_action_with_event['"]/);
-  }
-  assert.doesNotMatch(member, /\.from\(['"]action_events['"]\)\.upsert/);
-  assert.doesNotMatch(measure, /\.from\(['"]action_events['"]\)\.upsert/);
+const [actions, measurements] = await Promise.all([
+    readFile(new URL('../../convex/actions.ts', import.meta.url), 'utf8'),
+    readFile(new URL('../../convex/actionMeasurements.ts', import.meta.url), 'utf8')]);
+  assert.match(actions, /export const save = tenantMutation/);
+  assert.match(actions, /ctx\.db\.(?:replace|insert)/);
+  assert.match(actions, /ctx\.db\.insert\('actionEvents'/);
+  assert.match(measurements, /export const finish = internalMutation/);
+  assert.match(measurements, /ctx\.db\.patch\(action\._id/);
+  assert.match(measurements, /ctx\.db\.insert\('actionEvents'/);
+  assert.match(measurements, /job\.status !== 'running'/);
 });

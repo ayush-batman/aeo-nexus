@@ -9,7 +9,7 @@ export default function PrivacyPage() {
     return (
         <LegalPage
             kind="Privacy Policy"
-            lastUpdated="2026-07-04"
+            lastUpdated="2026-09-11"
             intro="This policy describes what Aelo collects, why, how we store it, and the controls you have. It is written to be readable, not compliant-for-compliant's-sake."
             sections={[
                 {
@@ -32,11 +32,11 @@ export default function PrivacyPage() {
                 },
                 {
                     title: "Who we share it with",
-                    body: "Only sub-processors strictly necessary to operate Aelo. Today: Supabase (Postgres, Auth, Storage), Vercel (hosting, Cron), Google Gemini / OpenAI / Anthropic / Perplexity (scan providers, prompts only, no PII sent), Resend (email delivery), Razorpay + Stripe (billing). We do not sell customer data. We do not share it with advertisers.",
+                    body: "Only sub-processors needed to operate Aelo. Today: Convex (database, authentication, and file storage), Vercel (hosting and scheduled triggers), Google Gemini / OpenAI / Anthropic / Perplexity (scan providers), Resend (email delivery), and Razorpay + Stripe (billing). We do not sell customer data or share it with advertisers.",
                 },
                 {
                     title: "How we store it",
-                    body: "All data lives in Supabase Postgres with Row-Level Security policies scoping every row to the owning organization. Backups are encrypted. Passwords are hashed with bcrypt.",
+                    body: "Product data is stored in Convex. Aelo checks the signed-in organization and workspace on protected server reads and writes; API keys are also bound to a workspace and explicit scopes. Authentication credentials are handled by the Better Auth service running with Convex rather than stored as readable passwords by Aelo.",
                 },
                 {
                     title: "Your controls",

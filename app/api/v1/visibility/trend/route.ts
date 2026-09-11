@@ -7,17 +7,7 @@ export async function GET(request: Request) {
   const w = new URL(request.url).searchParams.get('window') || '90d';
   const days = w === '180d' ? 180 : w === '30d' ? 30 : 90;
   return withKey(request, 'read', async (ctx, admin) => {
-    const since = new Date(Date.now() - days * 86400000).toISOString();
-    const { data, error } = await admin
-      .from('llm_scans')
-      .select('brand_mentioned, created_at')
-      .eq('workspace_id', ctx.workspaceId)
-      .gte('created_at', since)
-      .order('created_at', { ascending: true });
-
-    if (error) {
-      throw new Error('Failed to fetch visibility trend', { cause: error });
-    }
+    const data = await admin.scans({ since: Date.now() - days * 86400000 });
 
     const byDay: Record<string, { mentions: number; total: number }> = {};
     for (const r of data || []) {

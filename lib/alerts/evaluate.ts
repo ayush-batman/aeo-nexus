@@ -1,5 +1,4 @@
-import { createAdminClient } from '@/lib/supabase/admin';
-import { compareCompatibleMentionMetrics, type ComparableMentionSample } from '@/lib/measurement/metrics';
+import { compareCompatibleMentionMetrics, type ComparableMentionSample } from '../measurement/metrics';
 
 /**
  * Alert Evaluation Engine
@@ -33,61 +32,14 @@ export interface ScanData {
     scorer_version: string | null;
     measurement_contract_version: string | null;
     measurement_run_id: string | null;
+    search_mode?: string | null;
+    analyzer_method?: string | null;
+    analyzer_model?: string | null;
+    analyzer_prompt_version?: string | null;
     created_at: string;
 }
 
-// Lazy singleton, instantiating at module load breaks Next 16 page-data
-// collection on projects that don't have env vars set yet.
-let _supabaseAdmin: ReturnType<typeof createAdminClient> | null = null;
-function getSupabaseAdmin() {
-    if (_supabaseAdmin) return _supabaseAdmin;
-    _supabaseAdmin = createAdminClient();
-    return _supabaseAdmin;
-}
-// Proxy so existing `supabaseAdmin.from(…)` call sites keep working.
-const supabaseAdmin = new Proxy({} as ReturnType<typeof createAdminClient>, {
-    get(_target, prop) {
-        return (getSupabaseAdmin() as unknown as Record<string | symbol, unknown>)[prop];
-    },
-});
-
-/**
- * Check if an alert type is enabled for a workspace
- */
-async function loadAlertPreferences(workspaceId: string): Promise<Map<string, boolean>> {
-    const { data, error } = await supabaseAdmin
-        .from('alert_preferences')
-        .select('alert_type, enabled')
-        .eq('workspace_id', workspaceId);
-
-    if (error) throw new Error(`Could not read alert preferences: ${error.message}`);
-    return new Map((data ?? []).map((preference) => [preference.alert_type, preference.enabled]));
-}
-
-/**
- * Create a notification
- */
-async function createNotification(
-    workspaceId: string,
-    type: AlertType,
-    title: string,
-    message: string,
-    dedupeKey: string,
-    metadata?: Record<string, unknown>
-) {
-    const { error } = await supabaseAdmin
-        .from('notifications')
-        .upsert({
-            workspace_id: workspaceId,
-            type,
-            title,
-            message,
-            dedupe_key: dedupeKey,
-            metadata: metadata || {},
-        }, { onConflict: 'workspace_id,dedupe_key', ignoreDuplicates: true });
-
-    if (error) throw new Error(`Failed to create notification [${type}]: ${error.message}`);
-}
+export type MeasurementNotification = { type: AlertType; title: string; message: string; dedupeKey: string; metadata: Record<string, unknown> };
 
 function comparable(scan: ScanData): ComparableMentionSample {
     return {
@@ -99,31 +51,42 @@ function comparable(scan: ScanData): ComparableMentionSample {
         mode: scan.measurement_mode,
         scorerVersion: scan.scorer_version,
         contractVersion: scan.measurement_contract_version,
+        searchMode: scan.search_mode,
+        analyzerMethod: scan.analyzer_method,
+        analyzerModel: scan.analyzer_model,
+        analyzerPromptVersion: scan.analyzer_prompt_version,
     };
 }
 
 function compatibilityKey(scan: ScanData): string | null {
     const values = [
-        scan.prompt.trim().toLocaleLowerCase(),
+        scan.prompt.trim(),
         scan.platform.trim().toLocaleLowerCase(),
         scan.provider_model?.trim(),
         scan.measurement_region?.trim(),
         scan.measurement_mode?.trim(),
         scan.scorer_version?.trim(),
         scan.measurement_contract_version?.trim(),
+        scan.search_mode?.trim(), scan.analyzer_method?.trim(), scan.analyzer_model?.trim(), scan.analyzer_prompt_version?.trim(),
     ];
     return values.some((value) => !value) ? null : values.join('\u0000');
 }
 
 /** Keep only the most recent earlier measurement run for each exact cohort. */
 export function selectPreviousAlertCohort(currentScans: ScanData[], previousScans: ScanData[]): ScanData[] {
-    const currentKeys = new Set(currentScans.map(compatibilityKey).filter((key): key is string => Boolean(key)));
+    const currentStarts = new Map<string, number>();
+    const currentRuns = new Set(currentScans.map(scan => scan.measurement_run_id));
+    for (const scan of currentScans) {
+        const key = compatibilityKey(scan), time = Date.parse(scan.created_at);
+        if (key && Number.isFinite(time)) currentStarts.set(key, Math.min(time, currentStarts.get(key) ?? Infinity));
+    }
     const selectedRun = new Map<string, string>();
     const selected: ScanData[] = [];
-    for (const scan of previousScans) {
+    for (const scan of [...previousScans].sort((a, b) => Date.parse(b.created_at) - Date.parse(a.created_at))) {
         const key = compatibilityKey(scan);
         const runId = scan.measurement_run_id;
-        if (!key || !runId || !currentKeys.has(key)) continue;
+        const time = Date.parse(scan.created_at);
+        if (!key || !runId || currentRuns.has(runId) || !Number.isFinite(time) || !(time < (currentStarts.get(key) ?? -Infinity))) continue;
         const runForKey = selectedRun.get(key);
         if (!runForKey) selectedRun.set(key, runId);
         if ((runForKey ?? runId) === runId) selected.push(scan);
@@ -147,21 +110,24 @@ export function newOwnCitationUrls(currentScans: ScanData[], previousScans: Scan
 /**
  * Evaluate scan results and trigger applicable alerts
  */
-export async function evaluateAlerts(
+export function evaluateAlerts(
     workspaceId: string,
     currentScans: ScanData[],
     previousScans: ScanData[],
     runId: string,
     historicalScans: ScanData[] = previousScans,
-): Promise<void> {
-    try {
-        if (currentScans.length === 0) return;
-        const preferences = await loadAlertPreferences(workspaceId);
+    preferences = new Map<string, boolean>(),
+): MeasurementNotification[] {
+    const notifications: MeasurementNotification[] = [];
+    const createNotification = (_workspaceId: string, type: AlertType, title: string, message: string, dedupeKey: string, metadata: Record<string, unknown> = {}) => {
+        notifications.push({ type, title, message, dedupeKey, metadata });
+    };
+        if (currentScans.length === 0) return notifications;
         const enabled = (type: AlertType) => preferences.get(type) ?? true;
         // 1. Zero visibility check
         const anyMentioned = currentScans.some(s => s.brand_mentioned);
         if (!anyMentioned && enabled('zero_visibility')) {
-            await createNotification(
+            createNotification(
                 workspaceId,
                 'zero_visibility',
                 'Zero Visibility Alert',
@@ -174,7 +140,7 @@ export async function evaluateAlerts(
         // 2. Negative sentiment spike
         const negativeScans = currentScans.filter(s => s.sentiment === 'negative');
         if (negativeScans.length > 0 && enabled('negative_sentiment')) {
-            await createNotification(
+            createNotification(
                 workspaceId,
                 'negative_sentiment',
                 'Negative Sentiment Detected',
@@ -203,10 +169,10 @@ export async function evaluateAlerts(
             const brandMentions = currentScans.filter(s => s.brand_mentioned).length;
             for (const { name: competitor, count } of competitorCounts.values()) {
                 if (count > brandMentions) {
-                    await createNotification(
+                    createNotification(
                         workspaceId,
                         'competitor_overtake',
-                        'Competitor Overtake',
+                        'Competitor mentioned more in this run',
                         `${competitor} was mentioned ${count} times vs your brand's ${brandMentions} mentions.`,
                         `measurement:${runId}:competitor_overtake`,
                         { competitor, competitorMentions: count, brandMentions }
@@ -230,7 +196,7 @@ export async function evaluateAlerts(
                 && comparison.current.confidence.interval.upper < comparison.previous.confidence.interval.lower;
 
             if (confidenceQualifiedDrop) {
-                await createNotification(
+                createNotification(
                     workspaceId,
                     'visibility_drop',
                     'Visibility Drop Detected',
@@ -252,7 +218,7 @@ export async function evaluateAlerts(
             const ownCitations = newOwnCitationUrls(currentScans, historicalScans);
 
             if (ownCitations.length > 0) {
-                await createNotification(
+                createNotification(
                     workspaceId,
                     'new_citation',
                     'Your Domain Was Cited',
@@ -262,28 +228,5 @@ export async function evaluateAlerts(
                 );
             }
         }
-    } catch (err) {
-        console.error('Alert evaluation error:', err);
-    }
-}
-
-/** Evaluate persisted samples so manual, scheduled, and activation runs behave identically. */
-export async function evaluateMeasurementAlerts(workspaceId: string, runId: string): Promise<void> {
-    const since = new Date(Date.now() - 30 * 86400000).toISOString();
-    const fields = 'prompt, brand_mentioned, mention_position, sentiment, competitors_mentioned, citations, platform, provider_model, measurement_region, measurement_mode, scorer_version, measurement_contract_version, measurement_run_id, created_at';
-    try {
-        const [{ data: current, error: currentError }, { data: previous, error: previousError }] = await Promise.all([
-            supabaseAdmin.from('llm_scans').select(fields).eq('workspace_id', workspaceId).eq('measurement_run_id', runId),
-            supabaseAdmin.from('llm_scans').select(fields).eq('workspace_id', workspaceId).gte('created_at', since).order('created_at', { ascending: false }),
-        ]);
-        if (currentError || previousError) {
-            throw new Error(`Could not load alert evidence: ${(currentError || previousError)?.message}`);
-        }
-        const currentScans = (current ?? []) as ScanData[];
-        const historicalScans = ((previous ?? []) as ScanData[]).filter((scan) => scan.measurement_run_id !== runId);
-        const previousScans = selectPreviousAlertCohort(currentScans, historicalScans);
-        await evaluateAlerts(workspaceId, currentScans, previousScans, runId, historicalScans);
-    } catch (error) {
-        console.error(`[alerts] measurement ${runId} evaluation failed:`, error);
-    }
+    return notifications;
 }

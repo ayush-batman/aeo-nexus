@@ -6,19 +6,7 @@ import { estimateMentionConfidence } from '@/lib/measurement/confidence';
 export async function GET(request: Request) {
   const limit = Math.min(50, Math.max(1, Number(new URL(request.url).searchParams.get('limit')) || 15));
   return withKey(request, 'read', async (ctx, admin) => {
-    const since = new Date(Date.now() - 30 * 86400000).toISOString();
-    const [{ data: prompts, error: promptsError }, { data: scans, error: scansError }] = await Promise.all([
-      admin.from('prompt_library').select('id, prompt').eq('workspace_id', ctx.workspaceId),
-      admin
-        .from('llm_scans')
-        .select('prompt, brand_mentioned')
-        .eq('workspace_id', ctx.workspaceId)
-        .gte('created_at', since),
-    ]);
-
-    if (promptsError || scansError) {
-      throw new Error('Failed to fetch prompt gaps', { cause: promptsError || scansError });
-    }
+    const [prompts, scans] = await Promise.all([admin.prompts(), admin.scans({ since: Date.now() - 30 * 86400000 })]);
 
     const byPrompt: Record<string, { mentions: number; total: number }> = {};
     for (const s of scans || []) {

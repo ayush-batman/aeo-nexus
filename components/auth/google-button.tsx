@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Loader2 } from "lucide-react";
-import { createClient } from "@/lib/supabase/client";
+import { authClient } from "@/lib/auth-client";
 
 function GoogleIcon() {
     return (
@@ -16,19 +16,30 @@ function GoogleIcon() {
 }
 
 export function GoogleSignInButton({ label = "Continue with Google", selectedPlan }: { label?: string; selectedPlan?: "radar" | "command" | null }) {
+    const [googleEnabled, setGoogleEnabled] = useState(false);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
+
+    useEffect(() => {
+        const controller = new AbortController();
+        fetch('/api/auth/providers', { cache: 'no-store', signal: controller.signal })
+            .then((response) => response.ok ? response.json() : Promise.reject(new Error('provider_status_unavailable')))
+            .then((providers: { google?: boolean }) => setGoogleEnabled(providers.google === true))
+            .catch((cause: unknown) => {
+                if (!(cause instanceof DOMException && cause.name === 'AbortError')) setGoogleEnabled(false);
+            });
+        return () => controller.abort();
+    }, []);
 
     async function signIn() {
         setLoading(true);
         setError(null);
         try {
-            const supabase = createClient();
             const callback = new URL('/auth/callback', window.location.origin);
             if (selectedPlan) callback.searchParams.set('plan', selectedPlan);
-            const { error } = await supabase.auth.signInWithOAuth({
+            const { error } = await authClient.signIn.social({
                 provider: "google",
-                options: { redirectTo: callback.toString() },
+                callbackURL: callback.toString(),
             });
             // On success the browser redirects to Google, nothing else runs here.
             if (error) {
@@ -41,7 +52,10 @@ export function GoogleSignInButton({ label = "Continue with Google", selectedPla
         }
     }
 
+    if (!googleEnabled) return null;
+
     return (
+        <>
         <div className="w-full">
             <button
                 type="button"
@@ -54,5 +68,11 @@ export function GoogleSignInButton({ label = "Continue with Google", selectedPla
             </button>
             {error && <p className="mt-2 text-xs text-[var(--data-red)]" role="alert">{error}</p>}
         </div>
+        <div className="flex items-center gap-3 my-6" aria-hidden="true">
+            <div className="flex-1 h-px bg-[var(--border-default)]" />
+            <span className="text-xs text-[var(--text-tertiary)]">or</span>
+            <div className="flex-1 h-px bg-[var(--border-default)]" />
+        </div>
+        </>
     );
 }

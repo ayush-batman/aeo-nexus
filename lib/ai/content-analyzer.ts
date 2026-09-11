@@ -1,11 +1,12 @@
 import * as cheerio from 'cheerio';
-import { safeFetchText } from '@/lib/security/safe-fetch';
+import { safeFetchText } from '../security/safe-fetch';
 
 export interface AuditResult {
+    evidenceStatus: 'heuristic_page_check';
     url: string;
     score: number;
     readability: {
-        score: number;
+        score: null;
         issues: string[];
     };
     structure: {
@@ -68,7 +69,7 @@ export async function auditContent(url: string): Promise<AuditResult> {
         // Remove scripts, styles, etc.
         $('script, style, noscript, svg, iframe').remove();
         const cleanText = $('body').text().replace(/\s+/g, ' ').trim();
-        const wordCount = cleanText.split(' ').length;
+        const wordCount = cleanText ? cleanText.split(' ').length : 0;
 
         // Detect generic Q&A patterns (bold text ending in ? followed by text)
         // This is a naive heuristic but good for a baseline
@@ -91,50 +92,50 @@ export async function auditContent(url: string): Promise<AuditResult> {
         // Core SEO tags
         if ($('title').length === 0) {
             score -= 10;
-            issues.push('Missing Title tag - critical for AI ingestion and context.');
+            issues.push('No title element found in the fetched HTML.');
         }
 
         if (!metaDescription) {
             score -= 10;
-            issues.push('Missing Meta Description - AI agents use this for quick summarization.');
+            issues.push('No meta description found in the fetched HTML.');
         } else if (metaDescription.length < 50) {
             score -= 5;
-            issues.push('Meta Description is too short (<50 chars) - provides insufficient context.');
+            issues.push('Meta description is shorter than this checklist’s 50-character threshold.');
         }
 
         // H1 check
         if (h1Count === 0) {
             score -= 10;
-            issues.push('Missing H1 tag - AI agents use this for main topic identification.');
+            issues.push('No H1 heading found; check whether the main topic is clear.');
         } else if (h1Count > 1) {
             score -= 5;
-            issues.push('Multiple H1 tags found - confuses hierarchical structure.');
+            issues.push('Multiple H1 headings found; review their hierarchy in context.');
         }
 
         // Structure check
         if (h2Count < 2) {
             score -= 5;
-            issues.push('Low structural depth (few H2s) - hard for agents to parse sub-topics.');
+            issues.push('Fewer than two H2 headings found; short pages may not need more.');
         }
 
         // Layout semantics
         if ($('main, article').length === 0) {
             score -= 5;
-            issues.push('Missing semantic tags (<main>, <article>) - makes it hard for agents to isolate primary content.');
+            issues.push('No main or article landmark found in the fetched HTML.');
         }
 
         // Image context
         let missingAltCount = 0;
         $('img').each((_, el) => {
             const alt = $(el).attr('alt');
-            if (!alt || alt.trim() === '') {
+            if (alt === undefined) {
                 missingAltCount++;
             }
         });
         if (missingAltCount > 0) {
             const penalty = Math.min(15, missingAltCount * 2); // Max -15 penalty
             score -= penalty;
-            issues.push(`${missingAltCount} images missing alt text - AI vision models rely on this for multi-modal context.`);
+            issues.push(`${missingAltCount} images lack an alt attribute. Add useful text for meaningful images; use an empty alt attribute for decorative images.`);
         }
 
         // Schema check
@@ -145,13 +146,13 @@ export async function auditContent(url: string): Promise<AuditResult> {
             }
         } else {
             score -= 10;
-            issues.push('No Schema.org markup found - crucial for structured data extraction by AI.');
+            issues.push('No top-level JSON-LD type found; nested markup may require manual review.');
         }
 
         // Content depth
         if (wordCount < 300) {
             score -= 15;
-            issues.push('Thin content (<300 words) - minimal context for LLMs.');
+            issues.push('Fewer than 300 visible words found. Length alone does not determine usefulness.');
         } else if (wordCount > 1500) {
             score += 10; // Extra bonus for deep content
         } else if (wordCount > 800) {
@@ -162,22 +163,21 @@ export async function auditContent(url: string): Promise<AuditResult> {
         if (qnaCount > 2) {
             score += 10;
         } else {
-            issues.push('Few direct Q&A pairs detected - consider adding an FAQ section for Featured Snippets/Direct Answers.');
+            issues.push('Few question-and-answer patterns detected. Add answers only where useful to readers.');
         }
 
         // Cap score
         score = Math.min(100, Math.max(0, score));
 
         // Generate summary
-        let summary = "Good foundation, but needs optimization.";
-        if (score > 90) summary = "Excellent agent-ready structure!";
-        else if (score < 50) summary = "Requires significant restructuring for AI visibility.";
+        const summary = 'Rule-based HTML checklist, not a readability test or AI-visibility measurement. Weights are editorial, not calibrated against assistant answers; inspect each finding in context.';
 
         return {
+            evidenceStatus: 'heuristic_page_check',
             url,
             score,
             readability: {
-                score: Math.round(score), // simplified for now
+                score: null, // No readability test was performed.
                 issues,
             },
             structure: {

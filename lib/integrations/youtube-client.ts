@@ -57,13 +57,9 @@ export async function searchYouTube(
     if (pageToken) params.append('pageToken', pageToken);
 
     try {
-        const response = await fetch(`https://www.googleapis.com/youtube/v3/search?${params}`);
+        const response = await fetch(`https://www.googleapis.com/youtube/v3/search?${params}`, { signal: AbortSignal.timeout(20000) });
 
-        if (!response.ok) {
-            const errorText = await response.text();
-            console.error('YouTube Search Failed:', response.status, errorText);
-            return { videos: [] };
-        }
+        if (!response.ok) throw new Error('youtube_search_unavailable');
 
         const data = await response.json() as YouTubeSearchResponse;
         const videoIds = (data.items ?? []).map((item) => item.id.videoId).join(',');
@@ -94,8 +90,7 @@ export async function searchYouTube(
         };
 
     } catch (error) {
-        console.error('YouTube Search Error:', error);
-        return { videos: [] };
+        throw new Error('youtube_search_unavailable', { cause: error });
     }
 }
 
@@ -120,7 +115,7 @@ async function getVideoStatistics(videoIds: string): Promise<Map<string, YouTube
             key: apiKey,
         });
 
-        const response = await fetch(`https://www.googleapis.com/youtube/v3/videos?${params}`);
+        const response = await fetch(`https://www.googleapis.com/youtube/v3/videos?${params}`, { signal: AbortSignal.timeout(20000) });
         if (!response.ok) return new Map();
 
         const data = await response.json() as { items?: Array<{ id: string; statistics: YouTubeStatistic }> };

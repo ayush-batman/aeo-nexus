@@ -1,8 +1,6 @@
 
 import { GoogleGenerativeAI } from '@google/generative-ai';
 
-// Initialize Gemini Client
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
 
 interface DiscoveredSources {
     subreddits: string[];
@@ -20,11 +18,11 @@ export async function discoverIndustrySources(
     productName?: string
 ): Promise<DiscoveredSources> {
     if (!process.env.GEMINI_API_KEY) {
-        console.warn('GEMINI_API_KEY not set for source discovery.');
-        return { subreddits: [], youtubeKeywords: [], otherForums: [] };
+        throw new Error('source_discovery_not_configured');
     }
 
-    const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
+    const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+    const model = genAI.getGenerativeModel({ model: process.env.GEMINI_DISCOVERY_MODEL || 'gemini-2.5-flash' });
     const currentYear = new Date().getFullYear();
 
     const prompt = `
@@ -43,18 +41,19 @@ export async function discoverIndustrySources(
     `;
 
     try {
-        const result = await model.generateContent(prompt);
+        const result = await model.generateContent(prompt, { timeout: 60000 });
         const response = result.response;
         const text = response.text().replace(/```json|```/g, '').trim();
 
-        const sources = JSON.parse(text) as DiscoveredSources;
-        return sources;
-    } catch (error) {
-        console.error('Error discovering industry sources:', error);
-        return {
-            subreddits: ['marketing', 'smallbusiness', 'entrepreneur'], // Fallbacks
-            youtubeKeywords: [industry, `${industry} trends`, `${industry} reviews`],
-            otherForums: []
+        const sources: unknown = JSON.parse(text);
+        if (!sources || typeof sources !== 'object' || Array.isArray(sources)) throw new Error('invalid_discovery_result');
+        const read = (key: string) => {
+            const value = (sources as Record<string, unknown>)[key];
+            if (!Array.isArray(value) || value.length > 20 || value.some(item => typeof item !== 'string' || item.length > 200)) throw new Error('invalid_discovery_result');
+            return value as string[];
         };
+        return { subreddits: read('subreddits'), youtubeKeywords: read('youtubeKeywords'), otherForums: read('otherForums') };
+    } catch (error) {
+        throw new Error('source_discovery_failed', { cause: error });
     }
 }

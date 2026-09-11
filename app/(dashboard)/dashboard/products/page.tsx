@@ -17,7 +17,6 @@ import {
     Sparkles,
     Loader2,
 } from "lucide-react";
-import { createClient } from "@/lib/supabase/client";
 import { AddProductModal } from "@/components/dashboard/products/add-product-modal";
 
 interface Product {
@@ -37,34 +36,30 @@ export default function ProductsPage() {
     const [productToEdit, setProductToEdit] = useState<Product | null>(null);
     const [workspaceId, setWorkspaceId] = useState<string | null>(null);
     const [isDeleting, setIsDeleting] = useState<string | null>(null);
+    const [error, setError] = useState<string | null>(null);
+    const [nextCursor, setNextCursor] = useState<string | null>(null);
+    const [loadingMore, setLoadingMore] = useState(false);
 
     useEffect(() => {
         fetchProducts();
     }, []);
 
-    async function fetchProducts() {
+    async function fetchProducts(cursor?: string) {
+        setError(null);
         try {
             const res = await fetch("/api/onboarding/context");
             const ctx = await res.json();
-            if (!ctx?.workspaceId) return;
+            if (!res.ok || !ctx?.workspaceId) throw new Error(ctx.error || 'Please sign in again.');
 
             setWorkspaceId(ctx.workspaceId);
 
-            const supabase = createClient();
-            const { data, error } = await supabase
-                .from("products")
-                .select("*")
-                .eq("workspace_id", ctx.workspaceId)
-                .order("created_at", { ascending: false });
-
-            if (error) {
-                console.error("Error fetching products:", error);
-                return;
-            }
-
-            setProducts(data || []);
+            const response = await fetch(`/api/products${cursor ? `?cursor=${encodeURIComponent(cursor)}` : ''}`, { cache: 'no-store' });
+            const result = await response.json();
+            if (!response.ok) throw new Error(result.error || 'Unable to load products.');
+            setProducts((current) => cursor ? [...current, ...result.products] : result.products);
+            setNextCursor(result.nextCursor);
         } catch (err) {
-            console.error("Failed to load products:", err);
+            setError(err instanceof Error ? err.message : 'Unable to load products.');
         } finally {
             setLoading(false);
         }
@@ -75,15 +70,10 @@ export default function ProductsPage() {
 
         setIsDeleting(productId);
         try {
-            const supabase = createClient();
-            const { error } = await supabase
-                .from("products")
-                .delete()
-                .eq("id", productId);
+            const response = await fetch(`/api/products?id=${encodeURIComponent(productId)}`, { method: 'DELETE' });
+            if (!response.ok) throw new Error((await response.json()).error || 'Unable to delete product.');
 
-            if (error) throw error;
-
-            setProducts(products.filter(p => p.id !== productId));
+            setProducts((current) => current.filter(p => p.id !== productId));
         } catch (err) {
             console.error("Failed to delete product:", err);
             alert("Failed to delete product");
@@ -124,6 +114,7 @@ export default function ProductsPage() {
             />
 
             <div className="p-6 space-y-6">
+                {error && <div role="alert" className="text-[var(--data-red)]">{error} <Button variant="outline" onClick={() => void fetchProducts()}>Retry</Button></div>}
                 {/* Add Product Button */}
                 <div className="flex justify-end">
                     <Button onClick={() => setShowAddModal(true)}>
@@ -153,6 +144,7 @@ export default function ProductsPage() {
                                             size="icon"
                                             className="h-8 w-8"
                                             onClick={() => handleOpenEdit(product)}
+                                            aria-label={`Edit ${product.name}`}
                                         >
                                             <Edit className="w-4 h-4" />
                                         </Button>
@@ -161,6 +153,7 @@ export default function ProductsPage() {
                                             size="icon"
                                             className="h-8 w-8 text-[var(--data-red)] hover:text-[var(--data-red)]"
                                             onClick={() => handleDelete(product.id)}
+                                            aria-label={`Delete ${product.name}`}
                                             disabled={isDeleting === product.id}
                                         >
                                             {isDeleting === product.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
@@ -219,7 +212,7 @@ export default function ProductsPage() {
                                     </div>
                                 </div>
 
-                                <Button variant="outline" className="w-full">
+                                <Button variant="outline" className="w-full" onClick={() => handleOpenEdit(product)}>
                                     View Details
                                     <ChevronRight className="w-4 h-4 ml-1" />
                                 </Button>
@@ -228,7 +221,7 @@ export default function ProductsPage() {
                     ))}
 
                     {/* Empty State */}
-                    {products.length === 0 && (
+                    {!error && products.length === 0 && (
                         <Card className="col-span-full border-dashed">
                             <CardContent className="flex flex-col items-center justify-center py-12 text-[var(--text-ghost)]">
                                 <Package className="w-12 h-12 mb-3" />
@@ -249,6 +242,10 @@ export default function ProductsPage() {
                         </CardContent>
                     </Card>
                 </div>
+                {nextCursor && <Button variant="outline" disabled={loadingMore} onClick={async () => {
+                    setLoadingMore(true);
+                    try { await fetchProducts(nextCursor); } finally { setLoadingMore(false); }
+                }}>{loadingMore ? 'Loading…' : 'Load more products'}</Button>}
             </div>
 
             {/* Add/Edit Product Modal */}
@@ -257,7 +254,7 @@ export default function ProductsPage() {
                     key={showAddModal ? productToEdit?.id ?? "new" : "closed"}
                     isOpen={showAddModal}
                     onClose={handleCloseModal}
-                    onSuccess={fetchProducts}
+                    onSuccess={() => void fetchProducts()}
                     productToEdit={productToEdit}
                     workspaceId={workspaceId}
                 />

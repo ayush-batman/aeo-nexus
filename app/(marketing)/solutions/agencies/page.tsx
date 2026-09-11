@@ -21,7 +21,7 @@ export default function AgenciesSolution() {
                 capabilities: [
                     {
                         title: "One organization → N client workspaces",
-                        body: "Complete data isolation via Postgres RLS. Add or archive a client in seconds without touching the others.",
+                        body: "Server-enforced organization, role, and workspace checks keep each client workspace separate. Add or archive a client without exposing another client's data.",
                     },
                     {
                         title: "Client-ready reports",

@@ -64,12 +64,11 @@ export async function searchHN(
 
     try {
         const response = await fetch(
-            `https://hn.algolia.com/api/v1/${endpoint}?${params}`
+            `https://hn.algolia.com/api/v1/${endpoint}?${params}`, { signal: AbortSignal.timeout(20000) }
         );
 
         if (!response.ok) {
-            console.error(`HN API error: ${response.status} ${response.statusText}`);
-            return { stories: [], totalHits: 0 };
+            throw new Error('hackernews_unavailable');
         }
 
         const data: HNSearchResponse = await response.json();
@@ -79,8 +78,7 @@ export async function searchHN(
             totalHits: data.nbHits,
         };
     } catch (error) {
-        console.error('HN search error:', error);
-        return { stories: [], totalHits: 0 };
+        throw new Error('hackernews_unavailable', { cause: error });
     }
 }
 

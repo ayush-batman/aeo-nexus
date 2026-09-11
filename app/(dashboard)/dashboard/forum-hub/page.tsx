@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Header } from "@/components/dashboard/header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn, getScoreColor, getPriorityLabel } from "@/lib/utils";
-import { createClient } from "@/lib/supabase/client";
+import { useWorkspaceLive } from "@/hooks/use-workspace-live";
 import {
     MessageSquare,
     Search,
@@ -103,7 +103,6 @@ export default function ForumHubPage() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [copied, setCopied] = useState(false);
-    const [isLive, setIsLive] = useState(false);
 
     // Discovery state
     const [showDiscovery, setShowDiscovery] = useState(false);
@@ -148,7 +147,7 @@ export default function ForumHubPage() {
         }
     };
 
-    async function fetchThreads() {
+    const fetchThreads = useCallback(async () => {
         try {
             setError(null);
 
@@ -162,53 +161,22 @@ export default function ForumHubPage() {
 
             const data = await response.json();
             setThreads(data.threads || []);
+            setSelectedThread(previous => previous ? (data.threads.find((thread: ForumThread) => thread.id === previous.id) ?? previous) : null);
         } catch (err) {
             console.error('Error fetching threads:', err);
             setError('Failed to load threads');
         }
-    }
+    }, [activeTab]);
 
-    // Initial fetch and realtime setup
+    const isLive = useWorkspaceLive(() => { void fetchThreads(); });
     useEffect(() => {
-        async function init() {
+        let active = true;
+        const timer = window.setTimeout(() => {
             setLoading(true);
-            await fetchThreads();
-            setLoading(false);
-            setIsLive(true);
-        }
-        init();
-
-        // Setup Supabase Realtime subscription
-        const supabase = createClient();
-
-        const channel = supabase
-            .channel('forum-hub-threads-changes')
-            .on(
-                'postgres_changes',
-                { event: '*', schema: 'public', table: 'forum_threads' },
-                (payload) => {
-                    if (payload.eventType === 'INSERT') {
-                        const newThread = payload.new as ForumThread;
-                        setThreads(prev => [newThread, ...prev].slice(0, 20));
-                    } else if (payload.eventType === 'UPDATE') {
-                        const updated = payload.new as ForumThread;
-                        setThreads(prev => prev.map(t => t.id === updated.id ? updated : t));
-                        if (selectedThread?.id === updated.id) {
-                            setSelectedThread(updated);
-                        }
-                    } else if (payload.eventType === 'DELETE') {
-                        const deleted = payload.old as { id: string };
-                        setThreads(prev => prev.filter(t => t.id !== deleted.id));
-                    }
-                }
-            )
-            .subscribe();
-
-        return () => {
-            supabase.removeChannel(channel);
-        };
-
-    }, [activeTab, selectedThread?.id]);
+            void fetchThreads().finally(() => { if (active) setLoading(false); });
+        }, 0);
+        return () => { active = false; window.clearTimeout(timer); };
+    }, [fetchThreads]);
 
     // Check source configuration
     useEffect(() => {

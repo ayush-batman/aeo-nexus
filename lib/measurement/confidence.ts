@@ -23,11 +23,14 @@ export function estimateMentionConfidence(mentions: number, sampleCount: number)
   const lower = Math.max(0, center - margin);
   const upper = Math.min(1, center + margin);
   const width = upper - lower;
-  const level = sampleCount < 4
-    ? 'low'
+  // The label is deliberately stricter than merely having a 95% interval.
+  // Four repeated answers are useful evidence, but still too few to call the
+  // result medium or high confidence when the interval remains wide.
+  const level = sampleCount >= 20 && width <= 0.3
+    ? 'high'
     : sampleCount >= 8 && width <= 0.5
-      ? 'high'
-      : 'medium';
+      ? 'medium'
+      : 'low';
 
   return {
     level,

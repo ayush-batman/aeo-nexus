@@ -1,13 +1,12 @@
 import { randomUUID } from 'node:crypto';
 import { NextRequest, NextResponse } from 'next/server';
-import { getAvailablePlatforms, scanLLM, type BattleResult, type LLMPlatform, type ScanResult } from '@/lib/ai/llm-scanner';
+import { type BattleResult, type LLMPlatform, type ScanResult } from '@/lib/ai/llm-scanner';
 import { requireWorkspaceRole } from '@/lib/authorization';
-import { createAdminClient } from '@/lib/supabase/admin';
+import { api } from '@/convex/_generated/api';
+import { fetchAuthQuery } from '@/lib/auth-server';
+import { convexRouteError } from '@/lib/convex/http';
+import { startMeasurement, waitForMeasurement } from '@/lib/convex/measurement-server';
 import { getCurrentWorkspaceContext } from '@/lib/data-access';
-import { getEntitlements, reserveScanQuota } from '@/lib/entitlements';
-import { runVisibilityMeasurement } from '@/lib/measurement/service';
-import { scanResultPersistenceRow } from '@/lib/measurement/persistence';
-import { evaluateMeasurementAlerts } from '@/lib/alerts/evaluate';
 
 export const maxDuration = 300;
 
@@ -34,57 +33,29 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ error: 'prompt and brandName are required' }, { status: 400 });
         }
 
-        const availableInfo = getAvailablePlatforms();
-        const availablePlatformIds = availableInfo.filter(platform => platform.available).map(platform => platform.platform);
-        const admin = createAdminClient();
-        const entitlements = await getEntitlements(context.orgId, admin);
-        const platforms = (requestedPlatforms ?? availablePlatformIds)
-            .filter(platform => availablePlatformIds.includes(platform) && entitlements.engines.includes(platform)) as LLMPlatform[];
-
-        if (platforms.length === 0) {
-            return NextResponse.json({
-                error: 'no_engines_available',
-                message: 'No entitled AI engines are currently configured.',
-                available: availableInfo,
-                allowedEngines: entitlements.engines,
-            }, { status: 503 });
+        const capabilities = await fetchAuthQuery(api.measurements.capabilities, {});
+        const availablePlatformIds: LLMPlatform[] = capabilities.available.filter((platform) => platform.available).map((platform) => platform.platform);
+        const platforms = requestedPlatforms ?? availablePlatformIds.filter((platform) => capabilities.allowedEngines.includes(platform));
+        if (!platforms.length) return NextResponse.json({ error: 'no_engines_available',
+            message: 'No entitled AI engines are currently configured.', ...capabilities }, { status: 503 });
+        if (platforms.some((platform) => !capabilities.allowedEngines.includes(platform))) {
+            return NextResponse.json({ error: 'Your plan does not include every requested engine.' }, { status: 403 });
         }
-
-        const reservation = await reserveScanQuota(context.orgId, `app:${randomUUID()}`, admin);
-        if (reservation === 'denied') {
-            return NextResponse.json({
-                error: 'limit_reached',
-                message: entitlements.scansPerWeek === null
-                    ? 'Scan quota is unavailable.'
-                    : `This plan is limited to ${entitlements.scansPerWeek} scans per week.`,
-                upgrade: entitlements.scansPerWeek !== null,
-                limit: entitlements.scansPerWeek,
-            }, { status: 429 });
+        if (platforms.some((platform) => !availablePlatformIds.includes(platform))) {
+            return NextResponse.json({ error: 'A requested engine is not configured.', ...capabilities }, { status: 503 });
         }
-
-        const rawResults: ScanResult[] = [];
-        const measurement = await runVisibilityMeasurement({
-            prompt,
-            brandName,
-            brandDomain,
-            competitors,
-            platforms,
-            samples: 4,
+        const runId = await startMeasurement(context.workspaceId, request.headers.get('Idempotency-Key') || `app:${randomUUID()}`, {
+            prompt, brandName, brandDomain, competitors, platforms, samples: 4,
             mode: body?.mode === 'battle' ? 'battle' : 'standard',
-        }, {
-            execute: async (options) => {
-                const output = await scanLLM(options);
-                rawResults.push(...output.results);
-                return output;
-            },
-            persist: async (results) => {
-                const { error } = await admin.from('llm_scans').insert(results.map(result => scanResultPersistenceRow(context.workspaceId, result)));
-                if (error) throw new Error('Failed to store measurement samples.');
-            },
         });
-
-        if (measurement.persistence.rows > 0) {
-            await evaluateMeasurementAlerts(context.workspaceId, measurement.runId);
+        const measurement = await waitForMeasurement(context.workspaceId, runId);
+        if (!measurement) return NextResponse.json({ success: true, runId, runStatus: 'running',
+            statusUrl: `/api/llm/runs/${runId}`, message: 'Your scan is continuing in the background.' }, { status: 202 });
+        const rawResults: ScanResult[] = [];
+        if (measurement.mode === 'battle') {
+            for (let sampleNumber = 1; sampleNumber <= measurement.requestedSamplesPerEngine; sampleNumber++) {
+                rawResults.push(...await fetchAuthQuery(api.measurements.answers, { workspaceId: context.workspaceId, runId, sampleNumber }));
+            }
         }
 
         if (measurement.status === 'all_failed') {
@@ -167,7 +138,6 @@ export async function POST(request: NextRequest) {
             measurement,
         });
     } catch (error) {
-        console.error('LLM scan error:', error);
-        return NextResponse.json({ error: 'Failed to scan AI engines' }, { status: 500 });
+        return convexRouteError(error);
     }
 }

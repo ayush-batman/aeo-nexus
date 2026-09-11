@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getLLMScans, getCurrentWorkspaceId } from '@/lib/data-access';
 import { POST as runCanonicalScan } from '../scan/route';
+import { convexRouteError } from '@/lib/convex/http';
 
 export const maxDuration = 300;
 // GET: Fetch recent LLM scans
@@ -23,11 +24,7 @@ export async function GET(request: NextRequest) {
 
         return NextResponse.json({ scans });
     } catch (error) {
-        console.error('Error fetching LLM scans:', error);
-        return NextResponse.json(
-            { error: 'Failed to fetch LLM scans' },
-            { status: 500 }
-        );
+        return convexRouteError(error);
     }
 }
 

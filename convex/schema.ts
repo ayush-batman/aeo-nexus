@@ -1,5 +1,7 @@
 import { defineSchema, defineTable } from 'convex/server';
 import { v } from 'convex/values';
+import { measurementInput, measurementResult, scanResult } from './lib/measurementContract';
+import { metricObservation } from './lib/scanMetrics';
 
 import {
   actionStatusValidator,
@@ -17,6 +19,48 @@ import {
 } from './validators';
 
 export default defineSchema({
+  scanMetrics: defineTable({ scanId: v.id('scans'), workspaceId: v.id('workspaces'), prompt: v.string(), platform: engineValidator,
+    measurementRunId: nullableString, createdAt: v.number(), observation: metricObservation })
+    .index('by_scan', ['scanId'])
+    .index('by_workspace_created', ['workspaceId', 'createdAt'])
+    .index('by_workspace_prompt_engine_created', ['workspaceId', 'prompt', 'platform', 'createdAt'])
+    .index('by_workspace_run', ['workspaceId', 'measurementRunId']),
+  weeklyJobs: defineTable({ workspaceId:v.id('workspaces'), kind:v.union(v.literal('weekly_digest'),v.literal('sentiment_drift')), weekStart:v.number(),
+    status:v.union(v.literal('queued'),v.literal('running'),v.literal('complete'),v.literal('failed')), lastError:nullableString, createdAt:v.number(), updatedAt:v.number() })
+    .index('by_workspace_kind_week',['workspaceId','kind','weekStart']),
+  emailDeliveries: defineTable({ publicId:v.string(),workspaceId:v.id('workspaces'),recipientId:v.id('users'),recipientEmail:v.string(),kind:v.string(),dedupeKey:v.string(),
+    subject:v.string(),html:v.string(),sender:v.optional(v.string()),status:v.union(v.literal('pending'),v.literal('sending'),v.literal('sent'),v.literal('failed'),v.literal('skipped')),
+    attempts:v.number(),firstAttemptAt:nullableNumber,providerId:nullableString,lastError:nullableString,createdAt:v.number(),updatedAt:v.number() })
+    .index('by_workspace_recipient_key',['workspaceId','recipientId','dedupeKey']).index('by_workspace_created',['workspaceId','createdAt']),
+  indexPublications: defineTable({ publicId: v.string(), edition: v.string(), brand: v.string(), category: v.union(v.literal('SaaS'), v.literal('D2C'), v.literal('Fintech'), v.literal('EdTech'), v.literal('Consumer')),
+    website: nullableString, workspaceId: v.id('workspaces'), scanIds: v.array(v.id('scans')), cohortKey: v.string(),
+    mentionCount: v.number(), sampleCount: v.number(), avgPosition: nullableNumber, sentiment: v.union(sentimentValidator, v.null()),
+    publishedAt: v.number(), publishedBy: v.id('users') })
+    .index('by_edition_brand', ['edition', 'brand']).index('by_edition', ['edition']),
+  actionMeasurements: defineTable({ publicId: v.string(), actionId: v.id('actions'), workspaceId: v.id('workspaces'),
+    actorId: v.id('users'), requestId: v.string(), runIds: v.array(v.string()), baseline: v.any(),
+    status: v.union(v.literal('running'), measurementStatusValidator), createdAt: v.number(), updatedAt: v.number() })
+    .index('by_public_id', ['publicId']).index('by_action_request', ['actionId', 'requestId']).index('by_action_status', ['actionId', 'status']),
+  analysisJobs: defineTable({ publicId: v.string(), workspaceId: v.id('workspaces'), kind: v.union(v.literal('accuracy'), v.literal('positioning')),
+    requestedBy: v.id('users'), brandName: v.string(), website: nullableString, competitors: v.array(v.string()),
+    createdAt: v.number(), updatedAt: v.number() }).index('by_public_id', ['publicId']).index('by_workspace_kind_created', ['workspaceId', 'kind', 'createdAt']),
+  analysisTasks: defineTable({ jobId: v.id('analysisJobs'), scanId: v.id('scans'),
+    status: v.union(v.literal('pending'), v.literal('running'), v.literal('succeeded'), v.literal('failed')),
+    count: v.number(), error: nullableString }).index('by_job', ['jobId']),
+  measurementRuns: defineTable({ publicId: v.string(), workspaceId: v.id('workspaces'), organizationId: v.id('organizations'),
+    requestId: v.string(), input: measurementInput, status: v.union(v.literal('queued'), v.literal('running'), measurementStatusValidator),
+    result: v.union(measurementResult, v.null()), workflowId: nullableString,
+    resultStorageId: v.optional(v.id('_storage')),
+    decisionPacketId: v.optional(v.id('decisionPackets')),
+    createdAt: v.number(), updatedAt: v.number() })
+    .index('by_public_id', ['publicId'])
+    .index('by_organization_request', ['organizationId', 'requestId'])
+    .index('by_workspace_created_at', ['workspaceId', 'createdAt']),
+  measurementSamples: defineTable({ runId: v.id('measurementRuns'), engine: engineValidator, sampleNumber: v.number(),
+    status: v.union(v.literal('pending'), v.literal('running'), v.literal('succeeded'), v.literal('failed')),
+    result: v.union(scanResult, v.null()), error: nullableString, createdAt: v.number(), updatedAt: v.number() })
+    .index('by_run', ['runId'])
+    .index('by_run_sample_engine', ['runId', 'sampleNumber', 'engine']),
   organizations: defineTable({
     publicId: v.string(),
     name: v.string(),
@@ -24,6 +68,8 @@ export default defineSchema({
     stripeCustomerId: nullableString,
     stripeSubscriptionId: nullableString,
     razorpaySubscriptionId: nullableString,
+    billingProvider: v.optional(v.union(v.literal('stripe'), v.literal('razorpay'))),
+    billingOccurredAt: v.optional(v.number()),
     createdAt: v.number(),
     updatedAt: v.number(),
   })
@@ -63,10 +109,12 @@ export default defineSchema({
     .index('by_public_id', ['publicId'])
     .index('by_organization_id_and_user_id', ['organizationId', 'userId'])
     .index('by_user_id', ['userId'])
-    .index('by_organization_id', ['organizationId']),
+    .index('by_organization_id', ['organizationId'])
+    .index('by_organization_role', ['organizationId', 'role']),
 
   workspaces: defineTable({
     publicId: v.string(),
+    forumRevision: v.optional(v.number()),
     organizationId: v.id('organizations'),
     name: v.string(),
     logoUrl: nullableString,
@@ -111,11 +159,14 @@ export default defineSchema({
     analyzerConfidence: nullableNumber,
     analyzerMethod: nullableString,
     analyzerModel: nullableString,
+    analyzerPromptVersion: v.optional(nullableString),
+    searchMode: v.optional(nullableString),
     citations: v.array(citationValidator),
     winner: nullableString,
     winnerReason: nullableString,
     measurementRunId: nullableString,
     measurementContractVersion: nullableString,
+    sampleId: v.optional(nullableString),
     sampleNumber: nullableNumber,
     providerModel: nullableString,
     measurementRegion: nullableString,
@@ -126,6 +177,7 @@ export default defineSchema({
     createdAt: v.number(),
   })
     .index('by_public_id', ['publicId'])
+    .index('by_workspace_platform_created_at', ['workspaceId', 'platform', 'createdAt'])
     .index('by_workspace_id_and_created_at', ['workspaceId', 'createdAt'])
     .index('by_workspace_id_and_measurement_run_id', ['workspaceId', 'measurementRunId'])
     .index('by_workspace_id_prompt_platform_created_at', [
@@ -160,6 +212,8 @@ export default defineSchema({
   })
     .index('by_public_id', ['publicId'])
     .index('by_workspace_platform_external_id', ['workspaceId', 'platform', 'externalId'])
+    .index('by_workspace_opportunity', ['workspaceId', 'opportunityScore'])
+    .index('by_product_id', ['productId'])
     .index('by_workspace_id_and_created_at', ['workspaceId', 'createdAt'])
     .index('by_workspace_id_and_status', ['workspaceId', 'status']),
 
@@ -222,7 +276,8 @@ export default defineSchema({
   })
     .index('by_public_id', ['publicId'])
     .index('by_workspace_id_and_created_at', ['workspaceId', 'createdAt'])
-    .index('by_workspace_id_and_category', ['workspaceId', 'category']),
+    .index('by_workspace_id_and_category', ['workspaceId', 'category'])
+    .index('by_workspace_id_and_category_and_prompt', ['workspaceId', 'category', 'prompt']),
 
   analyticsEvents: defineTable({
     publicId: v.string(),
@@ -235,6 +290,7 @@ export default defineSchema({
     createdAt: v.number(),
   })
     .index('by_public_id', ['publicId'])
+    .index('by_workspace_event_created', ['workspaceId', 'eventType', 'createdAt'])
     .index('by_workspace_id_and_created_at', ['workspaceId', 'createdAt'])
     .index('by_ai_source_and_created_at', ['aiSource', 'createdAt']),
 
@@ -313,6 +369,7 @@ export default defineSchema({
     .index('by_public_id', ['publicId'])
     .index('by_action_id_and_idempotency_key', ['actionId', 'idempotencyKey'])
     .index('by_action_id_and_created_at', ['actionId', 'createdAt'])
+    .index('by_workspace_request', ['workspaceId', 'idempotencyKey'])
     .index('by_workspace_id_and_created_at', ['workspaceId', 'createdAt']),
 
   newsletterSubscribers: defineTable({
@@ -336,6 +393,9 @@ export default defineSchema({
 
   publicScans: defineTable({
     publicId: v.string(),
+    status: v.optional(v.union(v.literal('queued'), v.literal('running'), v.literal('complete'), v.literal('failed'), v.literal('expired'))),
+    providerModel: v.optional(nullableString),
+    scorerVersion: v.optional(nullableString),
     ipHash: v.string(),
     brandName: v.string(),
     prompt: v.string(),
@@ -357,6 +417,11 @@ export default defineSchema({
 
   sentimentDriftSnapshots: defineTable({
     publicId: v.string(),
+    cohortKey: v.optional(v.string()),
+    searchMode: v.optional(nullableString),
+    analyzerMethod: v.optional(nullableString),
+    analyzerModel: v.optional(nullableString),
+    analyzerPromptVersion: v.optional(nullableString),
     workspaceId: v.id('workspaces'),
     prompt: v.string(),
     platform: engineValidator,
@@ -372,6 +437,7 @@ export default defineSchema({
   })
     .index('by_public_id', ['publicId'])
     .index('by_workspace_id_and_week_start', ['workspaceId', 'weekStart'])
+    .index('by_workspace_cohort_week', ['workspaceId', 'cohortKey', 'weekStart'])
     .index('by_compatible_week', [
       'workspaceId',
       'prompt',
@@ -474,6 +540,7 @@ export default defineSchema({
     status: measurementStatusValidator,
     prompts: v.any(),
     packet: v.any(),
+    measurementRunIds: v.optional(v.array(v.string())),
     createdBy: v.union(v.id('users'), v.null()),
     createdAt: v.number(),
   })

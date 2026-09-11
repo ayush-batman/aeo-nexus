@@ -1,6 +1,6 @@
 import { randomUUID } from 'node:crypto';
-import { scanLLM, type LLMPlatform, type ScanOptions, type ScanOutput, type ScanResult } from '@/lib/ai/llm-scanner';
-import type { CitationEvidence } from '@/lib/types';
+import { scanLLM, type LLMPlatform, type ScanOptions, type ScanOutput, type ScanResult } from '../ai/llm-scanner';
+import type { CitationEvidence } from '../types';
 import { estimateMentionConfidence } from './confidence';
 import { aggregateMentionMetric } from './metrics';
 import {
@@ -19,12 +19,14 @@ export type VisibilityMeasurementInput = Omit<ScanOptions, 'platforms'> & {
 };
 
 type MeasurementDependencies = {
+  runId?: string;
+  startedAt?: string;
   execute?: (options: ScanOptions) => Promise<ScanOutput>;
   persist?: (results: ScanResult[]) => Promise<void>;
   executeTimeoutMs?: number;
 };
 
-const DEFAULT_EXECUTE_TIMEOUT_MS = 35_000;
+const DEFAULT_EXECUTE_TIMEOUT_MS = 45_000;
 
 async function withDeadline<T>(operation: Promise<T>, timeoutMs: number): Promise<T> {
   let timer: ReturnType<typeof setTimeout> | undefined;
@@ -44,7 +46,8 @@ function mode(values: string[]): string | null {
   if (values.length === 0) return null;
   const counts = new Map<string, number>();
   for (const value of values) counts.set(value, (counts.get(value) ?? 0) + 1);
-  return [...counts.entries()].sort((a, b) => b[1] - a[1])[0][0];
+  const ordered = [...counts.entries()].sort((a, b) => b[1] - a[1]);
+  return ordered[0][1] > (ordered[1]?.[1] ?? 0) ? ordered[0][0] : null;
 }
 
 function dedupeCitations(citations: CitationEvidence[]): CitationEvidence[] {
@@ -63,7 +66,7 @@ function engineMeasurement(engine: LLMPlatform, requestedSamples: number, sample
   const evidence = samples.filter((sample) => sample.engine === engine);
   const succeeded = evidence.filter((sample) => sample.status === 'succeeded');
   const mentions = succeeded.filter((sample) => sample.mentioned === true).length;
-  const positions = succeeded.flatMap((sample) => sample.position === null ? [] : [sample.position]);
+  const positions = succeeded.flatMap((sample) => sample.mentioned === true && typeof sample.position === 'number' && Number.isFinite(sample.position) && sample.position >= 1 ? [sample.position] : []);
   const sentiments = succeeded.flatMap((sample) => sample.sentiment ? [sample.sentiment] : []);
   const confidence = estimateMentionConfidence(mentions, succeeded.length);
   return {
@@ -103,10 +106,10 @@ export async function runVisibilityMeasurement(
   }
   const requestedEngines = [...new Set(input.platforms)];
   const execute = dependencies.execute ?? scanLLM;
-  const runId = randomUUID();
+  const runId = dependencies.runId ?? randomUUID();
   const region = process.env.AELO_MEASUREMENT_REGION?.trim() || 'global-unspecified';
   const mode = input.mode ?? 'standard';
-  const startedAt = new Date().toISOString();
+  const startedAt = dependencies.startedAt ?? new Date().toISOString();
   const samples: MeasurementSample[] = [];
   const failures: MeasurementFailure[] = [];
   const successfulResults: ScanResult[] = [];
@@ -143,6 +146,10 @@ export async function runVisibilityMeasurement(
           sampleNumber,
           engine,
           providerModel: result.providerModel ?? null,
+          searchMode: result.searchMode ?? null,
+          analyzerMethod: result.analyzerMethod ?? null,
+          analyzerModel: result.analyzerModel ?? null,
+          analyzerPromptVersion: result.analyzerPromptVersion ?? null,
           region: result.measurementRegion,
           mode: result.measurementMode,
           scorerVersion: MEASUREMENT_SCORER_VERSION,

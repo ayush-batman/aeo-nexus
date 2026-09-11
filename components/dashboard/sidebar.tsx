@@ -33,8 +33,9 @@ import {
 } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 import type { RefObject } from "react";
-import { createClient } from "@/lib/supabase/client";
+import { authClient } from "@/lib/auth-client";
 import { AeloMark, AeloWordmark } from "@/components/brand/logo";
+import { useDashboardBootstrap } from "@/components/onboarding-check";
 
 interface Workspace {
     id: string;
@@ -79,28 +80,25 @@ export function Sidebar({
     onCollapsedChange,
     onMobileClose,
     returnFocusRef,
+    drawerOnly = false,
 }: {
     collapsed: boolean;
     mobileOpen: boolean;
     onCollapsedChange: (collapsed: boolean) => void;
     onMobileClose: () => void;
     returnFocusRef: RefObject<HTMLButtonElement | null>;
+    drawerOnly?: boolean;
 }) {
     const pathname = usePathname();
+    const bootstrap = useDashboardBootstrap();
     const [showMoreTools, setShowMoreTools] = useState(false);
     // null = unknown (avoid flashing a lock before we know the plan)
-    const [paid, setPaid] = useState<boolean | null>(null);
-
-    useEffect(() => {
-        fetch("/api/entitlements", { cache: "no-store" })
-            .then((r) => (r.ok ? r.json() : null))
-            .then((d) => { if (d) setPaid(!!d.paid); })
-            .catch(() => {});
-    }, []);
+    const paid = bootstrap?.paid ?? null;
 
     // Workspace switcher state
-    const [workspaces, setWorkspaces] = useState<Workspace[]>([]);
-    const [activeWorkspace, setActiveWorkspace] = useState<Workspace | null>(null);
+    const [workspaces, setWorkspaces] = useState<Workspace[]>(bootstrap?.workspaces ?? []);
+    const [activeWorkspace, setActiveWorkspace] = useState<Workspace | null>(() =>
+        bootstrap?.workspaces.find((workspace) => workspace.id === bootstrap.workspaceId) ?? bootstrap?.workspaces[0] ?? null);
     const [showWsSwitcher, setShowWsSwitcher] = useState(false);
     const [showNewBrand, setShowNewBrand] = useState(false);
     const [newBrandName, setNewBrandName] = useState("");
@@ -153,42 +151,6 @@ export function Sidebar({
         const timer = window.setTimeout(onMobileClose, 0);
         return () => window.clearTimeout(timer);
     }, [mobileOpen, onMobileClose, pathname]);
-
-    // Load workspaces
-    useEffect(() => {
-        async function load() {
-            try {
-                // Fetch workspaces and current active workspace in parallel with no caching
-                const [wsRes, activeRes] = await Promise.all([
-                    fetch("/api/workspaces", { cache: "no-store" }),
-                    fetch("/api/onboarding/context", { cache: "no-store" }),
-                ]);
-
-                let currentWorkspaceId: string | null = null;
-                if (activeRes.ok) {
-                    const activeData = await activeRes.json();
-                    currentWorkspaceId = activeData.workspaceId || null;
-                }
-
-                if (wsRes.ok) {
-                    const data = await wsRes.json();
-                    const wsList = data.workspaces || [];
-                    setWorkspaces(wsList);
-
-                    if (wsList.length > 0) {
-                        // Find the workspace that matches the server's active one
-                        const activeWs = currentWorkspaceId
-                            ? wsList.find((ws: Workspace) => ws.id === currentWorkspaceId)
-                            : null;
-                        setActiveWorkspace(activeWs || wsList[0]);
-                    }
-                }
-            } catch (e) {
-                console.error("Failed to load workspaces:", e);
-            }
-        }
-        load();
-    }, []);
 
     // Click outside to close
     useEffect(() => {
@@ -265,8 +227,8 @@ export function Sidebar({
 
     const handleSignOut = async () => {
         try {
-            const supabase = createClient();
-            await supabase.auth.signOut();
+            const { error } = await authClient.signOut();
+            if (error) throw new Error(error.message || 'Unable to sign out.');
         } catch {
             // ignore; force the redirect regardless
         }
@@ -275,22 +237,23 @@ export function Sidebar({
     };
 
     return (<>
-        {mobileOpen && <button type="button" aria-label="Close navigation" className="fixed inset-0 z-40 bg-black/70 backdrop-blur-[2px] lg:hidden" onClick={() => { onMobileClose(); returnFocusRef.current?.focus(); }} />}
+        {mobileOpen && <button type="button" aria-label="Close navigation" className={cn("fixed inset-0 z-40 bg-black/70 backdrop-blur-[2px]", !drawerOnly && "lg:hidden")} onClick={() => { onMobileClose(); returnFocusRef.current?.focus(); }} />}
         <aside
             ref={sidebarRef}
             role={mobileOpen ? "dialog" : undefined}
             aria-modal={mobileOpen ? "true" : undefined}
             aria-label="Product navigation"
             className={cn(
-                "fixed left-0 top-0 z-50 h-dvh flex w-[min(15rem,calc(100vw-2rem))] flex-col border-r border-[var(--border-subtle)] bg-[var(--bg-base)] transition-transform duration-200 lg:z-40 lg:h-screen lg:translate-x-0 lg:transition-[width]",
+                "fixed left-0 top-0 z-50 flex h-dvh w-[min(18rem,calc(100vw-2rem))] flex-col border-r border-[var(--border-subtle)] bg-[var(--bg-base)] transition-transform duration-200",
+                !drawerOnly && "lg:z-40 lg:h-screen lg:translate-x-0 lg:transition-[width]",
                 mobileOpen ? "translate-x-0" : "-translate-x-full",
-                collapsed ? "lg:w-16" : "lg:w-60"
+                !drawerOnly && (collapsed ? "lg:w-16" : "lg:w-60")
             )}
         >
             {/* Logo */}
             <div className="flex h-14 items-center justify-between px-4 flex-shrink-0 border-b border-[var(--border-subtle)]">
                 {!collapsed && (
-                    <Link href="/dashboard" className="group">
+                    <Link href="/dashboard" className="group" onClick={onMobileClose}>
                         <AeloWordmark size="md" />
                     </Link>
                 )}
@@ -301,8 +264,8 @@ export function Sidebar({
                     </div>
                 )}
 
-                <button ref={closeButtonRef} onClick={() => { onMobileClose(); returnFocusRef.current?.focus(); }} aria-label="Close navigation" className="flex min-h-11 min-w-11 items-center justify-center text-[var(--text-tertiary)] hover:text-[var(--text-primary)] lg:hidden"><X className="h-5 w-5" /></button>
-                <button onClick={() => onCollapsedChange(!collapsed)} aria-label={collapsed ? "Expand navigation" : "Collapse navigation"} className="hidden min-h-10 min-w-10 flex-shrink-0 items-center justify-center text-[var(--text-tertiary)] transition-colors hover:text-[var(--text-primary)] lg:flex">
+                <button ref={closeButtonRef} onClick={() => { onMobileClose(); returnFocusRef.current?.focus(); }} aria-label="Close navigation" className={cn("flex min-h-11 min-w-11 items-center justify-center text-[var(--text-tertiary)] hover:text-[var(--text-primary)]", !drawerOnly && "lg:hidden")}><X className="h-5 w-5" /></button>
+                <button onClick={() => onCollapsedChange(!collapsed)} aria-label={collapsed ? "Expand navigation" : "Collapse navigation"} className={cn("hidden min-h-10 min-w-10 flex-shrink-0 items-center justify-center text-[var(--text-tertiary)] transition-colors hover:text-[var(--text-primary)]", !drawerOnly && "lg:flex")}>
                     <ChevronLeft className={cn("w-4 h-4 transition-transform duration-200", collapsed && "rotate-180")} />
                 </button>
             </div>
@@ -420,7 +383,7 @@ export function Sidebar({
                         {primaryNav.map((item) => {
                             const pathHref = item.href.split('#')[0];
                             const isActive = pathname === pathHref || (pathHref !== "/dashboard" && pathname.startsWith(pathHref + "/"));
-                            return <Link key={item.name} href={item.href} title={collapsed ? item.name : undefined} className={cn("nav-item min-h-10", isActive && "active", collapsed && "justify-center px-0 w-10 h-10 mx-auto gap-0")}>
+                            return <Link key={item.name} href={item.href} onClick={onMobileClose} title={collapsed ? item.name : undefined} className={cn("nav-item min-h-10", isActive && "active", collapsed && "justify-center px-0 w-10 h-10 mx-auto gap-0")}>
                                 <item.icon className="w-[18px] h-[18px] flex-shrink-0" strokeWidth={1.5} />{!collapsed && <span>{item.name}</span>}
                             </Link>;
                         })}
@@ -438,6 +401,7 @@ export function Sidebar({
                                     <Link
                                         key={item.name}
                                         href={item.href}
+                                        onClick={onMobileClose}
                                         title={collapsed ? item.name : undefined}
                                         className={cn(
                                             "nav-item",

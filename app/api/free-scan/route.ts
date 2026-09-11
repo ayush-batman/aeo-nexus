@@ -1,127 +1,21 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { scanLLM, getAvailablePlatforms, calculateVisibilityScore, LLMPlatform, type ScanOutput } from '@/lib/ai/llm-scanner';
-import rateLimit, { isRateLimitUnavailableError } from '@/lib/rate-limit';
-import { estimateMentionConfidence } from '@/lib/measurement/confidence';
-
-// Rate limit: 3 scans per IP per hour
-const limiter = rateLimit({
-    interval: 60 * 60 * 1000, // 1 hour
-    uniqueTokenPerInterval: 500,
-    namespace: 'free-scan',
-});
-
-export async function POST(request: NextRequest) {
-    try {
-        const ip = request.headers.get('x-forwarded-for') ||
-            request.headers.get('x-real-ip') ||
-            'unknown';
-
-        // Check rate limit (3 scans per hour)
-        try {
-            await limiter.check(3, ip);
-        } catch (error) {
-            if (isRateLimitUnavailableError(error)) {
-                return NextResponse.json({ error: 'Scan protection is temporarily unavailable.' }, { status: 503 });
-            }
-            console.warn(`Rate limit exceeded for IP: ${ip}`);
-            return NextResponse.json(
-                { error: 'Rate limit exceeded. Sign up for unlimited scans!' },
-                { status: 429 }
-            );
-        }
-
-        const body = await request.json().catch(() => ({}));
-        const { brandName } = body;
-
-        if (!brandName || typeof brandName !== 'string' || brandName.trim().length < 2) {
-            return NextResponse.json(
-                { error: 'Please enter a valid brand name (at least 2 characters)' },
-                { status: 400 }
-            );
-        }
-
-        const cleanBrandName = brandName.trim();
-
-        // Get all available platforms and try each in sequence until one succeeds
-        const allPlatforms = getAvailablePlatforms();
-        const availablePlatforms = allPlatforms.filter(p => p.available);
-
-        if (availablePlatforms.length === 0) {
-            console.error('No LLM platforms configured with API keys');
-            return NextResponse.json(
-                { error: 'Service temporarily unavailable. Please try again later.' },
-                { status: 503 }
-            );
-        }
-
-        const scanPrompt = `What is ${cleanBrandName}? Tell me about this company/product. If you do not have specific, verifiable information about this company or it does not exist, explicitly state "I do not have information about this brand."`;
-        let scanResult: ScanOutput['results'][number] | undefined;
-        let scanOutput: ScanOutput | undefined;
-        let platform: LLMPlatform = availablePlatforms[0].platform;
-
-        // Try each available platform until one succeeds
-        for (const p of availablePlatforms) {
-            platform = p.platform;
-            console.log(`Starting free scan for brand: "${cleanBrandName}" on ${platform} (IP: ${ip})`);
-
-            scanOutput = await scanLLM({
-                prompt: scanPrompt,
-                brandName: cleanBrandName,
-                platforms: [platform],
-            });
-
-            scanResult = scanOutput.results[0];
-            if (scanResult) break;
-
-            console.warn(`Platform ${platform} failed, trying next available...`);
-        }
-
-        // Final fallback to mock in dev
-        if (!scanResult || !scanOutput) {
-            const allowMock = process.env.ALLOW_MOCK_LLM === 'true' || process.env.NODE_ENV !== 'production';
-            if (allowMock) {
-                platform = 'mock';
-                scanOutput = await scanLLM({
-                    prompt: scanPrompt,
-                    brandName: cleanBrandName,
-                    platforms: ['mock'],
-                });
-                scanResult = scanOutput.results[0];
-            }
-        }
-
-        if (!scanResult || !scanOutput) {
-            console.error(`Scan failed for brand: ${cleanBrandName} - All platforms failed`);
-            return NextResponse.json(
-                { error: 'All AI platforms are currently unavailable. Please try again later.' },
-                { status: 503 }
-            );
-        }
-
-        const visibilityScore = calculateVisibilityScore(scanOutput.results);
-        const mentionCount = scanOutput.results.filter((result) => result.brandMentioned).length;
-        const confidence = estimateMentionConfidence(mentionCount, scanOutput.results.length);
-
-        return NextResponse.json({
-            platform: scanResult.platform,
-            mentioned: scanResult.brandMentioned,
-            sentiment: scanResult.sentiment || 'neutral',
-            visibilityScore,
-            samples: scanOutput.results.length,
-            confidence: confidence.level,
-            confidenceInterval: confidence.interval,
-            // Truncate response for free tier
-            snippet: scanResult.response?.substring(0, 200) + '...',
-            // Teaser data
-            limitedView: true,
-            note: 'Visibility is the observed mention rate. This free result is a single low-confidence sample, not a stable trend.',
-            message: 'Sign up to see full analysis, track over time, and scan all AI platforms!',
-        });
-    } catch (error) {
-        console.error('Free scan error:', error);
-        return NextResponse.json(
-            { error: 'Scan failed. Please try again.' },
-            { status: 500 }
-        );
-    }
+import { NextResponse } from 'next/server';
+import { internal } from '@/convex/_generated/api';
+import { callInternal } from '@/lib/convex/admin';
+import { convexRouteError } from '@/lib/convex/http';
+export const maxDuration = 300;
+export async function POST(request: Request) {
+  try {
+    const text = await request.text();
+    if (text.length > 10000) return NextResponse.json({ error: 'Request too large' }, { status: 413 });
+    const body = JSON.parse(text);
+    if (!body || typeof body !== 'object' || Array.isArray(body) ||
+      typeof body.brandName !== 'string') return NextResponse.json({ error: 'Please check the supplied values.' }, { status: 400 });
+    const result = await callInternal('action', internal.discoveryActions.freeScan, {
+      ip: request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || request.headers.get('x-real-ip') || 'unknown',
+      brandName: body.brandName });
+    return NextResponse.json(JSON.parse(result));
+  } catch (error) {
+    if (error instanceof SyntaxError) return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 });
+    return convexRouteError(error);
+  }
 }

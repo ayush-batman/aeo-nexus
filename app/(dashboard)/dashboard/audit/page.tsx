@@ -171,8 +171,8 @@ export default function AuditPage() {
                                 <CardHeader className="pb-4">
                                     <div className="flex items-center justify-between">
                                         <div>
-                                            <CardTitle>Optimization Score</CardTitle>
-                                            <CardDescription>How readable this page is for AI agents</CardDescription>
+                                            <CardTitle>HTML checklist score</CardTitle>
+                                            <CardDescription>Editorial checks on one fetched page—not measured AI visibility or readability.</CardDescription>
                                         </div>
                                         <span className="text-4xl font-bold text-[var(--accent-base)]">{result.score}/100</span>
                                     </div>

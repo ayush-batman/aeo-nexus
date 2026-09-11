@@ -165,7 +165,12 @@ test('critical evidence, API keys, and billing events import without fabrication
         prompt: 'Which product should I use?',
         response: 'A real stored answer',
         brandMentioned: true,
-        citations: [{ url: 'https://example.com/source', title: 'Source' }],
+        citations: [
+          { url: 'https://example.com/source', title: 'Legacy source' },
+          { url: 'https://example.com/unsupported', provenance: 'provider_citation' },
+          { url: 'https://example.com/mismatch', provenance: 'provider_citation', raw_provider_reference: { url: 'https://example.com/different' } },
+          { url: 'https://example.com/proven', provenance: 'provider_citation', raw_provider_reference: { url: 'https://example.com/proven' } },
+        ],
         createdAt: now,
       },
     },
@@ -228,9 +233,33 @@ test('critical evidence, API keys, and billing events import without fabrication
   }));
   expect(imported.scans).toHaveLength(1);
   expect(imported.scans[0].citations[0].provenance).toBe('unverified');
+  expect(imported.scans[0].citations.map((citation) => citation.provenance))
+    .toEqual(['unverified', 'unverified', 'unverified', 'provider_citation']);
   expect(imported.scans[0].analyzerMethod).toBeNull();
   expect(imported.apiKeys).toHaveLength(1);
   expect(imported.apiKeys[0].keyHash).toBe('f'.repeat(64));
   expect(imported.billingEvents).toHaveLength(1);
   expect(imported.billingEvents[0].changedOrganization).toBe(false);
+
+  await t.run(async (ctx) => {
+    await ctx.db.insert('organizations', {
+      publicId: 'other-org', name: 'Other tenant', plan: 'free', stripeCustomerId: null,
+      stripeSubscriptionId: null, razorpaySubscriptionId: null, createdAt: now, updatedAt: now,
+    });
+    const stagedKey = await ctx.db.query('importStaging')
+      .withIndex('by_manifest_table_public_id', (q) => q.eq('manifestHash', manifestHash)
+        .eq('sourceTable', 'api_keys')).unique();
+    if (!stagedKey) throw new Error('missing_synthetic_key');
+    await ctx.db.patch(stagedKey._id, { payload: { ...stagedKey.payload, organizationPublicId: 'other-org' } });
+  });
+  await expect(t.mutation(internal.imports.materializeCriticalBatch, {
+    manifestHash, sourceTable: 'api_keys', afterPublicId: null,
+  })).rejects.toThrow('import_organization_mismatch');
+  await t.run(async (ctx) => {
+    const user = (await ctx.db.query('users').take(1))[0];
+    await ctx.db.patch(user._id, { authSubject: 'claimed', claimedAt: now, emailVerified: true });
+  });
+  await expect(t.mutation(internal.imports.materializeTenantBatch, {
+    manifestHash, sourceTable: 'users', afterPublicId: null,
+  })).rejects.toThrow('import_user_already_claimed');
 });

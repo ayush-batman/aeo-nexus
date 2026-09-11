@@ -10,6 +10,7 @@ function samples(daysAgo: number, mentioned: boolean, count = 4) {
     provider_model: 'gemini-2.5-flash', measurement_region: 'global-unspecified',
     measurement_mode: 'standard', scorer_version: 'aelo-brand-scorer.v1',
     measurement_contract_version: 'measurement.v1',
+    search_mode: 'grounded', analyzer_method: 'llm', analyzer_model: 'synthetic-analyzer', analyzer_prompt_version: 'v2',
   }));
 }
 

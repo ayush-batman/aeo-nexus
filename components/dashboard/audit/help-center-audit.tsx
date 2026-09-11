@@ -72,9 +72,9 @@ export function HelpCenterAudit() {
                                 <Sparkles className="w-3 h-3 mr-1" /> Premium Audit
                             </Badge>
                         </div>
-                        <CardTitle className="text-2xl text-[var(--text-primary)]">Help Center AI-Readiness</CardTitle>
+                        <CardTitle className="text-2xl text-[var(--text-primary)]">Help-center page review</CardTitle>
                         <CardDescription className="text-[var(--text-secondary)] xl:w-2/3">
-                            Analyze your complete help center structure. Discover if your documentation is easily digested by LLMs and RAG systems to be used as authoritative answers.
+                            Subjective AI feedback on one fetched page, up to 12,000 characters. This does not crawl your whole help center, verify topic coverage, or predict AI citations.
                         </CardDescription>
                     </CardHeader>
                 </div>
@@ -90,7 +90,7 @@ export function HelpCenterAudit() {
                         />
                         <Button onClick={handleAudit} disabled={scanning || !url} className="bg-[var(--accent-base)] hover:bg-[var(--accent-base)] text-white">
                             {scanning ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Search className="w-4 h-4 mr-2" />}
-                            Run Deep Scan
+                            Review page
                         </Button>
                     </div>
 
@@ -109,11 +109,10 @@ export function HelpCenterAudit() {
                         <div className="flex items-center gap-4 mb-4">
                             <Loader2 className="w-6 h-6 text-[var(--accent-base)] animate-spin" />
                             <div>
-                                <h3 className="text-lg font-medium text-[var(--text-primary)]">Crawling & Analyzing Help Center...</h3>
-                                <p className="text-sm text-[var(--text-secondary)]">This usually takes about 15-30 seconds depending on size.</p>
+                                <h3 role="status" className="text-lg font-medium text-[var(--text-primary)]">Fetching and reviewing one page…</h3>
+                                <p className="text-sm text-[var(--text-secondary)]">Waiting for the page and AI provider.</p>
                             </div>
                         </div>
-                        <Progress value={45} className="h-2" />
                     </Card>
                 </div>
             )}
@@ -124,14 +123,14 @@ export function HelpCenterAudit() {
                         <CardContent className="p-6">
                             <div className="flex flex-col md:flex-row items-center gap-8">
                                 <div className="text-center md:text-left">
-                                    <p className="text-sm text-[var(--text-secondary)] uppercase tracking-wider mb-2 font-semibold">Total AEO Score</p>
+                                    <p className="text-sm text-[var(--text-secondary)] uppercase tracking-wider mb-2 font-semibold">Subjective editorial score</p>
                                     <div className="text-6xl font-black text-transparent bg-clip-text bg-[var(--accent-muted)]">
                                         {result.overallScore}
                                     </div>
                                 </div>
                                 <div className="flex-1 grid grid-cols-2 lg:grid-cols-4 gap-4 w-full">
                                     <div className="p-4 rounded-xl bg-[var(--bg-base)] border border-[var(--border-default)]">
-                                        <p className="text-xs text-[var(--text-secondary)] mb-1 font-medium">Topic Coverage</p>
+                                        <p className="text-xs text-[var(--text-secondary)] mb-1 font-medium">Perceived page coverage</p>
                                         <div className="text-2xl font-bold text-[var(--text-primary)]">{result.metrics.coverage}/100</div>
                                     </div>
                                     <div className="p-4 rounded-xl bg-[var(--bg-base)] border border-[var(--border-default)]">
@@ -143,7 +142,7 @@ export function HelpCenterAudit() {
                                         <div className="text-2xl font-bold text-[var(--text-primary)]">{result.metrics.clarity}/100</div>
                                     </div>
                                     <div className="p-4 rounded-xl bg-[var(--bg-base)] border border-[var(--border-default)]">
-                                        <p className="text-xs text-[var(--text-secondary)] mb-1 font-medium">Technical SEO</p>
+                                        <p className="text-xs text-[var(--text-secondary)] mb-1 font-medium">Presentation estimate</p>
                                         <div className="text-2xl font-bold text-[var(--text-primary)]">{result.metrics.technical}/100</div>
                                     </div>
                                 </div>

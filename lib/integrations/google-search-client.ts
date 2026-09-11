@@ -125,13 +125,11 @@ export async function searchForums(
 
     try {
         const response = await fetch(
-            `https://www.googleapis.com/customsearch/v1?${params}`
+            `https://www.googleapis.com/customsearch/v1?${params}`, { signal: AbortSignal.timeout(20000) }
         );
 
         if (!response.ok) {
-            const error = await response.json();
-            console.error('Google Search API error:', error.error?.message || response.statusText);
-            return { results: [], totalResults: 0 };
+            throw new Error('google_search_unavailable');
         }
 
         const data = await response.json() as GoogleCustomSearchResponse;
@@ -150,8 +148,7 @@ export async function searchForums(
             totalResults: parseInt(data.searchInformation?.totalResults || '0'),
         };
     } catch (error) {
-        console.error('Google Search fetch error:', error);
-        return { results: [], totalResults: 0 };
+        throw new Error('google_search_unavailable', { cause: error });
     }
 }
 

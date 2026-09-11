@@ -19,13 +19,7 @@ export async function GET(request: Request) {
   const limit = Math.min(100, Math.max(1, Number(url.searchParams.get('limit')) || 50));
 
   return withKey(request, 'read', async (ctx, admin) => {
-    const since = new Date(Date.now() - days * 86400000).toISOString();
-    const { data } = await admin
-      .from('llm_scans')
-      .select('platform, prompt, citations')
-      .eq('workspace_id', ctx.workspaceId)
-      .gte('created_at', since)
-      .limit(500);
+    const data = await admin.scans({ since: Date.now() - days * 86400000 });
 
     const out: Array<{
       url: string; domain: string; title: string; citesYou: boolean;
@@ -37,7 +31,7 @@ export async function GET(request: Request) {
       for (const c of cites) {
         if (!c || typeof c.url !== 'string') continue;
         // Records vary: newer scans store is_own_domain, older ones isOwnDomain.
-        const isOwn = Boolean(c.is_own_domain ?? c.isOwnDomain);
+        const isOwn = Boolean(c.is_own_domain);
         if (citesYou !== undefined && isOwn !== citesYou) continue;
         out.push({
           url: c.url,

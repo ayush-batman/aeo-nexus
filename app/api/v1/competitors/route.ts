@@ -13,17 +13,8 @@ export async function GET(request: Request) {
   const w = new URL(request.url).searchParams.get('window') || '30d';
   const days = w === '7d' ? 7 : w === '90d' ? 90 : 30;
   return withKey(request, 'read', async (ctx, admin) => {
-    const since = new Date(Date.now() - days * 86400000).toISOString();
     const brand = await getWorkspaceBrand(admin, ctx.workspaceId);
-    const { data, error } = await admin
-      .from('llm_scans')
-      .select('brand_mentioned, competitors_mentioned')
-      .eq('workspace_id', ctx.workspaceId)
-      .gte('created_at', since);
-
-    if (error) {
-      throw new Error('Failed to fetch competitor visibility', { cause: error });
-    }
+    const data = await admin.scans({ since: Date.now() - days * 86400000 });
 
     const rows = data || [];
     const counts = new Map<string, { name: string; mentions: number }>();

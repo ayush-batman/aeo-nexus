@@ -9,33 +9,33 @@ export default function SecurityPage() {
     return (
         <LegalPage
             kind="Security"
-            lastUpdated="2026-07-04"
+            lastUpdated="2026-09-11"
             intro="Aelo handles brand data. Here is what we do to keep it safe, described in operational terms rather than certification labels."
             sections={[
                 {
                     title: "Data at rest",
-                    body: "All customer data is stored in Supabase Postgres with database-level encryption. Backups are encrypted with rotating keys.",
+                    body: "Customer product data is stored in Convex. Aelo does not store full payment-card details; those remain with Razorpay or Stripe.",
                 },
                 {
                     title: "Data in transit",
                     body: "TLS 1.2+ everywhere. HSTS enforced on all origins. No plain-HTTP endpoints, in production or preview.",
                 },
                 {
-                    title: "Row-Level Security",
-                    body: "Every product table in Postgres has RLS policies scoped by organization. Users can only see rows in workspaces belonging to their organization, enforced at the database, not just the API.",
+                    title: "Tenant isolation",
+                    body: "Protected server functions resolve the signed-in user, organization, role, and workspace before reading or changing customer data. API keys are separately checked for workspace binding, scope, revocation, limits, and quotas.",
                 },
                 {
                     title: "Auth",
                     body: [
-                        "Supabase Auth with bcrypt-hashed passwords.",
-                        "OAuth via Google available.",
-                        "Sessions rotate on every login; JWTs are short-lived.",
-                        "Reset flows require email confirmation.",
+                        "Better Auth runs with Convex and stores authentication records separately from product workspaces.",
+                        "Google sign-in is offered only when its server credentials are configured.",
+                        "Protected application requests require a valid session.",
+                        "Password reset requires control of the account email.",
                     ],
                 },
                 {
                     title: "Sub-processor list",
-                    body: "Supabase (Postgres, Auth, Storage) · Vercel (hosting, Cron) · Google (Gemini scans) · OpenAI, Anthropic, Perplexity (scans) · Resend (email) · Razorpay + Stripe (billing). We only send the minimum required data to each. Prompts sent to LLM providers do not include PII.",
+                    body: "Convex (database, authentication, file storage) · Vercel (hosting, scheduled triggers) · Google, OpenAI, Anthropic, and Perplexity (scans) · Resend (email) · Razorpay and Stripe (billing). Aelo sends each provider only the data needed for that operation.",
                 },
                 {
                     title: "Vulnerability disclosure",

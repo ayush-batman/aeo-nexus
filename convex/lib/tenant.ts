@@ -5,6 +5,7 @@ import {
 } from 'convex-helpers/server/customFunctions';
 
 import type { Doc } from '../_generated/dataModel';
+import { ConvexError } from 'convex/values';
 import {
   mutation,
   query,
@@ -25,13 +26,14 @@ type ReadContext = QueryCtx | MutationCtx;
 
 export async function requireTenant(ctx: ReadContext): Promise<TenantContext> {
   const authUser = await authComponent.getAuthUser(ctx);
+  if (!authUser.emailVerified) throw new Error('verified_email_required');
   const user = await ctx.db
     .query('users')
     .withIndex('by_auth_subject', (q) => q.eq('authSubject', authUser._id))
     .unique();
 
   if (!user) {
-    throw new Error('profile_not_provisioned');
+    throw new ConvexError('profile_not_provisioned');
   }
 
   const membership = await ctx.db

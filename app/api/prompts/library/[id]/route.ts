@@ -1,6 +1,7 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { getCurrentWorkspaceId, deletePrompt } from "@/lib/data-access";
+import { convexRouteError } from '@/lib/convex/http';
 
 export async function DELETE(
     request: NextRequest,
@@ -21,7 +22,6 @@ export async function DELETE(
 
         return NextResponse.json({ success: true });
     } catch (error) {
-        console.error('Error deleting prompt:', error);
-        return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+        return convexRouteError(error);
     }
 }

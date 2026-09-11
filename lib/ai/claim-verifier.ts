@@ -1,6 +1,6 @@
 import { getOpenAIClient } from './openai-client';
 import type { ExtractedClaim } from './claim-extractor';
-import { safeFetchText } from '@/lib/security/safe-fetch';
+import { safeFetchText } from '../security/safe-fetch';
 
 // Fact-check each extracted claim against the brand's own website.
 // Fetches the site (best-effort, one-page GET, no crawl) and feeds
@@ -96,32 +96,27 @@ ${params.claims.map((c, i) => `${i + 1}. ${c.claim_text}`).join('\n')}`;
             paramsObj as unknown as Parameters<typeof client.chat.completions.create>[0] & { stream?: false }
         );
         raw = completion.choices[0]?.message?.content ?? '';
-    } catch (err) {
-        console.warn('[verifyClaims] LLM call failed:', err);
-        return params.claims.map(c => ({
-            ...c,
-            verdict:    'unverified' as const,
-            confidence: 0,
-            evidence_url:     null,
-            evidence_snippet: null,
-            reasoning:  'Verifier call failed.',
-        }));
+    } catch {
+        throw new Error('claim_verification_failed');
     }
 
     let parsed: { verdicts?: unknown[] };
-    try { parsed = JSON.parse(raw); } catch { parsed = {}; }
+    try { parsed = JSON.parse(raw); } catch { throw new Error('invalid_verifier_output'); }
     const verdicts: unknown[] = Array.isArray(parsed.verdicts) ? parsed.verdicts : [];
 
     return params.claims.map((c, i) => {
         const v = verdicts[i] as Record<string, unknown> | undefined;
-        const verdict = normalizeVerdict(typeof v?.verdict === 'string' ? v.verdict : 'unverified');
+        const snippet = typeof v?.evidence_snippet === 'string' ? v.evidence_snippet.trim().slice(0, 400) : null;
+        // A model-written quotation is not evidence unless it occurs in the fetched page.
+        const grounded = v?.claim_text === c.claim_text && snippet && sourceText.replace(/\s+/g, ' ').includes(snippet.replace(/\s+/g, ' '));
+        const verdict = grounded ? normalizeVerdict(typeof v?.verdict === 'string' ? v.verdict : 'unverified') : 'unverified';
         return {
             ...c,
             verdict,
-            confidence: typeof v?.confidence === 'number' ? Math.max(0, Math.min(1, v.confidence)) : 0.5,
+            confidence: verdict !== 'unverified' && typeof v?.confidence === 'number' && Number.isFinite(v.confidence) ? Math.max(0, Math.min(1, v.confidence)) : 0,
             evidence_url:     verdict === 'unverified' ? null : evidenceUrl,
-            evidence_snippet: typeof v?.evidence_snippet === 'string' ? v.evidence_snippet.slice(0, 400) : null,
-            reasoning:        typeof v?.reasoning === 'string' ? v.reasoning : 'No reasoning returned.',
+            evidence_snippet: verdict === 'unverified' ? null : snippet,
+            reasoning: !grounded ? 'No matching source quotation was verified.' : typeof v?.reasoning === 'string' ? v.reasoning.slice(0, 2000) : 'No reasoning returned.',
         };
     });
 }
@@ -149,8 +144,7 @@ async function fetchSourceText(url: string): Promise<string | null> {
             .replace(/<[^>]+>/g, ' ')
             .replace(/\s+/g, ' ')
             .trim();
-    } catch (err) {
-        console.warn('[verifyClaims] fetch failed:', err);
+    } catch {
         return null;
     }
 }

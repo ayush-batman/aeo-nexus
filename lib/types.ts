@@ -72,7 +72,7 @@ export interface KnowledgeBase {
 export interface LLMScan {
     id: string;
     workspace_id: string;
-    platform: 'chatgpt' | 'perplexity' | 'claude' | 'gemini' | 'google_ai' | 'bing_copilot';
+    platform: 'chatgpt' | 'perplexity' | 'claude' | 'gemini' | 'google_ai' | 'google_ai_overview' | 'bing_copilot' | 'mock';
     prompt: string;
     response: string;
     brand_mentioned: boolean;
@@ -83,6 +83,12 @@ export interface LLMScan {
     sample_id: string | null;
     measurement_run_id: string | null;
     sample_index: number | null;
+    sample_number?: number | null;
+    failure_code?: string | null;
+    search_mode?: string | null;
+    analyzer_method?: string | null;
+    analyzer_model?: string | null;
+    analyzer_prompt_version?: string | null;
     provider_model: string | null;
     measurement_region: string | null;
     measurement_mode: string | null;

@@ -1,10 +1,10 @@
 import { NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
-import { getCurrentWorkspaceContext } from '@/lib/data-access';
+import { getConvexDashboardBootstrap } from '@/lib/convex/session';
+import { convexRouteError } from '@/lib/convex/http';
 
 export async function GET() {
     try {
-        const context = await getCurrentWorkspaceContext();
+        const context = await getConvexDashboardBootstrap();
 
         if (!context) {
             return NextResponse.json(
@@ -13,32 +13,8 @@ export async function GET() {
             );
         }
 
-        const supabase = await createClient();
-        const { count, error } = await supabase
-            .from('products')
-            .select('*', { count: 'exact', head: true })
-            .eq('workspace_id', context.workspaceId);
-
-        if (error) {
-            console.error('Onboarding context error:', error);
-            return NextResponse.json(
-                { error: 'Failed to load onboarding context' },
-                { status: 500 }
-            );
-        }
-
-        return NextResponse.json({
-            userId: context.userId,
-            orgId: context.orgId,
-            workspaceId: context.workspaceId,
-            onboardingCompleted: context.onboardingCompleted,
-            hasBrand: (count || 0) > 0,
-        });
+        return NextResponse.json(context);
     } catch (error) {
-        console.error('Onboarding context error:', error);
-        return NextResponse.json(
-            { error: 'Failed to load onboarding context' },
-            { status: 500 }
-        );
+        return convexRouteError(error);
     }
 }

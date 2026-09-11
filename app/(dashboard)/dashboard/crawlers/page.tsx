@@ -2,8 +2,8 @@ import { redirect } from 'next/navigation';
 import Link from 'next/link';
 import { Check, X, Bot, ArrowRight } from 'lucide-react';
 import { getCurrentWorkspaceContext } from '@/lib/data-access';
-import { createAdminClient } from '@/lib/supabase/admin';
-import { checkCrawlerAccess, getAiReferralTraffic } from '@/lib/crawlers';
+import { api } from '@/convex/_generated/api';
+import { fetchAuthAction } from '@/lib/auth-server';
 import { Header } from '@/components/dashboard/header';
 
 export const dynamic = 'force-dynamic';
@@ -17,16 +17,7 @@ export default async function CrawlersPage() {
     const ctx = await getCurrentWorkspaceContext();
     if (!ctx?.workspaceId) redirect('/login');
 
-    // Workspace website (for the robots.txt check).
-    const db = createAdminClient();
-    const { data: ws } = await db
-        .from('workspaces').select('settings').eq('id', ctx.workspaceId).single();
-    const website = (ws?.settings as { website?: string } | null)?.website ?? null;
-
-    const [access, traffic] = await Promise.all([
-        checkCrawlerAccess(website),
-        getAiReferralTraffic(ctx.workspaceId, 30),
-    ]);
+    const { website, access, traffic } = await fetchAuthAction(api.crawlerActions.current, { workspaceId: ctx.workspaceId });
 
     const maxCount = Math.max(1, ...traffic.sources.map((s) => s.count));
 
@@ -52,7 +43,7 @@ export default async function CrawlersPage() {
                         {!website ? 'Add your website in Settings to check crawler access.'
                             : !access.ok ? 'Could not fetch your robots.txt. Check the domain in Settings.'
                             : !access.robotsFound ? 'No robots.txt found, so every AI crawler is allowed by default.'
-                            : 'Parsed live from your robots.txt. A blocked crawler cannot cite you, whatever you publish.'}
+                            : 'Parsed live from your robots.txt. These rules are one access signal; they do not prove indexing or predict citations.'}
                     </p>
 
                     {website && access.ok && (
@@ -87,12 +78,19 @@ export default async function CrawlersPage() {
                     <div className="flex items-center justify-between mb-1">
                         <h2 className="text-base font-medium text-[var(--text-primary)]">AI referral traffic</h2>
                         {traffic.hasPixelData && (
-                            <span className="text-[13px] tabular-nums text-[var(--text-secondary)]">{traffic.total} visits · 30d</span>
+                            <span className="text-[13px] tabular-nums text-[var(--text-secondary)]">
+                                {traffic.partial ? `${traffic.total}+ visits` : `${traffic.total} visits`} · 30d
+                            </span>
                         )}
                     </div>
 
                     {traffic.hasPixelData ? (
                         <div className="mt-4 space-y-3">
+                            {traffic.partial && (
+                                <p className="text-[12px] text-[var(--text-secondary)]">
+                                    Showing the first 10,000 recorded visits in this window. Source totals are partial.
+                                </p>
+                            )}
                             {traffic.sources.map((s) => (
                                 <div key={s.source} className="flex items-center gap-3">
                                     <div className="w-24 text-[13px] text-[var(--text-secondary)] flex-shrink-0">{SOURCE_LABEL[s.source] ?? s.source}</div>

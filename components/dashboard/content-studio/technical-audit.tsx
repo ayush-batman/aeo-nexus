@@ -20,23 +20,24 @@ export function TechnicalAudit() {
     const [url, setUrl] = useState("");
     const [loading, setLoading] = useState(false);
     const [result, setResult] = useState<AuditResult | null>(null);
+    const [error, setError] = useState<string | null>(null);
 
     const runAudit = async () => {
         if (!url) return;
         setLoading(true);
         setResult(null);
+        setError(null);
         try {
             const res = await fetch('/api/audit/technical', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ url })
             });
-            if (res.ok) {
-                const data = await res.json();
-                setResult(data);
-            }
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.error || 'Could not check the page and robots file. Please retry.');
+            setResult(data);
         } catch (error) {
-            console.error(error);
+            setError(error instanceof Error ? error.message : 'Audit failed. Please retry.');
         } finally {
             setLoading(false);
         }
@@ -48,12 +49,13 @@ export function TechnicalAudit() {
                 <CardHeader>
                     <CardTitle>Technical Aelo Audit</CardTitle>
                     <CardDescription>
-                        Check if your site is blocking AI crawlers (ChatGPT, Gemini, Claude, etc.) from reading your content.
+                        Inspect this URL’s robots rules for the listed bot names. Training and answer-search bots have different purposes; these rules do not prove visits, access, or future mentions.
                     </CardDescription>
                 </CardHeader>
                 <CardContent>
                     <div className="flex gap-4">
                         <Input
+                            aria-label="Page URL to audit"
                             placeholder="https://example.com"
                             value={url}
                             onChange={(e) => setUrl(e.target.value)}
@@ -64,6 +66,7 @@ export function TechnicalAudit() {
                             Run Audit
                         </Button>
                     </div>
+                    {error && <p role="alert" className="mt-3 text-[var(--data-red)]">{error}</p>}
                 </CardContent>
             </Card>
 
@@ -74,12 +77,12 @@ export function TechnicalAudit() {
                         <CardHeader>
                             <CardTitle className="flex items-center gap-2">
                                 {result.aiBotsBlocked ? <ShieldAlert className="w-6 h-6 text-[var(--data-red)]" /> : <ShieldCheck className="w-6 h-6 text-[var(--data-green)]" />}
-                                {result.aiBotsBlocked ? "AI Crawlers Blocked!" : "AI Crawlers Allowed"}
+                                {result.aiBotsBlocked ? "Some listed bots are disallowed" : "No disallow found for listed bots"}
                             </CardTitle>
                             <CardDescription className={result.aiBotsBlocked ? "text-[var(--data-red)]/80" : "text-[var(--data-green)]/80"}>
                                 {result.aiBotsBlocked
-                                    ? "Your site configuration is preventing AI engines from reading your content. This hurts your Aelo visibility."
-                                    : "Great! Your site is technically accessible to major AI engines."}
+                                    ? "Review each rule against your intended crawling and training policy. A disallow does not establish its effect on visibility."
+                                    : "No matching restriction was found in the fetched robots rules. Other access controls and bot-specific policies may still apply."}
                             </CardDescription>
                         </CardHeader>
                     </Card>

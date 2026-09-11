@@ -47,8 +47,12 @@ function comparable(overrides: Partial<ComparableMentionSample> = {}): Comparabl
     providerModel: 'gemini-2.5-flash',
     region: 'global-unspecified',
     mode: 'standard',
-    scorerVersion: 'aelo-brand-scorer.v1',
-    contractVersion: 'measurement.v1',
+    scorerVersion: 'aelo-brand-scorer.v2',
+    contractVersion: 'measurement.v2',
+    searchMode: 'google_search_auto',
+    analyzerMethod: 'deterministic-mentions+gemini-sentiment',
+    analyzerModel: 'gemini-2.5-flash',
+    analyzerPromptVersion: 'aelo-sentiment.v2',
     ...overrides,
   };
 }
@@ -95,6 +99,23 @@ test('legacy rows do not poison a valid matched cohort', () => {
   assert.equal(comparison.status, 'comparable');
   assert.equal(comparison.current.samples, 4);
   assert.equal(comparison.changePoints, 50);
+});
+
+test('search and analyzer changes cannot produce a comparable improvement claim', () => {
+  const baseline = Array.from({ length: 4 }, () => comparable());
+  for (const changed of [{ searchMode: 'none' }, { analyzerModel: 'different-model' },
+    { analyzerMethod: 'keyword-fallback' }, { analyzerPromptVersion: null }]) {
+    assert.equal(compareCompatibleMentionMetrics(baseline,
+      Array.from({ length: 4 }, () => comparable(changed))).status, 'incompatible');
+  }
+});
+
+test('changing the mix of easy and hard prompts is not an improvement', () => {
+  const easy = (count: number) => Array.from({ length: count }, () => comparable({ prompt: 'easy', mentioned: true }));
+  const hard = (count: number) => Array.from({ length: count }, () => comparable({ prompt: 'hard', mentioned: false }));
+  const result = compareCompatibleMentionMetrics([...easy(16), ...hard(4)], [...easy(4), ...hard(16)]);
+  assert.equal(result.status, 'incompatible');
+  assert.equal(result.changePoints, null);
 });
 
 test('share of voice counts each brand at most once per answer and is null without mentions', () => {

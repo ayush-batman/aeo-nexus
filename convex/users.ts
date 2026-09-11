@@ -166,3 +166,25 @@ export const current = query({
     };
   },
 });
+
+export const workspaceContext = query({
+  args: { activeWorkspacePublicId: v.union(v.string(), v.null()) },
+  returns: v.union(v.null(), v.object({
+    userId: v.string(), orgId: v.string(), workspaceId: v.string(),
+    onboardingCompleted: v.boolean(), role: roleValidator,
+  })),
+  handler: async (ctx, args) => {
+    const tenant = await requireTenant(ctx);
+    let workspace = args.activeWorkspacePublicId
+      ? await ctx.db.query('workspaces').withIndex('by_public_id', (q) =>
+        q.eq('publicId', args.activeWorkspacePublicId!)).unique() : null;
+    if (!workspace || workspace.organizationId !== tenant.organization._id) {
+      workspace = await ctx.db.query('workspaces').withIndex('by_organization_id', (q) =>
+        q.eq('organizationId', tenant.organization._id)).first();
+    }
+    if (!workspace) return null;
+    return { userId: tenant.user.publicId, orgId: tenant.organization.publicId,
+      workspaceId: workspace.publicId, onboardingCompleted: tenant.user.onboardingCompleted,
+      role: tenant.role };
+  },
+});

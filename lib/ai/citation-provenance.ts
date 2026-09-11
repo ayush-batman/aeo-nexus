@@ -1,4 +1,4 @@
-import type { CitationEvidence, CitationFetchValidation } from '@/lib/types';
+import type { CitationEvidence, CitationFetchValidation } from '../types';
 import { hostnameMatchesBrand } from './brand-matching';
 
 interface CitationContext {
@@ -8,6 +8,15 @@ interface CitationContext {
 }
 
 type ProviderCitationObject = Record<string, unknown>;
+type CitationRedirectFetcher = (
+  input: string,
+  init: { method: 'HEAD'; redirect: 'manual'; signal: AbortSignal },
+) => Promise<{ status: number; headers: { get(name: string): string | null } }>;
+
+const GEMINI_REDIRECT_HOST = 'vertexaisearch.cloud.google.com';
+const GEMINI_REDIRECT_PATH = '/grounding-api-redirect/';
+const CITATION_REDIRECT_TIMEOUT_MS = 5_000;
+const MAX_CITATION_REDIRECT_CONCURRENCY = 6;
 
 function asRecord(value: unknown): ProviderCitationObject | null {
   return value && typeof value === 'object' ? value as ProviderCitationObject : null;
@@ -21,6 +30,28 @@ export function extractPerplexityCitationReferences(payload: unknown): unknown[]
   const root = asRecord(payload);
   if (!root) return [];
   return [...asArray(root.citations), ...asArray(root.search_results)];
+}
+
+export function openAIUsedWebSearch(payload: unknown): boolean {
+  const root = asRecord(payload);
+  return asArray(root?.output).some((item) => asRecord(item)?.type === 'web_search_call');
+}
+
+export function geminiUsedWebSearch(payload: unknown): boolean {
+  const root = asRecord(payload);
+  return asArray(root?.candidates).some((candidateValue) => {
+    const metadata = asRecord(asRecord(candidateValue)?.groundingMetadata);
+    return asArray(metadata?.groundingChunks).length > 0 || asArray(metadata?.webSearchQueries).length > 0;
+  });
+}
+
+export function anthropicUsedWebSearch(payload: unknown): boolean {
+  const root = asRecord(payload);
+  return asArray(root?.content).some((blockValue) => {
+    const block = asRecord(blockValue);
+    return block?.type === 'web_search_tool_result' ||
+      (block?.type === 'server_tool_use' && block?.name === 'web_search');
+  });
 }
 
 export function extractGeminiCitationReferences(response: unknown): unknown[] {
@@ -41,15 +72,77 @@ export function extractGeminiCitationReferences(response: unknown): unknown[] {
   return references;
 }
 
+function wrappedGeminiReference(reference: unknown, url: string, unresolved: boolean): ProviderCitationObject {
+  return {
+    __aeloGeminiRedirect: true,
+    url,
+    title: referenceTitle(reference),
+    originalReference: reference,
+    unresolved,
+  };
+}
+
+async function resolveGeminiReference(reference: unknown, fetcher: CitationRedirectFetcher): Promise<unknown> {
+  const rawUrl = referenceUrl(reference);
+  if (!rawUrl) return reference;
+  let redirectUrl: URL;
+  try { redirectUrl = new URL(rawUrl); } catch { return reference; }
+  if (redirectUrl.protocol !== 'https:' || redirectUrl.hostname !== GEMINI_REDIRECT_HOST ||
+      !redirectUrl.pathname.startsWith(GEMINI_REDIRECT_PATH)) return reference;
+
+  try {
+    const response = await fetcher(redirectUrl.toString(), {
+      method: 'HEAD', redirect: 'manual', signal: AbortSignal.timeout(CITATION_REDIRECT_TIMEOUT_MS),
+    });
+    const location = response.headers.get('location');
+    if (response.status < 300 || response.status >= 400 || !location) {
+      return wrappedGeminiReference(reference, redirectUrl.toString(), true);
+    }
+    const resolved = inspectUrl(new URL(location, redirectUrl).toString());
+    if (resolved.validation !== 'not_checked' || resolved.hostname === GEMINI_REDIRECT_HOST) {
+      return wrappedGeminiReference(reference, redirectUrl.toString(), true);
+    }
+    return wrappedGeminiReference(reference, resolved.url, false);
+  } catch {
+    return wrappedGeminiReference(reference, redirectUrl.toString(), true);
+  }
+}
+
+export async function resolveGeminiCitationReferences(
+  references: readonly unknown[],
+  fetcher: CitationRedirectFetcher = (input, init) => fetch(input, init),
+): Promise<unknown[]> {
+  const resolved: unknown[] = [];
+  for (let offset = 0; offset < references.length; offset += MAX_CITATION_REDIRECT_CONCURRENCY) {
+    resolved.push(...await Promise.all(references.slice(offset, offset + MAX_CITATION_REDIRECT_CONCURRENCY)
+      .map((reference) => resolveGeminiReference(reference, fetcher))));
+  }
+  return resolved;
+}
+
 export function extractOpenAICitationReferences(completion: unknown): unknown[] {
   const root = asRecord(completion);
   const firstChoice = asRecord(asArray(root?.choices)[0]);
   const message = asRecord(firstChoice?.message);
   const references: unknown[] = [];
+  // Keep the legacy Chat Completions shape for compatible callers.
   for (const annotationValue of asArray(message?.annotations)) {
     const annotation = asRecord(annotationValue);
     const citation = asRecord(annotation?.url_citation) ?? annotation;
     if (citation?.url) references.push({ url: citation.url, title: citation.title });
+  }
+  // The Responses API puts web citations on output message text parts.
+  for (const outputValue of asArray(root?.output)) {
+    const output = asRecord(outputValue);
+    for (const contentValue of asArray(output?.content)) {
+      const content = asRecord(contentValue);
+      for (const annotationValue of asArray(content?.annotations)) {
+        const annotation = asRecord(annotationValue);
+        if (annotation?.type === 'url_citation' && typeof annotation.url === 'string') {
+          references.push({ url: annotation.url, title: annotation.title });
+        }
+      }
+    }
   }
   return references;
 }
@@ -136,7 +229,10 @@ function citationFromReference(
   const rawUrl = referenceUrl(reference);
   if (!rawUrl) return null;
   const inspected = inspectUrl(rawUrl);
-  const validForEvidence = inspected.validation === 'not_checked';
+  const object = asRecord(reference);
+  const wrappedGeminiRedirect = object?.__aeloGeminiRedirect === true;
+  const unresolvedRedirect = wrappedGeminiRedirect && object?.unresolved === true;
+  const validForEvidence = inspected.validation === 'not_checked' && !unresolvedRedirect;
   const title = referenceTitle(reference) || inspected.hostname || rawUrl;
 
   return {
@@ -150,7 +246,9 @@ function citationFromReference(
       : 'unverified',
     provider: context.provider,
     sample_id: context.sampleId,
-    raw_provider_reference: providerNative ? reference : null,
+    raw_provider_reference: providerNative
+      ? (wrappedGeminiRedirect ? object?.originalReference : reference)
+      : null,
     fetch_validation: inspected.validation,
   };
 }

@@ -1,7 +1,5 @@
 import { NextResponse } from 'next/server';
-import { getCurrentWorkspaceId } from '@/lib/data-access';
-import { createClient } from '@/lib/supabase/server';
-import { DEMO_SEED_ACTIVE, demoScanRows } from '@/lib/analytics/demo-seed';
+import { getCurrentWorkspaceId, readScanPages } from '@/lib/data-access';
 
 interface CitationSource {
     type: string;
@@ -28,7 +26,9 @@ interface CitationAnalysis {
 
 // Classify a URL into a citation source type
 function classifyUrl(url: string): { type: string; label: string } {
-    const lower = url.toLowerCase();
+    let host: string;
+    try { host = new URL(url).hostname.toLowerCase(); } catch { return { type: 'other', label: 'Other' }; }
+    const lower = { includes: (domain: string) => domain.includes('.') ? (host === domain || host.endsWith(`.${domain}`)) : host.includes(domain) };
 
     // Video platforms
     if (lower.includes('youtube.com') || lower.includes('youtu.be')) return { type: 'youtube', label: 'YouTube' };
@@ -75,21 +75,7 @@ export async function GET() {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
-        let scans: Array<{ citations: unknown; platform: string }>;
-        if (DEMO_SEED_ACTIVE()) {
-            scans = demoScanRows();
-        } else {
-            const supabase = await createClient();
-            const { data, error } = await supabase
-                .from('llm_scans')
-                .select('citations, platform')
-                .eq('workspace_id', workspaceId)
-                .not('citations', 'is', null)
-                .order('created_at', { ascending: false })
-                .limit(500);
-            if (error) throw new Error('Failed to fetch citation evidence', { cause: error });
-            scans = data ?? [];
-        }
+        const scans = (await readScanPages(workspaceId, {})).filter(scan => !scan.failure_code);
 
         // Aggregate citations
         const sourceMap: Record<string, { count: number; urls: Set<string>; label: string }> = {};
@@ -166,14 +152,14 @@ export async function GET() {
             youtube: 'YouTube, Create video content for niche topics',
             reddit: 'Reddit, Participate authentically in relevant communities',
             quora: 'Quora, Answer questions with genuine expertise',
-            tier1_affiliate: 'Tier-1 Affiliates (Forbes, etc.), Consider paid affiliate mentions',
+            tier1_affiliate: 'Tier-1 Affiliates (Forbes, etc.), Review relevant editorial sources; paid placement is not evidence of AI visibility',
             review_site: 'Review Sites (G2, Capterra), Get listed on review platforms',
             blog: 'Blogs, Aim for mentions on relevant industry blogs',
             tech_media: 'Tech Media, Pursue press coverage',
         };
 
         for (const [type, label] of Object.entries(gapLabels)) {
-            if (!presentTypes.has(type)) {
+            if (totalCitations > 0 && !presentTypes.has(type)) {
                 gaps.push(label);
             }
         }

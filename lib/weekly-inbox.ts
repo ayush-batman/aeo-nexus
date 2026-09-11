@@ -11,6 +11,10 @@ export type WeeklyScanRow = {
   measurement_mode?: string | null;
   scorer_version?: string | null;
   measurement_contract_version?: string | null;
+  search_mode?: string | null;
+  analyzer_method?: string | null;
+  analyzer_model?: string | null;
+  analyzer_prompt_version?: string | null;
 };
 export type WeeklyActionRow = {
   id: string;
@@ -56,6 +60,10 @@ export function buildWeeklyDecisionInbox(rows: WeeklyScanRow[], actions: WeeklyA
       row.measurement_mode,
       row.scorer_version,
       row.measurement_contract_version,
+      row.search_mode,
+      row.analyzer_method,
+      row.analyzer_model,
+      row.analyzer_prompt_version,
     ];
     // Legacy or partially tagged rows remain visible elsewhere, but they cannot
     // support a defensible week-over-week claim.

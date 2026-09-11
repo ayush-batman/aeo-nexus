@@ -1,3 +1,5 @@
+import { createHash } from 'node:crypto';
+
 export const EXPORT_TABLES = [
   'organizations',
   'users',
@@ -63,7 +65,12 @@ const TIMESTAMP_FIELDS = new Set([
   'available_at',
   'claim_expires_at',
   'completed_at',
+  'expires_at',
 ]);
+
+// PostgreSQL's NUMERIC parser returns strings to avoid precision loss. These
+// bounded measurement fields are represented as finite JS numbers by both apps.
+const NUMERIC_FIELDS = new Set(['confidence', 'sentiment_score', 'avg_sentiment']);
 
 function snakeToCamel(value: string): string {
   return value.replace(/_([a-z])/g, (_, letter: string) => letter.toUpperCase());
@@ -71,6 +78,11 @@ function snakeToCamel(value: string): string {
 
 function timestampToMillis(value: unknown, field: string): number | null {
   if (value === null) return null;
+  if (value instanceof Date) {
+    const millis = value.getTime();
+    if (!Number.isFinite(millis)) throw new Error(`invalid_timestamp:${field}`);
+    return millis;
+  }
   if (typeof value === 'number' && Number.isFinite(value)) return value;
   if (typeof value !== 'string') throw new Error(`invalid_timestamp:${field}`);
   const parsed = Date.parse(value);
@@ -102,6 +114,11 @@ export function transformExportRow(
   const transformed: Record<string, unknown> = {};
 
   for (const [key, value] of Object.entries(row)) {
+    if (_table === 'newsletter_subscribers' && key === 'unsubscribe_token') {
+      if (typeof value !== 'string' || !value) throw new Error('invalid_unsubscribe_token');
+      transformed.unsubscribeTokenHash = createHash('sha256').update(value).digest('hex');
+      continue;
+    }
     if (key === 'id') {
       transformed.publicId = value;
       continue;
@@ -112,9 +129,17 @@ export function transformExportRow(
       continue;
     }
     const targetKey = snakeToCamel(key);
-    transformed[targetKey] = TIMESTAMP_FIELDS.has(key)
-      ? timestampToMillis(value, key)
-      : value;
+    if (TIMESTAMP_FIELDS.has(key)) {
+      transformed[targetKey] = timestampToMillis(value, key);
+    } else if (NUMERIC_FIELDS.has(key) && typeof value === 'string') {
+      const number = Number(value);
+      if (!value.trim() || !Number.isFinite(number)) throw new Error(`invalid_numeric:${key}`);
+      transformed[targetKey] = number;
+    } else if (key === 'week_start' && value instanceof Date) {
+      // pg decodes DATE at local midnight. Preserve its calendar date, not a UTC
+      // conversion that could move a weekly digest into the preceding day.
+      transformed[targetKey] = `${value.getFullYear()}-${String(value.getMonth() + 1).padStart(2, '0')}-${String(value.getDate()).padStart(2, '0')}`;
+    } else transformed[targetKey] = value;
   }
 
   return transformed;

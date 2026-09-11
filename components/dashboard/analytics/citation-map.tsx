@@ -76,15 +76,15 @@ export function CitationMap() {
     const ownRate = data.totalCitations > 0 ? Math.round((data.ownDomainCitations / data.totalCitations) * 100) : 0;
     const externalDomains = data.domains.filter((item) => !item.isOwnDomain);
 
-    return <div id="citation-sources" className="scroll-mt-20 space-y-5">
-        <section aria-labelledby="source-summary-title" className="overflow-hidden rounded-xl border border-[var(--border-active)] bg-[var(--bg-surface)]">
-            <div className="grid sm:grid-cols-[1fr_auto]">
-                <div className="p-5 sm:p-7">
-                    <p className="text-[10px] uppercase tracking-[0.14em] text-[var(--accent-base)]">Structured provider evidence only</p>
-                    <h2 id="source-summary-title" className="mt-3 text-2xl font-medium tracking-tight text-[var(--text-primary)]">Where AI gets answers in your category</h2>
-                    <p className="mt-2 max-w-2xl text-sm leading-6 text-[var(--text-secondary)]">Domains are ranked by the number of provider-backed citations observed in your scans. Open a row to inspect the exact URLs.</p>
+    return <div id="citation-sources" className="scroll-mt-28 space-y-12">
+        <section aria-labelledby="source-summary-title">
+            <div className="grid items-end gap-10 lg:grid-cols-[1fr_auto]">
+                <div>
+                    <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-[var(--text-tertiary)]">02 / Trace · structured provider evidence</p>
+                    <h2 id="source-summary-title" className="mt-5 text-[clamp(2.5rem,5vw,4rem)] font-normal leading-[1.08] tracking-[-0.055em] text-[var(--text-primary)]">Follow the sources.</h2>
+                    <p className="mt-5 max-w-2xl text-[16px] leading-7 text-[var(--text-secondary)]">These domains appeared in sampled answers. Inspect the exact provider citations before turning a source into a task.</p>
                 </div>
-                <dl className="grid grid-cols-3 border-t border-[var(--border-default)] bg-[var(--bg-base)] sm:grid-cols-1 sm:border-l sm:border-t-0">
+                <dl className="grid min-w-[20rem] grid-cols-3 border-y border-[var(--border-default)]">
                     <SummaryMetric label="Citations" value={data.totalCitations.toString()} />
                     <SummaryMetric label="Domains" value={data.domains.length.toString()} />
                     <SummaryMetric label="Own-domain rate" value={`${ownRate}%`} />
@@ -92,8 +92,8 @@ export function CitationMap() {
             </div>
         </section>
 
-        <section aria-labelledby="domain-table-title" className="overflow-hidden rounded-xl border border-[var(--border-default)] bg-[var(--bg-surface)]">
-            <div className="flex items-end justify-between gap-3 border-b border-[var(--border-default)] px-5 py-4">
+        <section aria-labelledby="domain-table-title" className="overflow-hidden border-t border-[var(--border-default)]">
+            <div className="flex items-end justify-between gap-3 border-b border-[var(--border-default)] py-4">
                 <div><p className="text-[10px] uppercase tracking-[0.14em] text-[var(--text-tertiary)]">Evidence rail</p><h2 id="domain-table-title" className="mt-1 text-base font-medium text-[var(--text-primary)]">Cited domains</h2></div>
                 <span className="text-xs text-[var(--text-tertiary)]">{externalDomains.length} external · {data.domains.length - externalDomains.length} owned</span>
             </div>
@@ -101,21 +101,21 @@ export function CitationMap() {
                 {data.domains.map((source, index) => {
                     const expanded = expandedDomain === source.domain;
                     return <article key={source.domain}>
-                        <button type="button" aria-expanded={expanded} onClick={() => setExpandedDomain(expanded ? null : source.domain)} className="grid min-h-16 w-full grid-cols-[2rem_1fr_auto] items-center gap-3 px-5 py-3 text-left transition-colors hover:bg-[var(--bg-raised)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[var(--accent-base)] sm:grid-cols-[2rem_1fr_6rem_7rem]">
-                            <span className="text-xs text-[var(--text-ghost)]">{String(index + 1).padStart(2, "0")}</span>
-                            <span className="min-w-0 truncate text-sm font-medium text-[var(--text-primary)]">{source.domain}{source.isOwnDomain && <span className="ml-2 text-[10px] uppercase tracking-wide text-[var(--data-green)]">Owned</span>}</span>
+                        <button type="button" aria-expanded={expanded} onClick={() => setExpandedDomain(expanded ? null : source.domain)} className="grid min-h-20 w-full grid-cols-[2.5rem_1fr_auto] items-center gap-4 py-4 text-left transition-colors hover:bg-[var(--bg-raised)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[var(--accent-base)] sm:grid-cols-[2.5rem_1fr_6rem_7rem]">
+                            <span className="font-mono text-xs text-[var(--accent-base)]">{String(index + 1).padStart(2, "0")}</span>
+                            <span className="min-w-0 truncate text-lg font-medium text-[var(--text-primary)]">{source.domain}{source.isOwnDomain && <span className="ml-2 text-[10px] uppercase tracking-wide text-[var(--data-green)]">Owned</span>}</span>
                             <span className="hidden text-xs text-[var(--text-tertiary)] sm:block">{source.urlCount} URL{source.urlCount === 1 ? "" : "s"}</span>
                             <span className="text-right text-sm text-[var(--text-secondary)]">{source.totalMentions} citation{source.totalMentions === 1 ? "" : "s"}</span>
                         </button>
-                        {expanded && <div className="border-t border-[var(--border-subtle)] bg-[var(--bg-base)] px-5 py-3 sm:pl-[4.75rem]">
-                            <div className="space-y-2">{source.urls.map((url) => <a key={url} href={url} target="_blank" rel="noreferrer" className="flex min-h-10 items-center gap-2 text-xs text-[var(--text-secondary)] hover:text-[var(--accent-base)]"><Link2 className="h-3.5 w-3.5 shrink-0" /><span className="min-w-0 truncate">{url}</span><ArrowUpRight className="ml-auto h-3.5 w-3.5 shrink-0" /></a>)}</div>
+                        {expanded && <div className="border-t border-[var(--border-evidence)] bg-[var(--bg-evidence)] px-5 py-4 text-[var(--text-evidence)] sm:pl-[4.75rem]">
+                            <div className="space-y-2">{source.urls.map((url) => <a key={url} href={url} target="_blank" rel="noreferrer" className="flex min-h-10 items-center gap-2 text-xs text-[#5F6B6C] hover:text-[#324C74]"><Link2 className="h-3.5 w-3.5 shrink-0" /><span className="min-w-0 truncate">{url}</span><ArrowUpRight className="ml-auto h-3.5 w-3.5 shrink-0" /></a>)}</div>
                         </div>}
                     </article>;
                 })}
             </div>
         </section>
 
-        <section aria-labelledby="gap-title" className="rounded-xl border border-[var(--border-default)] bg-[var(--bg-surface)] p-5">
+        <section aria-labelledby="gap-title" className="border-l-2 border-[var(--accent-base)] bg-[var(--bg-raised)] p-5 sm:p-6">
             <div className="flex items-start gap-3"><CheckCircle2 className="mt-0.5 h-4 w-4 text-[var(--accent-base)]" /><div><h2 id="gap-title" className="text-sm font-medium text-[var(--text-primary)]">Places to earn a mention</h2><p className="mt-1 text-xs leading-5 text-[var(--text-secondary)]">These source types have not appeared in structured citation evidence yet. Treat them as research leads, not guaranteed ranking factors.</p></div></div>
             <div className="mt-4 grid gap-px overflow-hidden rounded-lg border border-[var(--border-default)] bg-[var(--border-default)] sm:grid-cols-2">
                 {data.gaps.slice(0, 6).map((gap) => {
@@ -128,5 +128,5 @@ export function CitationMap() {
 }
 
 function SummaryMetric({ label, value }: { label: string; value: string }) {
-    return <div className="min-w-32 border-[var(--border-default)] p-4 text-center sm:border-b sm:text-left sm:last:border-b-0"><dt className="text-[10px] uppercase tracking-[0.12em] text-[var(--text-tertiary)]">{label}</dt><dd className="mt-1 text-xl font-medium text-[var(--text-primary)]">{value}</dd></div>;
+    return <div className="border-r border-[var(--border-default)] px-4 py-4 text-left last:border-r-0"><dt className="font-mono text-[9px] uppercase tracking-[0.1em] text-[var(--text-tertiary)]">{label}</dt><dd className="mt-2 text-2xl font-normal text-[var(--text-primary)]">{value}</dd></div>;
 }

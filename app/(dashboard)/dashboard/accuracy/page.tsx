@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation';
 import { getCurrentWorkspaceContext } from '@/lib/data-access';
-import { createAdminClient } from '@/lib/supabase/admin';
+import { api } from '@/convex/_generated/api';
+import { fetchAuthQuery } from '@/lib/auth-server';
 import { loadAccuracySummary, type AccuracySummary } from '@/lib/analytics/accuracy';
 import { Header } from '@/components/dashboard/header';
 import { AccuracyView } from '@/components/dashboard/accuracy-view';
@@ -13,11 +14,9 @@ export default async function AccuracyPage() {
     const ctx = await getCurrentWorkspaceContext();
     if (!ctx?.workspaceId) redirect('/login');
 
-    const demoSeed = process.env.AELO_DEMO_SEED === '1';
-    const db = createAdminClient();
-    const { data: org } = await db.from('organizations').select('plan').eq('id', ctx.orgId).single();
-    const plan = demoSeed ? 'command' : (org?.plan ?? 'free');
-    const paidTier = demoSeed || PAID_PLANS.has(plan);
+    const org = await fetchAuthQuery(api.settings.organization, { orgId: ctx.orgId });
+    const plan = org.plan;
+    const paidTier = PAID_PLANS.has(plan);
 
     let summary: AccuracySummary = {
         total: 0,
@@ -28,9 +27,9 @@ export default async function AccuracyPage() {
     };
     let missingTable = false;
     try {
-        summary = await loadAccuracySummary(ctx.workspaceId);
+        if (paidTier) summary = await loadAccuracySummary(ctx.workspaceId);
     } catch (err) {
-        console.warn('[accuracy] load failed (migration 022 not applied?):', err);
+        console.warn('[accuracy] evidence load failed');
         missingTable = true;
     }
 

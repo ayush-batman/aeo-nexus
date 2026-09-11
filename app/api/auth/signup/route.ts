@@ -1,96 +1,23 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createAdminClient } from '@/lib/supabase/admin';
-import rateLimit, { isRateLimitUnavailableError } from '@/lib/rate-limit';
+import { handler } from '@/lib/auth-server';
 
-const limiter = rateLimit({
-    interval: 60 * 60 * 1000, // 1 hour
-    uniqueTokenPerInterval: 500,
-    namespace: 'signup',
-});
-
+/** Compatibility URL. Better Auth owns account creation and email verification. */
 export async function POST(request: NextRequest) {
-    try {
-        const { email, password, fullName, selectedPlan } = await request.json();
-
-        const ip = request.headers.get('x-forwarded-for') ||
-            request.headers.get('x-real-ip') ||
-            'unknown';
-
-        try {
-            await limiter.check(20, ip); // Max 20 signups per IP per hour (shared office/VPN IPs were tripping the old limit of 5)
-        } catch (error) {
-            if (isRateLimitUnavailableError(error)) {
-                return NextResponse.json({ error: 'Signup protection is temporarily unavailable.' }, { status: 503 });
-            }
-            return NextResponse.json(
-                { error: 'Too many signup attempts. Please try again later.' },
-                { status: 429 }
-            );
-        }
-
-        if (!email || !password) {
-            return NextResponse.json(
-                { error: 'Email and password are required' },
-                { status: 400 }
-            );
-        }
-        if (typeof password !== 'string' || password.length < 8) {
-            return NextResponse.json({ error: 'Password must be at least 8 characters' }, { status: 400 });
-        }
-        const planIntent = selectedPlan === 'radar' || selectedPlan === 'command' ? selectedPlan : null;
-
-        const supabase = createAdminClient();
-
-        // Create user with admin client (auto-confirms email)
-        const { data, error } = await supabase.auth.admin.createUser({
-            email: email.trim(),
-            password,
-            email_confirm: true,
-            user_metadata: {
-                full_name: fullName?.trim() || '',
-                selected_plan: planIntent,
-            },
-        });
-
-        if (data?.user) {
-            try {
-                const { sendWelcomeEmail } = await import('@/lib/email');
-                await sendWelcomeEmail(data.user.email!, fullName?.trim());
-            } catch (emailErr) {
-                console.error('Failed to send welcome email:', emailErr);
-                // Non-blocking error, we still want to return success for signup
-            }
-        }
-
-        if (error) {
-            console.error('Admin signup error:', error);
-
-            if (error.message.includes('already been registered') ||
-                error.message.includes('already exists')) {
-                return NextResponse.json(
-                    { error: 'An account with this email already exists. Please sign in instead.' },
-                    { status: 409 }
-                );
-            }
-
-            return NextResponse.json(
-                { error: error.message },
-                { status: 400 }
-            );
-        }
-
-        return NextResponse.json({
-            user: {
-                id: data.user.id,
-                email: data.user.email,
-            },
-            message: 'Account created successfully',
-        });
-    } catch (err) {
-        console.error('Signup API error:', err);
-        return NextResponse.json(
-            { error: 'Internal server error' },
-            { status: 500 }
-        );
+    let body: Record<string, unknown>;
+    try { body = await request.json(); } catch {
+        return NextResponse.json({ error: 'Invalid request' }, { status: 400 });
     }
+    if (!body || typeof body !== 'object' || typeof body.email !== 'string' || typeof body.password !== 'string' ||
+        body.password.length < 8 || typeof body.fullName !== 'string' || !body.fullName.trim()) {
+        return NextResponse.json({ error: 'Name, email and a password of at least 8 characters are required' }, { status: 400 });
+    }
+    const plan = body.selectedPlan === 'radar' || body.selectedPlan === 'command' ? body.selectedPlan : null;
+    const headers = new Headers(request.headers);
+    headers.set('content-type', 'application/json');
+    headers.delete('content-length');
+    return handler.POST(new NextRequest(new URL('/api/auth/sign-up/email', request.url), {
+        method: 'POST', headers,
+        body: JSON.stringify({ name: body.fullName.trim(), email: body.email.trim(), password: body.password,
+            callbackURL: plan ? `/onboarding?plan=${plan}` : '/onboarding' }),
+    }));
 }

@@ -40,7 +40,7 @@ export default function IndiaSolution() {
                     "Priced from ₹4,999/mo. India-first, not India-translated.",
                     "The only AEO tool that understands 'phones under 20k' as an intent query.",
                     "Featured in the monthly India AI Visibility Index for eligible brands.",
-                    "Data hosted on Supabase (AWS Mumbai region available on Concierge).",
+                    "Convex-backed workspaces with server-enforced organization and role checks.",
                 ],
                 tierRecommendation: {
                     tierName: "Command",

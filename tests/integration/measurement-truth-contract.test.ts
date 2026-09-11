@@ -57,21 +57,13 @@ test('the primary Sources job ranks domains from provider-backed citations', asy
 });
 
 test('intervention receipts use multi-sample matched cohorts and allow inconclusive verdicts', async () => {
-  const [measureRoute, comparison, snapshot, page] = await Promise.all([
-    source('app/api/interventions/[id]/measure/route.ts'),
-    source('lib/measurement/comparison.ts'),
-    source('lib/interventions.ts'),
-    source('app/(dashboard)/dashboard/interventions/page.tsx'),
-  ]);
-
-  assert.match(measureRoute, /runVisibilityMeasurement/);
-  assert.match(measureRoute, /samples: 4/);
-  assert.match(measureRoute, /reserveScanQuota/);
-  assert.doesNotMatch(measureRoute, /scanLLM\(/);
-  assert.match(comparison, /followupConfidence\.interval\.lower > baselineConfidence\.interval\.upper/);
-  assert.match(comparison, /'inconclusive'/);
-  assert.match(snapshot, /SNAPSHOT_SAMPLES_PER_ENGINE = 8/);
-  assert.match(page, /"inconclusive"/);
+const [backend, comparison, snapshot] = await Promise.all([source('convex/actionMeasurements.ts'),source('lib/measurement/comparison.ts'),source('lib/interventions.ts')]);
+ assert.match(backend,/beginMeasurement/); assert.match(backend,/samples: 4/);
+ assert.match(backend,/compareVisibilitySnapshots/);
+ assert.match(comparison,/followupConfidence\.interval\.lower > baselineConfidence\.interval\.upper/);
+ assert.match(comparison,/'inconclusive'/);
+ assert.match(snapshot,/rows\.length < 8/);
+ assert.match(snapshot,/snapshotFromObservations/);
 });
 
 test('marketing examples and provider status are not presented as live evidence', async () => {
@@ -79,26 +71,34 @@ test('marketing examples and provider status are not presented as live evidence'
     source('app/(marketing)/page.tsx'),
     source('components/marketing/footer.tsx'),
   ]);
-  assert.match(home, /Illustrative product view · example data/);
-  assert.match(home, /Example data, clearly labeled/);
+  assert.match(home, /Illustrative evidence view/);
+  assert.match(home, /Example structure, not a customer result/);
+  assert.match(home, /A live receipt displays only evidence returned by the provider/);
   assert.doesNotMatch(home, /No mock data anywhere/);
   assert.doesNotMatch(home, /Live on ChatGPT/);
   assert.doesNotMatch(footer, /All systems operational/);
 });
 
-test('dashboard visibility summaries expose sample count and Wilson confidence', async () => {
-  const [dataAccess, dashboard, tracker, overview, metricCard] = await Promise.all([
+test('dashboard visibility summaries expose exact counts and Wilson confidence', async () => {
+  const [dataAccess, dashboard, tracker, overview, metricCard, navigation] = await Promise.all([
     source('lib/data-access.ts'),
     source('app/(dashboard)/dashboard/page.tsx'),
     source('app/(dashboard)/dashboard/llm-tracker/page.tsx'),
     source('app/api/v1/visibility/overview/route.ts'),
     source('components/dashboard/metric-card.tsx'),
+    source('components/dashboard/dashboard-navigation.tsx'),
   ]);
   assert.match(dataAccess, /estimateMentionConfidence/);
+  assert.match(dataAccess, /llmVisibilityMentions/);
   assert.match(dashboard, /llmVisibilitySamples/);
+  assert.match(dashboard, /llmVisibilityMentions/);
   assert.match(tracker, /mention rate/);
   assert.match(overview, /confidenceInterval/);
   assert.match(metricCard, /<button type="button"/);
+  for (const job of ['Overview', 'Prompts & Scans', 'Sources', 'Actions', 'Reports & Settings']) {
+    assert.match(navigation, new RegExp(job.replace('&', '&')));
+  }
+  assert.match(navigation, /aelo-dashboard-theme-v1/);
 });
 
 test('all active visibility surfaces use mention rate and preserve unmeasured state', async () => {
@@ -119,7 +119,7 @@ test('all active visibility surfaces use mention rate and preserve unmeasured st
   assert.match(overview, /overall\.visibilityPercent/);
   assert.match(gaps, /mentionRate === null \? null/);
   assert.doesNotMatch(freeScan, /score \+= 40/);
-  assert.match(methodology, /successful_samples_where_brand_named/);
+  assert.match(methodology, /mentions ÷ successful samples × 100/);
 });
 
 test('provider work has deadlines and bounded engine concurrency', async () => {
@@ -132,6 +132,9 @@ test('provider work has deadlines and bounded engine concurrency', async () => {
   assert.match(scanner, /AbortSignal\.timeout/);
   assert.match(scanner, /MAX_ENGINE_CONCURRENCY/);
   assert.match(scanner, /Promise\.all\(batch\.map/);
+  assert.match(scanner, /search_context_size: 'low'/);
+  assert.match(scanner, /reasoning: \{ effort: 'low'/);
+  assert.match(scanner, /max_output_tokens: 2000/);
   assert.match(analyzer, /ANALYZER_TIMEOUT_MS/);
   assert.match(analyzer, /AbortSignal\.timeout/);
   assert.match(service, /DEFAULT_EXECUTE_TIMEOUT_MS/);
@@ -139,41 +142,22 @@ test('provider work has deadlines and bounded engine concurrency', async () => {
 });
 
 test('measurement read failures stay visible and alerts run from every scan path', async () => {
-  const [dataAccess, alertEngine, manualScan, scheduledScan, activationScan] = await Promise.all([
-    source('lib/data-access.ts'),
-    source('lib/alerts/evaluate.ts'),
-    source('app/api/llm/scan/route.ts'),
-    source('app/api/cron/process-scans/route.ts'),
-    source('app/api/cron/process-measurement-jobs/route.ts'),
-  ]);
-
-  assert.match(dataAccess, /throw new Error\('Failed to fetch visibility metrics'/);
-  assert.match(dataAccess, /throw new Error\('Failed to fetch LLM scans'/);
-  assert.match(alertEngine, /ignoreDuplicates: true/);
-  assert.match(alertEngine, /current\.confidence\.interval\.upper < comparison\.previous\.confidence\.interval\.lower/);
-  assert.match(alertEngine, /selectPreviousAlertCohort/);
-  for (const scanPath of [manualScan, scheduledScan, activationScan]) {
-    assert.match(scanPath, /await evaluateMeasurementAlerts/);
-  }
+const [data, alerts, backend, worker] = await Promise.all([source('lib/data-access.ts'),source('lib/alerts/evaluate.ts'),source('convex/measurements.ts'),source('convex/measurementAlerts.ts')]);
+ assert.match(data,/readScanPages/);
+ assert.doesNotMatch(data,/catch[\s\S]{0,100}return \[\]/);
+ assert.match(alerts,/current\.confidence\.interval\.upper < comparison\.previous\.confidence\.interval\.lower/);
+ assert.match(backend,/internal\.measurementAlerts\.evaluate/);
+ assert.match(worker,/by_workspace_id_and_dedupe_key/);
+ assert.match(worker,/if \(existing\) return false/);
+ for(const path of ['convex/apiWrites.ts','convex/scheduled.ts','convex/activation.ts']) assert.match(await source(path),/beginMeasurement/);
 });
 
 test('activation packet persists three-to-five prompt measurements and one ranked action', async () => {
-  const [route, packet, onboarding, migration] = await Promise.all([
-    source('app/api/onboarding/decision-packet/route.ts'),
-    source('lib/measurement/decision-packet.ts'),
-    source('app/(dashboard)/onboarding/page.tsx'),
-    source('supabase/migrations/029_create_decision_packets.sql'),
-  ]);
-  assert.match(route, /prompts\.length < 3 \|\| prompts\.length > 5/);
-  assert.match(route, /samples: 4/);
-  assert.match(route, /reserveScanQuota/);
-  assert.match(route, /decision_packets/);
-  assert.match(packet, /provider_citation/);
-  assert.match(packet, /rankedAction/);
-  assert.match(onboarding, /Open sample receipt/);
-  assert.match(onboarding, /Provider-backed source gaps/);
-  assert.match(onboarding, /throw new Error\(data\?\.error \|\| `Could not finish onboarding/);
-  assert.doesNotMatch(onboarding, /finally \{[\s\S]{0,200}router\.push\('\/dashboard'\)/);
-  assert.match(migration, /ENABLE ROW LEVEL SECURITY/i);
-  assert.doesNotMatch(migration, /FOR (INSERT|UPDATE|DELETE)\s+TO authenticated/i);
+const [backend, packet, page] = await Promise.all([source('convex/activation.ts'),source('lib/measurement/decision-packet.ts'),source('app/(dashboard)/onboarding/page.tsx')]);
+ assert.match(backend,/prompts\.length < 3 \|\| prompts\.length > 5/);
+ assert.match(backend,/samples: 4/); assert.match(backend,/beginMeasurement/);
+ assert.match(backend,/ctx\.db\.insert\('decisionPackets'/); assert.match(backend,/measurementRunIds: runIds/);
+ assert.match(packet,/provider_citation/); assert.match(packet,/rankedAction/);
+ assert.match(page,/Open sample receipt/); assert.match(page,/Provider-backed source gaps/);
+ assert.doesNotMatch(page,/finally \{[\s\S]{0,200}router\.push\('\/dashboard'\)/);
 });

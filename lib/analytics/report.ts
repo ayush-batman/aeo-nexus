@@ -2,7 +2,7 @@
 // hands a client. Per-engine mention rates, prompt-level breakdown, competitor
 // share, sentiment, over a window. This is the productized version of the
 // spreadsheet operators build by hand.
-import { createClient } from '@/lib/supabase/server';
+import { readScanPages } from '@/lib/data-access';
 import { estimateMentionConfidence } from '@/lib/measurement/confidence';
 import type { MeasurementConfidenceLevel } from '@/lib/measurement/types';
 
@@ -63,20 +63,11 @@ type Row = {
 };
 
 export async function buildReport(workspaceId: string, brand: string, days = 30): Promise<Report> {
-    const supabase = await createClient();
     const sinceDate = new Date(Date.now() - days * 86400000);
     const since = sinceDate.toISOString();
 
-    const { data, error } = await supabase
-        .from('llm_scans')
-        .select('platform, prompt, brand_mentioned, mention_position, sentiment, competitors_mentioned, created_at')
-        .eq('workspace_id', workspaceId)
-        .gte('created_at', since)
-        .order('created_at', { ascending: false });
-
-    if (error) throw new Error(`Failed to build report: ${error.message}`);
-
-    const scans = (data ?? []) as Row[];
+    const scans: Row[] = (await readScanPages(workspaceId, { since: sinceDate.getTime() }))
+        .filter(scan => !scan.failure_code && Boolean(scan.response.trim()));
 
     // Per engine
     const byEngine = new Map<string, { tested: number; mentioned: number; positions: number[] }>();

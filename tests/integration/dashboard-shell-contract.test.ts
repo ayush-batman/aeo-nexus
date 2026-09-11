@@ -4,11 +4,15 @@ import test from 'node:test';
 
 const root = process.cwd();
 
-test('dashboard shell shares collapsed width and exposes a responsive drawer', async () => {
+test('dashboard shell exposes five primary jobs and an accessible all-tools drawer', async () => {
   const shell = await readFile(`${root}/components/dashboard/dashboard-shell.tsx`, 'utf8');
   const sidebar = await readFile(`${root}/components/dashboard/sidebar.tsx`, 'utf8');
-  assert.match(shell, /collapsed && ["']lg:pl-16["']/);
-  assert.match(shell, /lg:pl-60/);
+  const navigation = await readFile(`${root}/components/dashboard/dashboard-navigation.tsx`, 'utf8');
+  assert.match(shell, /<DashboardNavigation/);
+  assert.match(shell, /drawerOnly/);
+  assert.match(navigation, /aria-label="Primary dashboard navigation"/);
+  for (const job of ['Overview', 'Prompts & Scans', 'Sources', 'Actions', 'Reports & Settings']) assert.match(navigation, new RegExp(job));
+  assert.match(navigation, /aria-label="Open all dashboard tools"/);
   assert.match(sidebar, /aria-modal/);
   assert.match(sidebar, /event\.key === ["']Escape["']/);
   assert.match(sidebar, /event\.key !== ["']Tab["']/);
@@ -19,23 +23,30 @@ test('dashboard shell shares collapsed width and exposes a responsive drawer', a
   assert.match(shell, /id=["']dashboard-content["']/);
 });
 
-test('dashboard header has a mobile menu and semantic, reachable controls', async () => {
-  const header = await readFile(`${root}/components/dashboard/header.tsx`, 'utf8');
-  assert.match(header, /aria-label=["']Open navigation["']/);
-  assert.match(header, /min-h-11 min-w-11/);
+test('dashboard header and navigation have semantic, reachable controls', async () => {
+  const [header, navigation] = await Promise.all([
+    readFile(`${root}/components/dashboard/header.tsx`, 'utf8'),
+    readFile(`${root}/components/dashboard/dashboard-navigation.tsx`, 'utf8'),
+  ]);
+  assert.match(navigation, /aria-label={`Use/);
+  assert.match(navigation, /min-h-11 min-w-11/);
   assert.doesNotMatch(header, /placeholder=["']Search\.\.\.["']/);
   assert.doesNotMatch(header, /<div[\s\S]{0,160}onClick=\{\(\) => openNotification/);
   assert.match(header, /role=["']alert["']/);
 });
 
 test('dashboard loading and onboarding failures remain explicit and retryable', async () => {
-  const loading = await readFile(`${root}/app/(dashboard)/loading.tsx`, 'utf8');
-  const gate = await readFile(`${root}/components/onboarding-check.tsx`, 'utf8');
-  const notifications = await readFile(`${root}/app/api/alerts/notifications/route.ts`, 'utf8');
-  assert.match(loading, /role=["']status["']/);
-  assert.match(gate, /role=["']alert["']/);
-  assert.match(gate, /Retry/);
-  assert.match(notifications, /Failed to load notifications[\s\S]*status:\s*500/);
+const [loading, gate, route, errors] = await Promise.all([
+  readFile(new URL('../../app/(dashboard)/loading.tsx', import.meta.url),'utf8'),
+  readFile(new URL('../../components/onboarding-check.tsx', import.meta.url),'utf8'),
+  readFile(new URL('../../app/api/alerts/notifications/route.ts', import.meta.url),'utf8'),
+  readFile(new URL('../../lib/convex/http.ts', import.meta.url),'utf8')]);
+ assert.match(loading,/role=["']status["']/); assert.match(gate,/role=["']alert["']/); assert.match(gate,/Retry/);
+ assert.match(gate,/controller\.signal\.aborted/);
+ assert.match(gate,/if \(pathname === ["']\/onboarding["']\)/);
+ assert.match(gate,/\[attempt, pathname, router\]/);
+ assert.doesNotMatch(gate,/initialPathname/);
+ assert.match(route,/convexRouteError/); assert.match(errors,/status: 503/);
 });
 
 test('core controls meet target sizes and respect reduced motion', async () => {
@@ -60,4 +71,28 @@ test('core public forms and product dialog have accessible names and focus behav
   assert.match(productDialog, /<Dialog open=\{isOpen\}/);
   assert.match(productDialog, /<DialogTitle/);
   assert.match(productDialog, /<DialogDescription/);
+});
+
+test('overview loads its supporting opportunities from the bounded dashboard summary', async () => {
+  const [page, route] = await Promise.all([
+    readFile(`${root}/app/(dashboard)/dashboard/page.tsx`, 'utf8'),
+    readFile(`${root}/app/api/dashboard/stats/route.ts`, 'utf8'),
+  ]);
+  assert.match(page, /data\?\.topThreads/);
+  assert.doesNotMatch(page, /api\/forum\/threads/);
+  assert.match(route, /api\.dashboard\.summary/);
+  assert.doesNotMatch(route, /getVisibilityMetrics|getRecentMentions|getDashboardStats/);
+});
+
+test('dashboard shell bootstraps workspace, onboarding and plan in one authenticated query', async () => {
+  const [gate, sidebar, route] = await Promise.all([
+    readFile(`${root}/components/onboarding-check.tsx`, 'utf8'),
+    readFile(`${root}/components/dashboard/sidebar.tsx`, 'utf8'),
+    readFile(`${root}/app/api/onboarding/context/route.ts`, 'utf8'),
+  ]);
+  assert.match(route, /getConvexDashboardBootstrap/);
+  assert.match(gate, /DashboardBootstrapContext\.Provider/);
+  assert.match(sidebar, /useDashboardBootstrap/);
+  assert.doesNotMatch(sidebar, /fetch\(["']\/api\/(?:entitlements|onboarding\/context)/);
+  assert.doesNotMatch(sidebar, /fetch\(["']\/api\/workspaces["'],\s*\{\s*cache/);
 });

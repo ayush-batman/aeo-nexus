@@ -18,6 +18,10 @@ export type ComparableMentionSample = {
   mode?: string | null;
   scorerVersion?: string | null;
   contractVersion?: string | null;
+  searchMode?: string | null;
+  analyzerMethod?: string | null;
+  analyzerModel?: string | null;
+  analyzerPromptVersion?: string | null;
 };
 
 export type MentionComparison = {
@@ -47,13 +51,17 @@ export function aggregateMentionMetric(rows: ReadonlyArray<{ mentioned: boolean 
 
 function compatibilityKey(sample: ComparableMentionSample): string | null {
   const values = [
-    sample.prompt.trim().toLocaleLowerCase(),
+    sample.prompt.trim(),
     sample.platform.trim().toLocaleLowerCase(),
     sample.providerModel?.trim(),
     sample.region?.trim(),
     sample.mode?.trim(),
     sample.scorerVersion?.trim(),
     sample.contractVersion?.trim(),
+    sample.searchMode?.trim(),
+    sample.analyzerMethod?.trim(),
+    sample.analyzerModel?.trim(),
+    sample.analyzerPromptVersion?.trim(),
   ];
   if (values.some((value) => !value)) return null;
   return values.join('\u0000');
@@ -98,6 +106,13 @@ export function compareCompatibleMentionMetrics(
 
   const current = aggregateMentionMetric(eligibleKeys.flatMap((key) => currentCohorts.get(key) ?? []));
   const previous = aggregateMentionMetric(eligibleKeys.flatMap((key) => previousCohorts.get(key) ?? []));
+  // A change in the prompt mix alone can move pooled visibility even when
+  // every prompt's rate is unchanged (Simpson's paradox). Do not call that
+  // improvement; require the same cohort proportions before pooling.
+  if (eligibleKeys.some((key) => currentCohorts.get(key)!.length * previous.samples !==
+      previousCohorts.get(key)!.length * current.samples)) {
+    return { status: 'incompatible', current: empty, previous: empty, changePoints: null };
+  }
   return {
     status: 'comparable',
     current,

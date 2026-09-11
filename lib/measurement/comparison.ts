@@ -14,6 +14,10 @@ export type ComparableSnapshotPoint = {
   measurement_region?: string;
   measurement_mode?: string;
   scorer_version?: string;
+  search_mode?: string;
+  analyzer_method?: string;
+  analyzer_model?: string;
+  analyzer_prompt_version?: string;
 };
 
 export type ComparableSnapshot = Record<string, Record<string, ComparableSnapshotPoint>>;
@@ -21,7 +25,7 @@ export type ComparableSnapshot = Record<string, Record<string, ComparableSnapsho
 export type InterventionVerdict = 'improved' | 'regressed' | 'inconclusive';
 
 export type InterventionImpactSummary = {
-  visibility_change: number;
+  visibility_change: number | null;
   position_change: number | null;
   verdict: InterventionVerdict;
   reason: string;
@@ -36,7 +40,8 @@ export type InterventionImpactSummary = {
 const MIN_SAMPLES_PER_COHORT = 4;
 
 function compatibleMetadata(baseline: ComparableSnapshotPoint, followup: ComparableSnapshotPoint): boolean {
-  const keys = ['contract_version', 'provider_model', 'measurement_region', 'measurement_mode', 'scorer_version'] as const;
+  const keys = ['contract_version', 'provider_model', 'measurement_region', 'measurement_mode', 'scorer_version',
+    'search_mode', 'analyzer_method', 'analyzer_model', 'analyzer_prompt_version'] as const;
   return keys.every(key => Boolean(baseline[key]) && baseline[key] === followup[key]);
 }
 
@@ -58,6 +63,7 @@ export function compareVisibilitySnapshots(
   let followupPositionSum = 0;
   let followupPositionSamples = 0;
   let comparablePairs = 0;
+  const weights: Array<[number, number]> = [];
 
   for (const [prompt, followupEngines] of Object.entries(followup)) {
     const baselineEngines = baseline[prompt];
@@ -79,6 +85,7 @@ export function compareVisibilitySnapshots(
       ) continue;
 
       comparablePairs++;
+      weights.push([baselineCount, followupCount]);
       baselineSamples += baselineCount;
       baselineMentions += baselineMentionCount;
       followupSamples += followupCount;
@@ -86,15 +93,15 @@ export function compareVisibilitySnapshots(
 
       const baselinePositionCount = validCount(baselinePoint.position_sample_count)
         ? baselinePoint.position_sample_count
-        : baselinePoint.position === null ? 0 : baselineCount;
+        : 0;
       const followupPositionCount = validCount(followupPoint.position_sample_count)
         ? followupPoint.position_sample_count
-        : followupPoint.position === null ? 0 : followupCount;
-      if (baselinePoint.position !== null && baselinePositionCount > 0) {
+        : 0;
+      if (baselinePoint.position !== null && Number.isFinite(baselinePoint.position) && baselinePoint.position >= 1 && baselinePositionCount > 0 && baselinePositionCount <= baselineMentionCount) {
         baselinePositionSum += baselinePoint.position * baselinePositionCount;
         baselinePositionSamples += baselinePositionCount;
       }
-      if (followupPoint.position !== null && followupPositionCount > 0) {
+      if (followupPoint.position !== null && Number.isFinite(followupPoint.position) && followupPoint.position >= 1 && followupPositionCount > 0 && followupPositionCount <= followupMentionCount) {
         followupPositionSum += followupPoint.position * followupPositionCount;
         followupPositionSamples += followupPositionCount;
       }
@@ -103,25 +110,27 @@ export function compareVisibilitySnapshots(
 
   const baselineConfidence = estimateMentionConfidence(baselineMentions, baselineSamples);
   const followupConfidence = estimateMentionConfidence(followupMentions, followupSamples);
-  const baselineRate = baselineConfidence.mentionRate ?? 0;
-  const followupRate = followupConfidence.mentionRate ?? 0;
-  const visibilityChange = Math.round((followupRate - baselineRate) * 100);
-  const positionChange = baselinePositionSamples > 0 && followupPositionSamples > 0
+  const baselineRate = baselineConfidence.mentionRate;
+  const followupRate = followupConfidence.mentionRate;
+  const changedMix = weights.some(([before, after]) => before * followupSamples !== after * baselineSamples);
+  const visibilityChange = changedMix || baselineRate === null || followupRate === null ? null : Math.round((followupRate - baselineRate) * 100);
+  const positionChange = !changedMix && baselinePositionSamples > 0 && followupPositionSamples > 0
     ? Math.round(((followupPositionSum / followupPositionSamples) - (baselinePositionSum / baselinePositionSamples)) * 10) / 10
     : null;
 
   let verdict: InterventionVerdict = 'inconclusive';
   let reason = comparablePairs === 0
     ? 'No matching prompt, engine, model, region, mode, and scorer cohorts have at least 4 successful samples before and after the action.'
-    : 'The 95% confidence intervals overlap, so the measured change is not yet conclusive.';
+    : 'The 95% repeatability intervals overlap, so the observed change is inconclusive. Repeated AI answers are not independent samples of all users.';
 
-  if (baselineConfidence.interval && followupConfidence.interval) {
+  if (changedMix) reason = 'The relative sample counts changed across prompt/engine cohorts. Repeat the same sampling mix before comparing the pooled rates.';
+  if (!changedMix && baselineConfidence.interval && followupConfidence.interval) {
     if (followupConfidence.interval.lower > baselineConfidence.interval.upper) {
       verdict = 'improved';
-      reason = 'The follow-up mention rate is higher with non-overlapping 95% confidence intervals.';
+      reason = 'The follow-up mention rate is higher with non-overlapping 95% repeatability intervals. This is observed answer behavior, not proof that the action caused the change.';
     } else if (followupConfidence.interval.upper < baselineConfidence.interval.lower) {
       verdict = 'regressed';
-      reason = 'The follow-up mention rate is lower with non-overlapping 95% confidence intervals.';
+      reason = 'The follow-up mention rate is lower with non-overlapping 95% repeatability intervals. This is observed answer behavior, not proof that the action caused the change.';
     }
   }
 

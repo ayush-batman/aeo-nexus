@@ -1,5 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
+import { createHash } from 'node:crypto';
+import pg from 'pg';
 
 import {
   EXPORT_TABLES,
@@ -18,6 +20,28 @@ test('migration exports parents before children and includes every source table'
     assert.ok(EXPORT_TABLES.includes(table), `${table} must be exported`);
   }
   assert.equal(new Set(EXPORT_TABLES).size, EXPORT_TABLES.length);
+});
+
+test('export accepts actual pg date and numeric parser outputs', () => {
+  const timestamp = pg.types.getTypeParser(1184)('2026-08-30 00:00:00+00');
+  const day = pg.types.getTypeParser(1082)('2026-08-30');
+  const numeric = pg.types.getTypeParser(1700)('0.875');
+  const transformed = transformExportRow('sentiment_drift_snapshots', {
+    id: 'snapshot', created_at: timestamp, week_start: day, avg_sentiment: numeric,
+  });
+  assert.equal(transformed.createdAt, Date.parse('2026-08-30T00:00:00Z'));
+  assert.equal(transformed.weekStart, '2026-08-30');
+  assert.equal(transformed.avgSentiment, 0.875);
+  assert.throws(() => transformExportRow('llm_scans', { confidence: 'NaN' }), /invalid_numeric/);
+  assert.throws(() => transformExportRow('llm_scans', { created_at: new Date('invalid') }), /invalid_timestamp/);
+});
+
+test('newsletter export hashes unsubscribe tokens while preserving existing links', () => {
+  const token = 'synthetic-unsubscribe-token';
+  const transformed = transformExportRow('newsletter_subscribers', { id: 'subscriber', unsubscribe_token: token });
+  assert.equal(transformed.unsubscribeTokenHash, createHash('sha256').update(token).digest('hex'));
+  assert.equal('unsubscribeToken' in transformed, false);
+  assert.equal(JSON.stringify(transformed).includes(token), false);
 });
 
 test('production-looking Supabase targets require an explicit export flag', () => {

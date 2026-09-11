@@ -1,8 +1,11 @@
 import { v } from 'convex/values';
+import { extractProviderCitations } from '../lib/ai/citation-provenance';
 
 import type { Doc } from './_generated/dataModel';
 import { internalMutation, type MutationCtx } from './_generated/server';
 import { newPublicId } from './lib/publicIds';
+import { materializeRemainingRecord } from './lib/importRecords';
+import { upsertScanMetric } from './lib/scanMetrics';
 
 type Payload = Record<string, unknown>;
 
@@ -116,12 +119,16 @@ function normalizeCitations(
   return value.map((raw) => {
     const citation = asPayload(raw);
     const provenance = citation.provenance;
+    const rawProviderReference = citation.raw_provider_reference ?? citation.rawProviderReference ?? null;
+    const url = stringField(citation, 'url');
+    const proven = extractProviderCitations([rawProviderReference], { provider, sampleId })
+      .some((reference) => {
+        if (reference.provenance !== 'provider_citation') return false;
+        try { return reference.url === new URL(url).toString(); } catch { return false; }
+      });
     const normalizedProvenance =
-      provenance === 'provider_citation' ||
-      provenance === 'link_mentioned' ||
-      provenance === 'unverified'
-        ? provenance
-        : 'unverified';
+      provenance === 'provider_citation' && proven ? 'provider_citation'
+        : provenance === 'link_mentioned' ? 'link_mentioned' : 'unverified';
     const fetchValidation = citation.fetch_validation ?? citation.fetchValidation;
     const normalizedValidation =
       fetchValidation === 'valid' ||
@@ -132,7 +139,7 @@ function normalizeCitations(
         : 'not_checked';
 
     return {
-      url: stringField(citation, 'url'),
+      url,
       title: typeof citation.title === 'string' ? citation.title : '',
       isOwnDomain: Boolean(citation.is_own_domain ?? citation.isOwnDomain),
       provenance: normalizedProvenance,
@@ -141,8 +148,7 @@ function normalizeCitations(
         typeof (citation.sample_id ?? citation.sampleId) === 'string'
           ? String(citation.sample_id ?? citation.sampleId)
           : sampleId,
-      rawProviderReference:
-        citation.raw_provider_reference ?? citation.rawProviderReference ?? null,
+      rawProviderReference,
       fetchValidation: normalizedValidation,
     };
   });
@@ -213,6 +219,9 @@ async function upsertUser(
     .query('users')
     .withIndex('by_public_id', (q) => q.eq('publicId', publicId))
     .unique();
+  if (user?.authSubject || user?.claimedAt !== null && user?.claimedAt !== undefined) {
+    throw new Error('import_user_already_claimed');
+  }
   const value = {
     email,
     normalizedEmail: email.trim().toLowerCase(),
@@ -358,6 +367,7 @@ async function upsertScan(ctx: MutationCtx, payload: Payload): Promise<void> {
     winnerReason: nullableStringField(payload, 'winnerReason'),
     measurementRunId: nullableStringField(payload, 'measurementRunId'),
     measurementContractVersion: nullableStringField(payload, 'measurementContractVersion'),
+    sampleId: nullableStringField(payload, 'sampleId'),
     sampleNumber: nullableNumberField(payload, 'sampleNumber'),
     providerModel: nullableStringField(payload, 'providerModel'),
     measurementRegion: nullableStringField(payload, 'measurementRegion'),
@@ -372,7 +382,8 @@ async function upsertScan(ctx: MutationCtx, payload: Payload): Promise<void> {
     .withIndex('by_public_id', (q) => q.eq('publicId', publicId))
     .unique();
   if (existing) await ctx.db.patch(existing._id, value);
-  else await ctx.db.insert('scans', { publicId, ...value });
+  const scanId = existing?._id ?? await ctx.db.insert('scans', { publicId, ...value });
+  await upsertScanMetric(ctx, scanId, { publicId, ...value });
 }
 
 async function upsertApiKey(ctx: MutationCtx, payload: Payload): Promise<void> {
@@ -387,6 +398,10 @@ async function upsertApiKey(ctx: MutationCtx, payload: Payload): Promise<void> {
   );
   const creator = await userByPublicId(ctx, stringField(payload, 'createdByPublicId'));
   if (!creator) throw new Error('missing_import_parent:created_by');
+  if (workspace.organizationId !== organization._id) throw new Error('import_organization_mismatch');
+  const membership = await ctx.db.query('memberships')
+    .withIndex('by_organization_id_and_user_id', (q) => q.eq('organizationId', organization._id).eq('userId', creator._id)).unique();
+  if (!membership) throw new Error('import_creator_organization_mismatch');
   const value = {
     workspaceId: workspace._id,
     organizationId: organization._id,
@@ -440,6 +455,36 @@ async function upsertBillingEvent(ctx: MutationCtx, payload: Payload): Promise<v
   else await ctx.db.insert('billingWebhookEvents', { publicId, ...value });
 }
 
+async function upsertPublicScan(ctx: MutationCtx, payload: Payload): Promise<void> {
+  const publicId = stringField(payload, 'publicId');
+  const platform = engineField(payload);
+  const createdAt = numberField(payload, 'createdAt');
+  const brandMentioned = payload.brandMentioned;
+  if (brandMentioned !== null && brandMentioned !== undefined && typeof brandMentioned !== 'boolean') {
+    throw new Error('invalid_import_field:brandMentioned');
+  }
+  const value = {
+    publicId, platform, createdAt,
+    ipHash: stringField(payload, 'ipHash'),
+    brandName: stringField(payload, 'brandName'),
+    prompt: stringField(payload, 'prompt'),
+    response: nullableStringField(payload, 'response'),
+    brandMentioned: brandMentioned ?? null,
+    mentionPosition: nullableNumberField(payload, 'mentionPosition'),
+    sentiment: sentimentField(payload),
+    competitorsMentioned: stringArrayField(payload, 'competitorsMentioned'),
+    citations: normalizeCitations(payload, platform, publicId),
+    errorMessage: nullableStringField(payload, 'errorMessage'),
+    email: nullableStringField(payload, 'email'),
+    // Existing public-scan retention is 30 days from creation, never from import.
+    expiresAt: numberField(payload, 'expiresAt', createdAt + 30 * 24 * 60 * 60 * 1000),
+  };
+  const existing = await ctx.db.query('publicScans')
+    .withIndex('by_public_id', (q) => q.eq('publicId', publicId)).unique();
+  if (existing) await ctx.db.replace(existing._id, value);
+  else await ctx.db.insert('publicScans', value);
+}
+
 const batchResultValidator = v.object({
   processed: v.number(),
   nextPublicId: v.union(v.string(), v.null()),
@@ -468,7 +513,7 @@ export const materializeTenantBatch = internalMutation({
           ? prefix.gt('sourcePublicId', args.afterPublicId)
           : prefix;
       })
-      .take(200);
+      .take(10);
 
     for (const row of staged) {
       const payload = asPayload(row.payload);
@@ -484,7 +529,7 @@ export const materializeTenantBatch = internalMutation({
     return {
       processed: staged.length,
       nextPublicId,
-      complete: staged.length < 200,
+      complete: staged.length < 10,
     };
   },
 });
@@ -497,6 +542,7 @@ export const materializeCriticalBatch = internalMutation({
       v.literal('llm_scans'),
       v.literal('api_keys'),
       v.literal('billing_webhook_events'),
+      v.literal('public_scans'),
     ),
     afterPublicId: v.union(v.string(), v.null()),
   },
@@ -512,7 +558,7 @@ export const materializeCriticalBatch = internalMutation({
           ? prefix.gt('sourcePublicId', args.afterPublicId)
           : prefix;
       })
-      .take(200);
+      .take(10);
 
     for (const row of staged) {
       const payload = asPayload(row.payload);
@@ -522,13 +568,51 @@ export const materializeCriticalBatch = internalMutation({
       if (args.sourceTable === 'products') await upsertProduct(ctx, payload);
       else if (args.sourceTable === 'llm_scans') await upsertScan(ctx, payload);
       else if (args.sourceTable === 'api_keys') await upsertApiKey(ctx, payload);
+      else if (args.sourceTable === 'public_scans') await upsertPublicScan(ctx, payload);
       else await upsertBillingEvent(ctx, payload);
     }
 
     return {
       processed: staged.length,
       nextPublicId: staged.at(-1)?.sourcePublicId ?? null,
-      complete: staged.length < 200,
+      complete: staged.length < 10,
+    };
+  },
+});
+
+export const materializeRemainingBatch = internalMutation({
+  args: {
+    manifestHash: v.string(),
+    sourceTable: v.union(
+      v.literal('prompt_library'), v.literal('forum_threads'), v.literal('reddit_accounts'),
+      v.literal('content_analyses'), v.literal('scheduled_scans'), v.literal('analytics_events'),
+      v.literal('alert_preferences'), v.literal('notifications'), v.literal('interventions'),
+      v.literal('action_events'), v.literal('sentiment_drift_snapshots'),
+      v.literal('competitor_attributes'), v.literal('accuracy_claims'),
+      v.literal('scan_quota_reservations'), v.literal('decision_packets'),
+      v.literal('weekly_digest_deliveries'), v.literal('measurement_jobs'),
+      v.literal('experiments'), v.literal('newsletter_subscribers'),
+    ),
+    afterPublicId: v.union(v.string(), v.null()),
+  },
+  returns: batchResultValidator,
+  handler: async (ctx, args) => {
+    const staged = await ctx.db.query('importStaging')
+      .withIndex('by_manifest_table_public_id', (q) => {
+        const prefix = q.eq('manifestHash', args.manifestHash).eq('sourceTable', args.sourceTable);
+        return args.afterPublicId ? prefix.gt('sourcePublicId', args.afterPublicId) : prefix;
+      }).take(10);
+    for (const row of staged) {
+      const payload = asPayload(row.payload);
+      if (stringField(payload, 'publicId') !== row.sourcePublicId) {
+        throw new Error('staging_public_id_mismatch');
+      }
+      await materializeRemainingRecord(ctx, args.sourceTable, payload);
+    }
+    return {
+      processed: staged.length,
+      nextPublicId: staged.at(-1)?.sourcePublicId ?? null,
+      complete: staged.length < 10,
     };
   },
 });

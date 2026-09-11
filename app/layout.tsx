@@ -1,4 +1,7 @@
 import type { Metadata } from "next";
+import "@fontsource-variable/manrope/wght.css";
+import "@fontsource/ibm-plex-mono/400.css";
+import "@fontsource/ibm-plex-mono/500.css";
 import "./globals.css";
 import { OrganizationJsonLd, WebSiteJsonLd } from "@/components/seo/structured-data";
 import { ConvexClientProvider } from "@/app/ConvexClientProvider";
@@ -61,10 +64,15 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" data-scroll-behavior="smooth">
-      <body
-        className={`antialiased dark`}
-      >
+    <html lang="en" data-scroll-behavior="smooth" data-theme="dark" suppressHydrationWarning>
+      <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(function(){try{var dashboard=location.pathname.indexOf('/dashboard')===0||location.pathname.indexOf('/onboarding')===0;document.documentElement.dataset.theme=dashboard?(localStorage.getItem('aelo-dashboard-theme-v1')||'dark'):'dark'}catch(e){document.documentElement.dataset.theme='dark'}})();`,
+          }}
+        />
+      </head>
+      <body className="antialiased">
         <OrganizationJsonLd />
         <WebSiteJsonLd />
         <ConvexClientProvider>{children}</ConvexClientProvider>

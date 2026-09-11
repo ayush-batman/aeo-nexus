@@ -13,13 +13,7 @@ function domainOf(url: string): string {
 export async function GET(request: Request) {
   const limit = Math.min(50, Math.max(1, Number(new URL(request.url).searchParams.get('limit')) || 20));
   return withKey(request, 'read', async (ctx, admin) => {
-    const since = new Date(Date.now() - 90 * 86400000).toISOString();
-    const { data } = await admin
-      .from('llm_scans')
-      .select('citations')
-      .eq('workspace_id', ctx.workspaceId)
-      .gte('created_at', since)
-      .limit(1000);
+    const data = await admin.scans({ since: Date.now() - 90 * 86400000 });
 
     const domains: Record<string, { citations: number; citesYou: boolean }> = {};
     for (const r of data || []) {
@@ -31,7 +25,7 @@ export async function GET(request: Request) {
         const rec = domains[d] || (domains[d] = { citations: 0, citesYou: false });
         rec.citations++;
         // Records vary: newer scans store is_own_domain, older ones isOwnDomain.
-        if (c.is_own_domain ?? c.isOwnDomain) rec.citesYou = true;
+        if (c.is_own_domain) rec.citesYou = true;
       }
     }
 

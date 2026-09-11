@@ -1,4 +1,5 @@
 "use client";
+import { waitForMeasurementJob } from '@/lib/client/wait-for-measurement';
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { formatDistanceToNow } from "date-fns";
@@ -13,7 +14,7 @@ type Priority = "high" | "medium" | "low";
 type Member = { id: string; full_name: string | null; email: string };
 type ActionEvent = { id: string; action_id: string; event_type: string; created_at: string };
 type ImpactSummary = {
-  visibility_change: number;
+  visibility_change: number | null;
   position_change: number | null;
   verdict: "improved" | "no_change" | "regressed" | "inconclusive";
   measured_at: string;
@@ -95,6 +96,14 @@ export default function ActionsPage() {
       const response = await fetch(url, init);
       const body = await response.json().catch(() => ({}));
       if (!response.ok) throw new Error(body.error ?? `Request failed (${response.status})`);
+      if (response.status === 202) {
+        const result = await waitForMeasurementJob(body.statusUrl);
+        if (result.status === 'partial') {
+          await load();
+          setError('Some samples failed. Review the evidence before interpreting this comparison.');
+          return true;
+        }
+      }
       await load();
       return true;
     } catch (reason) {
@@ -114,14 +123,14 @@ export default function ActionsPage() {
 
   return <>
     <Header title="Actions" description="Turn evidence into assigned work, then measure whether it helped." />
-    <main className="space-y-6 p-4 sm:p-6">
+    <main className="mx-auto max-w-[1440px] space-y-10 px-5 py-10 sm:px-8 lg:px-16 lg:py-12">
       {error && <div role="alert" className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-[rgba(239,68,68,.25)] bg-[var(--data-red-muted)] p-3 text-sm text-[var(--data-red)]">
         <span>{error}</span><Button variant="outline" size="sm" onClick={() => void load()}><RefreshCw className="mr-1.5 h-3.5 w-3.5" />Retry</Button>
       </div>}
 
-      <div className="grid grid-cols-2 gap-px overflow-hidden rounded-lg border border-[var(--border-default)] bg-[var(--border-default)] md:grid-cols-4">
+      <div className="grid grid-cols-2 border-y border-[var(--border-default)] md:grid-cols-4">
         {[['All actions', stats.total], ['Open', stats.open], ['Awaiting measure', stats.awaiting], ['Improved', stats.improved]].map(([label, value]) =>
-          <div key={label} className="bg-[var(--bg-surface)] p-4"><div className="text-[10px] uppercase tracking-widest text-[var(--text-tertiary)]">{label}</div><div className="mt-1 text-3xl tabular-nums text-[var(--text-primary)]">{value}</div></div>
+          <div key={label} className="border-b border-r border-[var(--border-default)] py-5 pr-5 last:border-r-0 md:border-b-0 md:pl-5 md:first:pl-0"><div className="font-mono text-[10px] uppercase tracking-widest text-[var(--text-tertiary)]">{label}</div><div className="mt-2 text-4xl font-normal tabular-nums tracking-[-0.04em] text-[var(--text-primary)]">{value}</div></div>
         )}
       </div>
 
@@ -131,10 +140,10 @@ export default function ActionsPage() {
         if (saved) setShowCreate(false);
       }} />}
 
-      {data && data.suggestions.length > 0 && <section aria-labelledby="suggestions-title" className="rounded-xl border border-[var(--border-default)] bg-[var(--bg-surface)] p-4 sm:p-5">
+      {data && data.suggestions.length > 0 && <section aria-labelledby="suggestions-title" className="border-t border-[var(--border-default)] pt-6">
         <div className="mb-4"><h2 id="suggestions-title" className="text-base font-medium text-[var(--text-primary)]">Suggested from your evidence</h2><p className="mt-1 text-sm text-[var(--text-secondary)]">Save a suggestion to make it shared, assignable, and measurable.</p></div>
         <div className="grid gap-3 lg:grid-cols-3">
-          {data.suggestions.slice(0, 3).map(suggestion => <article key={suggestion.id} className="rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-raised)] p-4">
+          {data.suggestions.slice(0, 3).map(suggestion => <article key={suggestion.id} className="border-l border-[var(--border-default)] px-5 py-2 first:border-l-0 first:pl-0">
             <div className="mb-2 flex items-center gap-2 text-[10px] uppercase tracking-widest"><span className={priorityColor(suggestion.priority)}>{suggestion.priority}</span><span className="text-[var(--text-tertiary)]">{suggestion.category}</span></div>
             <h3 className="text-sm font-medium text-[var(--text-primary)]">{suggestion.title}</h3><p className="mt-2 text-xs leading-relaxed text-[var(--text-secondary)]">{suggestion.detail}</p>
             {data.canEdit && <Button className="mt-4 min-h-10 w-full" variant="outline" disabled={busy === suggestion.id} onClick={() => void mutate(suggestion.id, "/api/interventions", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ insight_id: suggestion.id }) })}>{busy === suggestion.id ? <Loader2 className="mr-1.5 h-4 w-4 animate-spin" /> : <Plus className="mr-1.5 h-4 w-4" />}Add to Actions</Button>}
@@ -142,16 +151,23 @@ export default function ActionsPage() {
         </div>
       </section>}
 
-      {!data ? <BoardSkeleton /> : <section aria-label="Team action board" className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        {LANES.map(lane => {
+      {!data ? <BoardSkeleton /> : <section aria-label="Team action queue" className="grid items-start gap-12 lg:grid-cols-[minmax(0,2fr)_minmax(16rem,1fr)] lg:gap-16">
+        <div>{LANES.map(lane => {
           const items = data.interventions.filter(item => item.status === lane.status);
-          return <div key={lane.status} className="min-w-0 rounded-xl border border-[var(--border-default)] bg-[var(--bg-surface)]/45 p-3">
-            <div className="mb-3 flex items-start justify-between px-1"><div><h2 className="text-xs font-medium uppercase tracking-widest text-[var(--text-primary)]">{lane.label}</h2><p className="mt-1 text-[11px] text-[var(--text-tertiary)]">{lane.note}</p></div><span className="text-xs tabular-nums text-[var(--text-tertiary)]">{items.length}</span></div>
-            <div className="space-y-3">{items.map(item => <ActionCard key={item.id} item={item} members={data.members} events={data.events.filter(event => event.action_id === item.id)} canEdit={data.canEdit} busy={busy === item.id} onPatch={patch => void mutate(item.id, `/api/interventions/${item.id}`, { method: "PATCH", headers: { "Content-Type": "application/json", "Idempotency-Key": crypto.randomUUID() }, body: JSON.stringify(patch) })} onMeasure={() => void mutate(item.id, `/api/interventions/${item.id}/measure`, { method: "POST", headers: { "Idempotency-Key": crypto.randomUUID() } })} />)}
-              {items.length === 0 && <div className="rounded-lg border border-dashed border-[var(--border-subtle)] px-3 py-8 text-center text-xs text-[var(--text-tertiary)]">No actions here</div>}
+          return <section key={lane.status} aria-labelledby={`lane-${lane.status}`} className="mb-10">
+            <div className="flex items-end justify-between border-b border-[var(--border-default)] pb-3"><div><h2 id={`lane-${lane.status}`} className="font-mono text-[11px] uppercase tracking-widest text-[var(--text-primary)]">{lane.label}</h2><p className="mt-1 text-xs text-[var(--text-tertiary)]">{lane.note}</p></div><span className="font-mono text-xs tabular-nums text-[var(--text-tertiary)]">{items.length}</span></div>
+            <div>{items.map(item => <ActionCard key={item.id} item={item} members={data.members} events={data.events.filter(event => event.action_id === item.id)} canEdit={data.canEdit} busy={busy === item.id} onPatch={patch => void mutate(item.id, `/api/interventions/${item.id}`, { method: "PATCH", headers: { "Content-Type": "application/json", "Idempotency-Key": crypto.randomUUID() }, body: JSON.stringify(patch) })} onMeasure={() => void mutate(item.id, `/api/interventions/${item.id}/measure`, { method: "POST", headers: { "Idempotency-Key": crypto.randomUUID() } })} />)}
+              {items.length === 0 && <div className="border-b border-[var(--border-default)] py-7 text-sm text-[var(--text-tertiary)]">No actions in this stage.</div>}
             </div>
-          </div>;
-        })}
+          </section>;
+        })}</div>
+        <aside className="border-l border-[var(--border-default)] pl-7 lg:sticky lg:top-28">
+          <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-[var(--text-tertiary)]">The standard of proof</p>
+          <h2 className="mt-5 text-xl font-medium leading-7 text-[var(--text-primary)]">A task completed is not a result measured.</h2>
+          <p className="mt-4 text-sm leading-6 text-[var(--text-secondary)]">Finishing this queue does not increase visibility. Only a compatible follow-up scan can change the measurement.</p>
+          <ol className="mt-5 list-decimal space-y-3 pl-5 text-sm leading-6 text-[var(--text-secondary)]"><li>Save the current evidence.</li><li>Make one documented change.</li><li>Compare a compatible follow-up scan.</li></ol>
+          <div className="mt-7 border-l-2 border-[var(--accent-base)] bg-[var(--bg-raised)] px-4 py-3 text-xs text-[var(--text-secondary)]"><strong className="block font-medium text-[var(--text-primary)]">No promise of lift</strong>Aelo ranks investigations. It does not sell or guarantee mentions.</div>
+        </aside>
       </section>}
     </main>
   </>;
@@ -160,13 +176,13 @@ export default function ActionsPage() {
 function ActionCard({ item, members, events, canEdit, busy, onPatch, onMeasure }: { item: TeamAction; members: Member[]; events: ActionEvent[]; canEdit: boolean; busy: boolean; onPatch: (patch: Record<string, unknown>) => void; onMeasure: () => void }) {
   const summary = item.impact_summary as ImpactSummary;
   const next = NEXT_STATUS[item.status];
-  return <article className="rounded-lg border border-[var(--border-default)] bg-[var(--bg-surface)] p-4">
+  return <article className="border-b border-[var(--border-default)] py-6">
     <div className="flex items-center justify-between gap-2 text-[10px] uppercase tracking-widest"><span className={priorityColor(item.priority)}>{item.priority}</span><span className="text-[var(--text-tertiary)]">{formatDistanceToNow(new Date(item.created_at), { addSuffix: true })}</span></div>
     <h3 className="mt-2 text-sm font-medium leading-snug text-[var(--text-primary)]">{item.title}</h3>
     {item.hypothesis && <p className="mt-2 text-xs leading-relaxed text-[var(--text-secondary)]"><span className="text-[var(--text-tertiary)]">Hypothesis: </span>{item.hypothesis}</p>}
     {item.target_prompts?.[0] && <div className="mt-3 rounded border border-[var(--border-subtle)] bg-[var(--bg-raised)] px-2 py-1.5 text-[11px] text-[var(--text-secondary)]">{item.target_prompts[0]}</div>}
     {(item.source_url || item.action_url) && <a className="mt-3 inline-flex items-center gap-1 text-xs text-[var(--accent-base)] hover:underline" href={item.source_url || item.action_url || '#'} target="_blank" rel="noreferrer">Open evidence <ArrowUpRight className="h-3 w-3" /></a>}
-    {typeof summary?.visibility_change === "number" && <Receipt summary={summary} />}
+    {summary && <Receipt summary={summary} />}
     <div className="mt-4 space-y-2 border-t border-[var(--border-subtle)] pt-3">
       <label className="block text-[10px] uppercase tracking-widest text-[var(--text-tertiary)]" htmlFor={`owner-${item.id}`}>Owner</label>
       <select id={`owner-${item.id}`} value={item.owner_id ?? ""} disabled={!canEdit || busy} onChange={event => onPatch({ owner_id: event.target.value || null })} className="min-h-10 w-full rounded-md border border-[var(--border-default)] bg-[var(--bg-raised)] px-2 text-xs text-[var(--text-primary)]"><option value="">Unassigned</option>{members.map(member => <option value={member.id} key={member.id}>{member.full_name || member.email}</option>)}</select>
@@ -188,6 +204,6 @@ function CreateActionForm({ members, currentUserId, busy, onCancel, onSubmit }: 
 }
 
 function Field({ id, label, value, onChange, required, type = "text", placeholder }: { id: string; label: string; value: string; onChange: (value: string) => void; required?: boolean; type?: string; placeholder?: string }) { return <div><label htmlFor={id} className="mb-1.5 block text-xs text-[var(--text-secondary)]">{label}</label><input id={id} type={type} value={value} required={required} placeholder={placeholder} onChange={event => onChange(event.target.value)} className="min-h-11 w-full rounded-md border border-[var(--border-default)] bg-[var(--bg-raised)] px-3 text-sm text-[var(--text-primary)]" /></div>; }
-function Receipt({ summary }: { summary: ImpactSummary }) { const delta = summary.visibility_change > 0 ? `+${summary.visibility_change}` : String(summary.visibility_change); return <div className="mt-3 rounded-md border border-[var(--border-subtle)] bg-[var(--bg-raised)] p-3"><div className="flex items-center gap-1.5 text-[10px] uppercase tracking-widest text-[var(--text-tertiary)]"><CheckCircle2 className="h-3 w-3" />Verdict · {summary.verdict.replace('_', ' ')}</div><div className={cn("mt-1 text-2xl tabular-nums", summary.verdict === "improved" ? "text-[var(--accent-base)]" : summary.verdict === "regressed" ? "text-[var(--data-red)]" : "text-[var(--text-primary)]")}>{delta} <span className="text-xs text-[var(--text-tertiary)]">pts</span></div>{summary.reason && <p className="mt-1 text-[11px] text-[var(--text-secondary)]">{summary.reason}</p>}{typeof summary.baseline_sample_count === "number" && <p className="mt-1 text-[10px] text-[var(--text-tertiary)]">n={summary.baseline_sample_count} before · n={summary.followup_sample_count} after</p>}</div>; }
+function Receipt({ summary }: { summary: ImpactSummary }) { const delta = summary.visibility_change === null ? "Not comparable" : summary.visibility_change > 0 ? `+${summary.visibility_change}` : String(summary.visibility_change); return <div className="mt-3 rounded-md border border-[var(--border-subtle)] bg-[var(--bg-raised)] p-3"><div className="flex items-center gap-1.5 text-[10px] uppercase tracking-widest text-[var(--text-tertiary)]"><CheckCircle2 className="h-3 w-3" />Verdict · {summary.verdict.replace('_', ' ')}</div><div className={cn("mt-1 text-2xl tabular-nums", summary.verdict === "improved" ? "text-[var(--accent-base)]" : summary.verdict === "regressed" ? "text-[var(--data-red)]" : "text-[var(--text-primary)]")}>{delta} <span className="text-xs text-[var(--text-tertiary)]">pts</span></div>{summary.reason && <p className="mt-1 text-[11px] text-[var(--text-secondary)]">{summary.reason}</p>}{typeof summary.baseline_sample_count === "number" && <p className="mt-1 text-[10px] text-[var(--text-tertiary)]">n={summary.baseline_sample_count} before · n={summary.followup_sample_count} after</p>}</div>; }
 function priorityColor(priority: Priority) { return priority === "high" ? "text-[var(--data-red)]" : priority === "medium" ? "text-[var(--data-amber)]" : "text-[var(--text-tertiary)]"; }
-function BoardSkeleton() { return <div aria-label="Loading actions" className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">{LANES.map(lane => <div key={lane.status} className="h-56 animate-pulse rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-surface)]" />)}</div>; }
+function BoardSkeleton() { return <div aria-label="Loading actions" className="space-y-4">{LANES.map(lane => <div key={lane.status} className="h-32 animate-pulse border-y border-[var(--border-subtle)] bg-[var(--bg-surface)]" />)}</div>; }

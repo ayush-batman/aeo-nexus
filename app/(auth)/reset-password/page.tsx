@@ -1,12 +1,12 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Zap, AlertCircle, Loader2, CheckCircle } from "lucide-react";
-import { createClient } from "@/lib/supabase/client";
+import { authClient } from "@/lib/auth-client";
 
 export default function ResetPasswordPage() {
     const router = useRouter();
@@ -15,16 +15,6 @@ export default function ResetPasswordPage() {
     const [error, setError] = useState<string | null>(null);
     const [loading, setLoading] = useState(false);
     const [success, setSuccess] = useState(false);
-
-    useEffect(() => {
-        // Check if we have a valid session from the reset link
-        const supabase = createClient();
-        supabase.auth.onAuthStateChange((event) => {
-            if (event === "PASSWORD_RECOVERY") {
-                // User clicked the reset link, they can now set a new password
-            }
-        });
-    }, []);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -43,19 +33,19 @@ export default function ResetPasswordPage() {
         setLoading(true);
 
         try {
-            const supabase = createClient();
-
-            const { error: updateError } = await supabase.auth.updateUser({
-                password: password,
+            const token = new URLSearchParams(window.location.search).get('token');
+            if (!token) throw new Error('This reset link is missing or expired. Request a new password reset.');
+            const { error: updateError } = await authClient.resetPassword({
+                newPassword: password, token,
             });
 
             if (updateError) {
-                throw updateError;
+                throw new Error(updateError.message || 'Unable to reset your password.');
             }
 
             setSuccess(true);
             setTimeout(() => {
-                router.push("/dashboard");
+                router.push("/login");
             }, 2000);
         } catch (err) {
             console.error("Password update error:", err);

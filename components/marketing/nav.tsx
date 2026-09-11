@@ -1,142 +1,150 @@
 "use client";
 
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useState } from "react";
-import { AeloWordmark } from "@/components/brand/logo";
-import { cn } from "@/lib/utils";
 import { ChevronDown, Menu, X } from "lucide-react";
 
-// Sage nav: quiet, structured, no huge dropdowns. Solutions is the only
-// grouped item, everything else is a direct link.
+import { AeloWordmark } from "@/components/brand/logo";
+import { cn } from "@/lib/utils";
 
-const SOLUTIONS = [
-    { href: "/solutions/founders",  title: "SaaS Founders",  subtitle: "Own the answer buyers ask AI." },
-    { href: "/solutions/marketing", title: "Marketing Teams", subtitle: "Move visibility with prescribed actions." },
-    { href: "/solutions/agencies",  title: "Agencies",       subtitle: "Deliver AEO as a service, multi-workspace." },
-    { href: "/solutions/india",     title: "India-first Brands", subtitle: "₹ pricing, Razorpay, Indian-query nuance." },
+const PRIMARY_LINKS = [
+    { href: "/product", label: "How it works" },
+    { href: "/features", label: "Features" },
+    { href: "/methodology", label: "Methodology" },
+    { href: "/pricing", label: "Pricing" },
 ];
 
-const NAV_LINKS = [
-    { href: "/features",    label: "Features" },
-    { href: "/product",     label: "Product" },
-    { href: "/mcp",         label: "MCP" },
-    { href: "/pricing",     label: "Pricing" },
-    { href: "/india-index", label: "India Index" },
-    { href: "/methodology", label: "Methodology" },
-    { href: "/blog",        label: "Blog" },
-    { href: "/manifesto",   label: "Manifesto" },
+const EXPLORE_LINKS = [
+    { href: "/solutions/founders", label: "For founders", note: "Know what buyers hear" },
+    { href: "/solutions/marketing", label: "For marketing teams", note: "Turn evidence into a brief" },
+    { href: "/solutions/agencies", label: "For agencies", note: "Show clients the receipt" },
+    { href: "/india-index", label: "India visibility index", note: "Public category benchmarks" },
+    { href: "/blog", label: "Field notes", note: "Research and methods" },
+    { href: "/mcp", label: "MCP", note: "Ask Aelo from your tools" },
 ];
 
 export function MarketingNav() {
-    const [openSolutions, setOpenSolutions] = useState(false);
+    const pathname = usePathname();
+    const [openExplore, setOpenExplore] = useState(false);
     const [openMobile, setOpenMobile] = useState(false);
 
     return (
-        <header className="sticky top-0 z-50 border-b border-white/5 bg-black/80 backdrop-blur-xl">
-            <div className="mx-auto max-w-6xl px-6 h-14 flex items-center justify-between">
-                <Link href="/" className="group transition-opacity hover:opacity-90">
+        <header className="pointer-events-none sticky top-0 z-50 px-3 pt-3 [--accent-base:#8de6d1] [--text-primary:#ffffff]">
+            <a
+                href="#main-content"
+                className="pointer-events-auto absolute left-4 top-3 z-[60] -translate-y-24 rounded-full bg-white px-4 py-2 text-sm font-semibold text-[#111936] focus:translate-y-0"
+            >
+                Skip to content
+            </a>
+
+            <div className="pointer-events-auto relative mx-auto flex h-14 max-w-6xl items-center justify-between rounded-full border border-white/10 bg-[#111936]/95 px-4 shadow-[0_12px_40px_rgba(17,25,54,0.22)] backdrop-blur-2xl md:px-5">
+                <Link href="/" className="rounded-full p-1 transition-all duration-700 ease-[cubic-bezier(0.32,0.72,0,1)] hover:opacity-80">
                     <AeloWordmark size="md" />
                 </Link>
 
-                {/* Desktop nav */}
-                <nav className="hidden md:flex items-center gap-6">
-                    {/* Solutions dropdown */}
+                <nav aria-label="Primary" className="hidden items-center gap-1 lg:flex">
+                    {PRIMARY_LINKS.map((link) => {
+                        const current = pathname === link.href;
+                        return (
+                            <Link
+                                key={link.href}
+                                href={link.href}
+                                aria-current={current ? "page" : undefined}
+                                className={cn(
+                                    "rounded-full px-3 py-2 text-sm font-medium transition-all duration-700 ease-[cubic-bezier(0.32,0.72,0,1)]",
+                                    current ? "bg-white text-[#111936]" : "text-white/70 hover:bg-white/10 hover:text-white",
+                                )}
+                            >
+                                {link.label}
+                            </Link>
+                        );
+                    })}
+
                     <div
                         className="relative"
-                        onMouseEnter={() => setOpenSolutions(true)}
-                        onMouseLeave={() => setOpenSolutions(false)}
+                        onMouseEnter={() => setOpenExplore(true)}
+                        onMouseLeave={() => setOpenExplore(false)}
                     >
                         <button
                             type="button"
-                            className="flex items-center gap-1 text-[13px] text-zinc-400 hover:text-white transition-colors"
-                            onClick={() => setOpenSolutions(v => !v)}
+                            aria-expanded={openExplore}
+                            className="flex items-center gap-1 rounded-full px-3 py-2 text-sm font-medium text-white/70 transition-all duration-700 ease-[cubic-bezier(0.32,0.72,0,1)] hover:bg-white/10 hover:text-white"
+                            onClick={() => setOpenExplore((value) => !value)}
                         >
-                            Solutions <ChevronDown className={cn("h-3.5 w-3.5 transition-transform", openSolutions && "rotate-180")} />
+                            Explore
+                            <ChevronDown className={cn("size-4 transition-transform duration-700 ease-[cubic-bezier(0.32,0.72,0,1)]", openExplore && "rotate-180")} />
                         </button>
-                        {openSolutions && (
-                            <div className="absolute left-1/2 -translate-x-1/2 top-full pt-3 w-[520px]">
-                                <div className="rounded-lg border border-white/10 bg-[#0A0A0A] shadow-[0_12px_40px_rgba(0,0,0,0.65)] p-2 grid grid-cols-2 gap-1">
-                                    {SOLUTIONS.map(s => (
+                        {openExplore && (
+                            <div className="absolute right-0 top-full w-[560px] pt-3">
+                                <div className="grid grid-cols-2 gap-2 rounded-2xl border border-[#cdd6ff] bg-[#f7f8ff] p-3 text-[#111936] shadow-[0_24px_70px_rgba(17,25,54,0.2)]">
+                                    {EXPLORE_LINKS.map((link, index) => (
                                         <Link
-                                            key={s.href}
-                                            href={s.href}
-                                            className="rounded-md p-3 hover:bg-white/[0.04] transition-colors"
-                                            onClick={() => setOpenSolutions(false)}
+                                            key={link.href}
+                                            href={link.href}
+                                            onClick={() => setOpenExplore(false)}
+                                            className={cn(
+                                                "rounded-xl p-4 transition-all duration-700 ease-[cubic-bezier(0.32,0.72,0,1)] hover:-translate-y-0.5",
+                                                index % 3 === 0 ? "bg-[#dff7f1]" : index % 3 === 1 ? "bg-[#eeeaff]" : "bg-[#fff5c8]",
+                                            )}
                                         >
-                                            <div className="text-[13px] font-medium text-white">{s.title}</div>
-                                            <div className="text-[12px] text-zinc-500 mt-0.5 leading-snug">{s.subtitle}</div>
+                                            <span className="block text-sm font-semibold">{link.label}</span>
+                                            <span className="mt-1 block text-xs text-[#58627d]">{link.note}</span>
                                         </Link>
                                     ))}
                                 </div>
                             </div>
                         )}
                     </div>
-
-                    {NAV_LINKS.map(l => (
-                        <Link key={l.href} href={l.href} className="text-[13px] text-zinc-400 hover:text-white transition-colors">
-                            {l.label}
-                        </Link>
-                    ))}
                 </nav>
 
-                {/* Right side */}
-                <div className="flex items-center gap-3">
-                    <Link href="/login" className="hidden sm:inline text-[13px] text-zinc-400 hover:text-white transition-colors">
+                <div className="flex items-center gap-2">
+                    <Link href="/login" className="hidden rounded-full px-3 py-2 text-sm font-medium text-white/70 transition-all duration-700 ease-[cubic-bezier(0.32,0.72,0,1)] hover:text-white sm:inline-flex">
                         Log in
                     </Link>
-                    <Link
-                        href="/signup"
-                        className="text-[13px] bg-[var(--accent-base)] text-[var(--text-on-accent)] px-3.5 py-1.5 rounded-md font-medium hover:bg-[var(--accent-hover)] transition-colors"
-                    >
-                        Start free
+                    <Link href="/#scan" className="hidden rounded-full bg-[#f6e76b] px-4 py-2 text-sm font-semibold text-[#111936] transition-all duration-700 ease-[cubic-bezier(0.32,0.72,0,1)] hover:-translate-y-0.5 hover:bg-[#ffef8a] sm:inline-flex">
+                        Run a scan
                     </Link>
                     <button
                         type="button"
-                        className="md:hidden text-zinc-400 hover:text-white"
-                        onClick={() => setOpenMobile(v => !v)}
-                        aria-label="Menu"
+                        aria-label={openMobile ? "Close menu" : "Open menu"}
+                        aria-expanded={openMobile}
+                        className="relative flex size-10 items-center justify-center rounded-full bg-white/10 text-white lg:hidden"
+                        onClick={() => setOpenMobile((value) => !value)}
                     >
-                        {openMobile ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+                        {openMobile ? <X className="size-5" /> : <Menu className="size-5" />}
                     </button>
                 </div>
             </div>
 
-            {/* Mobile drawer */}
-            {openMobile && (
-                <div className="md:hidden border-t border-white/5 bg-black">
-                    <div className="mx-auto max-w-6xl px-6 py-4 space-y-1">
-                        <div className="pt-1 pb-2 text-[10px] font-mono uppercase tracking-[0.16em] text-zinc-500">Solutions</div>
-                        {SOLUTIONS.map(s => (
-                            <Link
-                                key={s.href}
-                                href={s.href}
-                                onClick={() => setOpenMobile(false)}
-                                className="block py-2 text-[14px] text-zinc-300 hover:text-white"
-                            >
-                                {s.title}
-                            </Link>
-                        ))}
-                        <div className="border-t border-white/5 my-3" />
-                        {NAV_LINKS.map(l => (
-                            <Link
-                                key={l.href}
-                                href={l.href}
-                                onClick={() => setOpenMobile(false)}
-                                className="block py-2 text-[14px] text-zinc-300 hover:text-white"
-                            >
-                                {l.label}
-                            </Link>
-                        ))}
+            <div
+                aria-hidden={!openMobile}
+                inert={!openMobile}
+                className={cn(
+                    "pointer-events-auto mx-auto mt-2 max-w-6xl overflow-hidden rounded-3xl border border-white/10 bg-[#111936]/95 backdrop-blur-3xl transition-all duration-700 ease-[cubic-bezier(0.32,0.72,0,1)] lg:hidden",
+                    openMobile ? "max-h-[720px] translate-y-0 opacity-100" : "max-h-0 -translate-y-4 border-transparent opacity-0",
+                )}
+            >
+                <nav aria-label="Mobile" className="grid gap-2 p-4 sm:grid-cols-2">
+                    {[...PRIMARY_LINKS, ...EXPLORE_LINKS].map((link, index) => (
                         <Link
-                            href="/login"
+                            key={link.href}
+                            href={link.href}
                             onClick={() => setOpenMobile(false)}
-                            className="block py-2 text-[14px] text-zinc-300 hover:text-white"
+                            className={cn(
+                                "translate-y-0 rounded-2xl px-4 py-3 text-base font-medium text-white transition-all duration-700 ease-[cubic-bezier(0.32,0.72,0,1)] hover:bg-white/10",
+                                openMobile ? "opacity-100" : "translate-y-12 opacity-0",
+                            )}
+                            style={{ transitionDelay: `${Math.min(index * 45, 360)}ms` }}
                         >
-                            Log in
+                            {link.label}
                         </Link>
-                    </div>
-                </div>
-            )}
+                    ))}
+                    <Link href="/#scan" onClick={() => setOpenMobile(false)} className="mt-2 rounded-2xl bg-[#f6e76b] px-4 py-3 text-center text-base font-semibold text-[#111936] sm:col-span-2">
+                        Run a real scan
+                    </Link>
+                </nav>
+            </div>
         </header>
     );
 }

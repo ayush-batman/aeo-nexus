@@ -2,15 +2,14 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import {
-    Bell, ChevronDown, X, Menu,
+    Bell, ChevronDown, X,
     TrendingDown, Zap, Flame, Sparkles, Link2, AlertTriangle, Bell as BellDot,
     ShieldAlert, LogOut, Settings,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { createClient } from "@/lib/supabase/client";
-import { useDashboardShell } from "@/components/dashboard/dashboard-shell";
+import { authClient } from "@/lib/auth-client";
 
 interface HeaderProps {
     title: string;
@@ -35,7 +34,6 @@ export function Header({ title, description }: HeaderProps) {
     const [notificationError, setNotificationError] = useState<string | null>(null);
     const [notificationClock, setNotificationClock] = useState(0);
     const userMenuRef = useRef<HTMLDivElement>(null);
-    const { openNavigation, navigationButtonRef } = useDashboardShell();
 
     const fetchNotifications = useCallback(async () => {
         try {
@@ -133,8 +131,8 @@ export function Header({ title, description }: HeaderProps) {
 
     async function handleSignOut() {
         try {
-            const supabase = createClient();
-            await supabase.auth.signOut();
+            const { error } = await authClient.signOut();
+            if (error) throw new Error(error.message || 'Unable to sign out.');
         } catch {
             // ignore; force the redirect regardless
         }
@@ -164,19 +162,17 @@ export function Header({ title, description }: HeaderProps) {
     }
 
     return (
-        <header className="sticky top-0 z-30 h-14 border-b border-[var(--border-subtle)] bg-[rgba(0,0,0,0.96)]">
-            <div className="flex items-center justify-between h-full gap-3 px-3 sm:px-6">
+        <header className="border-b border-[var(--border-default)] bg-[var(--bg-base)]">
+            <div className="mx-auto flex min-h-24 max-w-[1440px] items-center justify-between gap-5 px-5 py-5 sm:px-8 lg:px-10">
                 {/* Title */}
                 <div className="flex min-w-0 items-center gap-2.5">
-                    <button ref={navigationButtonRef} type="button" onClick={openNavigation} aria-label="Open navigation" className="flex min-h-11 min-w-11 items-center justify-center rounded-md text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] hover:text-[var(--text-primary)] lg:hidden">
-                        <Menu className="h-5 w-5" />
-                    </button>
                     <div className="min-w-0">
-                    <h1 className="text-lg font-semibold tracking-tight text-[var(--text-primary)] leading-tight">
+                    <p className="mb-1 font-mono text-[10px] uppercase tracking-[0.18em] text-[var(--text-tertiary)]">Aelo / Workspace</p>
+                    <h1 className="text-2xl font-medium tracking-[-0.035em] text-[var(--text-primary)] leading-tight sm:text-[28px]">
                         {title}
                     </h1>
                     {description && (
-                        <p className="hidden truncate text-xs text-[var(--text-secondary)] mt-0.5 sm:block">
+                        <p className="mt-1 hidden truncate text-sm text-[var(--text-secondary)] sm:block">
                             {description}
                         </p>
                     )}
@@ -219,7 +215,7 @@ export function Header({ title, description }: HeaderProps) {
                                         {unreadCount > 0 && (
                                             <button
                                                 onClick={markAllRead}
-                                                className="min-h-10 px-2 text-[10px] font-medium text-[var(--accent-base)] hover:text-white transition-colors"
+                                                className="min-h-10 px-2 text-[10px] font-medium text-[var(--accent-base)] hover:text-[var(--text-primary)] transition-colors"
                                             >
                                                 Mark all read
                                             </button>
@@ -250,7 +246,7 @@ export function Header({ title, description }: HeaderProps) {
                                                 type="button"
                                                 key={n.id}
                                                 onClick={() => openNotification(n)}
-                                                className={`w-full min-h-11 px-4 py-3 text-left transition-colors cursor-pointer border-b border-[var(--border-default)] last:border-0 hover:bg-[rgba(255,255,255,0.03)] ${
+                                                className={`w-full min-h-11 px-4 py-3 text-left transition-colors cursor-pointer border-b border-[var(--border-default)] last:border-0 hover:bg-[var(--bg-hover)] ${
                                                     !n.read ? "border-l-2 border-l-[var(--accent-base)]" : ""
                                                 }`}
                                                 style={!n.read ? { backgroundColor: 'color-mix(in srgb, var(--accent-base) 6%, transparent)' } : undefined}
@@ -290,7 +286,7 @@ export function Header({ title, description }: HeaderProps) {
                             aria-expanded={showUserMenu}
                             className="flex min-h-11 min-w-11 items-center justify-center gap-1 rounded-md transition-colors hover:bg-[var(--bg-hover)]"
                         >
-                            <div className="w-7 h-7 rounded-md bg-[var(--accent-base)] flex items-center justify-center text-white text-xs font-semibold">
+                            <div className="flex h-7 w-7 items-center justify-center rounded-sm bg-[var(--accent-base)] text-xs font-semibold text-[var(--text-on-accent)]">
                                U
                             </div>
                             <ChevronDown className={`w-3.5 h-3.5 text-[var(--text-secondary)] transition-transform ${showUserMenu ? "rotate-180" : ""}`} />

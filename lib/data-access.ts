@@ -1,9 +1,9 @@
-import { createClient } from '@/lib/supabase/server';
-import { createAdminClient } from '@/lib/supabase/admin';
-import { randomUUID } from 'crypto';
-import { cookies } from 'next/headers';
+import { api } from '@/convex/_generated/api';
+import type { FunctionReturnType } from 'convex/server';
+import { fetchAuthMutation, fetchAuthQuery } from '@/lib/auth-server';
+import { legacyScan, legacyThread } from './convex/records';
+import { getConvexWorkspaceContext } from './convex/session';
 import type { LLMScan, ForumThread } from './types';
-import { normalizeWorkspaceRole, type WorkspaceRole } from './authorization';
 import { estimateMentionConfidence } from './measurement/confidence';
 import type { MeasurementConfidenceLevel } from './measurement/types';
 import {
@@ -15,49 +15,6 @@ import {
     type ComparableMentionSample,
 } from './measurement/metrics';
 
-// ── Dev Auth Bypass ─────────────────────────────────────────────────────────
-// Guarded by a non-production runtime, NEXT_PUBLIC_ENABLE_DEV_AUTH_BYPASS=true,
-// and an explicit cookie. Production rejects the path even if misconfigured.
-//
-// Bootstraps a real Supabase auth user (dev@aelo.local) via the admin API so all
-// downstream FKs (public.users → auth.users) hold and the normal profile/org/
-// workspace autoprovision code runs unchanged.
-const DEV_BYPASS_EMAIL = 'dev@aelo.local';
-let cachedDevUser: { id: string; email: string } | null = null;
-
-async function getOrCreateDevUser(): Promise<{ id: string; email: string } | null> {
-    if (cachedDevUser) return cachedDevUser;
-    try {
-        const admin = createAdminClient();
-        // Look up first (auth.admin.listUsers is paged; email filter is exact)
-        const { data: list, error: listErr } = await admin.auth.admin.listUsers();
-        if (listErr) {
-            console.warn('[dev-bypass] listUsers failed:', listErr);
-        }
-        const existing = list?.users?.find(u => u.email === DEV_BYPASS_EMAIL);
-        if (existing?.email) {
-            cachedDevUser = { id: existing.id, email: existing.email };
-            return cachedDevUser;
-        }
-        // Create, random password, never used (we don't sign in via password)
-        const { data, error } = await admin.auth.admin.createUser({
-            email: DEV_BYPASS_EMAIL,
-            password: randomUUID(),
-            email_confirm: true,
-            user_metadata: { full_name: 'Aelo Dev', dev_bypass: true },
-        });
-        if (error || !data.user?.email) {
-            console.error('[dev-bypass] createUser failed:', error);
-            return null;
-        }
-        cachedDevUser = { id: data.user.id, email: data.user.email };
-        return cachedDevUser;
-    } catch (e) {
-        console.warn('[dev-bypass] getOrCreateDevUser failed:', e);
-        return null;
-    }
-}
-
 // Types for dashboard data
 export interface DashboardStats {
     aeoHealthScore: number | null;
@@ -65,6 +22,7 @@ export interface DashboardStats {
     llmVisibility: number | null;
     llmVisibilityChange: number | null;
     llmVisibilitySamples: number;
+    llmVisibilityMentions: number;
     llmVisibilityConfidence: MeasurementConfidenceLevel;
     forumThreadCount: number;
     highPriorityThreads: number;
@@ -100,320 +58,52 @@ export interface RecentMention {
     createdAt: string;
 }
 
-// Get the current user's workspace ID (auto-creates profile if missing)
-export async function getCurrentWorkspaceContext(): Promise<{
-    userId: string;
-    orgId: string;
-    workspaceId: string;
-    onboardingCompleted: boolean;
-    role: WorkspaceRole;
-} | null> {
-    const supabase = await createClient();
-
-    // Dev Auth Bypass (localhost / QA only, see helper at top of file)
-    let user: { id: string; email?: string | null; user_metadata?: { full_name?: string; avatar_url?: string } } | null = null;
-    if (process.env.NODE_ENV !== 'production' && process.env.NEXT_PUBLIC_ENABLE_DEV_AUTH_BYPASS === 'true') {
-        try {
-            const cookieStore = await cookies();
-            if (cookieStore.get('dev-auth-bypass')?.value === 'true') {
-                const dev = await getOrCreateDevUser();
-                if (dev) {
-                    user = { id: dev.id, email: dev.email, user_metadata: { full_name: 'Aelo Dev' } };
-                }
-            }
-        } catch {
-            // cookies() unavailable in this context, fall through to normal auth
-        }
-    }
-
-    if (!user) {
-        const { data } = await supabase.auth.getUser();
-        user = data.user;
-    }
-
-    if (!user) {
-        console.log('[getCurrentWorkspaceContext] No authenticated user');
-        return null;
-    }
-
-    let adminClient: ReturnType<typeof createAdminClient> | null = null;
-    try {
-        adminClient = createAdminClient();
-    } catch (error) {
-        console.warn('[getCurrentWorkspaceContext] Admin client unavailable, falling back to RLS client:', error);
-    }
-
-    const db = adminClient ?? supabase;
-    const useManualIds = !adminClient;
-
-    // Get user's profile (create if missing)
-    const { data: profile } = await db
-        .from('users')
-        .select('org_id, onboarding_completed, role')
-        .eq('id', user.id)
-        .maybeSingle();
-
-    if (!profile?.org_id) {
-        console.log('[getCurrentWorkspaceContext] Creating profile for:', user.id);
-
-        const orgName = (user.user_metadata?.full_name || user.email?.split('@')[0] || 'User') + "'s Organization";
-        const orgId = useManualIds ? randomUUID() : undefined;
-
-        let createdOrgId = orgId;
-        if (useManualIds) {
-            const { error: orgError } = await db
-                .from('organizations')
-                .insert({ id: orgId, name: orgName });
-            if (orgError || !createdOrgId) {
-                console.error('[getCurrentWorkspaceContext] Failed to create org:', orgError);
-                return null;
-            }
-        } else {
-            const { data: newOrg, error: orgError } = await db
-                .from('organizations')
-                .insert({ name: orgName })
-                .select('id')
-                .single();
-            createdOrgId = newOrg?.id;
-            if (orgError || !createdOrgId) {
-                console.error('[getCurrentWorkspaceContext] Failed to create org:', orgError);
-                return null;
-            }
-        }
-
-        const { error: userError } = await db
-            .from('users')
-            .insert({
-                id: user.id,
-                email: user.email!,
-                full_name: user.user_metadata?.full_name || null,
-                avatar_url: user.user_metadata?.avatar_url || null,
-                org_id: createdOrgId,
-                role: 'owner',
-                onboarding_completed: false,
-            });
-
-        if (userError) {
-            console.error('[getCurrentWorkspaceContext] Failed to create user:', userError);
-            return null;
-        }
-
-        const workspaceId = useManualIds ? randomUUID() : undefined;
-        let createdWorkspaceId = workspaceId;
-        if (useManualIds) {
-            const { error: wsError } = await db
-                .from('workspaces')
-                .insert({ id: workspaceId, org_id: createdOrgId, name: 'My Brand' });
-            if (wsError || !createdWorkspaceId) {
-                console.error('[getCurrentWorkspaceContext] Failed to create workspace:', wsError);
-                return null;
-            }
-        } else {
-            const { data: newWorkspace, error: wsError } = await db
-                .from('workspaces')
-                .insert({ org_id: createdOrgId, name: 'My Brand' })
-                .select('id')
-                .single();
-            createdWorkspaceId = newWorkspace?.id;
-            if (wsError || !createdWorkspaceId) {
-                console.error('[getCurrentWorkspaceContext] Failed to create workspace:', wsError);
-                return null;
-            }
-        }
-
-        return {
-            userId: user.id,
-            orgId: createdOrgId,
-            workspaceId: createdWorkspaceId,
-            onboardingCompleted: false,
-            role: 'owner',
-        };
-    }
-
-    // Ensure workspace exists, check for active workspace cookie first
-    let activeWsId: string | undefined;
-    
-    try {
-        const cookieStore = await cookies();
-        activeWsId = cookieStore.get('active-workspace-id')?.value;
-    } catch {
-        // cookies() may fail in some contexts
-    }
-
-    if (activeWsId) {
-        // Verify this workspace belongs to the user's org
-        const { data: workspace } = await db
-            .from('workspaces')
-            .select('id')
-            .eq('id', activeWsId)
-            .eq('org_id', profile.org_id)
-            .single();
-
-        if (workspace?.id) {
-            return {
-                userId: user.id,
-                orgId: profile.org_id,
-                workspaceId: workspace.id,
-                onboardingCompleted: profile.onboarding_completed ?? false,
-                role: normalizeWorkspaceRole(profile.role),
-            };
-        }
-    }
-
-    // Fallback: pick first workspace
-    const { data: workspace } = await db
-        .from('workspaces')
-        .select('id')
-        .eq('org_id', profile.org_id)
-        .limit(1)
-        .single();
-
-    if (!workspace?.id) {
-        const workspaceId = useManualIds ? randomUUID() : undefined;
-        let createdWorkspaceId = workspaceId;
-        if (useManualIds) {
-            const { error: createError } = await db
-                .from('workspaces')
-                .insert({ id: workspaceId, org_id: profile.org_id, name: 'My Brand' });
-            if (createError || !createdWorkspaceId) {
-                console.error('[getCurrentWorkspaceContext] Failed to create workspace:', createError);
-                return null;
-            }
-        } else {
-            const { data: newWs, error: createError } = await db
-                .from('workspaces')
-                .insert({ org_id: profile.org_id, name: 'My Brand' })
-                .select('id')
-                .single();
-            createdWorkspaceId = newWs?.id;
-            if (createError || !createdWorkspaceId) {
-                console.error('[getCurrentWorkspaceContext] Failed to create workspace:', createError);
-                return null;
-            }
-        }
-
-        return {
-            userId: user.id,
-            orgId: profile.org_id,
-            workspaceId: createdWorkspaceId!,
-            onboardingCompleted: profile.onboarding_completed ?? false,
-            role: normalizeWorkspaceRole(profile.role),
-        };
-    }
-
-    return {
-        userId: user.id,
-        orgId: profile.org_id,
-        workspaceId: workspace.id,
-        onboardingCompleted: profile.onboarding_completed ?? false,
-        role: normalizeWorkspaceRole(profile.role),
-    };
-}
+export { getConvexWorkspaceContext as getCurrentWorkspaceContext };
 
 export async function getCurrentWorkspaceId(): Promise<string | null> {
-    const context = await getCurrentWorkspaceContext();
+    const context = await getConvexWorkspaceContext();
     return context?.workspaceId ?? null;
 }
 
 
 // Fetch recent LLM scans
-export async function getLLMScans(
-    workspaceId: string,
-    limit: number = 10,
-    opts?: { platform?: string }
-): Promise<LLMScan[]> {
-    {
-        const { DEMO_SEED_ACTIVE, demoScanRows } = await import('./analytics/demo-seed');
-        if (DEMO_SEED_ACTIVE()) {
-            let rows = demoScanRows() as unknown as LLMScan[];
-            if (opts?.platform) rows = rows.filter(r => r.platform === opts.platform);
-            return rows.slice(0, limit);
-        }
-    }
-    const supabase = await createAdminClient();
+export async function getLLMScans(workspaceId: string, limit = 10, opts?: { platform?: string }): Promise<LLMScan[]> {
+    if (!Number.isInteger(limit) || limit < 1 || limit > 1000) throw new Error('invalid_scan_limit');
+    const supported = ['chatgpt', 'gemini', 'claude', 'perplexity', 'google_ai', 'google_ai_overview', 'bing_copilot', 'mock'] as const;
+    const platform = supported.find((value) => value === opts?.platform);
+    if (opts?.platform && !platform) throw new Error('invalid_platform');
+    return readScanPages(workspaceId, { platform }, limit);
+}
 
-    let query = supabase
-        .from('llm_scans')
-        .select('*')
-        .eq('workspace_id', workspaceId)
-        .order('created_at', { ascending: false })
-        .limit(limit);
-
-    if (opts?.platform) query = query.eq('platform', opts.platform);
-
-    const { data, error } = await query;
-
-    if (error) {
-        console.error('Error fetching LLM scans:', error);
-        throw new Error('Failed to fetch LLM scans', { cause: error });
-    }
-
-    return (data || []).map(scan => ({
-        id: scan.id,
-        workspace_id: scan.workspace_id,
-        platform: scan.platform,
-        prompt: scan.prompt,
-        response: scan.response,
-        brand_mentioned: scan.brand_mentioned,
-        mention_position: scan.mention_position,
-        sentiment: scan.sentiment,
-        competitors_mentioned: scan.competitors_mentioned || [],
-        citations: scan.citations || [],
-        sample_id: scan.sample_id ?? null,
-        measurement_run_id: scan.measurement_run_id ?? null,
-        sample_index: scan.sample_index ?? null,
-        provider_model: scan.provider_model ?? null,
-        measurement_region: scan.measurement_region ?? null,
-        measurement_mode: scan.measurement_mode ?? null,
-        scorer_version: scan.scorer_version ?? null,
-        measurement_contract_version: scan.measurement_contract_version ?? null,
-        created_at: scan.created_at,
-    }));
+export async function readScanPages(workspaceId: string, opts: { platform?: LLMScan['platform']; since?: number; before?: number } = {}, limit = Number.MAX_SAFE_INTEGER): Promise<LLMScan[]> {
+    const rows: LLMScan[] = [];
+    let cursor: string | null = null;
+    do {
+        const result: FunctionReturnType<typeof api.records.scans> = await fetchAuthQuery(api.records.scans, { workspaceId, ...opts,
+            paginationOpts: { numItems: Math.min(100, limit - rows.length), cursor } });
+        rows.push(...result.page.map((row) => legacyScan(row, workspaceId)));
+        cursor = result.isDone ? null : result.continueCursor;
+    } while (cursor && rows.length < limit);
+    return rows;
 }
 
 // Calculate visibility metrics by platform
 export async function getVisibilityMetrics(
-    workspaceId: string
+    workspaceId: string,
+    read: typeof readScanPages = readScanPages,
 ): Promise<PlatformVisibility[]> {
-    {
-        const { DEMO_SEED_ACTIVE, demoVisibilityMetrics } = await import('./analytics/demo-seed');
-        if (DEMO_SEED_ACTIVE()) return demoVisibilityMetrics();
-    }
-    const supabase = await createAdminClient();
-
-    // Get scans from last 7 days
-    const sevenDaysAgo = new Date();
-    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-
-    const scanFields = 'platform, prompt, brand_mentioned, mention_position, provider_model, measurement_region, measurement_mode, scorer_version, measurement_contract_version';
-    const { data: recentScans, error: recentError } = await supabase
-        .from('llm_scans')
-        .select(scanFields)
-        .eq('workspace_id', workspaceId)
-        .gte('created_at', sevenDaysAgo.toISOString());
-
-    // Get scans from previous 7 days for comparison
-    const fourteenDaysAgo = new Date();
-    fourteenDaysAgo.setDate(fourteenDaysAgo.getDate() - 14);
-
-    const { data: previousScans, error: previousError } = await supabase
-        .from('llm_scans')
-        .select(scanFields)
-        .eq('workspace_id', workspaceId)
-        .gte('created_at', fourteenDaysAgo.toISOString())
-        .lt('created_at', sevenDaysAgo.toISOString());
-
-    if (recentError || previousError) {
-        console.error('Error fetching visibility metrics:', recentError || previousError);
-        throw new Error('Failed to fetch visibility metrics', { cause: recentError || previousError });
-    }
+    const now = Date.now();
+    const [recentScans, previousScans] = await Promise.all([
+        read(workspaceId, { since: now - 7 * 86400000, before: now }),
+        read(workspaceId, { since: now - 14 * 86400000, before: now - 7 * 86400000 }),
+    ]);
 
     const platforms = ['chatgpt', 'gemini', 'perplexity', 'claude'];
     const metrics: PlatformVisibility[] = [];
 
     for (const platform of platforms) {
-        const currentPlatformScans = (recentScans || []).filter(s => s.platform === platform);
-        const previousPlatformScans = (previousScans || []).filter(s => s.platform === platform);
+        const currentPlatformScans = recentScans.filter(s => s.platform === platform && !s.failure_code);
+        const previousPlatformScans = previousScans.filter(s => s.platform === platform && !s.failure_code);
 
         const currentMetric = aggregateMentionMetric(currentPlatformScans.map((scan) => ({ mentioned: scan.brand_mentioned })));
         const comparable = (scan: typeof currentPlatformScans[number]): ComparableMentionSample => ({
@@ -425,6 +115,10 @@ export async function getVisibilityMetrics(
             mode: scan.measurement_mode,
             scorerVersion: scan.scorer_version,
             contractVersion: scan.measurement_contract_version,
+            searchMode: scan.search_mode,
+            analyzerMethod: scan.analyzer_method,
+            analyzerModel: scan.analyzer_model,
+            analyzerPromptVersion: scan.analyzer_prompt_version,
         });
         const comparison = compareCompatibleMentionMetrics(
             currentPlatformScans.map(comparable),
@@ -469,32 +163,17 @@ export async function getForumThreads(
         limit?: number;
     } = {}
 ): Promise<ForumThread[]> {
-    const supabase = createAdminClient();
     const { status, platform, minScore = 0, limit = 20 } = options;
-
-    let query = supabase
-        .from('forum_threads')
-        .select('*')
-        .eq('workspace_id', workspaceId)
-        .gte('opportunity_score', minScore)
-        .order('opportunity_score', { ascending: false })
-        .limit(limit);
-
-    if (status) {
-        query = query.eq('status', status);
-    }
-    if (platform) {
-        query = query.eq('platform', platform);
-    }
-
-    const { data, error } = await query;
-
-    if (error) {
-        console.error('Error fetching forum threads:', error);
-        throw new Error('Failed to fetch forum threads', { cause: error });
-    }
-
-    return data || [];
+    if (!Number.isInteger(limit) || limit < 1) throw new Error('invalid_thread_limit');
+    const rows: ForumThread[] = [];
+    let cursor: string | null = null;
+    do {
+        const result: FunctionReturnType<typeof api.records.threads> = await fetchAuthQuery(api.records.threads, { workspaceId, status, platform, minScore,
+            paginationOpts: { numItems: Math.min(100, limit - rows.length), cursor } });
+        rows.push(...result.page.map((row) => legacyThread(row, workspaceId)));
+        cursor = result.isDone ? null : result.continueCursor;
+    } while (cursor && rows.length < limit);
+    return rows;
 }
 
 // Calculate AEO Health Score
@@ -525,15 +204,9 @@ export async function getDashboardStats(
     workspaceId: string,
     suppliedVisibilityMetrics?: PlatformVisibility[],
 ): Promise<DashboardStats> {
-    {
-        const { DEMO_SEED_ACTIVE, demoDashboardStats } = await import('./analytics/demo-seed');
-        if (DEMO_SEED_ACTIVE()) return demoDashboardStats();
-    }
-    const supabase = await createAdminClient();
-
     const [visibilityMetrics, threads] = await Promise.all([
         suppliedVisibilityMetrics ?? getVisibilityMetrics(workspaceId),
-        getForumThreads(workspaceId, { limit: 100 }),
+        getForumThreads(workspaceId, { limit: Number.MAX_SAFE_INTEGER }),
     ]);
     const healthScore = healthScoreFromVisibilityMetrics(visibilityMetrics);
 
@@ -557,18 +230,8 @@ export async function getDashboardStats(
     let shareOfVoice: number | null = null;
     const shareOfVoiceChange: number | null = null;
 
-    const sevenDaysAgo = new Date();
-    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-
-    const { data: recentScans, error: recentScansError } = await supabase
-        .from('llm_scans')
-        .select('brand_mentioned, competitors_mentioned')
-        .eq('workspace_id', workspaceId)
-        .gte('created_at', sevenDaysAgo.toISOString());
-
-    if (recentScansError) {
-        throw new Error('Failed to fetch share-of-voice scans', { cause: recentScansError });
-    }
+    const recentScans = (await readScanPages(workspaceId, { since: Date.now() - 7 * 86400000 }))
+        .filter((row) => !row.failure_code);
 
     if (recentScans && recentScans.length > 0) {
         shareOfVoice = shareOfVoiceMetric(recentScans.map((scan) => ({
@@ -581,14 +244,14 @@ export async function getDashboardStats(
     let contentScore: number | null = null;
     let pagesNeedingOptimization = 0;
 
-    const { data: contentAnalyses, error: contentAnalysesError } = await supabase
-        .from('content_analyses')
-        .select('aeo_score')
-        .eq('workspace_id', workspaceId);
-
-    if (contentAnalysesError) {
-        throw new Error('Failed to fetch content analyses', { cause: contentAnalysesError });
-    }
+    const contentAnalyses: { aeo_score: number }[] = [];
+    let contentCursor: string | null = null;
+    do {
+        const result: FunctionReturnType<typeof api.records.content> = await fetchAuthQuery(api.records.content, { workspaceId,
+            paginationOpts: { numItems: 100, cursor: contentCursor } });
+        contentAnalyses.push(...result.page.map((row) => ({ aeo_score: row.aeloScore })));
+        contentCursor = result.isDone ? null : result.continueCursor;
+    } while (contentCursor);
 
     if (contentAnalyses && contentAnalyses.length > 0) {
         contentScore = Math.round(
@@ -603,6 +266,7 @@ export async function getDashboardStats(
         llmVisibility: llmMetric.visibilityPercent,
         llmVisibilityChange,
         llmVisibilitySamples,
+        llmVisibilityMentions,
         llmVisibilityConfidence: llmMetric.confidence.level,
         forumThreadCount: threads.length,
         highPriorityThreads,
@@ -647,77 +311,45 @@ export interface ScheduledScan {
 }
 
 export async function getScheduledScans(workspaceId: string): Promise<ScheduledScan[]> {
-    const supabase = await createClient();
-    const { data, error } = await supabase
-        .from('scheduled_scans')
-        .select('*')
-        .eq('workspace_id', workspaceId)
-        .order('created_at', { ascending: false });
+    const rows: ScheduledScan[] = [];
+    let cursor: string | null = null;
+    do {
+        const page: FunctionReturnType<typeof api.schedules.list> = await fetchAuthQuery(api.schedules.list, { workspaceId, paginationOpts: { numItems: 100, cursor } });
+        rows.push(...page.page);
+        cursor = page.isDone ? null : page.continueCursor;
+    } while (cursor);
+    return rows;
+}
 
-    if (error) {
-        console.error('Error fetching scheduled scans:', error);
-        return [];
-    }
-    return data || [];
+function schedulePlatforms(platforms: string[]) {
+    const allowed = ['chatgpt', 'gemini', 'claude', 'perplexity'] as const;
+    return platforms.map((value) => {
+        const platform = allowed.find((candidate) => candidate === value);
+        if (!platform) throw new Error('invalid_platform');
+        return platform;
+    });
 }
 
 export async function createScheduledScan(scan: {
-    workspace_id: string;
-    prompt: string;
-    platforms: string[];
-    competitors?: string[];
+    workspace_id: string; prompt: string; platforms: string[]; competitors?: string[];
     frequency: 'daily' | 'weekly' | 'monthly';
 }): Promise<ScheduledScan | null> {
-    const supabase = await createClient();
-
-    const { data, error } = await supabase
-        .from('scheduled_scans')
-        .insert({
-            workspace_id: scan.workspace_id,
-            prompt: scan.prompt,
-            platforms: scan.platforms,
-            competitors: scan.competitors || [],
-            frequency: scan.frequency,
-            next_run_at: new Date().toISOString(), // Run immediately on next cron tick
-            status: 'active'
-        })
-        .select()
-        .single();
-
-    if (error) {
-        console.error('Error creating scheduled scan:', error);
-        return null;
-    }
-    return data;
+    return fetchAuthMutation(api.schedules.save, { workspaceId: scan.workspace_id, prompt: scan.prompt,
+        platforms: schedulePlatforms(scan.platforms), competitors: scan.competitors, frequency: scan.frequency });
 }
 
 export async function updateScheduledScan(id: string, updates: Partial<ScheduledScan>): Promise<ScheduledScan | null> {
-    const supabase = await createClient();
-    const { data, error } = await supabase
-        .from('scheduled_scans')
-        .update(updates)
-        .eq('id', id)
-        .select()
-        .single();
-
-    if (error) {
-        console.error('Error updating scheduled scan:', error);
-        return null;
-    }
-    return data;
+    const workspaceId = await getCurrentWorkspaceId();
+    if (!workspaceId) throw new Error('Unauthenticated');
+    return fetchAuthMutation(api.schedules.save, { workspaceId, id, prompt: updates.prompt,
+        platforms: updates.platforms ? schedulePlatforms(updates.platforms) : undefined,
+        competitors: updates.competitors ?? undefined, frequency: updates.frequency, status: updates.status });
 }
 
 export async function deleteScheduledScan(id: string): Promise<boolean> {
-    const supabase = await createClient();
-    const { error } = await supabase
-        .from('scheduled_scans')
-        .delete()
-        .eq('id', id);
-
-    if (error) {
-        console.error('Error deleting scheduled scan:', error);
-        return false;
-    }
+    const workspaceId = await getCurrentWorkspaceId();
+    if (!workspaceId) throw new Error('Unauthenticated');
+    await fetchAuthMutation(api.schedules.remove, { workspaceId, id });
     return true;
 }
 
@@ -734,18 +366,16 @@ export interface Prompt {
 }
 
 export async function getPrompts(workspaceId: string): Promise<Prompt[]> {
-    const supabase = await createClient();
-    const { data, error } = await supabase
-        .from('prompt_library')
-        .select('*')
-        .eq('workspace_id', workspaceId)
-        .order('created_at', { ascending: false });
-
-    if (error) {
-        console.error('Error fetching prompts:', error);
-        return [];
-    }
-    return data || [];
+    const prompts: Prompt[] = [];
+    let cursor: string | null = null;
+    do {
+        const result: FunctionReturnType<typeof api.prompts.list> = await fetchAuthQuery(api.prompts.list, {
+            workspaceId, paginationOpts: { numItems: 100, cursor },
+        });
+        prompts.push(...result.page);
+        cursor = result.isDone ? null : result.continueCursor;
+    } while (cursor);
+    return prompts;
 }
 
 export async function savePrompt(promptData: {
@@ -755,36 +385,18 @@ export async function savePrompt(promptData: {
     is_favorite?: boolean;
     ai_generated?: boolean;
 }): Promise<Prompt | null> {
-    const supabase = await createClient();
-    const { data, error } = await supabase
-        .from('prompt_library')
-        .insert({
-            workspace_id: promptData.workspace_id,
-            prompt: promptData.prompt,
-            category: promptData.category || 'General',
-            is_favorite: promptData.is_favorite ?? false,
-            ai_generated: promptData.ai_generated ?? false,
-        })
-        .select()
-        .single();
-
-    if (error) {
-        console.error('Error saving prompt:', error);
-        return null;
-    }
-    return data;
+    return fetchAuthMutation(api.prompts.save, {
+        workspaceId: promptData.workspace_id,
+        prompt: promptData.prompt,
+        category: promptData.category,
+        isFavorite: promptData.is_favorite,
+        aiGenerated: promptData.ai_generated,
+    });
 }
 
 export async function deletePrompt(id: string): Promise<boolean> {
-    const supabase = await createClient();
-    const { error } = await supabase
-        .from('prompt_library')
-        .delete()
-        .eq('id', id);
-
-    if (error) {
-        console.error('Error deleting prompt:', error);
-        return false;
-    }
+    const workspaceId = await getCurrentWorkspaceId();
+    if (!workspaceId) throw new Error('Unauthenticated');
+    await fetchAuthMutation(api.prompts.remove, { workspaceId, id });
     return true;
 }

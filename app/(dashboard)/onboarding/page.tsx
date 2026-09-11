@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
+import { waitForPacket } from '@/lib/client/wait-for-packet';
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -122,6 +123,7 @@ export default function OnboardingPage() {
     const [description, setDescription] = useState("");
     const [targetAudience, setTargetAudience] = useState("");
     const [workspaceId, setWorkspaceId] = useState<string | null>(null);
+    const packetRequest = useRef<{ prompts: string; id: string } | null>(null);
 
     useEffect(() => {
         async function getContext() {
@@ -138,7 +140,12 @@ export default function OnboardingPage() {
 
                 setWorkspaceId(data.workspaceId);
                 if (packetRes.ok) {
-                    const packetData = await packetRes.json() as { packet?: DecisionPacket | null };
+                    const packetData = await packetRes.json() as { packet?: DecisionPacket | null; pending?: boolean; packetId?: string };
+                    if (packetData.pending && packetData.packetId) {
+                        setScanning(true);
+                        try { packetData.packet = await waitForPacket(`/api/onboarding/decision-packet?id=${packetData.packetId}`); }
+                        finally { setScanning(false); }
+                    }
                     if (packetData.packet) {
                         setDecisionPacket(packetData.packet);
                         setBrandName(packetData.packet.brandName);
@@ -193,9 +200,11 @@ export default function OnboardingPage() {
         setError(null);
 
         try {
+            const fingerprint = JSON.stringify(prompts);
+            if (packetRequest.current?.prompts !== fingerprint) packetRequest.current = { prompts: fingerprint, id: crypto.randomUUID() };
             const response = await fetch('/api/onboarding/decision-packet', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: { 'Content-Type': 'application/json', 'Idempotency-Key': packetRequest.current.id },
                 body: JSON.stringify({ prompts }),
             });
 
@@ -204,7 +213,9 @@ export default function OnboardingPage() {
             if (!response.ok) {
                 throw new Error(data?.message || data?.error || 'Scan failed');
             }
-            setDecisionPacket(data.packet as DecisionPacket);
+            const packet = response.status === 202 ? await waitForPacket(data.statusUrl) : data.packet as DecisionPacket;
+            setDecisionPacket(packet);
+            packetRequest.current = null;
             setCurrentStep(4);
         } catch (error) {
             console.error('Decision packet failed:', error);
@@ -238,7 +249,7 @@ export default function OnboardingPage() {
         <div className="min-h-screen bg-[var(--bg-base)] flex items-center justify-center p-6">
             <div className="w-full max-w-2xl">
                 {/* Progress */}
-                <div className="flex items-center justify-center gap-2 mb-8">
+                <div className="flex items-center justify-center gap-1 sm:gap-2 mb-8">
                     {steps.map((step, i) => (
                         <div key={step.id} className="flex items-center">
                             <div
@@ -257,7 +268,7 @@ export default function OnboardingPage() {
                             </div>
                             {i < steps.length - 1 && (
                                 <div
-                                    className={`w-12 h-0.5 mx-1 ${currentStep > step.id ? "bg-[var(--data-green)]" : "bg-[var(--bg-raised)]"
+                                    className={`w-5 sm:w-12 h-0.5 mx-1 ${currentStep > step.id ? "bg-[var(--data-green)]" : "bg-[var(--bg-raised)]"
                                         }`}
                                 />
                             )}
@@ -282,10 +293,10 @@ export default function OnboardingPage() {
                                 Welcome to Aelo!
                             </h1>
                             <p className="text-lg text-[var(--text-secondary)] mb-8 max-w-md mx-auto">
-                                Let&apos;s set up your brand and run your first AI visibility scan in under 2 minutes.
+                                Set up your brand and choose buyer prompts. Your first scan collects repeated answers and may take several minutes.
                             </p>
 
-                            <div className="grid grid-cols-3 gap-4 mb-8">
+                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
                                 <div className="p-4 rounded-lg bg-[var(--bg-raised)]">
                                     <TrendingUp className="w-6 h-6 text-[var(--accent-base)] mx-auto mb-2" />
                                     <p className="text-sm text-[var(--text-secondary)]">Track AI Visibility</p>
@@ -396,11 +407,11 @@ export default function OnboardingPage() {
                                     <ArrowLeft className="w-4 h-4 mr-2" />
                                     Back
                                 </Button>
-                                <Button onClick={handleSaveBrand} disabled={!brandName || loading}>
+                                <Button onClick={handleSaveBrand} disabled={!brandName || !workspaceId || loading}>
                                     {loading ? (
                                         <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                                     ) : null}
-                                    Continue
+                                    {!workspaceId ? 'Loading workspace…' : 'Continue'}
                                     <ArrowRight className="w-4 h-4 ml-2" />
                                 </Button>
                             </div>
@@ -518,7 +529,7 @@ export default function OnboardingPage() {
                                 You&apos;re All Set!
                             </h2>
                             <p className="text-[var(--text-secondary)] mb-8 max-w-md mx-auto">
-                                Your brand &quot;{brandName}&quot; is now being tracked. Explore the dashboard to see more insights.
+                                Your brand &quot;{brandName}&quot; is saved. Open the dashboard to review completed scans or start your first measurement.
                             </p>
 
                             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8 text-left">

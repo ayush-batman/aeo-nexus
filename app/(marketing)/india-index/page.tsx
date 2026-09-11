@@ -7,7 +7,7 @@ import { IndiaIndexDatasetJsonLd, BreadcrumbJsonLd } from "@/components/seo/stru
 
 export const metadata: Metadata = {
     title: "India AI Visibility Index · Aelo",
-    description: "How Gemini actually answers India's top intent queries. Real scans, zero fabricated. More engines coming. Refreshed monthly.",
+    description: "Reviewed, published samples of AI answers about Indian brands, with sample counts, uncertainty intervals and source evidence.",
 };
 
 // Server component, pulls the current edition at request time.
@@ -19,11 +19,11 @@ export default async function IndiaIndexPage() {
 
     return (
         <>
-            <IndiaIndexDatasetJsonLd
+            {edition.brandCount > 0 && <IndiaIndexDatasetJsonLd
                 label={edition.label}
                 brandCount={edition.brandCount}
                 categoriesTracked={edition.categoriesTracked.length}
-            />
+            />}
             <BreadcrumbJsonLd items={[{ label: 'India AI Visibility Index', path: '/india-index' }]} />
             {/* Hero */}
             <section className="pt-20 pb-14 md:pt-28 md:pb-16 px-6">
@@ -37,14 +37,14 @@ export default async function IndiaIndexPage() {
                         The India AI Visibility Index
                     </h1>
                     <p className="text-[16px] md:text-[18px] text-zinc-400 max-w-2xl mx-auto leading-relaxed">
-                        How Gemini actually answers India&apos;s top intent queries. Every number
-                        below is from a live scan. Zero fabricated. ChatGPT, Claude and Perplexity
-                        are next.
+                        Published observations of AI answers about Indian brands. Every result links
+                        to selected samples and their settings. These are API observations, not a
+                        claim about what every user sees in an assistant app.
                     </p>
                     <div className="mt-6 flex items-center justify-center gap-4 text-[11px] font-mono text-zinc-600">
                         <span>{edition.brandCount} brands · {edition.categoriesTracked.length} categories</span>
                         <span>·</span>
-                        <span>Refreshed {new Date(edition.publishedAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}</span>
+                        <span>{edition.brandCount ? `Published ${new Date(edition.publishedAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}` : 'No published results'}</span>
                     </div>
                 </div>
             </section>
@@ -66,20 +66,20 @@ export default async function IndiaIndexPage() {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                         {[
                             {
-                                t: "Real scans, no averages of averages",
-                                b: "Each brand is measured against 2–3 category-representative Indian intent prompts (\"best CRM for Indian SMBs\", \"lowest brokerage intraday India\"). We run them live on Gemini, capture the response, and analyze it. Prompts are public.",
+                                t: "Matching measurement settings",
+                                b: "An edition includes only explicitly reviewed samples with a matching prompt, engine, model, region, mode and scoring versions. A published brand needs at least four successful samples. This limited selection is not representative of every buyer question.",
                             },
                             {
                                 t: "Honest data policy",
-                                b: "When a scan provider fails, we surface an honest empty state. When a brand isn't named, we say invisible, not \"low visibility\". Zero fabricated metrics ever ship.",
+                                b: "Missing or failed measurements are not zero visibility. Zero percent means no mention in the published samples, not that the brand is invisible everywhere. Only explicitly approved publications are exposed; private workspaces stay private.",
                             },
                             {
-                                t: "Verdict rules (Sage: strict thresholds)",
-                                b: "Dominant = ≥90% mention rate AND avg position ≤2. Strong = ≥60%. Contested = 1–59%. Invisible = 0%. No smoothing.",
+                                t: "Rates, sample counts and uncertainty",
+                                b: "Mention rate is mentions divided by successful samples. Each row includes a 95% Wilson interval. These describe repeat-sample uncertainty under a statistical independence assumption, not the experience of all users or proven market dominance.",
                             },
                             {
                                 t: "How brands are picked",
-                                b: "For the Preview Edition, category leaders across SaaS, D2C, Fintech and EdTech. Future editions expand from applications and reader nominations.",
+                                b: "Entries are selected for a reviewed publication. Selection is not a claim that a brand leads its category. Inspect each receipt and the scope before drawing conclusions.",
                             },
                         ].map(c => (
                             <div key={c.t} className="rounded-md border border-white/[0.06] bg-black p-5">
@@ -96,15 +96,14 @@ export default async function IndiaIndexPage() {
                 <div className="mx-auto max-w-3xl px-6">
                     <div className="rounded-lg border border-[var(--accent-base)]/40 bg-black p-8 md:p-10">
                         <p className="text-[10px] font-mono uppercase tracking-[0.18em] text-[var(--accent-base)] mb-3">
-                            Next edition · August 2026
+                            Future editions
                         </p>
                         <h2 className="text-2xl md:text-3xl font-medium tracking-tight text-white mb-3">
                             Want your brand measured?
                         </h2>
                         <p className="text-[15px] text-zinc-400 leading-relaxed mb-6">
                             Apply to be included in the next edition. If your brand fits a category we track,
-                            we&apos;ll run the scans and publish the receipt. Featured brands get a free
-                            month of Command to see their per-prompt gaps.
+                            we can discuss a reviewed measurement. Inclusion, timing and favorable results are not guaranteed.
                         </p>
                         <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
                             <Link
@@ -130,10 +129,9 @@ export default async function IndiaIndexPage() {
                     <div className="flex items-start gap-2.5 text-[12px] text-zinc-500 leading-relaxed">
                         <Info className="w-3.5 h-3.5 mt-0.5 flex-shrink-0 text-zinc-600" strokeWidth={1.5} />
                         <p>
-                            LLM answers are non-deterministic, a single scan is a sample, not a truth. The Index
-                            aggregates multiple prompts per brand to reduce noise, but any single number can drift
-                            ±10 pts between measurements. See the raw responses in your own Aelo workspace to audit
-                            any entry.
+                            AI answers vary. Model behavior, prompt wording, search settings and timing can all change a result.
+                            There is no universal ±10-point error bound. Use the actual sample counts, intervals and
+                            published responses to judge what each result supports.
                         </p>
                     </div>
                 </div>

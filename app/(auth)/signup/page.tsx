@@ -1,19 +1,18 @@
 "use client";
 
 import { Suspense, useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { AlertCircle, Loader2 } from "lucide-react";
-import { createClient } from "@/lib/supabase/client";
+import { authClient } from "@/lib/auth-client";
 import { AeloWordmark } from "@/components/brand/logo";
 import { GoogleSignInButton } from "@/components/auth/google-button";
 
 const PLAN_LABELS = { radar: "Radar · ₹4,999/mo", command: "Command · ₹14,999/mo" } as const;
 
 function SignupForm() {
-    const router = useRouter();
     const searchParams = useSearchParams();
     const planParam = searchParams.get('plan');
     const selectedPlan = planParam === 'radar' || planParam === 'command' ? planParam : null;
@@ -31,41 +30,12 @@ function SignupForm() {
         setLoading(true);
 
         try {
-            // Step 1: Create user via server-side API (auto-confirms email)
-            const signupRes = await fetch("/api/auth/signup", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    email: email.trim(),
-                    password,
-                    fullName: name.trim(),
-                    selectedPlan,
-                }),
+            const callbackURL = selectedPlan ? `/onboarding?plan=${selectedPlan}` : '/onboarding';
+            const { error: signupError } = await authClient.signUp.email({
+                email: email.trim(), password, name: name.trim(), callbackURL,
             });
-
-            const signupData = await signupRes.json();
-
-            if (!signupRes.ok) {
-                throw new Error(signupData.error || "Failed to create account");
-            }
-
-            // Step 2: Auto sign-in with the newly created account
-            const supabase = createClient();
-            const { error: signInError } = await supabase.auth.signInWithPassword({
-                email: email.trim(),
-                password,
-            });
-
-            if (signInError) {
-                // Account created but auto-login failed, redirect to login
-                setSuccess("Account created! Please sign in.");
-                setTimeout(() => router.push("/login"), 1500);
-                return;
-            }
-
-            // Step 3: Redirect to onboarding
-            router.push(selectedPlan ? `/onboarding?plan=${selectedPlan}` : "/onboarding");
-            router.refresh();
+            if (signupError) throw new Error(signupError.message || 'Unable to create your account.');
+            setSuccess('Check your email to verify your account and continue to your first scan.');
         } catch (err) {
             console.error("Signup error:", err);
             setError(err instanceof Error ? err.message : "Failed to create account");
@@ -112,12 +82,6 @@ function SignupForm() {
                     )}
 
                     <GoogleSignInButton label="Sign up with Google" selectedPlan={selectedPlan} />
-
-                    <div className="flex items-center gap-3 my-6">
-                        <div className="flex-1 h-px bg-[var(--border-default)]" />
-                        <span className="text-xs text-[var(--text-tertiary)]">or</span>
-                        <div className="flex-1 h-px bg-[var(--border-default)]" />
-                    </div>
 
                     <form onSubmit={handleSubmit} className="space-y-4">
                         <div>

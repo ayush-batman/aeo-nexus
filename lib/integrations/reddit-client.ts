@@ -57,7 +57,7 @@ async function getAccessToken(): Promise<string | null> {
 
     try {
         const response = await fetch('https://www.reddit.com/api/v1/access_token', {
-            method: 'POST',
+            method: 'POST', signal: AbortSignal.timeout(20000),
             headers: {
                 'Authorization': `Basic ${auth}`,
                 'Content-Type': 'application/x-www-form-urlencoded',
@@ -103,7 +103,7 @@ async function redditRequest(endpoint: string): Promise<unknown> {
     }
 
     const response = await fetch(`${baseUrl}${endpoint}`, {
-        headers,
+        headers, signal: AbortSignal.timeout(20000),
     });
 
     if (!response.ok) {
@@ -210,8 +210,7 @@ export async function searchReddit(
             after: data.data.after,
         };
     } catch (e) {
-        console.error("Reddit Search Error:", e);
-        return { posts: [], after: null };
+        throw new Error('reddit_search_unavailable', { cause: e });
     }
 }
 

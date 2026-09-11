@@ -16,6 +16,10 @@ function scan(overrides: Partial<ScanData> = {}): ScanData {
     measurement_mode: 'standard',
     scorer_version: 'v2',
     measurement_contract_version: 'v2',
+    search_mode: 'grounded-search',
+    analyzer_method: 'gemini',
+    analyzer_model: 'synthetic-analyzer',
+    analyzer_prompt_version: 'test-v2',
     measurement_run_id: '00000000-0000-0000-0000-000000000001',
     created_at: '2026-08-29T10:00:00.000Z',
     ...overrides,
@@ -51,6 +55,14 @@ test('alert comparison rejects rows from a different provider model', () => {
   }));
 
   assert.deepEqual(selectPreviousAlertCohort(current, previous), []);
+});
+
+test('alert comparison sorts history and excludes future, same-run and changed-case prompts', () => {
+  const current = [scan({ measurement_run_id: 'current' })];
+  const older = scan({ measurement_run_id: 'old', created_at: '2026-08-20T10:00:00Z' });
+  const recent = scan({ measurement_run_id: 'recent', created_at: '2026-08-28T10:00:00Z' });
+  assert.deepEqual(selectPreviousAlertCohort(current, [older, scan({ measurement_run_id: 'future', created_at: '2026-09-01T10:00:00Z' }), recent]), [recent]);
+  assert.deepEqual(selectPreviousAlertCohort(current, [{ ...recent, prompt: recent.prompt.toUpperCase() }, { ...recent, measurement_run_id: 'current' }]), []);
 });
 
 test('citation alerts include only newly observed provider-backed own-domain URLs', () => {

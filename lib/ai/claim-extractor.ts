@@ -63,20 +63,20 @@ ${response.slice(0, 8000)}
             paramsObj as unknown as Parameters<typeof client.chat.completions.create>[0] & { stream?: false }
         );
         raw = completion.choices[0]?.message?.content ?? '';
-    } catch (err) {
-        console.warn('[extractClaims] LLM call failed:', err);
-        return [];
+    } catch {
+        throw new Error('claim_extraction_failed');
     }
 
     try {
         const parsed = JSON.parse(raw);
-        const arr: unknown[] = Array.isArray(parsed?.claims) ? parsed.claims : [];
+        if (!Array.isArray(parsed?.claims)) throw new Error('invalid_claim_output');
+        const arr: unknown[] = parsed.claims;
         return arr
             .map(c => (typeof c === 'object' && c && typeof (c as { claim_text?: unknown }).claim_text === 'string'
                 ? { claim_text: (c as { claim_text: string }).claim_text.trim() }
                 : null))
-            .filter((c): c is ExtractedClaim => !!c && c.claim_text.length > 0 && c.claim_text.length < 300);
+            .filter((c): c is ExtractedClaim => !!c && c.claim_text.length > 0 && c.claim_text.length < 300).slice(0, 30);
     } catch {
-        return [];
+        throw new Error('invalid_claim_output');
     }
 }

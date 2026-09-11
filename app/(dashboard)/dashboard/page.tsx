@@ -5,12 +5,13 @@ import { formatDistanceToNow } from "date-fns";
 import { AlertCircle, ArrowRight, CheckCircle2, ExternalLink, FileText, MessageSquare, Radio, RefreshCw, Search } from "lucide-react";
 import Link from "next/link";
 import { Header } from "@/components/dashboard/header";
+import { useDashboardBootstrap } from "@/components/onboarding-check";
 import { ScanReceiptDrawer } from "@/components/dashboard/scan-receipt-drawer";
 import { WeeklyDecisionInbox } from "@/components/dashboard/weekly-decision-inbox";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { DashboardSkeleton } from "@/components/ui/skeleton";
-import { createClient } from "@/lib/supabase/client";
+import { useWorkspaceLive } from "@/hooks/use-workspace-live";
 
 interface DashboardStats {
     aeoHealthScore: number | null;
@@ -18,13 +19,14 @@ interface DashboardStats {
     llmVisibility: number | null;
     llmVisibilityChange: number | null;
     llmVisibilitySamples: number;
+    llmVisibilityMentions: number;
     llmVisibilityConfidence: "none" | "low" | "medium" | "high";
-    forumThreadCount: number;
-    highPriorityThreads: number;
+    forumThreadCount: number | null;
+    highPriorityThreads: number | null;
     shareOfVoice: number | null;
     shareOfVoiceChange: number | null;
     contentScore: number | null;
-    pagesNeedingOptimization: number;
+    pagesNeedingOptimization: number | null;
 }
 
 interface RecentMention {
@@ -48,12 +50,16 @@ interface VisibilityMetric {
     score: number | null;
     change: number | null;
     scanCount: number;
+    mentionCount?: number;
 }
 
 interface DashboardData {
+    status: "complete" | "partial";
+    partialReasons: string[];
     stats: DashboardStats;
     recentMentions: RecentMention[];
     visibilityMetrics: VisibilityMetric[];
+    topThreads: ForumThread[];
 }
 
 const EMPTY_STATS: DashboardStats = {
@@ -62,6 +68,7 @@ const EMPTY_STATS: DashboardStats = {
     llmVisibility: null,
     llmVisibilityChange: null,
     llmVisibilitySamples: 0,
+    llmVisibilityMentions: 0,
     llmVisibilityConfidence: "none",
     forumThreadCount: 0,
     highPriorityThreads: 0,
@@ -87,31 +94,29 @@ function confidenceCopy(confidence: DashboardStats["llmVisibilityConfidence"]) {
 }
 
 export default function DashboardPage() {
+    const bootstrap = useDashboardBootstrap();
+    const workspaceId = bootstrap?.workspaceId;
     const [data, setData] = useState<DashboardData | null>(null);
-    const [threads, setThreads] = useState<ForumThread[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
-    const [realtimeReady, setRealtimeReady] = useState(false);
     const [receipt, setReceipt] = useState<{ title: string; subtitle: string } | null>(null);
 
     const fetchData = useCallback(async () => {
         try {
             setError(null);
-            const [statsRes, threadsRes] = await Promise.all([
-                fetch("/api/dashboard/stats", { cache: "no-store" }),
-                fetch("/api/forum/threads?limit=3&minScore=50", { cache: "no-store" }),
-            ]);
+            const workspaceQuery = workspaceId
+                ? `?workspaceId=${encodeURIComponent(workspaceId)}`
+                : "";
+            const statsRes = await fetch(`/api/dashboard/stats${workspaceQuery}`, { cache: "no-store" });
             if (!statsRes.ok) throw new Error("The measurement summary could not be loaded.");
             setData(await statsRes.json());
-            if (threadsRes.ok) {
-                const body = await threadsRes.json();
-                setThreads(body.threads || []);
-            }
         } catch (reason) {
             console.error("Error fetching dashboard data:", reason);
             setError(reason instanceof Error ? reason.message : "The overview could not be loaded.");
         }
-    }, []);
+    }, [workspaceId]);
+
+    const realtimeReady = useWorkspaceLive(() => void fetchData());
 
     useEffect(() => {
         let mounted = true;
@@ -122,18 +127,8 @@ export default function DashboardPage() {
         }
         void initialFetch();
 
-        const supabase = createClient();
-        const channel = supabase
-            .channel("dashboard-measurement-updates")
-            .on("postgres_changes", { event: "INSERT", schema: "public", table: "llm_scans" }, () => void fetchData())
-            .on("postgres_changes", { event: "*", schema: "public", table: "forum_threads" }, () => void fetchData())
-            .subscribe((status) => {
-                if (mounted) setRealtimeReady(status === "SUBSCRIBED");
-            });
-
         return () => {
             mounted = false;
-            void supabase.removeChannel(channel);
         };
     }, [fetchData]);
 
@@ -159,74 +154,67 @@ export default function DashboardPage() {
 
     const stats = data?.stats ?? EMPTY_STATS;
     const recentMentions = data?.recentMentions ?? [];
+    const threads = data?.topThreads ?? [];
     const metrics = ENGINE_ORDER.map((engine) =>
         data?.visibilityMetrics?.find((metric) => metric.platform.toLowerCase() === engine) ?? {
             platform: engine, score: null, change: null, scanCount: 0,
         },
     );
     const hasMeasuredVisibility = stats.llmVisibility !== null && stats.llmVisibilitySamples > 0;
+    const missedMentions = stats.llmVisibilitySamples - stats.llmVisibilityMentions;
+    const visibilityFinding = stats.llmVisibilityMentions === missedMentions
+        ? ["Answers split", "evenly."]
+        : stats.llmVisibilityMentions < missedMentions
+            ? ["Most answers", "leave you out."]
+            : ["More answers", "mention you."];
 
     return <>
         <Header title="Overview" description="Measurement, evidence, and the next decision" />
-        <main className="mx-auto max-w-7xl space-y-6 p-4 sm:p-6 lg:p-8">
-            <section aria-labelledby="visibility-title" className="overflow-hidden rounded-xl border border-[var(--border-active)] bg-[var(--bg-surface)]">
-                <div className="grid lg:grid-cols-[minmax(0,1.2fr)_minmax(340px,.8fr)]">
-                    <div className="p-5 sm:p-7 lg:p-8">
-                        <div className="flex flex-wrap items-center justify-between gap-3">
-                            <p className="text-[11px] font-medium uppercase tracking-[0.16em] text-[var(--accent-base)]">Defensible visibility</p>
-                            <div className="flex items-center gap-2 text-xs text-[var(--text-tertiary)]">
-                                <Radio className={realtimeReady ? "h-3.5 w-3.5 text-[var(--data-green)]" : "h-3.5 w-3.5"} />
-                                {realtimeReady ? "Auto-refresh connected" : "Refreshes after new scans"}
-                            </div>
-                        </div>
-                        <div className="mt-8 flex flex-wrap items-end gap-x-5 gap-y-3">
-                            <h2 id="visibility-title" className="text-6xl font-medium tracking-[-0.06em] text-[var(--text-primary)] sm:text-7xl">
-                                {stats.llmVisibility === null ? "—" : `${stats.llmVisibility}%`}
-                            </h2>
-                            {stats.llmVisibilityChange !== null && (
-                                <span className={stats.llmVisibilityChange > 0 ? "mb-2 text-sm text-[var(--data-green)]" : stats.llmVisibilityChange < 0 ? "mb-2 text-sm text-[var(--data-red)]" : "mb-2 text-sm text-[var(--text-secondary)]"}>
-                                    {stats.llmVisibilityChange > 0 ? "+" : ""}{stats.llmVisibilityChange} points vs matched baseline
-                                </span>
-                            )}
-                        </div>
-                        <p className="mt-4 max-w-xl text-sm leading-6 text-[var(--text-secondary)]">
-                            {hasMeasuredVisibility
-                                ? "The share of successful AI answers that mention your brand. Failed runs are excluded and remain visible in the receipts."
-                                : "Run a multi-sample scan to measure how often AI answers mention your brand. Missing evidence is never turned into a zero."}
-                        </p>
-                        <dl className="mt-7 grid grid-cols-2 gap-px overflow-hidden rounded-lg border border-[var(--border-default)] bg-[var(--border-default)] sm:grid-cols-4">
-                            <EvidenceCell label="Successful samples" value={stats.llmVisibilitySamples ? `n=${stats.llmVisibilitySamples}` : "—"} />
-                            <EvidenceCell label="Confidence" value={confidenceCopy(stats.llmVisibilityConfidence)} />
-                            <EvidenceCell label="Coverage" value={`${metrics.filter((item) => item.scanCount > 0).length}/4 engines`} />
-                            <div className="bg-[var(--bg-raised)]">
-                                <button type="button" onClick={() => setReceipt({
-                                    title: `Visibility evidence · ${stats.llmVisibility === null ? "unmeasured" : `${stats.llmVisibility}%`}`,
-                                    subtitle: "Every provider response behind this number, including model, region, sample, citation evidence, and failures.",
-                                })} className="min-h-20 w-full p-3 text-left transition-colors hover:bg-[var(--bg-hover)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[var(--accent-base)]">
-                                    <span className="block text-[10px] uppercase tracking-[0.12em] text-[var(--text-tertiary)]">Audit trail</span>
-                                    <span className="mt-2 flex items-center gap-1.5 text-sm font-medium text-[var(--accent-base)]">Open receipts <ArrowRight className="h-3.5 w-3.5" /></span>
-                                </button>
-                            </div>
-                        </dl>
+        <main className="mx-auto max-w-[1440px] space-y-16 px-5 py-10 sm:px-8 lg:px-16 lg:py-12">
+            {data?.status === "partial" && <div role="status" className="rounded-lg border border-[var(--data-amber)]/30 bg-[var(--data-amber-muted)] px-4 py-3 text-sm text-[var(--text-secondary)]">Some supporting evidence is incomplete. Aelo has withheld affected scores instead of estimating them.</div>}
+            <section aria-labelledby="visibility-title" className="grid items-center gap-12 py-2 lg:grid-cols-[1.08fr_.92fr] lg:gap-20 lg:pb-12">
+                <div>
+                    <div className="flex flex-wrap items-center justify-between gap-3">
+                        <p className="font-mono text-[11px] uppercase tracking-[0.12em] text-[var(--text-secondary)]">Current visibility brief</p>
+                        <div className="flex items-center gap-2 font-mono text-[11px] text-[var(--text-tertiary)]"><Radio className={realtimeReady ? "h-3.5 w-3.5 text-[var(--data-green)]" : "h-3.5 w-3.5"} />{realtimeReady ? "Auto-refresh connected" : "Refreshes after new scans"}</div>
                     </div>
+                    <h2 id="visibility-title" className="mt-8 text-[clamp(3.25rem,6vw,5.5rem)] font-normal leading-[1.02] tracking-[-0.065em] text-[var(--text-primary)]">
+                        {hasMeasuredVisibility
+                            ? <>{visibilityFinding[0]}<br /><span className="text-[var(--text-secondary)]">{visibilityFinding[1]}</span></>
+                            : <>Your visibility<br /><span className="text-[var(--text-secondary)]">is unmeasured.</span></>}
+                    </h2>
+                    <p className="mt-7 max-w-xl text-[17px] leading-7 text-[var(--text-secondary)]">
+                        {hasMeasuredVisibility
+                            ? <>Your brand appeared in <strong className="font-medium text-[var(--text-primary)]">{stats.llmVisibilityMentions} of {stats.llmVisibilitySamples} completed answers.</strong> Failed runs stay out of the percentage and remain visible in the receipts.</>
+                            : "Run a multi-sample scan to measure how often AI answers mention your brand. Missing evidence is never turned into a zero."}
+                    </p>
+                    <div className="mt-7 flex flex-wrap items-center gap-5">
+                        <Link href="/dashboard/llm-tracker"><Button>See the missing mentions <ArrowRight className="ml-2 h-4 w-4" /></Button></Link>
+                        <button type="button" onClick={() => setReceipt({ title: `Visibility evidence · ${stats.llmVisibility === null ? "unmeasured" : `${stats.llmVisibility}%`}`, subtitle: "Every provider response behind this number, including model, region, sample, citation evidence, and failures." })} className="min-h-11 text-sm font-medium text-[var(--text-primary)] underline decoration-[var(--border-active)] underline-offset-4 hover:decoration-[var(--accent-base)]">Open audit trail ↗</button>
+                    </div>
+                    <p className="mt-5 font-mono text-[11px] leading-5 text-[var(--text-tertiary)]">{metrics.filter((item) => item.scanCount > 0).length}/4 engines · n={stats.llmVisibilitySamples} completed samples · {confidenceCopy(stats.llmVisibilityConfidence).toLowerCase()}</p>
+                </div>
 
-                    <div className="border-t border-[var(--border-default)] bg-[var(--bg-base)] p-5 sm:p-7 lg:border-l lg:border-t-0">
-                        <div className="flex items-center justify-between gap-3">
-                            <div>
-                                <p className="text-[11px] uppercase tracking-[0.14em] text-[var(--text-tertiary)]">Engine evidence</p>
-                                <p className="mt-1 text-xs text-[var(--text-secondary)]">Same contract, shown separately</p>
-                            </div>
-                            <Link href="/dashboard/llm-tracker" className="text-xs font-medium text-[var(--accent-base)] hover:underline">Run scan</Link>
+                <div className="relative before:absolute before:inset-[10px_-10px_-10px_10px] before:-z-10 before:border before:border-[var(--border-default)]">
+                    <div className="bg-[var(--bg-evidence)] p-7 text-[var(--text-evidence)] sm:p-8">
+                        <div className="flex items-center justify-between gap-3 border-b border-[var(--border-evidence)] pb-4 font-mono text-[10px] uppercase tracking-[0.1em] text-[#667273]"><span>Measurement receipt</span><span>{stats.llmVisibilitySamples ? `n=${stats.llmVisibilitySamples}` : "No samples"}</span></div>
+                        <p className="mt-6 text-xl font-semibold leading-7 tracking-[-0.025em]">How often do AI assistants include your brand in buyer answers?</p>
+                        <div className="mt-6 border-y border-[var(--border-evidence)] py-6">
+                            <div className="flex items-end justify-between gap-5"><span className="text-sm text-[#5F6B6C]">Measured mention rate</span><strong className="text-5xl font-medium tracking-[-0.055em]">{stats.llmVisibility === null ? "—" : `${stats.llmVisibility}%`}</strong></div>
+                            <p className="mt-4 text-sm leading-6 text-[#5F6B6C]">{hasMeasuredVisibility ? `${stats.llmVisibilityMentions} mentions across ${stats.llmVisibilitySamples} usable provider answers.` : "There is not enough completed evidence to calculate this rate."}</p>
                         </div>
-                        <div className="mt-5 divide-y divide-[var(--border-default)] border-y border-[var(--border-default)]">
-                            {metrics.map((metric) => <EngineRow key={metric.platform} metric={metric} />)}
-                        </div>
-                        <div className="mt-5 flex items-start gap-2 text-xs leading-5 text-[var(--text-tertiary)]">
-                            <CheckCircle2 className="mt-0.5 h-3.5 w-3.5 shrink-0" />
-                            Scores are comparable only when prompt, model, region, mode, and scoring version match.
-                        </div>
+                        <div className="mt-5 flex items-start justify-between gap-5 text-xs leading-5 text-[#526D95]"><span>{confidenceCopy(stats.llmVisibilityConfidence)} · {metrics.filter((item) => item.scanCount > 0).length} engines responding</span><button type="button" onClick={() => setReceipt({ title: "Measurement receipt", subtitle: "Inspect the provider model, prompt, region, evidence, and persistence status for every sample." })} className="min-h-10 shrink-0 font-medium underline underline-offset-4">Inspect ↗</button></div>
                     </div>
                 </div>
+            </section>
+
+            <section aria-labelledby="engine-evidence-title">
+                <div className="mb-6 flex flex-col justify-between gap-3 sm:flex-row sm:items-end">
+                    <div><h2 id="engine-evidence-title" className="text-2xl font-medium text-[var(--text-primary)]">Visibility, by engine</h2><p className="mt-2 text-sm text-[var(--text-secondary)]">Share of completed answers that mention your brand.</p></div>
+                    <Link href="/dashboard/llm-tracker" className="min-h-11 py-3 text-sm text-[var(--text-primary)] underline decoration-[var(--border-active)] underline-offset-4 hover:decoration-[var(--accent-base)]">Run another scan ↗</Link>
+                </div>
+                <div className="grid border-t border-[var(--border-default)] sm:grid-cols-2 lg:grid-cols-4">{metrics.map((metric) => <EnginePanel key={metric.platform} metric={metric} />)}</div>
+                <p className="mt-5 flex items-start gap-2 font-mono text-[11px] leading-5 text-[var(--text-tertiary)]"><CheckCircle2 className="mt-0.5 h-3.5 w-3.5 shrink-0" />Scores compare only when prompt, model, region, mode, and scoring version match.</p>
             </section>
 
             {!hasMeasuredVisibility && (
@@ -277,8 +265,8 @@ export default function DashboardPage() {
                     <dl className="grid grid-cols-2 gap-px bg-[var(--border-default)]">
                         <SupportingMetric label="Aelo health" value={stats.aeoHealthScore === null ? "—" : `${stats.aeoHealthScore}/100`} detail={stats.aeoScoreChange === null ? "No matched change" : `${stats.aeoScoreChange > 0 ? "+" : ""}${stats.aeoScoreChange} this week`} />
                         <SupportingMetric label="Share of voice" value={stats.shareOfVoice === null ? "—" : `${stats.shareOfVoice}%`} detail="Competitor mentions" />
-                        <SupportingMetric label="Source opportunities" value={stats.forumThreadCount.toString()} detail={`${stats.highPriorityThreads} high priority`} />
-                        <SupportingMetric label="Content readiness" value={stats.contentScore === null ? "—" : stats.contentScore.toString()} detail={stats.pagesNeedingOptimization ? `${stats.pagesNeedingOptimization} pages to review` : "No flagged pages"} />
+                        <SupportingMetric label="Source opportunities" value={stats.forumThreadCount === null ? "—" : stats.forumThreadCount.toString()} detail={stats.highPriorityThreads === null ? "Partial evidence" : `${stats.highPriorityThreads} high priority`} />
+                        <SupportingMetric label="Content readiness" value={stats.contentScore === null ? "—" : stats.contentScore.toString()} detail={stats.pagesNeedingOptimization === null ? "Partial evidence" : stats.pagesNeedingOptimization ? `${stats.pagesNeedingOptimization} pages to review` : "No flagged pages"} />
                     </dl>
                     {threads.length > 0 ? <div className="border-t border-[var(--border-default)] p-5">
                         <div className="flex items-center justify-between"><p className="text-xs font-medium text-[var(--text-secondary)]">Highest source opportunity</p><Link href="/dashboard/forum-hub" className="text-xs text-[var(--accent-base)] hover:underline">View sources</Link></div>
@@ -299,15 +287,12 @@ export default function DashboardPage() {
     </>;
 }
 
-function EvidenceCell({ label, value }: { label: string; value: string }) {
-    return <div className="min-h-20 bg-[var(--bg-raised)] p-3"><dt className="text-[10px] uppercase tracking-[0.12em] text-[var(--text-tertiary)]">{label}</dt><dd className="mt-2 text-sm font-medium text-[var(--text-primary)]">{value}</dd></div>;
-}
-
-function EngineRow({ metric }: { metric: VisibilityMetric }) {
-    return <div className="grid min-h-14 grid-cols-[1fr_auto_auto] items-center gap-4 py-3">
-        <div className="flex items-center gap-2.5"><span className={metric.scanCount > 0 ? "h-1.5 w-1.5 rounded-full bg-[var(--data-green)]" : "h-1.5 w-1.5 rounded-full bg-[var(--text-ghost)]"} /><span className="text-sm text-[var(--text-primary)]">{formatEngine(metric.platform)}</span></div>
-        <span className="text-xs text-[var(--text-tertiary)]">n={metric.scanCount}</span>
-        <span className="w-12 text-right text-lg font-medium text-[var(--text-primary)]">{metric.score === null ? "—" : `${metric.score}%`}</span>
+function EnginePanel({ metric }: { metric: VisibilityMetric }) {
+    return <div className="border-b border-[var(--border-default)] py-6 sm:px-6 sm:odd:border-r lg:border-b-0 lg:border-r lg:first:pl-0 lg:last:border-r-0 lg:last:pr-0">
+        <div className="flex items-center gap-2.5"><span className={metric.scanCount > 0 ? "h-1.5 w-1.5 rounded-full bg-[var(--accent-base)]" : "h-1.5 w-1.5 rounded-full bg-[var(--text-ghost)]"} /><span className="text-sm text-[var(--text-primary)]">{formatEngine(metric.platform)}</span></div>
+        <div className="mt-5 text-4xl font-normal tracking-[-0.045em] text-[var(--text-primary)]">{metric.score === null ? "—" : `${metric.score}%`}<span className="ml-2 font-mono text-[11px] tracking-normal text-[var(--text-tertiary)]">n={metric.scanCount}</span></div>
+        <div className="relative mt-5 h-5 before:absolute before:inset-x-0 before:top-2.5 before:h-px before:bg-[var(--border-default)]"><span className="absolute top-[7px] h-[7px] w-[7px] -translate-x-1/2 rounded-full bg-[var(--accent-base)]" style={{ left: `${metric.score ?? 0}%` }} /></div>
+        <p className="mt-2 font-mono text-[11px] text-[var(--text-tertiary)]">{metric.mentionCount ?? 0} mentioned · {metric.scanCount - (metric.mentionCount ?? 0)} missed</p>
     </div>;
 }
 

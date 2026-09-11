@@ -1,8 +1,8 @@
-import type { LLMPlatform } from '@/lib/ai/llm-scanner';
-import type { CitationEvidence } from '@/lib/types';
+import type { LLMPlatform } from '../ai/llm-scanner';
+import type { CitationEvidence } from '../types';
 
-export const MEASUREMENT_CONTRACT_VERSION = 'measurement.v1' as const;
-export const MEASUREMENT_SCORER_VERSION = 'aelo-brand-scorer.v1' as const;
+export const MEASUREMENT_CONTRACT_VERSION = 'measurement.v2' as const;
+export const MEASUREMENT_SCORER_VERSION = 'aelo-brand-scorer.v2' as const;
 
 export type MeasurementRunStatus = 'complete' | 'partial' | 'all_failed' | 'untracked';
 export type MeasurementConfidenceLevel = 'none' | 'low' | 'medium' | 'high';
@@ -26,7 +26,11 @@ export type MeasurementSample = {
   providerModel: string | null;
   region: string;
   mode: 'standard' | 'battle';
-  scorerVersion: typeof MEASUREMENT_SCORER_VERSION;
+  scorerVersion: string;
+  searchMode?: string | null;
+  analyzerMethod?: string | null;
+  analyzerModel?: string | null;
+  analyzerPromptVersion?: string | null;
   status: 'succeeded' | 'failed';
   sampleId: string | null;
   mentioned: boolean | null;
@@ -67,9 +71,9 @@ export type MeasurementPersistence = {
 };
 
 export type VisibilityMeasurementRun = {
-  contractVersion: typeof MEASUREMENT_CONTRACT_VERSION;
+  contractVersion: string;
   runId: string;
-  scorerVersion: typeof MEASUREMENT_SCORER_VERSION;
+  scorerVersion: string;
   region: string;
   mode: 'standard' | 'battle';
   prompt: string;

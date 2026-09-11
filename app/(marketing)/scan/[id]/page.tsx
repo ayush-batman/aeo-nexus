@@ -2,44 +2,14 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import type { Metadata } from "next";
 import { ArrowRight, ExternalLink } from "lucide-react";
-import { createAdminClient } from "@/lib/supabase/admin";
+import { readPublicScan } from "@/lib/convex/public-scan";
+import { PendingReceipt } from "@/components/marketing/pending-receipt";
 import { NewsletterSubscribe } from "@/components/marketing/newsletter-subscribe";
 
-interface PublicScan {
-    id:                     string;
-    brand_name:             string;
-    prompt:                 string;
-    platform:               string;
-    response:               string | null;
-    brand_mentioned:        boolean | null;
-    mention_position:       number | null;
-    sentiment:              'positive' | 'neutral' | 'negative' | null;
-    competitors_mentioned:  string[] | null;
-    citations:              Array<{
-        url: string;
-        title: string;
-        isOwnDomain?: boolean;
-        provenance?: 'provider_citation' | 'link_mentioned' | 'unverified';
-        fetch_validation?: 'not_checked' | 'valid' | 'invalid' | 'blocked';
-    }> | null;
-    error_message:          string | null;
-    created_at:             string;
-}
-
-export const revalidate = 300; // 5 min
-
-// Fetch server-side so the receipt renders instantly (no client loading spinner).
-async function getScan(id: string): Promise<PublicScan | null> {
+export const dynamic = 'force-dynamic';
+async function getScan(id: string) {
     if (!/^[a-f0-9-]{36}$/i.test(id)) return null;
-
-    const db = createAdminClient();
-    const { data } = await db
-        .from('public_scans')
-        .select('*')
-        .eq('id', id)
-        .maybeSingle();
-
-    return (data as PublicScan | null) ?? null;
+    return readPublicScan(id);
 }
 
 export async function generateMetadata(
@@ -49,7 +19,7 @@ export async function generateMetadata(
     const scan = await getScan(id);
     if (!scan) return { title: 'Scan not found · Aelo' };
 
-    const verdict = scan.brand_mentioned
+    const verdict = scan.status !== "complete" ? scan.status : scan.brand_mentioned
         ? `mentioned${scan.mention_position ? ` at #${scan.mention_position}` : ''}`
         : 'not mentioned';
 
@@ -75,7 +45,8 @@ export default async function PublicScanPage(
         year: 'numeric', month: 'long', day: 'numeric',
     });
 
-    const verdictLabel = scan.error_message
+    const pending = scan.status === 'queued' || scan.status === 'running';
+    const verdictLabel = pending ? 'Running' : scan.error_message
         ? 'Failed'
         : scan.brand_mentioned
             ? scan.mention_position && scan.mention_position <= 3 ? 'Named early' : 'Named'
@@ -107,10 +78,11 @@ export default async function PublicScanPage(
                         </span>
                     </h1>
                     <p className="text-[15px] text-zinc-400 leading-relaxed max-w-2xl">
-                        We asked Gemini {scan.brand_mentioned === false ? "and it didn't name" : "and it named"}{' '}
-                        {scan.brand_name} for the prompt below. Verify yourself in 30 seconds by pasting the same prompt into Gemini.
+                        {pending ? "Your scan is running. This page will update when evidence is saved." : scan.error_message ? "The provider did not produce usable evidence. No visibility result is claimed." : "This receipt contains one sampled answer from the Gemini API. Consumer Gemini may answer differently; read the saved evidence below."}
                     </p>
                 </div>
+
+                {pending && <PendingReceipt />}
 
                 {/* The prompt card */}
                 <div className="mb-6 rounded-md border border-white/[0.08] bg-black overflow-hidden">
@@ -122,7 +94,7 @@ export default async function PublicScanPage(
                             rel="noreferrer"
                             className="inline-flex items-center gap-1 text-[11px] font-mono text-[var(--accent-base)] hover:text-[var(--accent-hover)]"
                         >
-                            Reproduce on Gemini <ExternalLink className="w-2.5 h-2.5" />
+                            Try in Gemini <ExternalLink className="w-2.5 h-2.5" />
                         </a>
                     </div>
                     <div className="px-4 py-3 text-[15px] text-white font-medium leading-snug">
@@ -187,7 +159,7 @@ export default async function PublicScanPage(
                         </div>
                         <div className="px-4 py-3 space-y-1.5">
                             {scan.citations!.slice(0, 10).map((c, i) => {
-                                const unsafe = c.fetch_validation === 'invalid' || c.fetch_validation === 'blocked';
+                                const unsafe = c.fetchValidation === 'invalid' || c.fetchValidation === 'blocked' || !/^https?:\/\//i.test(c.url);
                                 const content = <>
                                     <span className="truncate">{c.title || c.url}</span>
                                     <span className="shrink-0 text-[9px] uppercase tracking-wide text-zinc-600">
@@ -222,9 +194,8 @@ export default async function PublicScanPage(
                 {/* Sage disclaimer */}
                 <div className="mb-8 rounded-md border-l-2 border-[var(--accent-base)] bg-[var(--accent-muted)]/40 pl-4 pr-3 py-3 text-[13px] text-zinc-300 leading-relaxed italic">
                     LLM answers are non-deterministic, this scan is a sample, not a truth.
-                    Running the same prompt again could shift the position by ±2 and the
-                    sentiment by one bucket. That&apos;s why the receipt is here: verify any
-                    claim yourself in 30 seconds.
+                    One answer is not a reliable visibility score. Repeated measurements can show variation;
+                    this receipt does not establish a likely rank range or a trend.
                 </div>
 
                 {/* CTA, track over time */}

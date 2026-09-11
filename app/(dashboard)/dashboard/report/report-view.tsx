@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { Printer, Download, Lock, ArrowRight } from "lucide-react";
 import type { Report } from "@/lib/analytics/report";
+import { ReportsSettingsTabs } from "@/components/dashboard/reports-settings-tabs";
 
 function csvEscape(v: string | number | null): string {
     const s = v == null ? "" : String(v);
@@ -41,7 +42,8 @@ function downloadCsv(report: Report) {
 export default function ReportView({ paid, brand, report }: { paid: boolean; brand: string; report: Report | null }) {
     if (!paid || !report) {
         return (
-            <div className="p-8 max-w-2xl mx-auto">
+            <div className="mx-auto max-w-[1180px] px-5 py-10 sm:px-8 lg:px-16 lg:py-12">
+                <ReportsSettingsTabs />
                 <div className="rounded-2xl border border-[var(--border-default)] bg-[var(--bg-surface)] p-10 text-center">
                     <div className="mx-auto mb-4 inline-flex h-11 w-11 items-center justify-center rounded-xl border border-[var(--accent-base)]/25 bg-[var(--accent-muted)]">
                         <Lock className="h-5 w-5 text-[var(--accent-base)]" />
@@ -67,12 +69,14 @@ export default function ReportView({ paid, brand, report }: { paid: boolean; bra
         : null;
 
     return (
-        <div className="report-root p-6 md:p-8 max-w-4xl mx-auto">
+        <div className="report-root mx-auto max-w-[1180px] px-5 py-10 sm:px-8 lg:px-16 lg:py-12">
+            <div className="no-print mb-10"><ReportsSettingsTabs /></div>
             {/* Toolbar (hidden in print) */}
             <div className="no-print mb-6 flex items-center justify-between gap-3">
                 <div>
-                    <h1 className="text-2xl font-bold text-[var(--text-primary)] tracking-tight">Client report</h1>
-                    <p className="text-sm text-[var(--text-secondary)]">Branded, print-ready. Save as PDF or export CSV.</p>
+                    <div className="font-mono text-[10px] uppercase tracking-[0.16em] text-[var(--text-tertiary)]">04 / Share & manage</div>
+                    <h1 className="mt-2 text-3xl font-medium text-[var(--text-primary)] tracking-[-0.04em]">A brief you can stand behind.</h1>
+                    <p className="mt-2 text-sm text-[var(--text-secondary)]">The finding, the supporting evidence, and the limits—kept together.</p>
                 </div>
                 <div className="flex items-center gap-2">
                     <button onClick={() => downloadCsv(s)} className="inline-flex items-center gap-1.5 rounded-lg border border-[var(--border-default)] px-3 py-2 text-sm text-[var(--text-secondary)] hover:text-[var(--text-primary)]">
@@ -85,7 +89,7 @@ export default function ReportView({ paid, brand, report }: { paid: boolean; bra
             </div>
 
             {/* The report sheet */}
-            <div className="report-sheet rounded-2xl border border-[var(--border-default)] bg-[var(--bg-surface)] p-8">
+            <div className="report-sheet border border-[var(--border-evidence)] bg-[var(--bg-evidence)] p-6 text-[var(--text-evidence)] shadow-[8px_8px_0_var(--bg-base),8px_8px_0_1px_var(--border-default)] sm:p-10">
                 <div className="flex items-start justify-between border-b border-[var(--border-default)] pb-5 mb-6">
                     <div>
                         <div className="text-[11px] font-mono uppercase tracking-[0.18em] text-[var(--accent-base)] mb-1">AI Visibility Report</div>

@@ -7,11 +7,10 @@ async function source(relativePath: string): Promise<string> {
 }
 
 test('API schedules resolve configured entitled engines instead of saving an empty list', async () => {
-  const route = await source('app/api/v1/scans/schedule/route.ts');
-  assert.match(route, /getAvailablePlatforms/);
-  assert.match(route, /getEntitlements/);
-  assert.match(route, /no_engines_available/);
-  assert.doesNotMatch(route, /platforms:\s*\[\]/);
+const backend = await source('convex/apiWrites.ts');
+ assert.match(backend,/configuredEngines/); assert.match(backend,/const platforms = args\.platforms \?\? entitled/);
+ assert.match(backend,/if \(!platforms\.length\) throw new Error\('no_engines_available'\)/);
+ assert.match(backend,/api_scope_denied/);
 });
 
 test('scheduled scan claims are leased atomically and service-role only', async () => {
@@ -25,41 +24,23 @@ test('scheduled scan claims are leased atomically and service-role only', async 
 });
 
 test('scan cron fails closed and consumes only atomically claimed schedules', async () => {
-  const [route, leaseSql] = await Promise.all([
-    source('app/api/cron/process-scans/route.ts'),
-    source('supabase/migrations/035_reliable_scan_leases.sql'),
-  ]);
-  assert.match(route, /cron_not_configured/);
-  assert.match(route, /claim_due_scheduled_scans/);
-  assert.match(route, /reserveScanQuota/);
-  assert.match(route, /getEntitlements/);
-  assert.match(route, /runVisibilityMeasurement/);
-  assert.match(route, /samples: 4/);
-  assert.match(route, /measurement\.persistence\.status/);
-  assert.match(route, /claim_token/);
-  assert.match(route, /p_limit:\s*1/);
-  assert.match(route, /renew_scheduled_scan_claim/);
-  assert.match(leaseSql, /CREATE OR REPLACE FUNCTION public\.renew_scheduled_scan_claim/i);
-  assert.match(leaseSql, /claim_token = p_claim_token/i);
-  assert.match(leaseSql, /TO service_role/i);
-  assert.doesNotMatch(route, /scanLLM\(/);
-  assert.doesNotMatch(route, /\.from\('scheduled_scans'\)\s*\.select/);
+const [route, dispatcher, crons] = await Promise.all([source('app/api/cron/process-scans/route.ts'),source('convex/scheduled.ts'),source('convex/crons.ts')]);
+ assert.match(route,/cron_not_configured/); assert.match(route,/timingSafeEqual/); assert.match(route,/status: 401/);
+ assert.match(route,/internal\.scheduled\.dispatch/);
+ assert.match(dispatcher,/export const runOne = internalMutation/);
+ assert.match(dispatcher,/schedule\.nextRunAt !== args\.dueAt/);
+ assert.match(dispatcher,/beginMeasurement/); assert.match(dispatcher,/samples: 4/);
+ assert.match(dispatcher,/scanQuotaReservations/);
+ assert.match(dispatcher,/run\.result\.status/);
+ assert.match(crons,/internal\.scheduled\.dispatch/);
 });
 
 test('cookie schedule mutations require an editor role and validate entitled engines', async () => {
-  const [collection, member, migration] = await Promise.all([
-    source('app/api/llm/scheduled/route.ts'),
-    source('app/api/llm/scheduled/[id]/route.ts'),
-    source('supabase/migrations/033_secure_scheduled_scan_mutations.sql'),
-  ]);
-  for (const route of [collection, member]) {
-    assert.match(route, /getCurrentWorkspaceContext/);
-    assert.match(route, /requireWorkspaceRole/);
-    assert.match(route, /createAdminClient/);
-  }
-  assert.match(collection, /getEntitlements/);
-  assert.match(collection, /getAvailablePlatforms/);
-  assert.match(collection, /engine_not_entitled/);
-  assert.match(collection, /prompt\.length > 2_000/);
-  assert.match(migration, /REVOKE INSERT, UPDATE, DELETE ON TABLE public\.scheduled_scans FROM authenticated/i);
+const backend = await source('convex/schedules.ts');
+ assert.match(backend,/requireRole\(ctx\.tenant, 'editor'\)/);
+ assert.match(backend,/requireWorkspace\(ctx, ctx\.tenant, args\.workspaceId\)/);
+ assert.match(backend,/existing\.workspaceId !== workspace\._id/);
+ assert.match(backend,/prompt\.length > 2000/);
+ assert.match(backend,/engine_not_entitled/);
+ assert.match(backend,/ctx\.tenant\.organization\.plan === 'free'/);
 });

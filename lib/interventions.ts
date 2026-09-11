@@ -1,85 +1,41 @@
-import type { createAdminClient } from '@/lib/supabase/admin';
-import { MEASUREMENT_CONTRACT_VERSION } from '@/lib/measurement/types';
-import type { ComparableSnapshot } from '@/lib/measurement/comparison';
-
-// Shape stored in interventions.baseline_snapshot / impact_snapshot (JSONB).
-//   { "<prompt>": { "<platform>": { mentioned, position, sentiment } } }
+import type { LLMScan } from './types';
+import type { ComparableSnapshot } from './measurement/comparison';
 export type VisibilitySnapshot = ComparableSnapshot;
-
-const SNAPSHOT_SAMPLES_PER_ENGINE = 8;
-
-function mode(values: string[]): string | null {
-    const counts = new Map<string, number>();
-    for (const value of values) counts.set(value, (counts.get(value) ?? 0) + 1);
-    return [...counts.entries()].sort((a, b) => b[1] - a[1])[0]?.[0] ?? null;
+const fields = ['provider_model', 'measurement_region', 'measurement_mode', 'scorer_version', 'measurement_contract_version',
+  'search_mode', 'analyzer_method', 'analyzer_model', 'analyzer_prompt_version'] as const;
+export type SnapshotObservation = Pick<LLMScan, 'prompt' | 'platform' | 'brand_mentioned' | 'mention_position' | 'sentiment' | 'created_at' | typeof fields[number]> & { hasEvidence: boolean };
+/** Latest compatible cohort, at most eight real observations per prompt/engine. */
+export function snapshotFromScans(scans: LLMScan[], prompts: string[]): VisibilitySnapshot {
+  return snapshotFromObservations(scans.map(scan => ({ ...scan, hasEvidence: !scan.failure_code && Boolean(scan.response.trim()) })), prompts);
 }
-
-/**
- * Snapshot the CURRENT visibility for a set of prompts in a workspace by
- * looking at up to eight recent `llm_scans` rows per (prompt, platform) in
- * the last 30 days. This is the "before" cohort for an intervention receipt.
- *
- * Denormalizing at snapshot time means the "before" survives scan pruning.
- */
-export async function snapshotVisibility(
-    db: ReturnType<typeof createAdminClient>,
-    workspaceId: string,
-    prompts: string[],
-): Promise<VisibilitySnapshot> {
-    if (prompts.length === 0) return {};
-
-    const cutoff = new Date();
-    cutoff.setDate(cutoff.getDate() - 30);
-
-    const { data: scans, error } = await db
-        .from('llm_scans')
-        .select('platform, prompt, brand_mentioned, mention_position, sentiment, created_at, provider_model, measurement_region, measurement_mode, scorer_version, measurement_contract_version')
-        .eq('workspace_id', workspaceId)
-        .in('prompt', prompts)
-        .gte('created_at', cutoff.toISOString())
-        .order('created_at', { ascending: false });
-
-    if (error || !scans) {
-        console.warn('[interventions/snapshot] no scans found:', error);
-        // Return empty buckets per prompt so callers get a consistent shape
-        return Object.fromEntries(prompts.map(p => [p, {}])) as VisibilitySnapshot;
-    }
-
-    const grouped = new Map<string, typeof scans>();
-    for (const scan of scans) {
-        const key = [scan.prompt, scan.platform, scan.provider_model, scan.measurement_region, scan.measurement_mode, scan.scorer_version, scan.measurement_contract_version].join('\u0000');
-        const rows = grouped.get(key) ?? [];
-        if (rows.length < SNAPSHOT_SAMPLES_PER_ENGINE) rows.push(scan);
-        grouped.set(key, rows);
-    }
-
-    const out: VisibilitySnapshot = {};
-    for (const prompt of prompts) out[prompt] = {};
-    for (const rows of grouped.values()) {
-        const first = rows[0];
-        if (!first) continue;
-        const mentions = rows.filter((row) => row.brand_mentioned).length;
-        const positions = rows.flatMap((row) => typeof row.mention_position === 'number' ? [row.mention_position] : []);
-        const sentiments = rows.flatMap((row) => typeof row.sentiment === 'string' ? [row.sentiment] : []);
-        const bucket = out[first.prompt] ?? (out[first.prompt] = {});
-        if (bucket[first.platform]) continue;
-        bucket[first.platform] = {
-            mentioned: mentions / rows.length >= 0.5,
-            position: positions.length > 0
-                ? Math.round((positions.reduce((sum, value) => sum + value, 0) / positions.length) * 10) / 10
-                : null,
-            sentiment: mode(sentiments),
-            sample_count: rows.length,
-            mention_count: mentions,
-            mention_rate: Math.round((mentions / rows.length) * 10_000) / 10_000,
-            position_sample_count: positions.length,
-            measured_at: first.created_at,
-            contract_version: first.measurement_contract_version ?? MEASUREMENT_CONTRACT_VERSION,
-            provider_model: first.provider_model ?? undefined,
-            measurement_region: first.measurement_region ?? undefined,
-            measurement_mode: first.measurement_mode ?? undefined,
-            scorer_version: first.scorer_version ?? undefined,
-        };
-    }
-    return out;
+export function snapshotFromObservations(scans: SnapshotObservation[], prompts: string[]): VisibilitySnapshot {
+  const out: VisibilitySnapshot = Object.fromEntries(prompts.map(p => [p, {}]));
+  const groups = new Map<string, SnapshotObservation[]>();
+  const chosen = new Map<string, string>();
+  for (const scan of [...scans].sort((a, b) => b.created_at.localeCompare(a.created_at))) {
+    if (!prompts.includes(scan.prompt) || !scan.hasEvidence) continue;
+    const base = JSON.stringify([scan.prompt, scan.platform]);
+    const cohort = JSON.stringify(fields.map(field => scan[field]));
+    if (!chosen.has(base)) chosen.set(base, cohort);
+    if (chosen.get(base) !== cohort) continue;
+    const rows = groups.get(base) ?? [];
+    if (rows.length < 8) rows.push(scan);
+    groups.set(base, rows);
+  }
+  for (const rows of groups.values()) {
+    const first = rows[0];
+    const mentions = rows.filter(row => row.brand_mentioned).length;
+    const positions = rows.flatMap(row => row.brand_mentioned && typeof row.mention_position === 'number' && Number.isFinite(row.mention_position) && row.mention_position >= 1 ? [row.mention_position] : []);
+    const sentiments = new Map<string, number>();
+    for (const row of rows) if (row.sentiment) sentiments.set(row.sentiment, (sentiments.get(row.sentiment) || 0) + 1);
+    const ordered = [...sentiments].sort((a,b) => b[1]-a[1]);
+    out[first.prompt][first.platform] = {
+      mentioned: mentions / rows.length >= 0.5, position: positions.length ? positions.reduce((a,b) => a+b,0) / positions.length : null,
+      sentiment: ordered[0] && ordered[0][1] > (ordered[1]?.[1] || 0) ? ordered[0][0] : null,
+      sample_count: rows.length, mention_count: mentions, mention_rate: mentions / rows.length, position_sample_count: positions.length,
+      measured_at: first.created_at,
+      ...Object.fromEntries(fields.flatMap(field => first[field] ? [[field === 'measurement_contract_version' ? 'contract_version' : field, first[field]]] : [])),
+    };
+  }
+  return out;
 }

@@ -1,149 +1,21 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { GoogleGenerativeAI } from '@google/generative-ai';
-import rateLimit, { isRateLimitUnavailableError } from '@/lib/rate-limit';
-
-// Rate limit: 10 discovers per IP per hour
-const discoverLimiter = rateLimit({
-    interval: 60 * 60 * 1000,
-    uniqueTokenPerInterval: 500,
-    namespace: 'prompt-discovery',
-});
-
-// Google Autocomplete suggestions (unofficial but widely-used endpoint)
-async function getAutocompleteSuggestions(query: string): Promise<string[]> {
-    try {
-        const url = `https://suggestqueries.google.com/complete/search?client=firefox&q=${encodeURIComponent(query)}`;
-        const response = await fetch(url, {
-            headers: { 'Accept': 'application/json' },
-        });
-
-        if (!response.ok) return [];
-
-        const data = await response.json();
-        // Response format: [query, [suggestions]]
-        return (data[1] || []).slice(0, 10);
-    } catch (err) {
-        console.error('Autocomplete fetch failed:', err);
-        return [];
-    }
-}
-
-// Use Gemini to generate PAA-style questions for a topic
-async function getPeopleAlsoAsk(topic: string, brandName?: string, industry?: string): Promise<string[]> {
-    const apiKey = process.env.GOOGLE_API_KEY || process.env.GEMINI_API_KEY;
-    if (!apiKey) return [];
-
-    try {
-        const genAI = new GoogleGenerativeAI(apiKey);
-        const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
-
-        const prompt = `You are an SEO expert specializing in AI Engine Optimization (Aelo). 
-Generate exactly 10 "People Also Ask" style questions that real users would search for related to the topic below.
-${brandName ? `Brand context: ${brandName}` : ''}
-${industry ? `Industry: ${industry}` : ''}
-
-Topic: "${topic}"
-
-Rules:
-- Questions should be the kind that appear in Google's "People Also Ask" section
-- Include questions about comparisons, reviews, alternatives, pricing, features
-- Include questions that would trigger AI Overviews on Google
-- Make them specific and natural-sounding
-- Return ONLY the questions, one per line, numbered 1-10
-- No extra text or explanations`;
-
-        const result = await model.generateContent(prompt);
-        const text = result.response.text();
-
-        // Parse numbered lines
-        return text
-            .split('\n')
-            .map(line => line.replace(/^\d+[\.\)]\s*/, '').trim())
-            .filter(line => line.length > 10 && line.endsWith('?'));
-    } catch (err) {
-        console.error('PAA generation failed:', err);
-        return [];
-    }
-}
-
-export async function POST(req: NextRequest) {
-    try {
-        // Rate limit by IP
-        const ip = req.headers.get('x-forwarded-for') || req.headers.get('x-real-ip') || 'unknown';
-        try {
-            await discoverLimiter.check(10, `discover-${ip}`);
-        } catch (error) {
-            if (isRateLimitUnavailableError(error)) {
-                return NextResponse.json({ error: 'Request protection is temporarily unavailable.' }, { status: 503 });
-            }
-            return NextResponse.json(
-                { error: 'Rate limit exceeded. Try again later.' },
-                { status: 429 }
-            );
-        }
-
-        const body = await req.json();
-        const { query, brandName, industry, mode = 'all' } = body;
-
-        if (!query || query.trim().length < 2) {
-            return NextResponse.json(
-                { error: 'Query must be at least 2 characters' },
-                { status: 400 }
-            );
-        }
-
-        const results: {
-            autocomplete: string[];
-            peopleAlsoAsk: string[];
-            relatedQueries: string[];
-        } = {
-            autocomplete: [],
-            peopleAlsoAsk: [],
-            relatedQueries: [],
-        };
-
-        // Run both fetches in parallel
-        const promises: Promise<void>[] = [];
-
-        if (mode === 'all' || mode === 'autocomplete') {
-            promises.push(
-                getAutocompleteSuggestions(query).then(suggestions => {
-                    results.autocomplete = suggestions;
-                })
-            );
-
-            // Also get "vs" and "alternative" variants
-            promises.push(
-                getAutocompleteSuggestions(`${query} vs`).then(suggestions => {
-                    results.relatedQueries.push(...suggestions.slice(0, 5));
-                })
-            );
-            promises.push(
-                getAutocompleteSuggestions(`best ${query}`).then(suggestions => {
-                    results.relatedQueries.push(...suggestions.slice(0, 5));
-                })
-            );
-        }
-
-        if (mode === 'all' || mode === 'paa') {
-            promises.push(
-                getPeopleAlsoAsk(query, brandName, industry).then(questions => {
-                    results.peopleAlsoAsk = questions;
-                })
-            );
-        }
-
-        await Promise.all(promises);
-
-        // Deduplicate related queries
-        results.relatedQueries = [...new Set(results.relatedQueries)];
-
-        return NextResponse.json(results);
-    } catch (err) {
-        console.error('Prompt discovery error:', err);
-        return NextResponse.json(
-            { error: 'Failed to discover prompts' },
-            { status: 500 }
-        );
-    }
+import { NextResponse } from 'next/server';
+import { internal } from '@/convex/_generated/api';
+import { callInternal } from '@/lib/convex/admin';
+import { convexRouteError } from '@/lib/convex/http';
+export const maxDuration = 300;
+export async function POST(request: Request) {
+  try {
+    const text = await request.text();
+    if (text.length > 10000) return NextResponse.json({ error: 'Request too large' }, { status: 413 });
+    const body = JSON.parse(text);
+    if (!body || typeof body !== 'object' || Array.isArray(body) ||
+      typeof body.query !== 'string' || (body.brandName !== undefined && typeof body.brandName !== 'string') || (body.industry !== undefined && typeof body.industry !== 'string') || (body.mode !== undefined && typeof body.mode !== 'string')) return NextResponse.json({ error: 'Please check the supplied values.' }, { status: 400 });
+    const result = await callInternal('action', internal.discoveryActions.prompts, {
+      ip: request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || request.headers.get('x-real-ip') || 'unknown',
+      query: body.query, brandName: body.brandName, industry: body.industry, mode: body.mode });
+    return NextResponse.json(result);
+  } catch (error) {
+    if (error instanceof SyntaxError) return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 });
+    return convexRouteError(error);
+  }
 }

@@ -8,36 +8,39 @@
 
 :root {
   /* ── FONTS (self-contained system stacks; no network fetch at build) ── */
-  --font-sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+  --font-sans: "Manrope Variable", "Manrope", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
 
   /* ── BACKGROUNDS (Layered Depth, Sage keeps depth minimal) ── */
-  --bg-base:          #000000;   /* absolute noir */
-  --bg-surface:       #0A0A0B;   /* card fill */
-  --bg-raised:        #141415;   /* hover fills, inputs */
-  --bg-hover:         #1A1A1C;
-  --bg-active:        #222224;
+  --bg-base:          #171A1B;
+  --bg-surface:       #1B1F20;
+  --bg-raised:        #202425;
+  --bg-hover:         #282D2E;
+  --bg-active:        #303637;
+  --bg-evidence:      #FDFDFA;
+  --text-evidence:    #202627;
+  --border-evidence:  #D8DEDA;
 
   /* ── BORDERS ── */
-  --border-default:   rgba(255, 255, 255, 0.07);
-  --border-subtle:    rgba(255, 255, 255, 0.04);
-  --border-active:    rgba(255, 255, 255, 0.18);
+  --border-default:   #353A3C;
+  --border-subtle:    rgba(244, 245, 242, 0.08);
+  --border-active:    #596264;
 
   /* ── TEXT ── */
-  --text-primary:     #FAFAFA;
-  --text-secondary:   #A1A1AA;
-  --text-tertiary:    #52525B;
-  --text-ghost:       #3F3F46;
-  --text-on-accent:   #08080A;   /* dark ink on the accent, Sage/Palantir-style */
+  --text-primary:     #F4F5F2;
+  --text-secondary:   #A0A9AA;
+  --text-tertiary:    #7D8788;
+  --text-ghost:       #5F696A;
+  --text-on-accent:   #202627;
 
   /* ── ACCENT: single high-signal color (Sage discipline)
         A cool amber-ivory ("beacon"), reads as truth/measurement,
         distinct from the indigo everyone else uses in this category. ── */
-  --accent-base:      #E5D3A6;   /* beacon ivory */
-  --accent-muted:     rgba(229, 211, 166, 0.08);
-  --accent-glow:      rgba(229, 211, 166, 0.14);
-  --accent-hover:     #F1E3BC;
-  --accent-strong:    #F7EBC8;
+  --accent-base:      #B9CEF0;
+  --accent-muted:     rgba(185, 206, 240, 0.10);
+  --accent-glow:      rgba(185, 206, 240, 0.16);
+  --accent-hover:     #CAD9F1;
+  --accent-strong:    #DCE6F5;
 
   /* ── SEMANTIC COLORS ── */
   --data-green:       #22C55E;
@@ -65,6 +68,34 @@
   --shadow-md:        0 4px 14px rgba(0, 0, 0, 0.5);
   --shadow-lg:        0 12px 40px rgba(0, 0, 0, 0.65);
   --shadow-glow:      0 0 24px rgba(229, 211, 166, 0.12);
+}
+
+html[data-theme="light"] {
+  color-scheme: light;
+  --bg-base: #F0F1ED;
+  --bg-surface: #F7F8F4;
+  --bg-raised: #E5E8E2;
+  --bg-hover: #DDE1DB;
+  --bg-active: #D2D7D0;
+  --bg-evidence: #FDFDFA;
+  --text-evidence: #202627;
+  --border-evidence: #D8DEDA;
+  --border-default: #C5CBC5;
+  --border-subtle: rgba(32, 38, 39, 0.09);
+  --border-active: #8D9995;
+  --text-primary: #202627;
+  --text-secondary: #5F6B6C;
+  --text-tertiary: #667273;
+  --text-ghost: #7A8585;
+  --text-on-accent: #FDFDFA;
+  --accent-base: #526D95;
+  --accent-muted: rgba(82, 109, 149, 0.10);
+  --accent-glow: rgba(82, 109, 149, 0.14);
+  --accent-hover: #405B82;
+  --accent-strong: #324C74;
+  --shadow-sm: 0 1px 2px rgba(32, 38, 39, 0.06);
+  --shadow-md: 0 2px 8px rgba(32, 38, 39, 0.06);
+  --shadow-lg: 0 12px 32px rgba(32, 38, 39, 0.10);
 }
 
 @theme inline {
@@ -125,8 +156,61 @@ h1, h2, h3, h4, h5, h6, .font-display {
 code, pre {
   font-family: var(--font-mono), ui-monospace, monospace;
 }
-.font-mono {
-  font-family: var(--font-sans), system-ui, -apple-system, sans-serif;
+.font-mono { font-family: var(--font-mono), ui-monospace, monospace; }
+
+.aelo-dashboard {
+  min-height: 100vh;
+  background-color: var(--bg-base);
+  color: var(--text-primary);
+}
+html[data-theme="light"] .aelo-dashboard {
+  background-image: linear-gradient(rgba(32, 38, 39, 0.022) 1px, transparent 1px);
+  background-size: 100% 32px;
+}
+.aelo-dashboard button:active,
+.aelo-dashboard a[role="button"]:active { transform: scale(0.98); }
+.aelo-dashboard .rounded-2xl,
+.aelo-dashboard .rounded-xl,
+.aelo-dashboard .rounded-lg,
+.aelo-dashboard .rounded-md { border-radius: 3px; }
+.aelo-dashboard input,
+.aelo-dashboard select,
+.aelo-dashboard textarea { border-radius: 3px; }
+.aelo-dashboard :focus-visible {
+  outline: 2px solid var(--accent-base);
+  outline-offset: 3px;
+}
+.aelo-dashboard .report-sheet {
+  --bg-base: #F4F5F2;
+  --bg-surface: #FDFDFA;
+  --bg-raised: #ECEFEA;
+  --text-primary: #202627;
+  --text-secondary: #5F6B6C;
+  --text-tertiary: #667273;
+  --text-ghost: #7A8585;
+  --border-default: #D8DEDA;
+  --accent-base: #526D95;
+}
+
+.marketing-site :focus-visible {
+  outline: 3px solid #6d63f7;
+  outline-offset: 3px;
+}
+
+.marketing-site h1,
+.marketing-site h2,
+.marketing-site h3,
+.marketing-site h4 {
+  text-wrap: balance;
+}
+
+.marketing-site p {
+  text-wrap: pretty;
+}
+
+.marketing-site button:active,
+.marketing-site a:active {
+  transform: scale(0.98);
 }
 
 /* ========================================

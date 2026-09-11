@@ -1,138 +1,119 @@
-import Link from "next/link";
 import type { Metadata } from "next";
-import { cn } from "@/lib/utils";
-import {
-    Search, Bot, BarChart3, Target, Grid3x3, TrendingDown,
-    ShieldCheck, FileText, Globe, ArrowRight, CheckCircle2,
-} from "lucide-react";
+import Image from "next/image";
+import Link from "next/link";
+import { ArrowRight, BarChart3, Bot, Check, FileText, Globe, Grid3x3, Search, ShieldCheck, Target, TrendingDown } from "lucide-react";
 
 export const metadata: Metadata = {
-    title: "Features · Aelo",
-    description:
-        "Everything Aelo measures: multi-engine scans, AI crawler access, prioritised insights, competitor positioning, sentiment drift, accuracy verification, and the India AI Visibility Index.",
-    keywords: ["AI visibility features", "AI brand monitoring", "answer engine optimization tools", "AI crawler analytics", "AI sentiment tracking"],
+    title: "Aelo features · From AI answer to next action",
+    description: "Measure real AI answers, inspect citation evidence and turn visibility gaps into ranked work your team can act on.",
 };
 
-type Feature = { icon: typeof Search; name: string; desc: string; badge?: string };
-
-// One real product view per group, shown alongside its features.
-const GROUP_IMAGE: Record<string, { src: string; alt: string }> = {
-    Measure:  { src: "/features/crawlers.png",  alt: "Aelo AI Crawlers and Traffic view" },
-    Diagnose: { src: "/features/insights.png",  alt: "Aelo Insights board" },
-    Prove:    { src: "/features/accuracy.png",  alt: "Aelo Accuracy Verdict" },
-};
-
-const GROUPS: { stage: string; tagline: string; features: Feature[] }[] = [
+const GROUPS = [
     {
         stage: "Measure",
-        tagline: "See exactly where you stand",
+        kicker: "Know what the assistants actually said",
+        image: "/features/crawlers.png",
+        imageAlt: "Aelo crawler access view",
+        shell: "bg-[#dff7f1]",
+        accent: "bg-[#148c78] text-white",
         features: [
-            { icon: Search, name: "Multi-engine scan", desc: "Ask the questions your buyers ask and see how ChatGPT, Gemini, Claude and Perplexity answer, side by side, with the verbatim response behind every number." },
-            { icon: Bot, name: "AI Crawlers & Traffic", desc: "Check whether GPTBot, ClaudeBot and PerplexityBot can even reach your site, and how much traffic AI answers are sending back.", badge: "New" },
-            { icon: BarChart3, name: "LLM Tracker", desc: "Track your mention rate and average position over time, per engine, so you can see movement instead of a one-time snapshot." },
+            { icon: Search, name: "Repeated answer scans", desc: "Ask real buyer questions across ChatGPT, Gemini, Claude and Perplexity. Keep every returned answer and failure." },
+            { icon: BarChart3, name: "Confidence you can defend", desc: "See mention frequency beside the number of samples and the strength of the observed signal." },
+            { icon: Bot, name: "Crawler access", desc: "Check whether major AI crawlers can reach the pages you expect them to read." },
         ],
     },
     {
-        stage: "Diagnose",
-        tagline: "Understand why, and what to do",
+        stage: "Understand",
+        kicker: "Open the evidence behind the score",
+        image: "/features/insights.png",
+        imageAlt: "Aelo source and action insights",
+        shell: "bg-[#eeeaff]",
+        accent: "bg-[#6d63f7] text-white",
         features: [
-            { icon: Target, name: "Insights", desc: "A prioritised board of what to fix next, generated from your scans: invisible prompts, competitor-owned queries, weak coverage, negative tone.", badge: "New" },
-            { icon: Grid3x3, name: "Competitor Positioning", desc: "How AI frames you against every rival, attribute by attribute, on a single grid." },
-            { icon: TrendingDown, name: "Sentiment Drift", desc: "Watch the tone of AI answers about you move week over week, and get alerted the moment it shifts." },
+            { icon: Target, name: "Prompt gaps", desc: "Find the buyer questions where competitors appear and your brand does not." },
+            { icon: Grid3x3, name: "Source ledger", desc: "Open the real URLs supplied by each provider and see which domains recur across samples." },
+            { icon: TrendingDown, name: "Comparable movement", desc: "Compare like with like. Changed models, regions or sample plans produce an inconclusive result, not a victory claim." },
         ],
     },
     {
-        stage: "Prove",
-        tagline: "Show the receipt",
+        stage: "Improve",
+        kicker: "Give the team one useful move",
+        image: "/features/accuracy.png",
+        imageAlt: "Aelo evidence receipt and accuracy verdict",
+        shell: "bg-[#fff5c8]",
+        accent: "bg-[#efd631] text-[#4c4512]",
         features: [
-            { icon: ShieldCheck, name: "Accuracy Verdict", desc: "Not just whether AI mentions you, but whether what it says is true. Every factual claim checked and marked true, false, or outdated." },
-            { icon: FileText, name: "Client Report", desc: "A branded, print-ready AI visibility report with per-engine rates and a shareable receipt, built for agencies." },
-            { icon: Globe, name: "India AI Visibility Index", desc: "A public benchmark of how AI describes real Indian brands. Every number from a live scan, zero fabricated." },
+            { icon: ShieldCheck, name: "Accuracy checks", desc: "Separate true, false and outdated claims when the source evidence supports a verdict." },
+            { icon: FileText, name: "Decision reports", desc: "Share a clear record of what changed, what did not and how much evidence supports the result." },
+            { icon: Globe, name: "Ranked action queue", desc: "Turn missed prompts and source gaps into work your team can assign, complete and measure again." },
         ],
     },
 ];
 
 export default function FeaturesPage() {
     return (
-        <div>
-            <section className="pt-20 pb-14 md:pt-28 md:pb-16 px-6">
-                <div className="mx-auto max-w-3xl text-center">
-                    <div className="text-[11px] font-mono uppercase tracking-[0.16em] text-[var(--accent-base)] mb-4">
-                        Everything Aelo measures
+        <div className="bg-[#f7f8ff] text-[#111936]">
+            <section className="px-4 pb-20 pt-16 md:px-6 md:pb-24 md:pt-24">
+                <div className="mx-auto grid max-w-6xl gap-12 lg:grid-cols-[1fr_0.8fr] lg:items-end">
+                    <div>
+                        <p className="text-sm font-semibold uppercase tracking-widest text-[#5d53e8]">Inside Aelo</p>
+                        <h1 className="mt-5 max-w-[680px] bg-gradient-to-r from-[#111936] to-[#615f8c] bg-clip-text text-5xl font-semibold tracking-tight text-transparent md:text-7xl">A clear answer. The evidence. What to do next.</h1>
                     </div>
-                    <h1 className="text-4xl md:text-6xl font-medium tracking-tighter leading-[1.05] text-white text-balance mb-5">
-                        The instrument for AI answer visibility
-                    </h1>
-                    <p className="text-[15px] md:text-[17px] text-zinc-400 leading-relaxed max-w-2xl mx-auto">
-                        Measure how AI describes you, diagnose what is holding you back, and prove
-                        the change. Every number opens the raw scan behind it.
-                    </p>
-                    <div className="mt-8 flex items-center justify-center gap-3">
-                        <Link href="/signup" className="inline-flex items-center gap-1.5 px-5 py-2.5 rounded-lg bg-[var(--accent-base)] text-[var(--text-on-accent)] text-sm font-medium hover:opacity-90 transition-opacity">
-                            Start free <ArrowRight className="w-4 h-4" />
-                        </Link>
-                        <Link href="/product" className="inline-flex items-center px-5 py-2.5 rounded-lg border border-white/10 text-sm text-zinc-300 hover:text-white transition-colors">
-                            How it works
-                        </Link>
+                    <div className="lg:pb-2">
+                        <p className="max-w-[680px] text-lg leading-relaxed text-[#58627d]">Aelo turns unstable AI answers into a result your team can inspect and act on. No mystery score and no hidden source list.</p>
+                        <Link href="/#scan" className="mt-6 inline-flex items-center gap-2 rounded-full bg-[#6d63f7] px-5 py-3 text-base font-semibold text-white transition-all duration-700 ease-[cubic-bezier(0.32,0.72,0,1)] hover:-translate-y-1 hover:bg-[#5d53e8]">Run a real scan <ArrowRight className="size-4" /></Link>
                     </div>
                 </div>
             </section>
 
-            {GROUPS.map((group, gi) => {
-                const img = GROUP_IMAGE[group.stage];
-                return (
-                <section key={group.stage} className="pb-20 px-6">
-                    <div className="mx-auto max-w-6xl">
-                        <div className="flex items-baseline gap-3 mb-8">
-                            <h2 className="text-2xl md:text-3xl font-medium tracking-tight text-white">{group.stage}</h2>
-                            <span className="text-[13px] text-zinc-500">{group.tagline}</span>
-                        </div>
-                        <div className="grid lg:grid-cols-2 gap-10 items-center">
-                            {img && (
-                                <div className={cn("rounded-xl border border-white/[0.08] overflow-hidden bg-[#0d0d10] shadow-2xl", gi % 2 === 1 && "lg:order-2")}>
-                                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                                    <img src={img.src} alt={img.alt} className="w-full h-auto block" loading="lazy" />
+            <section className="px-4 pb-16 md:px-6 md:pb-24">
+                <div className="mx-auto grid max-w-6xl overflow-hidden rounded-3xl md:grid-cols-3">
+                    <div className="bg-[#111936] p-8 text-white"><p className="text-xs font-semibold uppercase tracking-widest text-[#8de6d1]">The result</p><p className="mt-8 text-3xl font-semibold md:text-4xl">Mentioned</p><p className="mt-3 text-sm text-white/60">9 times across 16 samples</p></div>
+                    <div className="bg-[#8de6d1] p-8"><p className="text-xs font-semibold uppercase tracking-widest text-[#17695d]">The confidence</p><p className="mt-8 text-3xl font-semibold md:text-4xl">Moderate</p><p className="mt-3 text-sm text-[#386b64]">Enough evidence to watch, not overclaim</p></div>
+                    <div className="bg-[#f6e76b] p-8"><p className="text-xs font-semibold uppercase tracking-widest text-[#6e6119]">The action</p><p className="mt-8 text-2xl font-semibold">Earn a mention from two recurring category sources.</p><p className="mt-3 text-sm text-[#6e6119]">Illustrative product structure</p></div>
+                </div>
+            </section>
+
+            {GROUPS.map((group, index) => (
+                <section key={group.stage} className="px-4 py-12 md:px-6 md:py-16">
+                    <div className={`mx-auto max-w-6xl rounded-3xl p-5 md:p-8 lg:p-12 ${group.shell}`}>
+                        <div className="grid gap-10 lg:grid-cols-[0.8fr_1.2fr] lg:items-center">
+                            <div className={index % 2 === 1 ? "lg:order-2" : undefined}>
+                                <span className={`inline-flex rounded-full px-3 py-2 text-xs font-semibold uppercase tracking-widest ${group.accent}`}>{group.stage}</span>
+                                <h2 className="mt-5 text-3xl font-semibold tracking-tight md:text-4xl">{group.kicker}</h2>
+                                <div className="mt-8 space-y-6">
+                                    {group.features.map((feature) => (
+                                        <article key={feature.name} className="grid grid-cols-[40px_1fr] gap-4">
+                                            <div className="flex size-10 items-center justify-center rounded-xl bg-white/65"><feature.icon className="size-5" strokeWidth={1.7} /></div>
+                                            <div><h3 className="text-lg font-semibold">{feature.name}</h3><p className="mt-1 text-sm leading-relaxed text-[#58627d]">{feature.desc}</p></div>
+                                        </article>
+                                    ))}
                                 </div>
-                            )}
-                            <div className="space-y-3">
-                                {group.features.map((f) => (
-                                    <div key={f.name} className="rounded-xl border border-white/[0.08] bg-[#0d0d10] p-5">
-                                        <div className="flex items-center gap-3 mb-2">
-                                            <div className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-[var(--accent-base)]/25 bg-[var(--accent-base)]/10 flex-shrink-0">
-                                                <f.icon className="h-[18px] w-[18px] text-[var(--accent-base)]" strokeWidth={1.5} />
-                                            </div>
-                                            <h3 className="text-[16px] font-medium text-white">{f.name}</h3>
-                                            {f.badge && (
-                                                <span className="ml-auto text-[10px] font-mono uppercase tracking-[0.12em] text-[var(--accent-base)] border border-[var(--accent-base)]/25 rounded px-1.5 py-0.5">
-                                                    {f.badge}
-                                                </span>
-                                            )}
-                                        </div>
-                                        <p className="text-[13.5px] text-zinc-400 leading-relaxed">{f.desc}</p>
-                                    </div>
-                                ))}
+                            </div>
+                            <div className={index % 2 === 1 ? "lg:order-1" : undefined}>
+                                <div className="overflow-hidden rounded-2xl border border-[#111936]/10 bg-[#111936] p-2 shadow-[0_24px_70px_rgba(17,25,54,0.18)]">
+                                    <Image src={group.image} alt={group.imageAlt} width={1200} height={760} className="h-auto w-full rounded-xl" sizes="(min-width: 1024px) 52vw, 100vw" />
+                                </div>
+                                <p className="mt-3 text-center text-xs text-[#66708b]">A real Aelo product view</p>
                             </div>
                         </div>
                     </div>
                 </section>
-                );
-            })}
+            ))}
 
-            <section className="py-20 border-t border-white/5 text-center px-6">
-                <h2 className="text-3xl md:text-4xl font-medium tracking-tight text-white mb-4 text-balance">
-                    See what AI says about you today
-                </h2>
-                <p className="text-[15px] text-zinc-400 max-w-xl mx-auto mb-8">
-                    The free tier is real. Run your first scan in under a minute, no card required.
-                </p>
-                <div className="flex items-center justify-center gap-3">
-                    <Link href="/signup" className="inline-flex items-center gap-1.5 px-5 py-2.5 rounded-lg bg-[var(--accent-base)] text-[var(--text-on-accent)] text-sm font-medium hover:opacity-90 transition-opacity">
-                        Start free <ArrowRight className="w-4 h-4" />
-                    </Link>
-                    <Link href="/pricing" className="inline-flex items-center gap-1.5 px-5 py-2.5 rounded-lg border border-white/10 text-sm text-zinc-300 hover:text-white transition-colors">
-                        <CheckCircle2 className="w-4 h-4" /> See plans
-                    </Link>
+            <section className="px-4 py-24 md:px-6 md:py-32">
+                <div className="mx-auto grid max-w-6xl gap-12 rounded-3xl bg-[#111936] p-8 text-white md:p-12 lg:grid-cols-[1fr_0.8fr] lg:items-center">
+                    <div><p className="text-sm font-semibold uppercase tracking-widest text-[#8de6d1]">Honesty is a product feature</p><h2 className="mt-4 text-4xl font-semibold tracking-tight md:text-5xl">A failed provider is not a zero score.</h2><p className="mt-5 max-w-2xl text-lg leading-relaxed text-white/60">Aelo keeps partial, failed, stale and incompatible states distinct so your team does not plan around a number the evidence cannot support.</p></div>
+                    <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-1">
+                        {["Raw answers stay available", "Provider citations stay distinct", "Comparisons require compatible samples", "Every result names its confidence"].map((item) => <p key={item} className="flex items-center gap-3 rounded-2xl bg-white/10 p-4 text-sm"><span className="flex size-7 items-center justify-center rounded-full bg-[#8de6d1] text-[#103f3a]"><Check className="size-4" /></span>{item}</p>)}
+                    </div>
                 </div>
+            </section>
+
+            <section className="bg-[#ff9d8f] px-4 py-24 text-center text-[#44201c] md:px-6 md:py-32">
+                <h2 className="mx-auto max-w-[680px] text-4xl font-semibold tracking-tight md:text-6xl">Start with one question your buyers already ask.</h2>
+                <p className="mx-auto mt-5 max-w-xl text-lg text-[#6e3932]">The first live Gemini scan is free. No signup and no card.</p>
+                <Link href="/#scan" className="mt-8 inline-flex items-center gap-2 rounded-full bg-[#111936] px-5 py-3 text-base font-semibold text-white transition-all duration-700 ease-[cubic-bezier(0.32,0.72,0,1)] hover:-translate-y-1">See the real answer <ArrowRight className="size-4" /></Link>
             </section>
         </div>
     );

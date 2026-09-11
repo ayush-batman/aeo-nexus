@@ -6,7 +6,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Loader2 } from "lucide-react";
-import { createClient } from "@/lib/supabase/client";
 
 interface Product {
     id: string;
@@ -46,8 +45,6 @@ export function AddProductModal({ isOpen, onClose, onSuccess, productToEdit, wor
         setError(null);
 
         try {
-            const supabase = createClient();
-
             const keywordsArray = keywordsStr
                 .split(",")
                 .map(k => k.trim())
@@ -61,22 +58,10 @@ export function AddProductModal({ isOpen, onClose, onSuccess, productToEdit, wor
                 workspace_id: workspaceId,
             };
 
-            let err;
-
-            if (productToEdit) {
-                const { error } = await supabase
-                    .from("products")
-                    .update(productData)
-                    .eq("id", productToEdit.id);
-                err = error;
-            } else {
-                const { error } = await supabase
-                    .from("products")
-                    .insert(productData);
-                err = error;
-            }
-
-            if (err) throw new Error(err.message);
+            const response = await fetch('/api/products', { method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ ...productData, ...(productToEdit ? { id: productToEdit.id } : {}) }) });
+            if (!response.ok) throw new Error((await response.json()).error || 'Unable to save product.');
 
             onSuccess();
             onClose();

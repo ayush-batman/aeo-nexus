@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import { attributionWidgetCode } from "@/lib/attribution-widget";
 import { Header } from "@/components/dashboard/header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -20,7 +21,9 @@ import {
 interface AttributionData {
     total: number;
     aiInfluenced: number;
-    aiInfluencedPercentage: number;
+    aiInfluencedPercentage: number | null;
+    workspaceId: string;
+    canInstall: boolean;
     sources: { source: string; count: number; percentage: number }[];
     recentResponses: { source: string; timestamp: string }[];
 }
@@ -47,17 +50,22 @@ export default function AttributionPage() {
     const [data, setData] = useState<AttributionData | null>(null);
     const [loading, setLoading] = useState(true);
     const [copied, setCopied] = useState(false);
+    const [error, setError] = useState<string | null>(null);
+    const [widgetCode, setWidgetCode] = useState("");
+    const [installing, setInstalling] = useState(false);
     const [activeTab, setActiveTab] = useState<"dashboard" | "widget">("dashboard");
 
     const fetchAttribution = useCallback(async () => {
         try {
             const res = await fetch("/api/attribution/survey");
+            if (!res.ok) throw new Error("Could not load survey responses.");
             if (res.ok) {
+                setError(null);
                 const d = await res.json();
                 setData(d);
             }
         } catch (err) {
-            console.error("Error fetching attribution:", err);
+            setError(err instanceof Error ? err.message : "Could not load survey responses.");
         } finally {
             setLoading(false);
         }
@@ -68,46 +76,18 @@ export default function AttributionPage() {
         return () => window.clearTimeout(timer);
     }, [fetchAttribution]);
 
-    const widgetCode = `<!-- Aelo Attribution Survey Widget -->
-<script>
-(function() {
-  var w = document.createElement('div');
-  w.id = 'aelo-attribution';
-  w.innerHTML = '<div style="position:fixed;bottom:24px;right:24px;z-index:9999;font-family:system-ui;max-width:320px;">' +
-    '<div style="background:#1a1a2e;border:1px solid #333;border-radius:16px;padding:20px;box-shadow:0 8px 32px rgba(0,0,0,0.5);">' +
-    '<p style="color:#fff;font-size:14px;font-weight:600;margin:0 0 12px;">How did you find us?</p>' +
-    '<div id="aelo-options" style="display:flex;flex-direction:column;gap:8px;"></div>' +
-    '</div></div>';
-  document.body.appendChild(w);
-  var options = [
-    {v:'chatgpt',l:'ChatGPT'},{v:'gemini',l:'Google Gemini'},
-    {v:'perplexity',l:'Perplexity'},{v:'ai_assistant',l:'Other AI'},
-    {v:'google_search',l:'Google Search'},{v:'social_media',l:'Social Media'},
-    {v:'referral',l:'Friend or Colleague'},{v:'other',l:'Other'}
-  ];
-  var container = document.getElementById('aelo-options');
-  options.forEach(function(o) {
-    var btn = document.createElement('button');
-    btn.textContent = o.l;
-    btn.style.cssText = 'background:#252540;color:#ccc;border:1px solid #444;border-radius:10px;padding:8px 12px;font-size:12px;cursor:pointer;text-align:left;transition:all 0.2s;';
-    btn.onmouseover = function(){this.style.borderColor='var(--accent-base)';this.style.color='#fff';};
-    btn.onmouseout = function(){this.style.borderColor='#444';this.style.color='#ccc';};
-    btn.onclick = function() {
-      fetch('/api/attribution/survey', {
-        method: 'POST',
-        headers: {'Content-Type':'application/json'},
-        body: JSON.stringify({workspaceId:'YOUR_WORKSPACE_ID',source:o.v})
-      });
-      w.innerHTML = '<div style="position:fixed;bottom:24px;right:24px;z-index:9999;font-family:system-ui;">' +
-        '<div style="background:#1a1a2e;border:1px solid #333;border-radius:16px;padding:20px;box-shadow:0 8px 32px rgba(0,0,0,0.5);text-align:center;">' +
-        '<p style="color:var(--accent-base);font-size:24px;margin:0 0 8px;">✓</p>' +
-        '<p style="color:#fff;font-size:14px;margin:0;">Thanks!</p></div></div>';
-      setTimeout(function(){w.remove()},2000);
-    };
-    container.appendChild(btn);
-  });
-})();
-</script>`;
+    async function generateWidget() {
+        if (!data?.workspaceId) return;
+        setInstalling(true); setError(null);
+        try {
+            const response = await fetch('/api/analytics/install-token', { cache: 'no-store' });
+            const body = await response.json();
+            if (!response.ok) throw new Error(body.error || 'Could not generate install code.');
+            setWidgetCode(attributionWidgetCode(window.location.origin, data.workspaceId, body.ingestToken));
+        } catch (reason) { setError(reason instanceof Error ? reason.message : 'Could not generate install code.'); }
+        finally { setInstalling(false); }
+    }
+
 
     const handleCopyWidget = () => {
         navigator.clipboard.writeText(widgetCode);
@@ -120,6 +100,7 @@ export default function AttributionPage() {
             <Header title="Attribution" description="Track how users discover you through AI" />
 
             <div className="p-6 space-y-6">
+                {error && <div role="alert" className="text-sm text-[var(--data-red)]">{error} <Button variant="outline" onClick={() => void fetchAttribution()}>Retry</Button></div>}
                 {/* Tabs */}
                 <div className="flex gap-2">
                     <button
@@ -156,13 +137,13 @@ export default function AttributionPage() {
                                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                                     <div className="rounded-xl border border-[var(--border-default)] bg-[var(--bg-surface)] p-5">
                                         <p className="text-xs text-[var(--text-ghost)] uppercase tracking-wider mb-1">Total Responses</p>
-                                        <p className="text-3xl font-bold font-display text-[var(--text-primary)]">{data?.total || 0}</p>
+                                        <p className="text-3xl font-bold font-display text-[var(--text-primary)]">{data?.total ?? "—"}</p>
                                     </div>
                                     <div className="rounded-xl border border-[var(--accent-base)]/25 bg-[var(--accent-muted)] p-5">
-                                        <p className="text-xs text-[var(--accent-base)] uppercase tracking-wider mb-1">AI-Influenced</p>
+                                        <p className="text-xs text-[var(--accent-base)] uppercase tracking-wider mb-1">Reported AI discovery</p>
                                         <div className="flex items-baseline gap-2">
-                                            <p className="text-3xl font-bold font-display text-[var(--accent-base)]">{data?.aiInfluenced || 0}</p>
-                                            <span className="text-sm text-[var(--accent-base)]">{data?.aiInfluencedPercentage || 0}%</span>
+                                            <p className="text-3xl font-bold font-display text-[var(--accent-base)]">{data?.aiInfluenced ?? "—"}</p>
+                                            <span className="text-sm text-[var(--accent-base)]">{data?.aiInfluencedPercentage == null ? "—" : `${data.aiInfluencedPercentage}%`}</span>
                                         </div>
                                     </div>
                                     <div className="rounded-xl border border-[var(--border-default)] bg-[var(--bg-surface)] p-5">
@@ -237,13 +218,15 @@ export default function AttributionPage() {
                                 &quot;How did you find us?&quot; survey on your site. Responses are tracked in the Attribution dashboard.
                             </p>
 
+                            <Button disabled={!data?.canInstall || installing} onClick={() => void generateWidget()}>{installing ? "Generating…" : "Generate install code"}</Button>
                             <div className="relative">
                                 <pre className="p-4 rounded-xl bg-[var(--bg-raised)] border border-[var(--border-default)] text-xs text-[var(--text-secondary)] overflow-x-auto max-h-[300px]">
-                                    <code>{widgetCode}</code>
+                                    <code>{widgetCode || "Generate install code to bind this widget to your workspace."}</code>
                                 </pre>
                                 <Button
                                     variant="outline"
                                     size="sm"
+                                    disabled={!widgetCode}
                                     onClick={handleCopyWidget}
                                     className="absolute top-3 right-3"
                                 >
@@ -255,7 +238,7 @@ export default function AttributionPage() {
                             <div className="rounded-xl border border-[var(--data-amber)]/25 bg-[var(--data-amber-muted)] p-4">
                                 <p className="text-[10px] font-mono uppercase tracking-[0.14em] text-[var(--data-amber)] mb-1">Before you paste</p>
                                 <p className="text-xs text-[var(--text-secondary)]">
-                                    Replace <code>YOUR_WORKSPACE_ID</code> in the script with your actual workspace ID from Settings.
+                                    The code includes a write-only survey token and the Aelo address. Install it only on your own website. Replace older unsigned widgets with this version.
                                 </p>
                             </div>
                         </CardContent>

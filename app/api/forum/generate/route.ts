@@ -1,54 +1,22 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { GoogleGenerativeAI } from '@google/generative-ai';
-
-export async function POST(request: NextRequest) {
-    try {
-        const { threadTitle, threadContext, tone = 'helpful' } = await request.json();
-
-        if (!threadTitle) {
-            return NextResponse.json(
-                { error: 'Thread title is required' },
-                { status: 400 }
-            );
-        }
-
-        const apiKey = process.env.GOOGLE_API_KEY || process.env.GEMINI_API_KEY;
-        if (!apiKey) {
-            return NextResponse.json(
-                { error: 'AI API key not configured' },
-                { status: 503 }
-            );
-        }
-
-        const genAI = new GoogleGenerativeAI(apiKey);
-        const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
-
-        const prompt = `You are a helpful expert engaging in an online forum discussion.
-        
-Thread Title: "${threadTitle}"
-${threadContext ? `Context: "${threadContext}"` : ''}
-
-Your goal is to write a comment that adds value to this discussion.
-Tone: ${tone} (e.g., helpful, enthusiastic, professional, casual)
-
-Guidelines:
-- Be concise (under 150 words).
-- Be genuine and authentic.
-- Don't sound like a bot.
-- If recommending something, explain why.
-- Use formatting (bullet points) if helpful.
-
-Draft the comment now:`;
-
-        const result = await model.generateContent(prompt);
-        const comment = result.response.text();
-
-        return NextResponse.json({ comment });
-    } catch (error) {
-        console.error('Comment generation error:', error);
-        return NextResponse.json(
-            { error: 'Failed to generate comment' },
-            { status: 500 }
-        );
-    }
+import { NextResponse } from 'next/server';
+import { api } from '@/convex/_generated/api';
+import { fetchAuthAction } from '@/lib/auth-server';
+import { getConvexWorkspaceContext } from '@/lib/convex/session';
+import { convexRouteError } from '@/lib/convex/http';
+export const maxDuration = 90;
+export async function POST(request: Request) {
+  try {
+    const context = await getConvexWorkspaceContext();
+    if (!context) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    const text = await request.text();
+    if (text.length > 60000) return NextResponse.json({ error: 'Content is too long.' }, { status: 413 });
+    const body = JSON.parse(text);
+    if (!body || typeof body !== 'object' || Array.isArray(body) ||
+      typeof body.threadTitle !== 'string' || (body.threadContext !== undefined && typeof body.threadContext !== 'string') || (body.tone !== undefined && typeof body.tone !== 'string')) return NextResponse.json({ error: 'Invalid content' }, { status: 400 });
+    return NextResponse.json(await fetchAuthAction(api.contentActions.forumReply, { workspaceId: context.workspaceId,
+      threadTitle: body.threadTitle, threadContext: body.threadContext, tone: body.tone }));
+  } catch (error) {
+    if (error instanceof SyntaxError) return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 });
+    return convexRouteError(error);
+  }
 }

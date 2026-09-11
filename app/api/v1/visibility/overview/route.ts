@@ -6,8 +6,8 @@ import { mentionMetricFromCounts } from '@/lib/measurement/metrics';
 // Backs the `get_visibility_overview` MCP tool. Every score carries its
 // sample count and a confidence label, because a single-shot number lies.
 export async function GET(request: Request) {
-  return withKey(request, 'read', async (ctx) => {
-    const metrics = await getVisibilityMetrics(ctx.workspaceId);
+  return withKey(request, 'read', async (ctx, reader) => {
+    const metrics = await getVisibilityMetrics(ctx.workspaceId, (_workspaceId, options) => reader.scans(options));
     const engines = metrics.map((m) => ({
       engine: m.platform,
       visibility: m.score,

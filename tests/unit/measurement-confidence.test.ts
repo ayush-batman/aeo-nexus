@@ -11,10 +11,11 @@ test('confidence is none without evidence and low for a single sample', () => {
 
 test('confidence increases only with enough samples and a sufficiently narrow interval', () => {
   const fourOfFour = estimateMentionConfidence(4, 4);
-  assert.equal(fourOfFour.level, 'medium');
+  assert.equal(fourOfFour.level, 'low');
   assert.ok(fourOfFour.interval && fourOfFour.interval.lower < 1 && fourOfFour.interval.upper === 1);
-  assert.equal(estimateMentionConfidence(8, 8).level, 'high');
-  assert.equal(estimateMentionConfidence(4, 8).level, 'medium');
+  assert.equal(estimateMentionConfidence(8, 8).level, 'medium');
+  assert.equal(estimateMentionConfidence(4, 8).level, 'low');
+  assert.equal(estimateMentionConfidence(20, 20).level, 'high');
 });
 
 test('invalid mention counts are rejected', () => {

@@ -26,7 +26,9 @@ interface MinedQuestion {
     topic: string;
     type: string;
     priority: "high" | "medium" | "low";
-    hasExistingContent: boolean;
+    hasExistingContent: boolean | null;
+    sourceQuote?: string | null;
+    evidenceStatus?: string;
 }
 
 const SOURCE_TYPES = [
@@ -58,6 +60,7 @@ export default function QuestionMinePage() {
     const [brandName, setBrandName] = useState("");
     const [industry, setIndustry] = useState("");
     const [loading, setLoading] = useState(false);
+    const [error, setError] = useState<string | null>(null);
     const [questions, setQuestions] = useState<MinedQuestion[]>([]);
     const [topics, setTopics] = useState<string[]>([]);
     const [filterTopic, setFilterTopic] = useState<string | null>(null);
@@ -68,6 +71,9 @@ export default function QuestionMinePage() {
     const handleMine = async () => {
         if (!input.trim() || !brandName.trim()) return;
         setLoading(true);
+        setError(null);
+        setQuestions([]);
+        setTopics([]);
 
         try {
             const res = await fetch("/api/questions/mine", {
@@ -84,30 +90,31 @@ export default function QuestionMinePage() {
             setFilterTopic(null);
             setFilterType(null);
         } catch (err) {
-            console.error("Error mining questions:", err);
+            setError(err instanceof Error ? err.message : 'Question extraction failed. Please retry.');
         } finally {
             setLoading(false);
         }
     };
 
-    const handleCopy = (text: string) => {
-        navigator.clipboard.writeText(text);
-        setCopiedId(text);
-        setTimeout(() => setCopiedId(null), 2000);
+    const handleCopy = async (text: string) => {
+        try {
+            await navigator.clipboard.writeText(text);
+            setCopiedId(text);
+            setTimeout(() => setCopiedId(null), 2000);
+        } catch { setError('Could not copy. Select the question and copy it manually.'); }
     };
 
     const handleSaveToPrompts = async (question: string) => {
         try {
-            const res = await fetch("/api/prompts", {
+            const res = await fetch("/api/prompts/library", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ prompt: question, category: "mined", ai_generated: true }),
             });
-            if (res.ok) {
-                setSavedQuestions(prev => new Set(prev).add(question));
-            }
+            if (!res.ok) throw new Error('Question was not saved. Please retry.');
+            setSavedQuestions(prev => new Set(prev).add(question));
         } catch (err) {
-            console.error("Error saving prompt:", err);
+            setError(err instanceof Error ? err.message : 'Question was not saved. Please retry.');
         }
     };
 
@@ -120,7 +127,7 @@ export default function QuestionMinePage() {
     const stats = {
         total: questions.length,
         highPriority: questions.filter(q => q.priority === "high").length,
-        gaps: questions.filter(q => !q.hasExistingContent).length,
+        unchecked: questions.filter(q => q.hasExistingContent === null).length,
         topics: topics.length,
     };
 
@@ -128,10 +135,11 @@ export default function QuestionMinePage() {
         <>
             <Header
                 title="Question Mine"
-                description="Discover the long-tail questions your audience is asking AI"
+                description="Extract questions from your own text or brainstorm ideas; suggestions are not measured demand."
             />
 
             <div className="p-6 space-y-6">
+                {error && <p role="alert" className="text-[var(--data-red)]">{error}</p>}
                 {/* Source Type Selector */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                     {SOURCE_TYPES.map((src) => (
@@ -222,8 +230,8 @@ export default function QuestionMinePage() {
                                 <p className="text-2xl font-bold font-display text-[var(--data-red)]">{stats.highPriority}</p>
                             </div>
                             <div className="rounded-xl border border-[var(--border-default)] bg-[var(--bg-surface)] p-4">
-                                <p className="text-xs text-[var(--text-ghost)] uppercase tracking-wider">Content Gaps</p>
-                                <p className="text-2xl font-bold font-display text-orange-400">{stats.gaps}</p>
+                                <p className="text-xs text-[var(--text-ghost)] uppercase tracking-wider">Coverage not checked</p>
+                                <p className="text-2xl font-bold font-display">{stats.unchecked}</p>
                             </div>
                             <div className="rounded-xl border border-[var(--border-default)] bg-[var(--bg-surface)] p-4">
                                 <p className="text-xs text-[var(--text-ghost)] uppercase tracking-wider">Topic Clusters</p>
@@ -281,12 +289,13 @@ export default function QuestionMinePage() {
                                                     {q.priority}
                                                 </Badge>
                                                 <span className="text-[10px] text-[var(--text-ghost)]">{q.topic}</span>
-                                                {!q.hasExistingContent && (
+                                                {q.hasExistingContent === null && (
                                                     <Badge variant="outline" className="text-[10px] bg-orange-500/10 text-orange-400 border-orange-500/20">
-                                                        GAP
+                                                        Coverage unknown
                                                     </Badge>
                                                 )}
                                             </div>
+                                            {q.sourceQuote && <blockquote className="text-xs text-[var(--text-secondary)] border-l pl-3 mt-2">Source excerpt: {q.sourceQuote}</blockquote>}
                                         </div>
                                         <div className="flex items-center gap-1">
                                             <Button

@@ -51,13 +51,12 @@ test('analytics request bodies stop at the byte limit', async () => {
 });
 
 test('analytics route requires token, bounded parsing, and shared rate limits', async () => {
-  const [source, helper] = await Promise.all([
-    readFile(new URL('../../app/api/analytics/track/route.ts', import.meta.url), 'utf8'),
-    readFile(new URL('../../lib/analytics-ingest.ts', import.meta.url), 'utf8'),
-  ]);
-  assert.match(source, /verifyAnalyticsIngestToken/);
-  assert.match(source, /readBoundedJson/);
-  assert.match(source, /rateLimit/);
-  assert.match(helper, /AnalyticsInputError\('Request body is too large\.', 413\)/);
-  assert.doesNotMatch(source, /request\.json\(\)/);
+const [route, backend, helper] = await Promise.all([
+  readFile(new URL('../../app/api/analytics/track/route.ts', import.meta.url),'utf8'),
+  readFile(new URL('../../convex/trafficActions.ts', import.meta.url),'utf8'),
+  readFile(new URL('../../lib/analytics-ingest.ts', import.meta.url),'utf8')]);
+ assert.match(route,/readBoundedJson/); assert.match(route,/internal\.trafficActions\.ingest/);
+ assert.match(backend,/verifyAnalyticsIngestToken/); assert.match(backend,/internal\.abuse\.check/);
+ assert.match(helper,/AnalyticsInputError\('Request body is too large\.', 413\)/);
+ assert.doesNotMatch(route,/request\.json\(\)/);
 });
