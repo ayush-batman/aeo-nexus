@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#171a1b" />
+    <script>
+      try {
+        document.documentElement.dataset.theme =
+          localStorage.getItem("aelo-preview-theme") || "dark";
+      } catch {
+        document.documentElement.dataset.theme = "dark";
+      }
+    </script>
+    <title>Aelo — Overview · Design preview</title>
+    <link rel="icon" href="data:," />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="aelo-core.css" />
+    <script type="module" src="aelo-core.js"></script>
+  </head>
+  <body>
+    <a class="skip" href="#main">Skip to content</a>
+    <div class="prototype">
+      <span
+        >DESIGN PREVIEW
+        <span class="desktop-only"
+          >/ Fictional Northstar workspace. No live data.</span
+        ></span
+      ><label
+        >View state
+        <select id="preview-state">
+          <option value="complete">Complete</option>
+          <option value="partial">Partial</option>
+          <option value="stale">Stale</option>
+          <option value="empty">Empty</option>
+          <option value="loading">Loading</option>
+          <option value="failed">Failed</option>
+        </select></label
+      >
+    </div>
+    <header class="site-header">
+      <a class="wordmark" href="#overview" aria-label="Aelo overview"
+        >aelo<span aria-hidden="true">↗</span></a
+      >
+      <nav id="navigation" aria-label="Main navigation"></nav>
+      <button id="theme-toggle" class="theme-toggle" type="button">
+        <span class="theme-icon" aria-hidden="true">☼</span
+        ><span class="theme-label">Light mode</span>
+      </button>
+      <button id="workspace" class="workspace" data-dialog="workspace">
+        <span class="avatar">N</span
+        ><span>Northstar <span class="muted">/ sample</span></span>
+      </button>
+      <button
+        class="mobile-menu"
+        data-dialog="menu"
+        aria-label="Open navigation"
+      >
+        Menu ☰
+      </button>
+    </header>
+    <main id="main" tabindex="-1"></main>
+    <footer class="site-footer">
+      <span>Aelo / Evidence before advice.</span
+      ><span>Fictional sample · Not connected to live data</span
+      ><button data-dialog="method" class="text-button">
+        How to read this data ↗
+      </button>
+    </footer>
+    <dialog id="detail" aria-labelledby="dialog-title">
+      <div class="dialog-top">
+        <span class="eyebrow">AELO / DESIGN PREVIEW</span
+        ><button id="close-dialog" aria-label="Close dialog">✕</button>
+      </div>
+      <div id="dialog-content"></div>
+    </dialog>
+    <div id="announcement" class="toast" role="status" aria-live="polite"></div>
+    <noscript
+      ><p>
+        This clickable design preview needs JavaScript. No live product data is
+        connected.
+      </p></noscript
+    >
+  </body>
+</html>

@@ -1,6 +1,21 @@
 # Aelo product-rescue deployment and rollback
 
-## Current status
+## Current Convex rollout — September 8, 2026
+
+The current branch uses Convex, not Supabase/Upstash, at runtime. **The legacy rollout below is historical and must not be executed for the current branch.** Follow `CONVEX_IMPORT_RUNBOOK.md` for data transfer and `CONVEX_RUNTIME_CHECKPOINT.md` for current verification evidence.
+
+The user-approved `aelo-test` development deployment is `woozy-starfish-810` under team `ayush-grover`. Backend code has been pushed there and a synthetic account used for browser checks. An approved read-only Supabase export/import/parity rehearsal passed on the separate five-day preview target `deafening-robin-567`; the source was not changed. Production deployment, cutover, and production billing remain unauthorized.
+
+1. Keep Next's public Convex cloud/site URLs and server-only `CONVEX_SERVER_KEY` bound to the same verified test deployment. Keep secrets in private environment configuration; never commit `.env` files. The ignored `.env.convex-test` is for this local-frontend/test-backend rehearsal only.
+2. Configure test-only auth, engine, mail, analytics and payment settings listed in `CONVEX_IMPORT_RUNBOOK.md`. Never pull production credentials for testing. Convex's shared limiter and recurring jobs replace Upstash and Vercel schedules; do not enable duplicate workers.
+3. Gemini's complete live sample and Azure OpenAI's partial live sample are recorded in `IMPLEMENTATION_PROGRESS.md`. Finish Claude/Perplexity evidence, a clean Azure four-sample repeat after the 2,000-token cap, browser authorization, failure/retry, test billing and email checks. Direct populated-workspace backend latency is measured, but the full signed-in page must be remeasured because a 7.97-second bootstrap outlier remains. Build/test success alone does not establish product fitness.
+4. The read-only data-transfer rehearsal is complete on separate target `deafening-robin-567`: 337 rows, matching double-export hashes, all-table parity, and duplicate-free replay. The REST export was non-transactional, so cutover still requires stopped writers or a repeatable-read database export. Authentication account claiming, live API keys/quotas, billing replays, and evidence file storage still require staging checks before traffic changes.
+5. Production cutover requires separate approval after every release gate passes. Preserve source backups plus Convex tables **and file storage**. Stop/reconcile workers and webhooks before switching ownership; do not replay historical imported jobs automatically.
+6. A code rollback must preserve the matching backend contract. Do not point an older Supabase build at Convex or switch writes back to a stale source database. Reconcile any writes since cutover and authorize a recovery plan before changing data ownership. Prefer additive schema changes; no destructive schema/data rollback without a recoverable export and explicit approval.
+
+## Historical Supabase rollout (superseded; retained for traceability)
+
+### Status at the original checkpoint
 
 No production deployment or production database change was made. Work is on `codex/product-rescue`. Validate it in an isolated staging project before merging or deploying.
 

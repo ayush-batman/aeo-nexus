@@ -1,5 +1,25 @@
 # Aelo Product Rescue — Implementation Progress
 
+## Latest checkpoint — September 11, 2026
+
+Runtime migration and product-trust fixes now cover authentication, scans, API/MCP, billing, forum/actions, public receipts, content tools, weekly jobs, emails, and the five-job dashboard. Supabase and Upstash runtime dependencies have been removed; only additive legacy identifiers and the explicit source-export tooling remain for the approved data transfer. The dashboard is implemented in dark and light modes.
+
+The code is a **tested release candidate, not yet a production-verified release**. The `aelo-test` development backend (`woozy-starfish-810`) and disposable synthetic `@example.test` accounts pass the authenticated rehearsal. Fresh post-follow-up gates pass: 166 Node tests, 49 Convex tests, lint with zero errors and 62 pre-existing warnings, both type checks, the 141-route production build, dependency audit with zero reported vulnerabilities, diff hygiene, and a changed-file secret-pattern scan with no matches. The latest browser rerun passes all six primary jobs at desktop and mobile widths with no page errors, failed same-origin requests, or horizontal overflow. API-key HTTP behavior also passes: missing key 401, read key 200, measure with a read-only key 403, and revoked key 401. The protected Vercel preview is Ready but does not contain the latest local changes. With explicit approval, the production Supabase source was read—but not changed—for a 337-row export/import/parity rehearsal into fresh test deployment `deafening-robin-567`; two exports matched, parity passed, and replay created no duplicates. Live Gemini and Azure OpenAI checks are recorded below. Claude, Perplexity, email, OAuth, test payments, and production promotion still require explicit input. See `CONVEX_RUNTIME_CHECKPOINT.md` for historical observations.
+
+## Live measurement and latency follow-up — September 11, 2026
+
+- A real four-sample Gemini run completed 4/4 samples in 21.2 seconds. Gemini returned 79 structured citations, which resolved to 49 publisher domains. No Google redirect host was counted as a source and no redirect was left unresolved. The first run exposed Google grounding redirects; Aelo now resolves only the exact Google redirect endpoint with a bounded HEAD request, preserves the original provider reference, and withholds unresolved redirects from source totals.
+- Four samples no longer qualify as medium confidence merely because the point estimate is stable. Confidence now stays low below 8 successful samples; medium requires at least 8 samples and a Wilson 95% interval no wider than 50 points; high requires at least 20 samples and a range no wider than 30 points. A 0/4 result is therefore low confidence, with a 0–49% Wilson interval.
+- The OpenAI Responses citation parser now supports the current `output[].content[].annotations[]` shape as well as the legacy Chat Completions shape. Claude's current and legacy web-citation shapes also have fixture coverage.
+- The configured Azure deployment initially failed because `2025-01-01-preview` predates Azure Responses support. The code and ignored local configuration now use `2025-03-01-preview`, and older or invalid versions fail with an explicit configuration error.
+- Live Azure probes proved `gpt-5-mini` can complete web search with the configured account. With low reasoning and low search context, two bounded 2,000-token probes completed in about 10 and 17 seconds; one returned 18 structured URL citations. The full four-sample Aelo run before the final output-cap reduction completed 3/4 samples in 114 seconds, with one 30-second provider timeout. It produced 0/3 mentions and correctly reported low confidence with a 0–56.15% Wilson interval. This is a partial test, not a clean four-sample pass. The final reduction from 4,000 to 2,000 output tokens is regression-tested but has not been re-billed as another four-sample live run.
+- Search metadata now records actual tool use (`web_search`, `google_search`, or `model_only`) instead of claiming a search merely because the tool was available. This prevents searched and model-only answers from being compared as one cohort.
+- Direct populated-backend timings from India to the US-East test deployment, in two seven-read batches: dashboard bootstrap median 355 ms in both batches (ranges 242–7,973 ms and 272–1,618 ms); dashboard summary medians 354 and 448 ms (ranges 328–545 ms and 362–514 ms). These are small samples, not p95 or an SLA. The isolated 7.97-second bootstrap spike remains operational evidence to watch.
+- Overview now reuses the already-authorized bootstrap workspace ID and lets the tenant-protected Convex summary query verify ownership. This removes one duplicate workspace lookup from page startup without weakening server authorization.
+- The final browser rerun exposed a first-login loop: the onboarding guard retained the original `/dashboard` pathname after redirecting a new user, leaving the UI on “Loading your workspace…”. The guard now follows the current pathname, the regression contract forbids the stale-path pattern, and the rerun reaches onboarding before completing all 12 desktop/mobile route checks.
+- Authenticated local HTTP timings against the remote US-East test backend were slower than direct Convex reads: first-login-to-usable-page was 7.33 seconds; subsequent bootstrap reads were 654–655 ms after a 2.05-second first request, workspace reads were 1.25–1.47 seconds, and dashboard summary reads were 1.33–1.47 seconds. This confirms that avoiding duplicate Next-to-Convex hops matters, and that India-to-US-East plus auth bridging remains a material latency cost.
+- No production environment, deployment, billing account, or production data was changed by these checks.
+
 ## Initial state
 
 - **Recorded:** 2026-08-29 Asia/Kolkata
@@ -1140,7 +1160,7 @@ The complete architecture and rollout rules are recorded in `CONVEX_MIGRATION_SP
 
 ### Remaining before Supabase can be removed
 
-- Materialize the remaining source tables and add count/aggregate parity checks.
+- Remaining source-table materializers and count/aggregate comparison tooling are now implemented (2026-09-06 checkpoint below); live staging export/import rehearsal remains open.
 - Move product queries/mutations, scan workflows, citations, Actions, alerts, analytics, crawlers, emails, and scheduled work to Convex functions.
 - Replace Upstash/in-memory rate limits with the registered Convex limiter.
 - Move Stripe and Razorpay webhook application to Convex while preserving exact replay and stale-event behavior.
@@ -1156,3 +1176,115 @@ The complete architecture and rollout rules are recorded in `CONVEX_MIGRATION_SP
 - `a13f09e` — `feat: establish convex tenant authentication`
 - `7bf4e06` — `feat: add safe convex migration pipeline`
 - `4ef4eaf` — `feat: preserve critical records in convex imports`
+
+### Resume checkpoint — 2026-09-06
+
+Resume from this subsection and the changed files for the next task; do not reread the
+earlier rescue batches or redo the foundation. The branch was unchanged since the last
+checkpoint when work restarted.
+
+Completed in the resumed data-transfer batch:
+
+- Added materialization for the remaining 20 source tables, covering all 27 exported
+  application tables. Added runtime destination-schema checks and parent/tenant binding.
+- Added hash-verified, bounded staging; import run tracking; a resumable CLI; and a
+  separate comparison command. Finished replays verify without rewriting target rows.
+- Comparison checks full destination counts (including unexpected extra rows), shared
+  fields, memberships, evidence counts, API keys, quotas, billing keys, and action/job states.
+- Fixed real exporter date/numeric conversion defects and absent-table transaction
+  failure. Export files are private; unsubscribe tokens are hashed.
+- Failed public scans preserve null results and their original 30-day expiration.
+  Imported provider-citation labels require matching raw provider evidence.
+- Added rejection of cross-organization API keys and re-import into claimed accounts.
+
+Verification: 122 Node tests and 12 Convex tests pass. Both app/MCP type checks pass.
+Project lint has zero errors and the existing 64 warnings; changed migration code has
+zero lint warnings/errors. The production build passed for 138 routes. The new Convex
+functions compile and push to the anonymous localhost deployment. Synthetic export
+files exercise an interrupted import, resume, comparison, and replay in the Convex test
+runtime. Actual PostgreSQL parser behavior is tested; the export SQL client is simulated.
+
+Not run: live PostgreSQL-to-staging HTTP import or browser journeys (no user-facing
+runtime was switched). Production remains untouched and Supabase remains the active
+application backend. The migration is not complete.
+
+Next implementation: Task 5 in `docs/superpowers/plans/2026-08-30-convex-backend-migration.md`
+— tenant-protected product/prompt queries and mutations, then their Next.js consumers.
+Keep scan workflows, quotas, `/api/v1`, MCP, billing webhooks, and production cutover as
+the subsequent compatibility gates. Import commands and remaining rehearsal constraints
+are in `CONVEX_IMPORT_RUNBOOK.md`.
+
+## Batch 6 — Calm evidence-instrument dashboard
+
+### Completed
+
+- Replaced the persistent template sidebar with a horizontal five-job navigation: Overview, Prompts & Scans, Sources, Actions, and Reports & Settings.
+- Kept all secondary tools, workspace switching, notifications, account controls, and sign-out in an accessible all-tools drawer.
+- Added first-class dark and light dashboard themes using bundled Manrope and IBM Plex Mono fonts, border-led hierarchy, restrained status color, and a paper-style evidence surface.
+- Reframed Overview around the plain-language finding, exact mention/sample counts, confidence, engine coverage, and receipts. Equal mention/miss counts are labelled as an even split rather than a win.
+- Rebuilt Sources as a provider-evidence ledger with exact URL expansion and research-lead gaps.
+- Rebuilt Actions as a staged investigation queue with the standard of proof kept beside the work; completing a task is not presented as measured lift.
+- Reworked the decision report as a printable evidence document and grouped report/settings navigation without changing billing behavior.
+- Restored the development-only browser bypass for localhost and kept it impossible in production; API and tenant authorization remain enforced independently.
+
+### Verification
+
+- Full suite passed: 141 Node tests and 43 Convex tests.
+- App and MCP type-checks passed.
+- Project lint passed with zero errors and 63 existing warnings; the new dashboard navigation adds no warning.
+- Production build passed for 141 routes.
+- `git diff --check` passed.
+- Browser checks covered dark and light desktop shells, a 390×844 mobile shell, explicit loading/error states, the all-tools drawer, and route-change closing/focus behavior.
+
+### Still open
+
+- The checked-in local environment points to a stopped anonymous Convex backend, so authenticated live-data layouts, report data, multi-role access, console/network cleanliness with a running backend, keyboard-only operation, 200% zoom, and axe remain staging gates.
+- No deployment, production data access, billing action, provider scan, or migration was performed in this batch.
+
+## Batch 7 — Release hardening
+
+### Completed
+
+- Replaced the Overview page's repeated scan, forum, content, and recent-mention reads with one workspace-authorized Convex summary query.
+- Added a date index over compact scan measurements and explicit 5,000-measurement / 1,000-supporting-row bounds.
+- An exceeded bound now returns `partial` and withholds the affected score or aggregate instead of calculating from silently truncated evidence.
+- Compact scan measurements now carry optional competitor evidence for share-of-voice. Legacy compact rows without that evidence produce a withheld share-of-voice value until backfilled.
+- The summary continues to exclude provider failures and only reports change for compatible prompt, engine, model, region, mode, scorer, contract, search, and analyzer cohorts with stable sample proportions.
+- Recent mentions and the top three source opportunities now arrive in the same response, removing the Overview page's second forum request.
+- The authenticated shell now receives user, organization, active workspace, onboarding, and plan data in one tenant-protected bootstrap request instead of repeating three startup requests.
+- Independent provider samples are queued together under the existing four-job concurrency cap, removing avoidable serial provider waits without reducing the required four samples.
+- Dashboard comparison claims are withheld whenever recent measurement runs are failed, partial, or still pending; successful samples still determine the displayed point estimate.
+- Missing AI, email, OAuth, and payment configuration now fails closed. Google sign-in is hidden unless both OAuth credentials exist, and the contact form no longer reports a false success or logs submitted personal data.
+- Onboarding prompt deduplication now uses a compound index. Thirty-day crawler analytics stop after 10,000 events and visibly label totals as partial instead of risking an unbounded action.
+
+### Measured development result
+
+- Test backend: `woozy-starfish-810`; synthetic `@example.test` account only.
+- Before: dashboard summary 3,749–4,427 ms, median 3,944 ms.
+- After: dashboard summary 1,320–1,506 ms, median 1,348 ms.
+- Observed median improvement: about 66%. These are three local development samples, not a production percentile or SLA.
+- After the combined bootstrap, login-to-usable measured 5,007 ms in the final local development rehearsal. Bootstrap requests measured 702–1,478 ms. These are local development observations, not production percentiles or an SLA.
+- Later direct Convex checks against the populated synthetic workspace measured dashboard summary medians of 354 and 448 ms across two seven-read batches. Bootstrap median was 355 ms in both batches, with one 7,973 ms outlier. Overview now avoids resolving that workspace twice before requesting the summary.
+
+### Verification so far
+
+- Dashboard summary unit tests: 3 passed.
+- Dashboard Convex authorization and result tests: 2 passed.
+- Dashboard route/shell and latency contracts: 7 passed.
+- App type-check passed.
+- New Convex schema and functions compiled and pushed to the test development deployment.
+- Desktop and 390×844 mobile synthetic-account smoke checks passed with no page errors or horizontal overflow.
+- The final authenticated rehearsal covered all six primary destinations at 1440×1000 and 390×844. All 12 route/viewport checks passed with no browser errors, failed same-origin requests, or horizontal overflow.
+- Missing-provider, billing, email, OAuth, contact-delivery, authorization, import-integrity, measurement, quota, and durable-workflow regression checks pass in their focused suites.
+- A public-function authorization review found no cross-workspace read or write path. Billing signatures and provider-owned plan mapping, import hashes/idempotence/parity, citation provenance, partial failures, and compatible measurement cohorts were traced and regression-tested.
+- Full suite passed: 158 Node tests and 49 Convex tests.
+- Lint passed with zero errors and 62 existing warnings; app and MCP type-checks passed.
+- The production build passed for 141 routes and `git diff --check` passed.
+- Protected preview `https://aeo-nexus-2xaihdvo7-ayush-batmans-projects.vercel.app` reached Ready. `/`, `/features`, `/pricing`, `/methodology`, `/login`, and `/privacy` returned 200 through deployment protection; uncredentialed dashboard and API-key endpoints returned 401. The deployed privacy page names Convex and contains no stale Supabase claim.
+- Updated AI SDK 6 within its current major line to pull patched provider utilities. `npm audit --omit=dev --audit-level=low` now reports zero known vulnerabilities.
+
+### External release gates
+
+- Live Gemini passed a complete four-sample check. Azure OpenAI is live but its first complete Aelo batch was partial at 3/4; the final output-cap reduction still needs a clean repeat when further provider spend is approved. Anthropic, Perplexity, Resend, Google OAuth, Stripe-test, and Razorpay-test checks require approved non-production credentials; missing-configuration behavior is covered and passes.
+- The approved Supabase-to-Convex test rehearsal passed: two identical read-only REST exports, 337 imported rows, independent all-table parity, and a duplicate-free replay on empty preview target `deafening-robin-567`. The REST source read was non-transactional; production cutover still requires stopped writers or a repeatable-read database export plus a recoverable source backup.
+- Production promotion remains a separate explicit approval.
