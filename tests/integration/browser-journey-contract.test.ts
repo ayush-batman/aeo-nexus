@@ -20,6 +20,7 @@ test('browser smoke covers every primary signed-in job at desktop and mobile wid
   assert.match(script, /390[\s\S]*844/);
   assert.match(script, /scrollWidth > innerWidth/);
   assert.match(script, /sameOriginFailures/);
+  assert.match(script, /usableMs/);
   assert.match(script, /No provider citations measured yet/);
   assert.match(script, /No actions in this stage/);
 });

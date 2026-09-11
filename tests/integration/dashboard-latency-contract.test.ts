@@ -33,7 +33,7 @@ test('activation prompt lookup and crawler traffic reads are bounded', async () 
   assert.match(crawler, /partial\s*=\s*!page\.isDone\s*&&\s*totalEvents\s*>=\s*MAX_TRAFFIC_EVENTS/);
 });
 
-test('overview reuses the authorized bootstrap workspace instead of resolving it twice', async () => {
+test('overview reads its live summary directly after the authorized bootstrap', async () => {
   const [page, route, backend] = await Promise.all([
     source('app/(dashboard)/dashboard/page.tsx'),
     source('app/api/dashboard/stats/route.ts'),
@@ -42,7 +42,8 @@ test('overview reuses the authorized bootstrap workspace instead of resolving it
 
   assert.match(page, /useDashboardBootstrap/);
   assert.match(page, /const workspaceId = bootstrap\?\.workspaceId/);
-  assert.match(page, /encodeURIComponent\(workspaceId\)/);
+  assert.match(page, /useQuery\([\s\S]*api\.dashboard\.summary/);
+  assert.doesNotMatch(page, /fetch\(`?\/api\/dashboard\/stats/);
   assert.match(route, /UUID_PATTERN\.test\(requestedWorkspaceId\)/);
   assert.match(route, /requestedWorkspaceId \?\? \(await getConvexWorkspaceContext\(\)\)\?\.workspaceId/);
   assert.match(route, /fetchAuthQuery\(api\.dashboard\.summary/);

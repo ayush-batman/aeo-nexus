@@ -81,18 +81,20 @@ try {
     for (const viewport of [{ width: 1440, height: 1000, label: 'desktop' }, { width: 390, height: 844, label: 'mobile' }]) {
       await page.setViewportSize(viewport);
       for (const job of jobs) {
+        const routeStart = performance.now();
         const failureStart = sameOriginFailures.length;
         const errorStart = errors.length;
         await page.goto(`${origin}${job.path}`, { waitUntil: 'domcontentloaded', timeout: 60000 });
         await page.getByRole('heading', { name: job.heading }).first().waitFor({ timeout: 60000 });
         await page.getByText(job.empty).first().waitFor({ timeout: 30000 });
+        const usableMs = Math.round(performance.now() - routeStart);
         // Let shell requests settle before the next hard navigation so the
         // check does not manufacture cancellation races that users would not see.
         await page.waitForTimeout(1800);
         const overflow = await page.evaluate(() => document.documentElement.scrollWidth > innerWidth);
         const routeFailures = sameOriginFailures.slice(failureStart);
         const routeErrors = errors.slice(errorStart);
-        journeyResults.push({ path: job.path, viewport: viewport.label, overflow, routeFailures, routeErrors });
+        journeyResults.push({ path: job.path, viewport: viewport.label, usableMs, overflow, routeFailures, routeErrors });
         if (overflow || routeFailures.length || routeErrors.length) {
           throw new Error(`Core journey failed: ${JSON.stringify(journeyResults.at(-1))}`);
         }

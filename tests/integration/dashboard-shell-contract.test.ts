@@ -78,7 +78,9 @@ test('overview loads its supporting opportunities from the bounded dashboard sum
     readFile(`${root}/app/(dashboard)/dashboard/page.tsx`, 'utf8'),
     readFile(`${root}/app/api/dashboard/stats/route.ts`, 'utf8'),
   ]);
-  assert.match(page, /data\?\.topThreads/);
+  assert.match(page, /data\.topThreads/);
+  assert.match(page, /useQuery\([\s\S]*api\.dashboard\.summary/);
+  assert.doesNotMatch(page, /fetch\(`?\/api\/dashboard\/stats/);
   assert.doesNotMatch(page, /api\/forum\/threads/);
   assert.match(route, /api\.dashboard\.summary/);
   assert.doesNotMatch(route, /getVisibilityMetrics|getRecentMentions|getDashboardStats/);

@@ -1,17 +1,19 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useState } from "react";
 import { formatDistanceToNow } from "date-fns";
+import { useConvexAuth, useConvexConnectionState, useQuery } from "convex/react";
 import { AlertCircle, ArrowRight, CheckCircle2, ExternalLink, FileText, MessageSquare, Radio, RefreshCw, Search } from "lucide-react";
 import Link from "next/link";
+import { api } from "@/convex/_generated/api";
 import { Header } from "@/components/dashboard/header";
 import { useDashboardBootstrap } from "@/components/onboarding-check";
 import { ScanReceiptDrawer } from "@/components/dashboard/scan-receipt-drawer";
 import { WeeklyDecisionInbox } from "@/components/dashboard/weekly-decision-inbox";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { ErrorBoundary } from "@/components/ui/error-boundary";
 import { DashboardSkeleton } from "@/components/ui/skeleton";
-import { useWorkspaceLive } from "@/hooks/use-workspace-live";
 
 interface DashboardStats {
     aeoHealthScore: number | null;
@@ -94,69 +96,31 @@ function confidenceCopy(confidence: DashboardStats["llmVisibilityConfidence"]) {
 }
 
 export default function DashboardPage() {
+    return <ErrorBoundary fallback={<DashboardQueryError />}><DashboardContent /></ErrorBoundary>;
+}
+
+function DashboardContent() {
     const bootstrap = useDashboardBootstrap();
     const workspaceId = bootstrap?.workspaceId;
-    const [data, setData] = useState<DashboardData | null>(null);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState<string | null>(null);
+    const [asOf] = useState(() => Date.now());
+    const { isAuthenticated } = useConvexAuth();
+    const connection = useConvexConnectionState();
+    const data = useQuery(
+        api.dashboard.summary,
+        workspaceId ? { workspaceId, asOf } : "skip",
+    ) as DashboardData | undefined;
     const [receipt, setReceipt] = useState<{ title: string; subtitle: string } | null>(null);
+    const realtimeReady = Boolean(data && isAuthenticated && connection.isWebSocketConnected);
 
-    const fetchData = useCallback(async () => {
-        try {
-            setError(null);
-            const workspaceQuery = workspaceId
-                ? `?workspaceId=${encodeURIComponent(workspaceId)}`
-                : "";
-            const statsRes = await fetch(`/api/dashboard/stats${workspaceQuery}`, { cache: "no-store" });
-            if (!statsRes.ok) throw new Error("The measurement summary could not be loaded.");
-            setData(await statsRes.json());
-        } catch (reason) {
-            console.error("Error fetching dashboard data:", reason);
-            setError(reason instanceof Error ? reason.message : "The overview could not be loaded.");
-        }
-    }, [workspaceId]);
-
-    const realtimeReady = useWorkspaceLive(() => void fetchData());
-
-    useEffect(() => {
-        let mounted = true;
-        async function initialFetch() {
-            setLoading(true);
-            await fetchData();
-            if (mounted) setLoading(false);
-        }
-        void initialFetch();
-
-        return () => {
-            mounted = false;
-        };
-    }, [fetchData]);
-
-    if (loading) {
+    if (!data) {
         return <><Header title="Overview" description="Measurement, evidence, and the next decision" /><DashboardSkeleton /></>;
     }
 
-    if (error) {
-        return <>
-            <Header title="Overview" description="Measurement, evidence, and the next decision" />
-            <main className="mx-auto max-w-7xl p-4 sm:p-6 lg:p-8">
-                <div role="alert" className="flex max-w-2xl items-start gap-4 rounded-lg border border-[var(--data-red)]/25 bg-[var(--data-red-muted)] p-5">
-                    <AlertCircle className="mt-0.5 h-5 w-5 shrink-0 text-[var(--data-red)]" />
-                    <div>
-                        <h2 className="text-base font-medium text-[var(--text-primary)]">Measurement summary unavailable</h2>
-                        <p className="mt-1 text-sm text-[var(--text-secondary)]">{error} No score has been substituted.</p>
-                        <Button variant="outline" className="mt-4" onClick={() => void fetchData()}><RefreshCw className="mr-2 h-4 w-4" />Retry</Button>
-                    </div>
-                </div>
-            </main>
-        </>;
-    }
-
-    const stats = data?.stats ?? EMPTY_STATS;
-    const recentMentions = data?.recentMentions ?? [];
-    const threads = data?.topThreads ?? [];
+    const stats = data.stats ?? EMPTY_STATS;
+    const recentMentions = data.recentMentions ?? [];
+    const threads = data.topThreads ?? [];
     const metrics = ENGINE_ORDER.map((engine) =>
-        data?.visibilityMetrics?.find((metric) => metric.platform.toLowerCase() === engine) ?? {
+        data.visibilityMetrics?.find((metric) => metric.platform.toLowerCase() === engine) ?? {
             platform: engine, score: null, change: null, scanCount: 0,
         },
     );
@@ -171,7 +135,7 @@ export default function DashboardPage() {
     return <>
         <Header title="Overview" description="Measurement, evidence, and the next decision" />
         <main className="mx-auto max-w-[1440px] space-y-16 px-5 py-10 sm:px-8 lg:px-16 lg:py-12">
-            {data?.status === "partial" && <div role="status" className="rounded-lg border border-[var(--data-amber)]/30 bg-[var(--data-amber-muted)] px-4 py-3 text-sm text-[var(--text-secondary)]">Some supporting evidence is incomplete. Aelo has withheld affected scores instead of estimating them.</div>}
+            {data.status === "partial" && <div role="status" className="rounded-lg border border-[var(--data-amber)]/30 bg-[var(--data-amber-muted)] px-4 py-3 text-sm text-[var(--text-secondary)]">Some supporting evidence is incomplete. Aelo has withheld affected scores instead of estimating them.</div>}
             <section aria-labelledby="visibility-title" className="grid items-center gap-12 py-2 lg:grid-cols-[1.08fr_.92fr] lg:gap-20 lg:pb-12">
                 <div>
                     <div className="flex flex-wrap items-center justify-between gap-3">
@@ -284,6 +248,22 @@ export default function DashboardPage() {
         </main>
 
         <ScanReceiptDrawer open={Boolean(receipt)} onOpenChange={(open) => { if (!open) setReceipt(null); }} title={receipt?.title ?? "Scans"} subtitle={receipt?.subtitle} />
+    </>;
+}
+
+function DashboardQueryError() {
+    return <>
+        <Header title="Overview" description="Measurement, evidence, and the next decision" />
+        <main className="mx-auto max-w-7xl p-4 sm:p-6 lg:p-8">
+            <div role="alert" className="flex max-w-2xl items-start gap-4 rounded-lg border border-[var(--data-red)]/25 bg-[var(--data-red-muted)] p-5">
+                <AlertCircle className="mt-0.5 h-5 w-5 shrink-0 text-[var(--data-red)]" />
+                <div>
+                    <h2 className="text-base font-medium text-[var(--text-primary)]">Measurement summary unavailable</h2>
+                    <p className="mt-1 text-sm text-[var(--text-secondary)]">No score has been substituted. Retry the live connection.</p>
+                    <Button variant="outline" className="mt-4" onClick={() => window.location.reload()}><RefreshCw className="mr-2 h-4 w-4" />Retry</Button>
+                </div>
+            </div>
+        </main>
     </>;
 }
 
