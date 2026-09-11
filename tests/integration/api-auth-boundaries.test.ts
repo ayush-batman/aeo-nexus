@@ -26,6 +26,13 @@ const [session, login, proxy, onboardingCheck] = await Promise.all([source('lib/
   assert.match(onboardingCheck, /\["localhost", "127\.0\.0\.1"\]/);
 });
 
+test('handled login failures stay visible without creating false console errors', async () => {
+  const login = await source('app/(auth)/login/page.tsx');
+  assert.match(login, /Invalid email or password\. Please check your credentials\./);
+  assert.match(login, /role=["']alert["']/);
+  assert.doesNotMatch(login, /console\.error\(["']Login error:/);
+});
+
 test('internal Convex token refreshes cannot exhaust the credential-attempt limiter', async () => {
   const auth = await source('convex/auth.ts');
   assert.match(auth, /['"]\/convex\/token['"]:\s*false/);

@@ -40,9 +40,12 @@ function LoginForm() {
                 router.refresh();
             }
         } catch (err) {
-            console.error("Login error:", err);
             if (err instanceof Error) {
-                if (err.message.includes("Invalid login credentials") || err.message.includes("invalid_grant")) {
+                if (
+                    err.message.includes("Invalid email or password") ||
+                    err.message.includes("Invalid login credentials") ||
+                    err.message.includes("invalid_grant")
+                ) {
                     setError("Invalid email or password. Please check your credentials.");
                 } else if (err.message.includes("Email not confirmed")) {
                     setError("Please confirm your email address before signing in.");
@@ -77,7 +80,7 @@ function LoginForm() {
                     </p>
 
                     {error && (
-                        <div className="mb-4 p-3 rounded-md bg-[var(--data-red-muted)] border border-[var(--data-red)]/25 flex items-center gap-2 text-[var(--data-red)] text-sm">
+                        <div role="alert" className="mb-4 p-3 rounded-md bg-[var(--data-red-muted)] border border-[var(--data-red)]/25 flex items-center gap-2 text-[var(--data-red)] text-sm">
                             <AlertCircle className="w-4 h-4 flex-shrink-0" />
                             {error}
                         </div>
