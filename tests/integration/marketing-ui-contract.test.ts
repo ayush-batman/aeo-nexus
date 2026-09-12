@@ -46,3 +46,24 @@ test("public copy does not promise causal lift or unverified market behavior", a
   assert.doesNotMatch(combined, /visibility change on the target prompt, in points, with a verdict/i);
   assert.doesNotMatch(combined, /#1 country for ChatGPT users/i);
 });
+
+test("marketing surfaces keep muted copy readable", async () => {
+  const files = await Promise.all([
+    source("app/(marketing)/page.tsx"),
+    source("app/(marketing)/pricing/page.tsx"),
+    source("app/(marketing)/product/page.tsx"),
+    source("app/(marketing)/features/page.tsx"),
+    source("app/(marketing)/methodology/page.tsx"),
+    source("components/marketing/evidence-sequence.tsx"),
+    source("components/marketing/footer.tsx"),
+    source("components/marketing/free-scan-widget.tsx"),
+    source("components/marketing/page-primitives.tsx"),
+    source("components/marketing/scan-progress.tsx"),
+  ]);
+  const combined = files.join("\n");
+  const wordReveal = await source("components/marketing/word-reveal.tsx");
+
+  assert.doesNotMatch(combined, /#65736f|#74807d|#7a8783|text-white\/45/);
+  assert.match(wordReveal, /opacity-55/);
+  assert.doesNotMatch(wordReveal, /opacity-25/);
+});

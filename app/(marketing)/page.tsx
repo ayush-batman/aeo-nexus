@@ -61,7 +61,7 @@ export default function LandingPage() {
             <section className="px-4 py-20 md:px-6 md:py-24">
                 <div className="mx-auto grid max-w-6xl gap-12 lg:grid-cols-[.72fr_1.28fr] lg:items-start">
                     <div className="lg:sticky lg:top-28">
-                        <p className="font-mono text-xs uppercase tracking-widest text-[#65736f]">The proof, not the pitch</p>
+                        <p className="font-mono text-xs uppercase tracking-widest text-[#586560]">The proof, not the pitch</p>
                         <h2 className="mt-4 max-w-md text-4xl font-semibold tracking-tight md:text-5xl">One buyer question. Sixteen answers you can open.</h2>
                         <p className="mt-5 max-w-md text-base leading-relaxed text-[#53615d]">A summary is only useful when your team can challenge it. Every percentage leads back to the prompt, answer, model, sample and returned source evidence.</p>
                         <Link href="/methodology" className="mt-8 inline-flex min-h-11 items-center gap-2 text-base font-semibold text-[#315873] underline decoration-[#8fb0c3] underline-offset-4 transition-all duration-700 ease-[cubic-bezier(0.32,0.72,0,1)] hover:decoration-[#315873]">Read the method <ArrowRight className="size-4" /></Link>
@@ -120,7 +120,7 @@ export default function LandingPage() {
 
             <section className="bg-[#a8cbe0] px-4 py-24 text-[#17201f] md:px-6 md:py-32">
                 <div className="mx-auto flex max-w-6xl flex-col justify-between gap-10 lg:flex-row lg:items-end">
-                    <div><p className="font-mono text-xs uppercase tracking-widest text-[#315873]">One question. Real evidence.</p><h2 className="mt-4 max-w-[680px] text-4xl font-semibold tracking-tight md:text-6xl">Your buyers are already asking. Read the answer.</h2></div>
+                    <div><p className="font-mono text-xs uppercase tracking-widest text-[#294f69]">One question. Real evidence.</p><h2 className="mt-4 max-w-[680px] text-4xl font-semibold tracking-tight md:text-6xl">Your buyers are already asking. Read the answer.</h2></div>
                     <Link href="#scan" className="inline-flex min-h-11 shrink-0 items-center justify-center gap-2 rounded-sm bg-[#131717] px-4 py-2 text-base font-semibold text-[#eff2ec] transition-all duration-700 ease-[cubic-bezier(0.32,0.72,0,1)] hover:-translate-y-1 hover:bg-[#202626] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#131717] focus-visible:ring-offset-4 focus-visible:ring-offset-[#a8cbe0]">Run one real answer <ArrowRight className="size-4" /></Link>
                 </div>
             </section>

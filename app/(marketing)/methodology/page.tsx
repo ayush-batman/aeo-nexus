@@ -29,7 +29,7 @@ export default function MethodologyPage() {
                 <div className="mx-auto max-w-6xl">
                     <MarketingSectionHeading eyebrow="Counting rules" title="Mechanical where possible. Labelled where judgment remains." copy={<p>The score cannot be edited by the sentiment analyser, a missing provider, or a URL copied from answer prose.</p>} />
                     <div className="mt-12 border-t border-[#bbc4bc]">
-                        {RULES.map(([number, title, tag, copy]) => <article key={number} className="grid gap-4 border-b border-[#bbc4bc] py-8 md:grid-cols-[56px_.55fr_1.45fr]"><p className="font-mono text-xs text-[#416a88]">{number}</p><div><h2 className="text-2xl font-semibold tracking-tight">{title}</h2><p className="mt-2 font-mono text-xs uppercase tracking-widest text-[#65736f]">{tag}</p></div><p className="text-base leading-relaxed text-[#53615d]">{copy}</p></article>)}
+                        {RULES.map(([number, title, tag, copy]) => <article key={number} className="grid gap-4 border-b border-[#bbc4bc] py-8 md:grid-cols-[56px_.55fr_1.45fr]"><p className="font-mono text-xs text-[#416a88]">{number}</p><div><h2 className="text-2xl font-semibold tracking-tight">{title}</h2><p className="mt-2 font-mono text-xs uppercase tracking-widest text-[#586560]">{tag}</p></div><p className="text-base leading-relaxed text-[#53615d]">{copy}</p></article>)}
                     </div>
                 </div>
             </section>
@@ -39,7 +39,7 @@ export default function MethodologyPage() {
                     <MarketingSectionHeading light eyebrow="Visibility" title="A mention rate. Nothing more mysterious." copy={<p>If a brand appears in 7 of 12 successful answers, observed visibility is 58.3%. Failed or untracked samples stay outside that number and remain visible beside it.</p>} />
                     <EvidencePanel eyebrow="Illustrative calculation" title="7 mentions / 12 successful samples">
                         <p className="text-6xl font-semibold tracking-tight">58.3%</p>
-                        <p className="mt-3 font-mono text-xs uppercase tracking-widest text-[#65736f]">mentions ÷ successful samples × 100</p>
+                        <p className="mt-3 font-mono text-xs uppercase tracking-widest text-[#586560]">mentions ÷ successful samples × 100</p>
                         <div className="mt-8 grid gap-5 border-t border-[#d2d7cf] pt-5 sm:grid-cols-3"><Fact label="Successful" value="12" /><Fact label="Failed" value="2" /><Fact label="Confidence" value="Medium" /></div>
                         <p className="mt-6 text-sm leading-relaxed text-[#53615d]">The two failed samples are reported, not converted into non-mentions. Illustrative structure, not a customer result.</p>
                     </EvidencePanel>
@@ -55,7 +55,7 @@ export default function MethodologyPage() {
                             <div className="absolute left-[31%] right-[19%] top-[21px] h-2 bg-[#a8cbe0]" />
                             <div className="absolute left-[58%] top-4 h-5 w-0.5 bg-[#315873]" />
                         </div>
-                        <div className="flex justify-between font-mono text-xs uppercase tracking-widest text-[#65736f]"><span>31 lower</span><span>58 observed</span><span>81 upper</span></div>
+                        <div className="flex justify-between font-mono text-xs uppercase tracking-widest text-[#586560]"><span>31 lower</span><span>58 observed</span><span>81 upper</span></div>
                         <p className="mt-7 text-sm leading-relaxed text-[#53615d]">Fewer than 8 successful samples stays low confidence. Medium needs at least 8 and an interval no wider than 50 points. High needs at least 20 and an interval no wider than 30 points.</p>
                     </EvidencePanel>
                 </div>
@@ -78,4 +78,4 @@ export default function MethodologyPage() {
     );
 }
 
-function Fact({ label, value }: { label: string; value: string }) { return <div><p className="font-mono text-xs uppercase tracking-widest text-[#74807d]">{label}</p><p className="mt-2 text-xl font-semibold">{value}</p></div>; }
+function Fact({ label, value }: { label: string; value: string }) { return <div><p className="font-mono text-xs uppercase tracking-widest text-[#586560]">{label}</p><p className="mt-2 text-xl font-semibold">{value}</p></div>; }

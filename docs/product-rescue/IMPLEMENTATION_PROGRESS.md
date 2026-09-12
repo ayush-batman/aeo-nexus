@@ -1329,3 +1329,19 @@ are in `CONVEX_IMPORT_RUNBOOK.md`.
 - Rotated only the preview runtime's test-deployment credential after the local copy was found invalid; production credentials and production environment variables were not changed.
 - Final local gates passed after the preview refresh: 174 Node tests, 50 Convex tests, lint with zero warnings/errors, app and MCP type-checks, the 142-page webpack production build, and all 18 public route/viewport browser checks.
 - No production deployment, production data access, paid provider call, email, OAuth, or payment operation was performed.
+
+## Batch 9 — Public accessibility finish
+
+### Completed
+
+- Rebalanced muted copy within the existing graphite, ivory, and reference-blue palette so small labels and evidence metadata meet readable contrast without making the interface louder.
+- Raised the unrevealed-word state in the homepage statement above the large-text contrast threshold while preserving the intended motion hierarchy.
+- Added a source contract that prevents the known low-contrast marketing colors and reveal opacity from returning unnoticed.
+
+### Verification
+
+- Lighthouse accessibility on the production build homepage improved from 96 to 100.
+- The marketing UI contract passed, followed by all 175 Node tests and 50 Convex tests.
+- Lint, app type-check, MCP type-check, the 142-page webpack production build, and all 18 public Chrome route/viewport checks passed.
+- The public browser suite rechecked keyboard skip navigation, interactive sample controls, reduced motion, console errors, failed same-origin requests, error overlays, and horizontal overflow.
+- Desktop and mobile screenshots were visually inspected after the change. Safari automation is still pending because the Mac was locked during the attempted check.

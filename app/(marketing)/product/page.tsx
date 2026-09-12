@@ -58,7 +58,7 @@ export default function ProductPage() {
                         <div className="mt-7 grid gap-4 border-t border-[#d2d7cf] pt-5 sm:grid-cols-3">
                             <Fact label="Observed" value="3 / 4 mentions" /><Fact label="Confidence" value="Low" /><Fact label="State" value="Partial" />
                         </div>
-                        <p className="mt-5 text-xs text-[#65736f]">Illustrative structure, not a customer result.</p>
+                        <p className="mt-5 text-xs text-[#586560]">Illustrative structure, not a customer result.</p>
                     </EvidencePanel>
                 </div>
             </section>
@@ -74,5 +74,5 @@ export default function ProductPage() {
 }
 
 function Fact({ label, value }: { label: string; value: string }) {
-    return <div><p className="font-mono text-xs uppercase tracking-widest text-[#74807d]">{label}</p><p className="mt-2 text-lg font-semibold">{value}</p></div>;
+    return <div><p className="font-mono text-xs uppercase tracking-widest text-[#586560]">{label}</p><p className="mt-2 text-lg font-semibold">{value}</p></div>;
 }

@@ -78,7 +78,7 @@ export default function FeaturesPage() {
                         <div className="border border-[#343c3b] bg-[#131717] p-2 shadow-[0_28px_80px_rgba(29,37,35,.2)] md:p-3">
                             <Image src={group.image} alt={group.imageAlt} width={1200} height={760} className="h-auto w-full" sizes="(min-width: 1024px) 1152px, 100vw" priority={index === 0} />
                         </div>
-                        <p className="mt-4 font-mono text-xs uppercase tracking-widest text-[#65736f]">A real Aelo product view</p>
+                        <p className="mt-4 font-mono text-xs uppercase tracking-widest text-[#586560]">A real Aelo product view</p>
                     </div>
                 </section>
             ))}

@@ -38,9 +38,9 @@ export default function PricingPage() {
                         {PLANS.map((plan) => (
                             <article key={plan.name} className={`relative flex flex-col border-b border-[#bbc4bc] p-6 last:border-b-0 lg:border-b-0 lg:border-r lg:last:border-r-0 ${plan.featured ? "bg-[#131717] text-[#eff2ec]" : ""}`}>
                                 {plan.featured ? <span className="mb-5 w-fit border-l-2 border-[#a8cbe0] pl-3 font-mono text-xs uppercase tracking-widest text-[#a8cbe0]">For active teams</span> : null}
-                                <p className={`font-mono text-xs uppercase tracking-widest ${plan.featured ? "text-[#a4aeaa]" : "text-[#65736f]"}`}>{plan.name}</p>
+                                <p className={`font-mono text-xs uppercase tracking-widest ${plan.featured ? "text-[#a4aeaa]" : "text-[#586560]"}`}>{plan.name}</p>
                                 <p className="mt-6 text-3xl font-semibold tracking-tight">{plan.price}</p>
-                                <p className={`mt-1 text-xs ${plan.featured ? "text-[#7c8985]" : "text-[#65736f]"}`}>{plan.note}</p>
+                                <p className={`mt-1 text-xs ${plan.featured ? "text-[#7c8985]" : "text-[#586560]"}`}>{plan.note}</p>
                                 <p className={`mt-6 min-h-16 text-sm leading-relaxed ${plan.featured ? "text-[#a4aeaa]" : "text-[#53615d]"}`}>{plan.summary}</p>
                                 <ul className={`mt-6 flex-1 space-y-3 border-t pt-6 ${plan.featured ? "border-[#343c3b]" : "border-[#bbc4bc]"}`}>
                                     {plan.features.map((feature) => <li key={feature} className="flex items-start gap-2 text-sm leading-relaxed"><Check aria-hidden="true" className={`mt-0.5 size-4 shrink-0 ${plan.featured ? "text-[#a8cbe0]" : "text-[#416a88]"}`} />{feature}</li>)}
@@ -50,7 +50,7 @@ export default function PricingPage() {
                         ))}
                     </div>
                 </div>
-                <p className="mx-auto mt-6 max-w-2xl text-center text-xs text-[#65736f]">Prices shown in Indian rupees. Taxes may apply. Provider availability is reported on every scan.</p>
+                <p className="mx-auto mt-6 max-w-2xl text-center text-xs text-[#586560]">Prices shown in Indian rupees. Taxes may apply. Provider availability is reported on every scan.</p>
             </section>
 
             <section className="bg-[#131717] px-4 py-24 text-[#eff2ec] md:px-6 md:py-32">

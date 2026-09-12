@@ -77,7 +77,7 @@ export function FreeScanWidget() {
     return (
         <div className="w-full rounded-sm bg-[#f3f1e9] p-6 text-[#1d2523] shadow-[0_24px_80px_rgba(0,0,0,.22)] sm:p-8">
             <div className="mb-8">
-                <div className="mb-5 flex flex-wrap items-center justify-between gap-3 border-b border-[#d2d7cf] pb-4 font-mono text-xs uppercase tracking-widest text-[#65736f]">
+                <div className="mb-5 flex flex-wrap items-center justify-between gap-3 border-b border-[#d2d7cf] pb-4 font-mono text-xs uppercase tracking-widest text-[#586560]">
                     <span className="inline-flex items-center gap-2"><span className="size-2 rounded-full bg-[#7db89d]" />Gemini / live answer</span>
                     <span>No signup</span>
                 </div>
@@ -142,7 +142,7 @@ export function FreeScanWidget() {
                 </form>
             )}
 
-            <p className="mt-5 text-center font-mono text-xs uppercase tracking-widest text-[#74807d]">
+            <p className="mt-5 text-center font-mono text-xs uppercase tracking-widest text-[#586560]">
                 3 scans each week · no card · failed scans stay failed
             </p>
         </div>

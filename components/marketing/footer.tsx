@@ -14,7 +14,7 @@ export function MarketingFooter() {
             <div className="mx-auto max-w-6xl">
                 <div className="mb-16 grid overflow-hidden rounded-sm bg-[#f3f1e9] text-[#1d2523] md:grid-cols-[1.4fr_0.6fr]">
                     <div className="p-8 md:p-12">
-                        <p className="font-mono text-xs uppercase tracking-widest text-[#65736f]">One question. Real evidence.</p>
+                        <p className="font-mono text-xs uppercase tracking-widest text-[#586560]">One question. Real evidence.</p>
                         <h2 className="mt-4 max-w-2xl text-4xl font-semibold tracking-tight md:text-5xl">Read what AI tells your next buyer.</h2>
                     </div>
                     <div className="flex items-end bg-[#a8cbe0] p-8 md:justify-end md:p-12">
@@ -42,7 +42,7 @@ export function MarketingFooter() {
                     ))}
                 </div>
 
-                <div className="flex flex-col gap-3 border-t border-white/15 py-6 text-xs text-white/45 sm:flex-row sm:items-center sm:justify-between">
+                <div className="flex flex-col gap-3 border-t border-white/15 py-6 text-xs text-white/55 sm:flex-row sm:items-center sm:justify-between">
                     <p>© {new Date().getFullYear()} Aelo. Built in India for teams everywhere.</p>
                     <div className="flex gap-5"><Link href="/privacy" className="hover:text-white">Privacy</Link><Link href="/terms" className="hover:text-white">Terms</Link></div>
                 </div>

@@ -53,7 +53,7 @@ export function ScanProgress({ brand, prompt }: { brand: string; prompt: string 
                 <span className="flex-shrink-0 text-base font-semibold text-[#1d2523]">
                     {brand.trim() || "Your brand"}
                 </span>
-                <span className="truncate text-sm text-[#65736f]">
+                <span className="truncate text-sm text-[#586560]">
                     &middot; &ldquo;{prompt}&rdquo;
                 </span>
             </div>
@@ -77,7 +77,7 @@ export function ScanProgress({ brand, prompt }: { brand: string; prompt: string 
                 </div>
                 <div className="flex flex-col gap-0.5">
                     <div className="text-sm font-semibold text-[#1d2523]">Scanning Gemini</div>
-                    <div className="text-xs tabular-nums text-[#65736f]">
+                    <div className="text-xs tabular-nums text-[#586560]">
                         {elapsed.toFixed(1)}s elapsed
                     </div>
                 </div>
@@ -111,7 +111,7 @@ export function ScanProgress({ brand, prompt }: { brand: string; prompt: string 
                             <span
                                 className={
                                     done
-                                        ? "text-sm text-[#65736f]"
+                                        ? "text-sm text-[#586560]"
                                         : isActive
                                             ? "text-sm font-semibold text-[#1d2523]"
                                             : "text-sm text-[#87928e]"

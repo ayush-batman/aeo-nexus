@@ -78,7 +78,7 @@ export function EvidencePanel({ eyebrow, title, children, className = "" }: { ey
         <article className={`min-w-0 bg-[#fbfaf5] p-6 text-[#1d2523] shadow-[0_20px_70px_rgba(29,37,35,.10)] md:p-8 ${className}`}>
             {eyebrow || title ? (
                 <header className="border-b border-[#d2d7cf] pb-5">
-                    {eyebrow ? <p className="font-mono text-xs uppercase tracking-widest text-[#65736f]">{eyebrow}</p> : null}
+                    {eyebrow ? <p className="font-mono text-xs uppercase tracking-widest text-[#586560]">{eyebrow}</p> : null}
                     {title ? <h3 className="mt-3 text-2xl font-semibold tracking-tight">{title}</h3> : null}
                 </header>
             ) : null}
