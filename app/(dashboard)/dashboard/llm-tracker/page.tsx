@@ -31,14 +31,11 @@ import {
     Globe,
     X,
     Plus,
-    Lightbulb,
-    ArrowRight,
 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
-import Link from "next/link";
-import { generateRecommendations, CATEGORY_CONFIG, PRIORITY_CONFIG } from "@/lib/ai/recommendations";
 import { groupRecentScans } from "@/lib/measurement/scan-groups";
 import type { LLMScan } from "@/lib/types";
+import { useDashboardBootstrap } from "@/components/onboarding-check";
 
 // Engine names stay neutral; status and evidence carry the visual meaning.
 const platforms = [
@@ -62,18 +59,13 @@ interface PlatformVisibility {
     };
 }
 
-interface WorkspaceSummary {
-    id: string;
-    name?: string;
-    settings?: { competitors?: string[] };
-}
-
 interface PlatformError {
     platform: string;
     error: string;
 }
 
 export default function LLMTrackerPage() {
+    const bootstrap = useDashboardBootstrap();
     const [newPrompt, setNewPrompt] = useState("");
     const [brandName, setBrandName] = useState("");
     const [isScanning, setIsScanning] = useState(false);
@@ -113,40 +105,17 @@ export default function LLMTrackerPage() {
                 fetch('/api/dashboard/stats', { cache: 'no-store' }),
             ]);
 
-            if (scansRes.ok) {
-                const scansData = await scansRes.json();
-                setScans(scansData.scans || []);
+            if (!scansRes.ok || !statsRes.ok) {
+                throw new Error('Scan history or visibility summary could not be loaded.');
             }
 
-            if (statsRes.ok) {
-                const statsData = await statsRes.json();
-                setVisibilityMetrics(statsData.visibilityMetrics || []);
-            }
-        } catch (err) {
-            console.error('Error fetching data:', err);
-            setError('Failed to load data');
-        }
-    }
+            const scansData = await scansRes.json();
+            setScans(scansData.scans || []);
 
-    // Load competitors from workspace settings
-    async function loadCompetitors() {
-        try {
-            const [wsRes, activeRes] = await Promise.all([
-                fetch("/api/workspaces", { cache: "no-store" }),
-                fetch("/api/onboarding/context", { cache: "no-store" }),
-            ]);
-            let activeId = null;
-            if (activeRes.ok) activeId = (await activeRes.json()).workspaceId;
-            if (wsRes.ok && activeId) {
-                const data = await wsRes.json() as { workspaces?: WorkspaceSummary[] };
-                const activeWs = data.workspaces?.find((ws) => ws.id === activeId);
-                if (activeWs) {
-                    if (activeWs.name) setBrandName(activeWs.name);
-                    if (activeWs.settings?.competitors) setCompetitors(activeWs.settings.competitors);
-                }
-            }
-        } catch (err) {
-            console.error('Error loading workspace settings:', err);
+            const statsData = await statsRes.json();
+            setVisibilityMetrics(statsData.visibilityMetrics || []);
+        } catch {
+            setError('Measurement history could not be loaded. Retry before trusting this view.');
         }
     }
 
@@ -154,12 +123,17 @@ export default function LLMTrackerPage() {
     useEffect(() => {
         async function init() {
             setLoading(true);
-            await Promise.all([fetchData(), loadCompetitors()]);
+            const activeWorkspace = bootstrap?.workspaces.find(workspace => workspace.id === bootstrap.workspaceId);
+            if (activeWorkspace) {
+                setBrandName(activeWorkspace.name);
+                setCompetitors(activeWorkspace.settings?.competitors ?? []);
+            }
+            await fetchData();
             setLoading(false);
         }
         init();
 
-    }, []);
+    }, [bootstrap]);
 
     const handleScan = async () => {
         if (!newPrompt.trim() || !brandName.trim()) return;
@@ -263,8 +237,11 @@ export default function LLMTrackerPage() {
 
             <main className="mx-auto max-w-[1440px] px-5 py-10 sm:px-8 lg:px-16 lg:py-12">
                 {error && (
-                    <div className="mb-4 rounded-md border border-[var(--data-red)]/30 bg-[var(--data-red-muted)] px-4 py-3 text-sm text-[var(--data-red)]">
-                        {error}
+                    <div role="alert" className="mb-4 flex items-center gap-3 rounded-md border border-[var(--data-red)]/30 bg-[var(--data-red-muted)] px-4 py-3 text-sm text-[var(--data-red)]">
+                        <span className="flex-1">{error}</span>
+                        <Button variant="outline" size="sm" onClick={() => { setLoading(true); void fetchData().finally(() => setLoading(false)); }}>
+                            <RefreshCw className="mr-2 h-4 w-4" />Retry
+                        </Button>
                     </div>
                 )}
                 <Tabs defaultValue="manual" className="space-y-6">
@@ -659,83 +636,6 @@ export default function LLMTrackerPage() {
                                 )}
                             </CardContent>
                         </Card>
-
-                        {/* ===== RECOMMENDATIONS PANEL ===== */}
-                        {scans.length > 0 && (() => {
-                            const recsData = scans.map(s => ({
-                                prompt: s.prompt,
-                                brandName: brandName,
-                                brandMentioned: s.brand_mentioned,
-                                mentionPosition: s.mention_position,
-                                sentiment: s.sentiment,
-                                competitorsMentioned: s.competitors_mentioned || [],
-                                competitorPositions: [],
-                                citations: (s.citations || []).map(c => ({ ...c, isOwnDomain: c.is_own_domain })),
-                                platform: s.platform,
-                                response: '',
-                            }));
-                            const recs = generateRecommendations(recsData, brandName);
-                            if (recs.length === 0) return null;
-
-                            return (
-                                <Card className="border-[var(--accent-base)]/25 bg-[var(--bg-surface)]">
-                                    <CardHeader className="flex flex-row items-center justify-between">
-                                        <CardTitle className="text-lg flex items-center gap-2">
-                                            <Lightbulb className="w-5 h-5 text-[var(--data-amber)]" />
-                                            Recommendations
-                                            <Badge variant="outline" className="text-xs ml-2">
-                                                {recs.length} action{recs.length > 1 ? 's' : ''}
-                                            </Badge>
-                                        </CardTitle>
-                                    </CardHeader>
-                                    <CardContent className="space-y-3">
-                                        {recs.map(rec => (
-                                            <div
-                                                key={rec.id}
-                                                className={cn(
-                                                    "rounded-xl border p-4 transition-colors",
-                                                    PRIORITY_CONFIG[rec.priority].bgColor
-                                                )}
-                                            >
-                                                <div className="flex items-start justify-between gap-3">
-                                                    <div className="flex-1 min-w-0">
-                                                        <div className="flex items-center gap-2 mb-1">
-                                                            <span className="text-sm">{CATEGORY_CONFIG[rec.category].icon}</span>
-                                                            <span className={cn("text-xs font-medium uppercase tracking-wider", PRIORITY_CONFIG[rec.priority].color)}>
-                                                                {PRIORITY_CONFIG[rec.priority].label}
-                                                            </span>
-                                                            {rec.metric && (
-                                                                <Badge variant="outline" className="text-[10px] px-1.5 py-0 border-[var(--border-default)]">
-                                                                    {rec.metric}
-                                                                </Badge>
-                                                            )}
-                                                        </div>
-                                                        <h4 className="font-semibold text-[var(--text-primary)] mb-1">{rec.title}</h4>
-                                                        <p className="text-sm text-[var(--text-secondary)] mb-2">{rec.description}</p>
-                                                        <div className="flex items-start gap-2 text-sm">
-                                                            <span className="text-[var(--accent-base)] font-medium flex-shrink-0">Action:</span>
-                                                            <span className="text-[var(--text-secondary)]">{rec.action}</span>
-                                                        </div>
-                                                    </div>
-                                                    {rec.link && (
-                                                        <Link href={rec.link}>
-                                                            <Button
-                                                                size="sm"
-                                                                variant="outline"
-                                                                className="flex-shrink-0 border-[var(--border-default)] text-[var(--text-secondary)] hover:bg-[var(--bg-raised)]"
-                                                            >
-                                                                {rec.linkLabel || 'Go'}
-                                                                <ArrowRight className="w-3 h-3 ml-1" />
-                                                            </Button>
-                                                        </Link>
-                                                    )}
-                                                </div>
-                                            </div>
-                                        ))}
-                                    </CardContent>
-                                </Card>
-                            );
-                        })()}
 
                         {/* Tracked Prompts */}
                         {scans.length > 0 && (

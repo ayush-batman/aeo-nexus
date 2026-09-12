@@ -18,7 +18,7 @@ Aelo's MCP is **read-first and honest**:
 | `get_visibility_overview` | How visible am I right now, per engine, with confidence |
 | `get_visibility_trend` | Am I gaining or losing ground over time |
 | `run_visibility_scan` | Fresh multi-sample scan for one buyer question, with raw evidence |
-| `get_answer_volatility` | How much the answer changes when you ask again (our signature metric) |
+| `get_answer_volatility` | How evenly repeated answers split between mentioning and not mentioning your brand |
 | `compare_competitors` | Share of voice vs competitors, prompt by prompt |
 | `analyze_prompt_gaps` | The buyer questions I should own and don't |
 | `list_citations` | The real URLs engines cited (filter to ones that cite me or not) |
@@ -88,7 +88,7 @@ The server talks to Aelo's `/api/v1/*` endpoints, authenticated by the API key (
 | `GET /visibility/overview` | `getVisibilityMetrics` (sample count + confidence) |
 | `GET /visibility/trend` | `llm_scans`, aggregated by day |
 | `POST /scan` | `scanLLM` looped `samples` times, aggregated with evidence |
-| `GET /volatility` | `llm_scans`, flip-rate per prompt/engine |
+| `GET /volatility` | `llm_scans`, compatible mention-split score per prompt/engine |
 | `GET /competitors` | `llm_scans.competitors_mentioned` |
 | `GET /prompts/gaps` | `prompt_library` × `llm_scans` |
 | `GET /citations` | `llm_scans.citations` (real URLs) |

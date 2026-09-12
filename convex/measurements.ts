@@ -122,6 +122,29 @@ export const executionInput = internalQuery({
 });
 
 const slotArgs = { runId: v.id('measurementRuns'), engine: engineValidator, sampleNumber: v.number() };
+
+function normalizedFailure(error: string | null | undefined): { code: string; message: string } {
+  const message = (error ?? 'provider_interrupted').slice(0, 2000);
+  const candidate = message.split(':', 1)[0];
+  const code = /^[a-z][a-z0-9_]{1,79}$/.test(candidate) ? candidate : 'provider_failed';
+  return { code, message };
+}
+
+function failedScan(run: Doc<'measurementRuns'>, engine: Doc<'measurementSamples'>['engine'], sampleNumber: number,
+  error: string | null | undefined): Omit<Doc<'scans'>, '_id' | '_creationTime'> {
+  const failure = normalizedFailure(error);
+  return {
+    publicId: newPublicId(), workspaceId: run.workspaceId, platform: engine,
+    prompt: run.input.prompt, response: '', brandMentioned: false, brandVariants: [], mentionPosition: null,
+    sentiment: null, sentimentScore: null, sentimentReason: null, competitorsMentioned: [], listItems: [],
+    analyzerConfidence: null, analyzerMethod: null, analyzerModel: null, analyzerPromptVersion: null,
+    searchMode: null, citations: [], winner: null, winnerReason: null, measurementRunId: run.publicId,
+    measurementContractVersion: null, sampleId: null, sampleNumber, providerModel: null,
+    measurementRegion: null, measurementMode: run.input.mode ?? 'standard', scorerVersion: null,
+    failureCode: failure.code, failureMessage: failure.message, createdAt: Date.now(),
+  };
+}
+
 export const claimSample = internalMutation({
   args: slotArgs, returns: v.boolean(),
   handler: async (ctx, args) => {
@@ -163,6 +186,8 @@ export const finishSample = internalMutation({
       failureCode: null, failureMessage: null, createdAt: Date.now() };
       const scanId = await ctx.db.insert('scans', value);
       await upsertScanMetric(ctx, scanId, value);
+    } else {
+      await ctx.db.insert('scans', failedScan(run, args.engine, args.sampleNumber, args.error));
     }
     return null;
   },
@@ -184,8 +209,19 @@ export const finishRun = internalMutation({
     const run = await ctx.db.get(args.runId);
     if (!run || run.publicId !== args.result.runId) throw new Error('measurement_not_found');
     const slots = await ctx.db.query('measurementSamples').withIndex('by_run', (q) => q.eq('runId', run._id)).take(32);
+    const stored = await ctx.db.query('scans').withIndex('by_workspace_id_and_measurement_run_id', (q) =>
+      q.eq('workspaceId', run.workspaceId).eq('measurementRunId', run.publicId)).take(32);
+    const storedSamples = new Set(stored.map((row) => `${row.platform}:${row.sampleNumber}`));
     for (const slot of slots) if (slot.status === 'pending' || slot.status === 'running') {
       await ctx.db.patch(slot._id, { status: 'failed', error: 'provider_interrupted', updatedAt: Date.now() });
+    }
+    for (const slot of slots) {
+      const key = `${slot.engine}:${slot.sampleNumber}`;
+      if (slot.status !== 'succeeded' && !storedSamples.has(key)) {
+        await ctx.db.insert('scans', failedScan(run, slot.engine, slot.sampleNumber,
+          slot.status === 'pending' || slot.status === 'running' ? 'provider_interrupted' : slot.error));
+        storedSamples.add(key);
+      }
     }
     if (!run.result) {
       if (args.resultStorageId && !await ctx.db.system.get(args.resultStorageId)) throw new Error('measurement_evidence_unavailable');

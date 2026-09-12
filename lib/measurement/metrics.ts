@@ -142,6 +142,17 @@ export function shareOfVoiceMetric(rows: ReadonlyArray<{
   };
 }
 
+/**
+ * A normalized split score for repeated mention outcomes.
+ * 0 means every successful sample agreed; 100 means an even mention/non-mention split.
+ * This does not describe changes elsewhere in the answer or chronological flips.
+ */
+export function mentionVolatilityPercent(mentions: number, samples: number): number | null {
+  const metric = mentionMetricFromCounts(mentions, samples);
+  if (metric.mentionRate === null) return null;
+  return Math.round(2 * Math.min(metric.mentionRate, 1 - metric.mentionRate) * 100);
+}
+
 /** A secondary composite; visibility itself remains the unweighted mention rate. */
 export function healthScoreMetric(visibilityPercent: number | null, averageMentionPosition: number | null): number | null {
   if (visibilityPercent === null) return null;

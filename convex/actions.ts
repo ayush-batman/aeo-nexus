@@ -81,7 +81,10 @@ export const save = tenantMutation({
       return serializeAction(ctx, prior, workspace.publicId);
     }
     const completing = normalized.status === 'completed' && existing?.status !== 'completed';
-    const baseline = !existing || completing ? await snapshot(ctx, workspace, normalized.target_prompts) : existing.baselineSnapshot;
+    // A baseline must remain the before-state captured when the action is
+    // created. Re-snapshotting on completion would mix post-action evidence
+    // into the control and could manufacture an inconclusive or false result.
+    const baseline = !existing ? await snapshot(ctx, workspace, normalized.target_prompts) : existing.baselineSnapshot;
     const now = Date.now();
     const value: Omit<Doc<'actions'>, '_id' | '_creationTime'> = { publicId: existing?.publicId ?? crypto.randomUUID(), workspaceId: workspace._id,
       ownerId: owner?._id ?? null, forumThreadId: existing?.forumThreadId ?? null, actionType, title: normalized.title,

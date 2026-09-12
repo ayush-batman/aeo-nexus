@@ -134,6 +134,16 @@ test('all active visibility surfaces use mention rate and preserve unmeasured st
   assert.match(methodology, /mentions ÷ successful samples × 100/);
 });
 
+test('secondary analytics excludes failures and unverified links instead of showing false zeroes', async () => {
+  const analytics = await source('app/(dashboard)/dashboard/analytics/page.tsx');
+  assert.match(analytics, /successfulScans = scans\.filter\(scan => !scan\.failure_code\)/);
+  assert.match(analytics, /c\.provenance !== "provider_citation"/);
+  assert.match(analytics, /failed provider sample/);
+  assert.match(analytics, /Retry before trusting this view/);
+  assert.doesNotMatch(analytics, /Lumina, Analytics Report/);
+  assert.doesNotMatch(analytics, /Ship FAQ blocks/);
+});
+
 test('provider work has deadlines and bounded engine concurrency', async () => {
   const [scanner, analyzer, service] = await Promise.all([
     source('lib/ai/llm-scanner.ts'),
@@ -154,13 +164,16 @@ test('provider work has deadlines and bounded engine concurrency', async () => {
 });
 
 test('measurement read failures stay visible and alerts run from every scan path', async () => {
-const [data, alerts, backend, worker] = await Promise.all([source('lib/data-access.ts'),source('lib/alerts/evaluate.ts'),source('convex/measurements.ts'),source('convex/measurementAlerts.ts')]);
+const [data, alerts, backend, worker, apiReads] = await Promise.all([source('lib/data-access.ts'),source('lib/alerts/evaluate.ts'),source('convex/measurements.ts'),source('convex/measurementAlerts.ts'),source('convex/apiReads.ts')]);
  assert.match(data,/readScanPages/);
  assert.doesNotMatch(data,/catch[\s\S]{0,100}return \[\]/);
  assert.match(alerts,/current\.confidence\.interval\.upper < comparison\.previous\.confidence\.interval\.lower/);
  assert.match(backend,/internal\.measurementAlerts\.evaluate/);
+ assert.match(backend,/failedScan\(run/);
  assert.match(worker,/by_workspace_id_and_dedupe_key/);
  assert.match(worker,/if \(existing\) return false/);
+ assert.match(worker,/filter\(s => !s\.failureCode && s\.response\.trim\(\)\)/);
+ assert.match(apiReads,/page\.page\.filter\(\(row\) => !row\.failureCode\)/);
  for(const path of ['convex/apiWrites.ts','convex/scheduled.ts','convex/activation.ts']) assert.match(await source(path),/beginMeasurement/);
 });
 

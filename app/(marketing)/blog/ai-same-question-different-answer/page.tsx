@@ -17,7 +17,7 @@ const FAQS = [
     },
     {
         q: "How many times should you run an AI visibility check?",
-        a: "One run is close to meaningless for a contested category. Around seven runs separates a dominant brand from a rare one. Twenty runs per engine gives an estimate tight enough to compare brands and detect real movement. The right answer is to sample repeatedly and report the distribution.",
+        a: "One run cannot show repeatability. Four runs reveal some variation but remain low confidence in Aelo. More samples narrow the uncertainty range; Aelo labels results medium or high only when both the sample count and interval width support it.",
     },
     {
         q: "Is a one-time AI visibility score reliable?",
@@ -92,17 +92,19 @@ export default function VolatilityPost() {
                         We ran that prompt ten times per category on each of two engines, ChatGPT
                         (via the API, model gpt-5-mini) and Gemini (gemini-2.5-flash). One hundred
                         fresh calls, a short delay between each, no memory carried between runs, and
-                        default sampling, the same randomness a normal user gets. Every response was
+                        default API sampling. This is not identical to any consumer chat product.
+                        Every response was
                         stored verbatim with its model version and timestamp, so every number below
-                        traces back to a real call. Nothing is estimated.
+                        traces back to a real call. The disagreement rates are estimates from those
+                        stored observations, not universal rates for every question.
                     </p>
 
                     <h2 className="text-xl md:text-2xl font-medium text-white pt-6">The result, category by category</h2>
                     <p>
                         For each engine and category we counted how many distinct brands took the
-                        number one spot across the ten runs, and the probability that two runs
-                        disagree on the winner. A volatility of one means a perfectly stable winner.
-                        Higher means the top recommendation kept changing.
+                        number one spot across the ten runs, and the observed probability that two
+                        sampled runs disagree on the winner. A disagreement rate of 0% means the
+                        winner was stable in this sample. Higher means the top recommendation varied more.
                     </p>
 
                     <div className="my-6 overflow-x-auto rounded-lg border border-white/10">

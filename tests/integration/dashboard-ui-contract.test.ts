@@ -36,11 +36,26 @@ test("the five primary dashboard jobs share restrained, evidence-first language"
   assert.match(pages[0], /Run a measurement/);
   assert.match(pages[0], /Starting measurement…/);
   assert.match(pages[0], /of \$\{scanProgress\.requested\} saved…/);
+  assert.match(pages[0], /useDashboardBootstrap/);
+  assert.doesNotMatch(pages[0], /fetch\("\/api\/workspaces"/);
+  assert.match(pages[0], /Retry before trusting this view/);
+  assert.doesNotMatch(pages[0], /generateRecommendations|AI assistants don't know|increases the chance of being cited/);
   assert.doesNotMatch(pages[0], /Run a New Scan|Scanning\.\.\./);
   assert.match(pages[2], /structured citation evidence/);
   assert.match(pages[3], /A task completed is not a result measured/);
   assert.match(pages[4], /Prompts &(?:amp;)? Scans/);
   assert.match(pages[5], /ReportsSettingsTabs/);
+});
+
+test("simulated playbook and incomplete experiments redirect to evidence-backed Actions", async () => {
+  const [sidebar, playbook, experiments] = await Promise.all([
+    source("components/dashboard/sidebar.tsx"),
+    source("app/(dashboard)/dashboard/playbook/layout.tsx"),
+    source("app/(dashboard)/dashboard/experiments/layout.tsx"),
+  ]);
+  assert.doesNotMatch(sidebar, /href: "\/dashboard\/(playbook|experiments)"/);
+  assert.match(playbook, /redirect\('\/dashboard\/interventions'\)/);
+  assert.match(experiments, /redirect\('\/dashboard\/interventions'\)/);
 });
 
 test("primary dashboard controls expose usable names and semantics", async () => {

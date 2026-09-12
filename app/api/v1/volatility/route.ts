@@ -1,7 +1,9 @@
 import { withKey } from '@/lib/api-v1';
+import { estimateMentionConfidence } from '@/lib/measurement/confidence';
+import { mentionVolatilityPercent } from '@/lib/measurement/metrics';
 
-// GET /api/v1/volatility?window=30d  — Aelo's signature metric: how often the
-// same question flips between naming you and not, per engine. (get_answer_volatility)
+// GET /api/v1/volatility?window=30d — mention-outcome uncertainty for repeated,
+// compatible samples of the same question and engine. (get_answer_volatility)
 export async function GET(request: Request) {
   const url = new URL(request.url);
   const w = url.searchParams.get('window') === '7d' ? '7d' : '30d';
@@ -28,9 +30,19 @@ export async function GET(request: Request) {
       .filter((g) => g.total >= 4)
       .map((g) => {
         const rate = g.mentions / g.total;
-        // 0 when always/never mentioned (stable), 100 at a 50/50 coin flip.
-        const volatilityPct = Math.round(2 * Math.min(rate, 1 - rate) * 100);
-        return { prompt: g.prompt, engine: g.engine, samples: g.total, mentionRate: Math.round(rate * 100) / 100, volatilityPct };
+        const confidence = estimateMentionConfidence(g.mentions, g.total);
+        const volatilityPct = mentionVolatilityPercent(g.mentions, g.total);
+        if (volatilityPct === null) throw new Error('volatility_sample_count_invalid');
+        return {
+          prompt: g.prompt,
+          engine: g.engine,
+          samples: g.total,
+          mentions: g.mentions,
+          mentionRate: Math.round(rate * 100) / 100,
+          volatilityPct,
+          confidence: confidence.level,
+          confidenceInterval: confidence.interval,
+        };
       })
       .sort((a, b) => b.volatilityPct - a.volatilityPct);
 
@@ -39,7 +51,8 @@ export async function GET(request: Request) {
       window: w,
       avgVolatilityPct: avg,
       status: items.length ? 'measured' : 'inconclusive',
-      note: 'Volatility describes the balance of mentions and non-mentions within matching prompt, engine, model, search and scoring settings. It is not a chronological flip rate. 0 = all observed answers agree; 100 = evenly split. At least 4 compatible samples are required.',
+      metric: 'mention_split_volatility',
+      note: 'Mention volatility describes only the balance of mentions and non-mentions within matching prompt, engine, model, search and scoring settings. It is not full-answer change or a chronological flip rate. 0 = all observed mention outcomes agree; 100 = evenly split. At least 4 compatible samples are required.',
       items,
     };
   });

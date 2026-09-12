@@ -54,6 +54,13 @@ test('provider failures remain missing observations and are never retried into s
     persistence: { rows: 1 }, engines: [{ successfulSamples: 1, failedSamples: 3, mentions: 1 }] });
   expect(receipt.result?.samples.filter((sample) => sample.mentioned === null)).toHaveLength(3);
   expect(calls).toBe(4);
+  const stored = await t.run(async (ctx) => ({
+    scans: await ctx.db.query('scans').collect(),
+    metrics: await ctx.db.query('scanMetrics').collect(),
+  }));
+  expect(stored.scans).toHaveLength(4);
+  expect(stored.scans.filter((row) => row.failureCode === 'provider_timeout')).toHaveLength(3);
+  expect(stored.metrics).toHaveLength(1);
 });
 
 test('quotas, request replay and engine entitlements are enforced atomically at the backend', async () => {

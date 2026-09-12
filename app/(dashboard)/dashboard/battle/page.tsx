@@ -27,6 +27,13 @@ interface BattleResultData {
     competitorPositions: { name: string; position: number | null; sentiment: string }[];
     winner: string | null;
     winnerReason: string;
+    samples: number;
+    requestedSamples: number;
+    confidence: { level: string; sampleCount: number; interval: { lower: number; upper: number } | null };
+}
+
+function sameName(left: string, right: string): boolean {
+    return left.trim().localeCompare(right.trim(), undefined, { sensitivity: 'base' }) === 0;
 }
 
 export default function BattlePage() {
@@ -48,9 +55,7 @@ export default function BattlePage() {
         const prompt = `Compare the following two brands for ${productCategory}: 1. ${brandName} 2. ${competitorName}. Which one is better and why?`;
 
         try {
-            // Re-using the existing scan API but with specific params
-            // In a real app, we'd have a dedicated /api/battle endpoint
-            // For now, we simulate the battle logic on the client or reuse the generic scan
+            // Battle mode uses the canonical four-sample measurement workflow.
             const res = await fetch('/api/llm/scans', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -61,10 +66,6 @@ export default function BattlePage() {
                     mode: 'battle' // We added this to the scanner lib
                 }),
             });
-
-            // Note: Since we haven't updated the API route to accept 'mode' yet, 
-            // the backend might ignore it. We'll handle the display logic here.
-
 
             const data = await res.json();
 
@@ -170,8 +171,8 @@ export default function BattlePage() {
                 <div className="grid md:grid-cols-3 gap-6">
                     {[
                         { title: "Be Specific", desc: "Instead of \"Shoes\", try \"Best marathon running shoes under $150\"." },
-                        { title: "Analyze Gaps", desc: "Use the \"Winner Reason\" to understand exactly why AI prefers one brand." },
-                        { title: "Iterate", desc: "Try different queries to map out your entire competitive landscape." }
+                        { title: "Read the receipt", desc: "The observed lead describes these saved answers; it does not explain every cause behind them." },
+                        { title: "Repeat compatibly", desc: "Use the same prompt, engine, model and method before comparing a later run." }
                     ].map((tip, i) => (
                         <div key={i} className="p-6 rounded-xl border border-[var(--border-default)] bg-[var(--bg-surface)]">
                             <h3 className="font-semibold text-[var(--text-primary)] mb-2 flex items-center gap-2">
@@ -213,13 +214,16 @@ export default function BattlePage() {
 
                         <h2 className="text-2xl font-bold text-[var(--text-primary)] mb-2">
                             {result.winner
-                                ? result.winner.toLowerCase() === brandName.toLowerCase()
-                                    ? `${brandName} wins`
-                                    : `${result.winner} takes the lead`
-                                : "Draw"}
+                                ? sameName(result.winner, brandName)
+                                    ? `${brandName} led this run`
+                                    : `${result.winner} led this run`
+                                : "No stable leader"}
                         </h2>
                         <p className="text-[var(--text-secondary)] max-w-xl mx-auto">
                             {result.winnerReason || "No clear winner detected."}
+                        </p>
+                        <p className="mt-3 font-mono text-[10px] uppercase tracking-[0.14em] text-[var(--text-tertiary)]">
+                            {result.samples} of {result.requestedSamples} samples succeeded · {result.confidence.level} confidence
                         </p>
                     </div>
 
@@ -259,13 +263,13 @@ export default function BattlePage() {
                                 <div className="flex justify-between items-center">
                                     <span className="text-[var(--text-secondary)]">Position</span>
                                     <Badge variant="outline">
-                                        #{(result.competitorPositions || []).find(c => c.name.toLowerCase().includes(competitorName.toLowerCase()))?.position || "-"}
+                                        #{(result.competitorPositions || []).find(c => sameName(c.name, competitorName))?.position || "-"}
                                     </Badge>
                                 </div>
                                 <div className="flex justify-between items-center">
                                     <span className="text-[var(--text-secondary)]">Mentions</span>
                                     <span className="text-[var(--text-primary)]">
-                                        {(result.competitorsMentioned || []).some(c => c.toLowerCase().includes(competitorName.toLowerCase())) ? "Yes" : "No"}
+                                        {(result.competitorsMentioned || []).some(c => sameName(c, competitorName)) ? "Yes" : "No"}
                                     </span>
                                 </div>
                             </CardContent>

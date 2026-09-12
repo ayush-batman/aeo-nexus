@@ -74,7 +74,7 @@ server.tool(
 
 server.tool(
   "get_answer_volatility",
-  "Aelo's signature metric: how much an engine's answer CHANGES when you ask the same question repeatedly. A high number means the recommendation is a coin flip and any single-shot tool is lying to you. Returns per-prompt, per-engine volatility with the differing answers as evidence.",
+  "How uncertain your brand's inclusion is when the same question is sampled repeatedly. The score is 0 when every compatible sample agrees about mentioning the brand and 100 at an even mention/non-mention split. It does not measure all wording or ranking changes.",
   {
     promptId: z.string().optional().describe("Limit to one tracked prompt; omit for an account-wide summary."),
     window: z.enum(["7d", "30d"]).default("30d"),

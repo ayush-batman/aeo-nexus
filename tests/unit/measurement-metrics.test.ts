@@ -4,6 +4,7 @@ import {
   aggregateMentionMetric,
   compareCompatibleMentionMetrics,
   healthScoreMetric,
+  mentionVolatilityPercent,
   shareOfVoiceMetric,
   type ComparableMentionSample,
 } from '../../lib/measurement/metrics';
@@ -129,6 +130,16 @@ test('share of voice counts each brand at most once per answer and is null witho
   assert.equal(measured.competitorMentions, 3);
   assert.equal(measured.sharePercent, 25);
   assert.equal(absent.sharePercent, null);
+});
+
+test('mention volatility is symmetric and describes only the mention split', () => {
+  assert.equal(mentionVolatilityPercent(0, 0), null);
+  assert.equal(mentionVolatilityPercent(0, 4), 0);
+  assert.equal(mentionVolatilityPercent(4, 4), 0);
+  assert.equal(mentionVolatilityPercent(1, 4), 50);
+  assert.equal(mentionVolatilityPercent(3, 4), 50);
+  assert.equal(mentionVolatilityPercent(2, 4), 100);
+  assert.throws(() => mentionVolatilityPercent(5, 4), RangeError);
 });
 
 test('health score follows the published mention-rate and position formula', () => {

@@ -68,7 +68,8 @@ interface LLMScan {
     brand_mentioned: boolean;
     sentiment: "positive" | "neutral" | "negative" | null;
     competitors_mentioned: string[] | null;
-    citations: { url: string; title: string; is_own_domain: boolean }[] | null;
+    citations: { url: string; title: string; is_own_domain: boolean; provenance?: string }[] | null;
+    failure_code?: string | null;
     created_at: string;
 }
 
@@ -125,19 +126,18 @@ export default function AnalyticsPage() {
                 fetch("/api/llm/scans?limit=200"),
             ]);
 
-            if (statsRes.ok) {
-                const statsData = await statsRes.json();
-                setStats(statsData.stats);
-                setVisibilityMetrics(statsData.visibilityMetrics || []);
+            if (!statsRes.ok || !scansRes.ok) {
+                throw new Error("Analytics inputs could not be loaded.");
             }
 
-            if (scansRes.ok) {
-                const scansData = await scansRes.json();
-                setScans(scansData.scans || []);
-            }
-        } catch (err) {
-            console.error("Error fetching analytics:", err);
-            setError("Failed to load analytics data");
+            const statsData = await statsRes.json();
+            setStats(statsData.stats);
+            setVisibilityMetrics(statsData.visibilityMetrics || []);
+
+            const scansData = await scansRes.json();
+            setScans(scansData.scans || []);
+        } catch {
+            setError("Analytics evidence could not be loaded. Retry before trusting this view.");
         } finally {
             setLoading(false);
         }
@@ -149,12 +149,20 @@ export default function AnalyticsPage() {
     }, [fetchData]);
 
     // Filter scans by time range
+    const successfulScans = scans.filter(scan => !scan.failure_code);
     const filteredScans = (() => {
-        if (timeRange === "all") return scans;
+        if (timeRange === "all") return successfulScans;
         const now = new Date();
         const days = timeRange === "7d" ? 7 : timeRange === "30d" ? 30 : 90;
         const cutoff = new Date(now.getTime() - days * 24 * 60 * 60 * 1000);
-        return scans.filter(s => new Date(s.created_at) >= cutoff);
+        return successfulScans.filter(s => new Date(s.created_at) >= cutoff);
+    })();
+    const failedScanCount = (() => {
+        const failures = scans.filter(scan => Boolean(scan.failure_code));
+        if (timeRange === "all") return failures.length;
+        const days = timeRange === "7d" ? 7 : timeRange === "30d" ? 30 : 90;
+        const cutoff = new Date().getTime() - days * 24 * 60 * 60 * 1000;
+        return failures.filter(scan => new Date(scan.created_at).getTime() >= cutoff).length;
     })();
 
     // ================================================================
@@ -225,8 +233,8 @@ export default function AnalyticsPage() {
         const oneWeekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
         const twoWeeksAgo = new Date(now.getTime() - 14 * 24 * 60 * 60 * 1000);
 
-        const thisWeek = scans.filter(s => new Date(s.created_at) >= oneWeekAgo);
-        const lastWeek = scans.filter(s => {
+        const thisWeek = successfulScans.filter(s => new Date(s.created_at) >= oneWeekAgo);
+        const lastWeek = successfulScans.filter(s => {
             const d = new Date(s.created_at);
             return d >= twoWeeksAgo && d < oneWeekAgo;
         });
@@ -286,20 +294,26 @@ export default function AnalyticsPage() {
         if (filteredScans.length === 0) return { brand: 0, competitors: [] as { name: string; mentions: number; percentage: number }[], brandMentions: 0, totalScans: filteredScans.length, donutData: [] as { name: string; value: number }[] };
 
         let brandMentions = 0;
-        const compMap: Record<string, number> = {};
+        const compMap = new Map<string, { name: string; mentions: number }>();
 
         filteredScans.forEach(scan => {
             if (scan.brand_mentioned) brandMentions++;
             if (scan.competitors_mentioned) {
+                const seen = new Set<string>();
                 scan.competitors_mentioned.forEach(c => {
-                    compMap[c] = (compMap[c] || 0) + 1;
+                    const name = c.trim();
+                    const key = name.toLocaleLowerCase();
+                    if (!key || seen.has(key)) return;
+                    seen.add(key);
+                    const existing = compMap.get(key);
+                    compMap.set(key, { name: existing?.name ?? name, mentions: (existing?.mentions ?? 0) + 1 });
                 });
             }
         });
 
-        const totalMentions = brandMentions + Object.values(compMap).reduce((a, b) => a + b, 0);
-        const competitors = Object.entries(compMap)
-            .map(([name, mentions]) => ({
+        const totalMentions = brandMentions + [...compMap.values()].reduce((total, value) => total + value.mentions, 0);
+        const competitors = [...compMap.values()]
+            .map(({ name, mentions }) => ({
                 name,
                 mentions,
                 percentage: totalMentions > 0 ? Math.round((mentions / totalMentions) * 100) : 0,
@@ -326,8 +340,14 @@ export default function AnalyticsPage() {
 
         filteredScans.forEach(scan => {
             if (scan.citations) {
+                const seenDomains = new Set<string>();
                 scan.citations.forEach(c => {
-                    const domain = c.title || c.url;
+                    if (c.provenance !== "provider_citation") return;
+                    let domain: string;
+                    try { domain = new URL(c.url).hostname.replace(/^www\./, ""); }
+                    catch { return; }
+                    if (!domain || seenDomains.has(domain)) return;
+                    seenDomains.add(domain);
                     if (!domainMap[domain]) {
                         domainMap[domain] = { count: 0, isOwnDomain: c.is_own_domain, urls: new Set() };
                     }
@@ -350,11 +370,13 @@ export default function AnalyticsPage() {
 
     const citationRate = (() => {
         if (filteredScans.length === 0) return 0;
-        const scansWithOwnCitation = filteredScans.filter(s => s.citations?.some(c => c.is_own_domain)).length;
+        const scansWithOwnCitation = filteredScans.filter(s => s.citations?.some(c =>
+            c.provenance === "provider_citation" && c.is_own_domain,
+        )).length;
         return Math.round((scansWithOwnCitation / filteredScans.length) * 100);
     })();
 
-    const hasData = scans.length > 0 || stats?.aeoHealthScore !== null;
+    const hasData = successfulScans.length > 0 || stats?.aeoHealthScore != null;
 
     // ================================================================
     // EXPORT FUNCTIONS
@@ -405,7 +427,7 @@ export default function AnalyticsPage() {
             pdf.rect(0, 0, pdfWidth, 20, "F");
             pdf.setTextColor(255, 255, 255);
             pdf.setFontSize(16);
-            pdf.text("Lumina, Analytics Report", 10, 13);
+            pdf.text("Aelo, Analytics Report", 10, 13);
             pdf.setFontSize(8);
             pdf.setTextColor(150, 150, 150);
             pdf.text(`Generated: ${new Date().toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}`, 10, 18);
@@ -494,9 +516,21 @@ export default function AnalyticsPage() {
                 </div>
 
                 {error && (
-                    <div className="flex items-center gap-3 p-4 rounded-lg bg-[var(--data-red-muted)] border border-[var(--data-red)]/25">
+                    <div role="alert" className="flex items-center gap-3 p-4 rounded-lg bg-[var(--data-red-muted)] border border-[var(--data-red)]/25">
                         <AlertCircle className="w-5 h-5 text-[var(--data-red)]" />
-                        <p className="text-sm text-[var(--data-red)]">{error}</p>
+                        <p className="flex-1 text-sm text-[var(--data-red)]">{error}</p>
+                        <Button variant="outline" size="sm" onClick={() => { setLoading(true); void fetchData(); }}>
+                            <RefreshCw className="mr-2 h-4 w-4" />Retry
+                        </Button>
+                    </div>
+                )}
+
+                {failedScanCount > 0 && (
+                    <div className="flex items-center gap-3 rounded-lg border border-[var(--data-amber)]/25 bg-[var(--data-amber-muted)] p-4">
+                        <AlertCircle className="h-5 w-5 text-[var(--data-amber)]" />
+                        <p className="text-sm text-[var(--text-secondary)]">
+                            {failedScanCount} failed provider sample{failedScanCount === 1 ? " is" : "s are"} excluded from every percentage in this view.
+                        </p>
                     </div>
                 )}
 
@@ -550,7 +584,7 @@ export default function AnalyticsPage() {
                                     iconColor: "text-blue-400"
                                 },
                                 {
-                                    label: "Total Scans",
+                                    label: "Successful samples",
                                     value: filteredScans.length,
                                     change: weekComparison.scanChange,
                                     icon: BarChart3,
@@ -921,11 +955,11 @@ export default function AnalyticsPage() {
                                                 <p className="text-xs text-[var(--text-secondary)] uppercase tracking-wider mb-2">Citation Rate</p>
                                                 <div className="text-4xl font-bold text-amber-300">{citationRate}%</div>
                                                 <p className="text-xs text-[var(--text-ghost)] mt-2">
-                                                    {citationRate > 0 ? 'of LLM responses cite your domain' : 'LLMs are not citing your domain yet'}
+                                                    {citationRate > 0 ? 'of successful samples include a provider-backed citation to your domain' : 'No provider-backed own-domain citation was observed'}
                                                 </p>
                                             </div>
                                             <div className="rounded-2xl bg-[var(--bg-surface)] border border-[var(--border-default)] p-5">
-                                                <p className="text-xs text-[var(--text-secondary)] uppercase tracking-wider mb-2">Total Citations Found</p>
+                                                <p className="text-xs text-[var(--text-secondary)] uppercase tracking-wider mb-2">Citations among top sources</p>
                                                 <div className="text-3xl font-bold text-[var(--text-primary)]">{topCitations.reduce((s, c) => s + c.count, 0)}</div>
                                                 <p className="text-xs text-[var(--text-ghost)] mt-2">
                                                     across {topCitations.length} unique sources
@@ -934,7 +968,7 @@ export default function AnalyticsPage() {
                                             {citationRate === 0 && (
                                                 <div className="rounded-2xl bg-[var(--data-red-muted)] border border-[var(--data-red)]/25 p-4">
                                                     <p className="text-[10px] font-mono uppercase tracking-[0.14em] text-[var(--data-red)] mb-1">Not being cited</p>
-                                                    <p className="text-[11px] text-[var(--text-ghost)]">Ship FAQ blocks and original research so LLMs have something worth citing.</p>
+                                                    <p className="text-[11px] text-[var(--text-ghost)]">Review the provider-backed sources above before choosing a content or distribution experiment.</p>
                                                 </div>
                                             )}
                                         </div>
@@ -963,7 +997,7 @@ export default function AnalyticsPage() {
                                             ) : (
                                                 <div className="p-4 rounded-lg border border-dashed border-[var(--border-default)] text-center">
                                                     <p className="text-xs text-[var(--text-ghost)]">No pages from your domain have been cited yet</p>
-                                                    <p className="text-[10px] text-[var(--text-ghost)] mt-1">Create authoritative content to earn citations</p>
+                                                    <p className="text-[10px] text-[var(--text-ghost)] mt-1">No causal recommendation is made from this absence alone.</p>
                                                 </div>
                                             )}
                                         </div>

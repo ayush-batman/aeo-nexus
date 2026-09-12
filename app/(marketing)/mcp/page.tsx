@@ -15,7 +15,7 @@ export const metadata: Metadata = {
 
 const READS = [
     { icon: Eye, name: "get_visibility_overview", desc: "Your visibility per engine, right now, with confidence and sample count." },
-    { icon: Activity, name: "get_answer_volatility", desc: "How much the answer changes when you ask again. Our signature metric." },
+    { icon: Activity, name: "get_answer_volatility", desc: "How often repeated answers disagree about mentioning your brand." },
     { icon: Search, name: "run_visibility_scan", desc: "A fresh multi-sample scan for one buyer question, with the raw passes as evidence." },
     { icon: GitCompare, name: "compare_competitors", desc: "Share of voice: who AI names in your category, and where you rank." },
     { icon: Target, name: "analyze_prompt_gaps", desc: "The buyer questions you should own and don't, ranked by opportunity." },
