@@ -44,6 +44,50 @@ test('configured engine names still fail without provider keys and never call a 
   }
 });
 
+test('one ChatGPT sample makes exactly one paid provider request', async () => {
+  const names = [
+    'GOOGLE_API_KEY', 'GEMINI_API_KEY', 'ANTHROPIC_API_KEY',
+    'AZURE_OPENAI_API_KEY', 'AZURE_OPENAI_ENDPOINT', 'OPENAI_API_KEY',
+  ] as const;
+  const previous = Object.fromEntries(names.map((name) => [name, process.env[name]]));
+  const originalFetch = globalThis.fetch;
+  let providerCalls = 0;
+  for (const name of names) delete process.env[name];
+  process.env.OPENAI_API_KEY = 'synthetic-never-sent';
+  globalThis.fetch = async () => {
+    providerCalls += 1;
+    return new Response(JSON.stringify({
+      id: 'resp_test',
+      object: 'response',
+      created_at: 1,
+      status: 'completed',
+      model: 'gpt-4o-mini',
+      output: [{
+        id: 'msg_test',
+        type: 'message',
+        status: 'completed',
+        role: 'assistant',
+        content: [{ type: 'output_text', text: 'Aelo is listed first.', annotations: [] }],
+      }],
+      output_text: 'Aelo is listed first.',
+      tools: [],
+      usage: { input_tokens: 1, output_tokens: 1, total_tokens: 2 },
+    }), { status: 200, headers: { 'Content-Type': 'application/json' } });
+  };
+  try {
+    const result = await scanLLM({ prompt: 'Best tools?', brandName: 'Aelo', platforms: ['chatgpt'] });
+    assert.equal(providerCalls, 1);
+    assert.equal(result.results.length, 1);
+    assert.equal(result.errors.length, 0);
+  } finally {
+    globalThis.fetch = originalFetch;
+    for (const name of names) {
+      const value = previous[name];
+      if (value === undefined) delete process.env[name]; else process.env[name] = value;
+    }
+  }
+});
+
 test('AI sentiment cannot erase a real brand mention, and zero confidence is preserved', async () => {
   const originalFetch = globalThis.fetch;
   const previous = { google: process.env.GOOGLE_API_KEY, gemini: process.env.GEMINI_API_KEY, claude: process.env.ANTHROPIC_API_KEY };

@@ -37,6 +37,8 @@ import {
 import { formatDistanceToNow } from "date-fns";
 import Link from "next/link";
 import { generateRecommendations, CATEGORY_CONFIG, PRIORITY_CONFIG } from "@/lib/ai/recommendations";
+import { groupRecentScans } from "@/lib/measurement/scan-groups";
+import type { LLMScan } from "@/lib/types";
 
 // Engine names stay neutral; status and evidence carry the visual meaning.
 const platforms = [
@@ -46,25 +48,6 @@ const platforms = [
     { id: "claude", name: "Claude" },
     { id: "google_ai_overview", name: "AI Overview" },
 ];
-
-interface LLMScan {
-    id: string;
-    platform: string;
-    prompt: string;
-    response: string;
-    brand_mentioned: boolean;
-    mention_position: number | null;
-    sentiment: 'positive' | 'neutral' | 'negative' | null;
-    competitors_mentioned: string[];
-    citations: Array<{
-        url: string;
-        title: string;
-        is_own_domain: boolean;
-        provenance?: 'provider_citation' | 'link_mentioned' | 'unverified';
-        fetch_validation?: 'not_checked' | 'valid' | 'invalid' | 'blocked';
-    }> | null;
-    created_at: string;
-}
 
 interface PlatformVisibility {
     platform: string;
@@ -251,49 +234,10 @@ export default function LLMTrackerPage() {
         setNewCompetitor("");
     }
 
-    // Group scans by prompt for display
-    const groupedScans = scans.reduce((acc, scan) => {
-        const key = scan.prompt;
-        if (!acc[key]) {
-            acc[key] = {
-                prompt: scan.prompt,
-                platforms: [],
-                brandMentioned: false,
-                mentionPosition: null as number | null,
-                sentiment: null as string | null,
-                competitors: [] as string[],
-                citations: [] as NonNullable<LLMScan['citations']>,
-                scannedAt: scan.created_at,
-            };
-        }
-        if (!acc[key].platforms.includes(scan.platform)) {
-            acc[key].platforms.push(scan.platform);
-        }
-        if (scan.brand_mentioned) {
-            acc[key].brandMentioned = true;
-            if (!acc[key].mentionPosition || (scan.mention_position && scan.mention_position < acc[key].mentionPosition!)) {
-                acc[key].mentionPosition = scan.mention_position;
-            }
-        }
-        if (scan.sentiment && !acc[key].sentiment) {
-            acc[key].sentiment = scan.sentiment;
-        }
-        if (scan.competitors_mentioned) {
-            acc[key].competitors = [...new Set([...acc[key].competitors, ...scan.competitors_mentioned])];
-        }
-        if (scan.citations && scan.citations.length > 0) {
-            const existingUrls = new Set(acc[key].citations.map(c => c.url));
-            for (const c of scan.citations) {
-                if (!existingUrls.has(c.url)) {
-                    acc[key].citations.push(c);
-                    existingUrls.add(c.url);
-                }
-            }
-        }
-        return acc;
-    }, {} as Record<string, { prompt: string; platforms: string[]; brandMentioned: boolean; mentionPosition: number | null; sentiment: string | null; competitors: string[]; citations: NonNullable<LLMScan['citations']>; scannedAt: string }>);
-
-    const scanGroups = Object.values(groupedScans).slice(0, 10);
+    const scanGroups = groupRecentScans(scans).slice(0, 10);
+    const latestPromptGroups = scanGroups.filter((group, index, groups) =>
+        groups.findIndex((candidate) => candidate.prompt === group.prompt) === index,
+    );
 
     return (
         <>
@@ -317,18 +261,18 @@ export default function LLMTrackerPage() {
                 )}
                 <Tabs defaultValue="manual" className="space-y-6">
                     <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-center">
-                        <TabsList className="w-full max-w-full justify-start overflow-x-auto border-[var(--border-default)] bg-[var(--bg-raised)] sm:w-auto">
-                            <TabsTrigger value="manual" className="data-[state=active]:bg-[var(--accent-base)] data-[state=active]:text-[var(--text-on-accent)]">
-                                <Search className="w-4 h-4 mr-2" />
-                                Manual Scan
+                        <TabsList className="grid h-auto min-w-0 w-full grid-cols-3 border-[var(--border-default)] bg-[var(--bg-raised)] sm:inline-flex sm:h-9 sm:w-auto">
+                            <TabsTrigger value="manual" className="min-w-0 px-2 data-[state=active]:bg-[var(--accent-base)] data-[state=active]:text-[var(--text-on-accent)] sm:px-3">
+                                <Search className="mr-1 h-3.5 w-3.5 shrink-0 sm:mr-2 sm:h-4 sm:w-4" />
+                                <span className="sm:hidden">Scan</span><span className="hidden sm:inline">Manual Scan</span>
                             </TabsTrigger>
-                            <TabsTrigger value="schedules" className="data-[state=active]:bg-[var(--accent-base)] data-[state=active]:text-[var(--text-on-accent)]">
-                                <Bot className="w-4 h-4 mr-2" />
-                                Scheduled Scans
+                            <TabsTrigger value="schedules" className="min-w-0 px-2 data-[state=active]:bg-[var(--accent-base)] data-[state=active]:text-[var(--text-on-accent)] sm:px-3">
+                                <Bot className="mr-1 h-3.5 w-3.5 shrink-0 sm:mr-2 sm:h-4 sm:w-4" />
+                                <span className="sm:hidden">Schedule</span><span className="hidden sm:inline">Scheduled Scans</span>
                             </TabsTrigger>
-                            <TabsTrigger value="variants" className="data-[state=active]:bg-[var(--accent-base)] data-[state=active]:text-[var(--text-on-accent)]">
-                                <Layers className="w-4 h-4 mr-2" />
-                                Question Variants
+                            <TabsTrigger value="variants" className="min-w-0 px-2 data-[state=active]:bg-[var(--accent-base)] data-[state=active]:text-[var(--text-on-accent)] sm:px-3">
+                                <Layers className="mr-1 h-3.5 w-3.5 shrink-0 sm:mr-2 sm:h-4 sm:w-4" />
+                                <span className="sm:hidden">Variants</span><span className="hidden sm:inline">Question Variants</span>
                             </TabsTrigger>
                         </TabsList>
 
@@ -388,6 +332,7 @@ export default function LLMTrackerPage() {
                                             <span className="text-right text-2xl font-medium text-[var(--text-primary)]">{score === null ? "—" : `${score}%`}</span>
                                             <span className="col-span-2 text-xs text-[var(--text-tertiary)] sm:col-span-4">
                                                 {change === null ? "Matched baseline needed" : `${change > 0 ? "+" : ""}${change} points vs matched baseline`}
+                                                <span className="sm:hidden"> · n={metrics?.scanCount ?? 0}</span>
                                                 {metrics?.mentionRate !== null && metrics?.mentionRate !== undefined ? ` · ${Math.round(metrics.mentionRate * 100)}% mention rate` : ""}
                                             </span>
                                         </button>
@@ -541,8 +486,8 @@ export default function LLMTrackerPage() {
                                     <div className="space-y-3">
                                         {scanGroups.map((scan, index) => (
                                             <div
-                                                key={index}
-                                                className="p-4 rounded-lg bg-[var(--bg-raised)] hover:bg-[var(--bg-raised)] transition-colors cursor-pointer"
+                                                key={scan.key}
+                                                className="rounded-lg bg-[var(--bg-raised)] p-4"
                                             >
                                                 <div className="flex items-start justify-between gap-4">
                                                     <div className="flex-1 min-w-0">
@@ -553,7 +498,7 @@ export default function LLMTrackerPage() {
                                                             </p>
                                                         </div>
 
-                                                        <div className="flex items-center gap-4 text-sm">
+                                                        <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm">
                                                             <div className="flex items-center gap-1">
                                                                 {scan.platforms.map((pid) => {
                                                                     const p = platforms.find(x => x.id === pid);
@@ -565,38 +510,44 @@ export default function LLMTrackerPage() {
                                                                         />
                                                                     );
                                                                 })}
-                                                                <span className="text-[var(--text-ghost)] ml-1">
-                                                                    {scan.platforms.length} platform{scan.platforms.length > 1 ? 's' : ''}
+                                                                <span className="ml-1 text-[var(--text-tertiary)]">
+                                                                    {scan.platforms.length} engine{scan.platforms.length > 1 ? 's' : ''}
                                                                 </span>
                                                             </div>
 
-                                                            {scan.brandMentioned ? (
+                                                            {scan.mentionCount > 0 ? (
                                                                 <div className="flex items-center gap-1 text-[var(--data-green)]">
                                                                     <Eye className="w-3 h-3" />
-                                                                    Position #{scan.mentionPosition || '?'}
+                                                                    {scan.mentionCount}/{scan.sampleCount} mentioned
                                                                 </div>
                                                             ) : (
                                                                 <div className="flex items-center gap-1 text-[var(--data-red)]">
                                                                     <Eye className="w-3 h-3" />
-                                                                    Not mentioned
+                                                                    0/{scan.sampleCount} mentioned
                                                                 </div>
                                                             )}
 
+                                                            <span className="text-[var(--text-tertiary)]">
+                                                                {scan.visibilityPercent === null ? 'Unmeasured' : `${scan.visibilityPercent}% visibility`} · {scan.confidence.level} confidence
+                                                            </span>
+
                                                             {scan.competitors.length > 0 && (
-                                                                <div className="flex items-center gap-1 text-[var(--text-ghost)]">
+                                                                <div className="flex items-center gap-1 text-[var(--text-tertiary)]">
                                                                     <Users className="w-3 h-3" />
                                                                     {scan.competitors.join(", ")}
                                                                 </div>
                                                             )}
 
                                                             {scan.citations.length > 0 && (
-                                                                <div className="flex items-center gap-1 text-[var(--text-ghost)]">
+                                                                <div className="flex items-center gap-1 text-[var(--text-tertiary)]">
                                                                     <Link2 className="w-3 h-3" />
                                                                     {scan.citations.length} source{scan.citations.length > 1 ? 's' : ''}
                                                                 </div>
                                                             )}
 
-                                                            <span className="text-[var(--text-ghost)]">
+                                                            {scan.failedSamples > 0 && <span className="text-[var(--data-red)]">{scan.failedSamples} failed sample{scan.failedSamples > 1 ? 's' : ''}</span>}
+
+                                                            <span className="text-[var(--text-tertiary)]">
                                                                 {formatDistanceToNow(new Date(scan.scannedAt), { addSuffix: true })}
                                                             </span>
                                                         </div>
@@ -618,6 +569,8 @@ export default function LLMTrackerPage() {
                                                             variant="ghost"
                                                             size="icon"
                                                             className="h-7 w-7"
+                                                            aria-label={expandedScan === index ? `Collapse evidence for ${scan.prompt}` : `Expand evidence for ${scan.prompt}`}
+                                                            aria-expanded={expandedScan === index}
                                                             onClick={() => setExpandedScan(expandedScan === index ? null : index)}
                                                         >
                                                             {expandedScan === index ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
@@ -782,35 +735,34 @@ export default function LLMTrackerPage() {
                                 </CardHeader>
                                 <CardContent>
                                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                                        {Object.values(groupedScans).slice(0, 6).map((item, i) => {
-                                            const visibility = item.brandMentioned
-                                                ? (item.mentionPosition === 1 ? 90 : item.mentionPosition && item.mentionPosition <= 3 ? 70 : 50)
-                                                : 0;
+                                        {latestPromptGroups.slice(0, 6).map((item) => {
+                                            const visibility = item.visibilityPercent;
 
                                             return (
                                                 <div
-                                                    key={i}
+                                                    key={item.key}
                                                     className={cn(
-                                                        "p-4 rounded-lg border transition-colors cursor-pointer",
-                                                        getScoreBgColor(visibility)
+                                                        "rounded-lg border p-4 transition-colors",
+                                                        getScoreBgColor(visibility ?? 0)
                                                     )}
                                                 >
                                                     <div className="flex items-center justify-between mb-2">
-                                                        <span className={cn("text-2xl font-bold", getScoreColor(visibility))}>
-                                                            {visibility}%
+                                                        <span className={cn("text-2xl font-bold", getScoreColor(visibility ?? 0))}>
+                                                            {visibility === null ? '—' : `${visibility}%`}
                                                         </span>
                                                         <Button
                                                             variant="ghost"
                                                             size="icon"
                                                             className="h-8 w-8"
+                                                            aria-label={`Run ${item.prompt} again`}
                                                             onClick={() => setNewPrompt(item.prompt)}
                                                         >
                                                             <RefreshCw className="w-4 h-4" />
                                                         </Button>
                                                     </div>
                                                     <p className="text-sm text-[var(--text-secondary)] mb-1 line-clamp-2">&ldquo;{item.prompt}&rdquo;</p>
-                                                    <p className="text-xs text-[var(--text-ghost)]">
-                                                        Last scan: {formatDistanceToNow(new Date(item.scannedAt), { addSuffix: true })}
+                                                    <p className="text-xs text-[var(--text-tertiary)]">
+                                                        Latest run: {item.mentionCount}/{item.sampleCount} mentions · {item.confidence.level} confidence · {formatDistanceToNow(new Date(item.scannedAt), { addSuffix: true })}
                                                     </p>
                                                 </div>
                                             );

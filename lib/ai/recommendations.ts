@@ -37,10 +37,10 @@ export const CATEGORY_CONFIG: Record<RecommendationCategory, { icon: string; lab
 };
 
 export const PRIORITY_CONFIG: Record<string, { label: string; color: string; bgColor: string }> = {
-    critical: { label: 'Critical', color: 'text-red-400', bgColor: 'bg-red-500/10 border-red-500/20' },
-    high: { label: 'High', color: 'text-orange-400', bgColor: 'bg-orange-500/10 border-orange-500/20' },
-    medium: { label: 'Medium', color: 'text-yellow-400', bgColor: 'bg-yellow-500/10 border-yellow-500/20' },
-    low: { label: 'Low', color: 'text-zinc-400', bgColor: 'bg-zinc-500/10 border-zinc-500/20' },
+    critical: { label: 'Critical', color: 'text-[var(--data-red)]', bgColor: 'bg-[var(--data-red-muted)] border-[var(--data-red)]/25' },
+    high: { label: 'High', color: 'text-[var(--data-amber)]', bgColor: 'bg-[var(--data-amber-muted)] border-[var(--data-amber)]/25' },
+    medium: { label: 'Medium', color: 'text-[var(--accent-base)]', bgColor: 'bg-[var(--accent-muted)] border-[var(--accent-base)]/25' },
+    low: { label: 'Low', color: 'text-[var(--text-secondary)]', bgColor: 'bg-[var(--bg-raised)] border-[var(--border-default)]' },
 };
 
 interface ScanData {

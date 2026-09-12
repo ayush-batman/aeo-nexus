@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { AlertCircle, ArrowUpRight, CheckCircle2, Link2, Loader2, RefreshCw, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { splitSourceGap } from "@/lib/measurement/source-gaps";
 
 interface CitationDomain {
     domain: string;
@@ -119,7 +120,7 @@ export function CitationMap() {
             <div className="flex items-start gap-3"><CheckCircle2 className="mt-0.5 h-4 w-4 text-[var(--accent-base)]" /><div><h2 id="gap-title" className="text-sm font-medium text-[var(--text-primary)]">Places to earn a mention</h2><p className="mt-1 text-xs leading-5 text-[var(--text-secondary)]">These source types have not appeared in structured citation evidence yet. Treat them as research leads, not guaranteed ranking factors.</p></div></div>
             <div className="mt-4 grid gap-px overflow-hidden rounded-lg border border-[var(--border-default)] bg-[var(--border-default)] sm:grid-cols-2">
                 {data.gaps.slice(0, 6).map((gap) => {
-                    const [name, action] = gap.split(/,\s*/, 2);
+                    const [name, action] = splitSourceGap(gap);
                     return <div key={gap} className="bg-[var(--bg-raised)] p-4"><p className="text-sm font-medium text-[var(--text-primary)]">{name}</p><p className="mt-1 text-xs leading-5 text-[var(--text-tertiary)]">{action || "Research an authentic contribution."}</p></div>;
                 })}
             </div>
