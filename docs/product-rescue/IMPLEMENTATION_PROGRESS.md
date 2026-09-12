@@ -1324,5 +1324,8 @@ are in `CONVEX_IMPORT_RUNBOOK.md`.
 ### Verification
 
 - Focused browser, latency, measurement-truth, and app type checks passed after the rehearsal fixes.
-- The full suite, lint, MCP type-check, production build, and final diff review remain required after the preview refresh.
+- Refreshed the protected non-production preview at `https://aelo-rescue-preview.vercel.app`; it points to immutable deployment `aeo-nexus-2br7lzj1w-ayush-batmans-projects.vercel.app` in Ready state.
+- The Vercel build compiled, type-checked, and generated all 142 pages. Through deployment protection, `/`, `/features`, `/pricing`, `/methodology`, `/login`, and `/privacy` returned 200, while `/api/v1/brands` without a key returned 401. The post-check error-log query returned no records.
+- Rotated only the preview runtime's test-deployment credential after the local copy was found invalid; production credentials and production environment variables were not changed.
+- The full suite, lint, MCP type-check, local production build, and final diff review remain required after this documentation update.
 - No production deployment, production data access, paid provider call, email, OAuth, or payment operation was performed.

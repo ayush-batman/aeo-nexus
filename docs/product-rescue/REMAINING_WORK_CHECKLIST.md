@@ -10,7 +10,7 @@ This list starts from the current `codex/product-rescue` workspace. The Convex r
 - [x] Re-run the focused dashboard/measurement tests after that review.
 - [x] Run the code release gates: 174 Node tests, 50 Convex tests, lint, app type-check, MCP type-check, the 142-route production build, public production-server browser checks, and dependency audit. Diff hygiene and the final scoped commit are recorded at handoff.
 - [x] Commit the current UI pass as a scoped, reversible commit.
-- [ ] Redeploy the protected non-production preview so it contains the latest zero-warning and visual changes.
+- [x] Redeploy the protected non-production preview so it contains the latest zero-warning and visual changes. The stable alias now points to the Ready deployment created on September 12, 2026.
 
 ## 2. Prove the real customer journey in staging
 
