@@ -68,6 +68,46 @@ try {
   if (process.env.AELO_PERF_JSON === '1') {
     console.log(JSON.stringify({ kind: 'aelo-performance', loginMs, timings }));
   }
+  if (process.env.AELO_TEST_ACCESSIBILITY === '1') {
+    const skipLink = page.getByRole('link', { name: 'Skip to dashboard content' });
+    const hiddenSkipBox = await skipLink.boundingBox();
+    if (!hiddenSkipBox || hiddenSkipBox.y + hiddenSkipBox.height >= 0) {
+      throw new Error('Dashboard skip link is visible without focus');
+    }
+    await page.keyboard.press('Tab');
+    await page.waitForTimeout(250);
+    const focusedSkipBox = await skipLink.boundingBox();
+    if (!(await skipLink.evaluate(element => element === document.activeElement)) || !focusedSkipBox || focusedSkipBox.y < 0) {
+      throw new Error('Dashboard skip link is not visible on keyboard focus');
+    }
+    await page.keyboard.press('Enter');
+    if (!await page.locator('#dashboard-content').evaluate(element => element === document.activeElement)) {
+      throw new Error('Dashboard skip link did not move focus to the main content');
+    }
+
+    const navigationButton = page.getByRole('button', { name: 'Open all dashboard tools' });
+    await navigationButton.click();
+    const navigationDialog = page.getByRole('dialog', { name: 'Product navigation' });
+    await navigationDialog.waitFor();
+    if (!await navigationDialog.evaluate(element => element.contains(document.activeElement))) {
+      throw new Error('Dashboard tools drawer did not receive focus');
+    }
+    await page.keyboard.press('Escape');
+    await navigationDialog.waitFor({ state: 'hidden' });
+    if (!await navigationButton.evaluate(element => element === document.activeElement)) {
+      throw new Error('Dashboard tools drawer did not return focus to its trigger');
+    }
+
+    await page.setViewportSize({ width: 720, height: 500 });
+    const zoomEquivalentOverflow = await page.evaluate(() => document.documentElement.scrollWidth > innerWidth);
+    if (zoomEquivalentOverflow) throw new Error('Dashboard overflows at a 200% desktop-zoom equivalent viewport');
+    console.log('Signed-in accessibility:', {
+      skipLink: 'passed',
+      drawerFocusReturn: 'passed',
+      zoomEquivalentOverflow,
+    });
+    await page.setViewportSize({ width: 1440, height: 1000 });
+  }
   await page.screenshot({ path: '/tmp/aelo-signed-in-desktop.png', fullPage: true });
   console.log('Signed-in route:', new URL(page.url()).pathname);
   console.log('Page:', (await page.locator('body').innerText()).slice(0, 2000));

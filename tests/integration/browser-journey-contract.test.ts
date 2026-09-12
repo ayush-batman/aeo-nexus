@@ -59,6 +59,10 @@ test('browser smoke covers every primary signed-in job at desktop and mobile wid
   assert.match(script, /Synthetic session cookies require local HTTPS/);
   assert.match(script, /AELO_EXPECT_MISSING_PROVIDERS/);
   assert.match(script, /AELO_ALLOW_TEST_MEASUREMENT/);
+  assert.match(script, /AELO_TEST_ACCESSIBILITY/);
+  assert.match(script, /Skip to dashboard content/);
+  assert.match(script, /drawer did not return focus to its trigger/);
+  assert.match(script, /width: 720, height: 500/);
   assert.match(script, /Add my brand/);
   assert.match(script, /Brand or company name/);
   assert.doesNotMatch(script, /Get Started|Brand\/Company Name/);
