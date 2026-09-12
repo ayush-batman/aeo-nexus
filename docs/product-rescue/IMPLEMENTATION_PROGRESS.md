@@ -1324,7 +1324,7 @@ are in `CONVEX_IMPORT_RUNBOOK.md`.
 ### Verification
 
 - Focused browser, latency, measurement-truth, and app type checks passed after the rehearsal fixes.
-- Refreshed the protected non-production preview at `https://aelo-rescue-preview.vercel.app`; it points to immutable deployment `aeo-nexus-2br7lzj1w-ayush-batmans-projects.vercel.app` in Ready state.
+- That batch's protected non-production preview used immutable deployment `aeo-nexus-2br7lzj1w-ayush-batmans-projects.vercel.app` in Ready state; Batch 9 supersedes it.
 - The Vercel build compiled, type-checked, and generated all 142 pages. Through deployment protection, `/`, `/features`, `/pricing`, `/methodology`, `/login`, and `/privacy` returned 200, while `/api/v1/brands` without a key returned 401. The post-check error-log query returned no records.
 - Rotated only the preview runtime's test-deployment credential after the local copy was found invalid; production credentials and production environment variables were not changed.
 - Final local gates passed after the preview refresh: 174 Node tests, 50 Convex tests, lint with zero warnings/errors, app and MCP type-checks, the 142-page webpack production build, and all 18 public route/viewport browser checks.
@@ -1345,3 +1345,4 @@ are in `CONVEX_IMPORT_RUNBOOK.md`.
 - Lint, app type-check, MCP type-check, the 142-page webpack production build, and all 18 public Chrome route/viewport checks passed.
 - The public browser suite rechecked keyboard skip navigation, interactive sample controls, reduced motion, console errors, failed same-origin requests, error overlays, and horizontal overflow.
 - Desktop and mobile screenshots were visually inspected after the change. Safari automation is still pending because the Mac was locked during the attempted check.
+- The protected preview alias `https://aelo-rescue-preview.vercel.app` now points to immutable Ready deployment `aeo-nexus-52lsu2s9z-ayush-batmans-projects.vercel.app`. Six public routes returned 200 through deployment protection, `/api/v1/brands` returned the expected 401 without a key, and the post-check error-log query returned no records.
