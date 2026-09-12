@@ -18,16 +18,6 @@ export type Insight = {
     targetPrompt?: string;
 };
 
-type ScanRow = {
-    platform: string;
-    prompt: string;
-    brand_mentioned: boolean;
-    mention_position: number | null;
-    sentiment: string | null;
-    competitors_mentioned: string[] | null;
-    created_at: string;
-};
-
 const PRIORITY_RANK: Record<InsightPriority, number> = { high: 0, medium: 1, low: 2 };
 
 function slug(s: string): string {

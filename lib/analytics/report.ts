@@ -64,8 +64,6 @@ type Row = {
 
 export async function buildReport(workspaceId: string, brand: string, days = 30): Promise<Report> {
     const sinceDate = new Date(Date.now() - days * 86400000);
-    const since = sinceDate.toISOString();
-
     const scans: Row[] = (await readScanPages(workspaceId, { since: sinceDate.getTime() }))
         .filter(scan => !scan.failure_code && Boolean(scan.response.trim()));
 

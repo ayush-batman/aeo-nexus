@@ -136,9 +136,8 @@ export function Header({ title, description }: HeaderProps) {
         } catch {
             // ignore; force the redirect regardless
         }
-        // Hard navigation so the server + middleware re-evaluate with cookies cleared.
-        // router.push() is a soft nav and leaves the stale session, so logout "does nothing".
-        window.location.assign("/login");
+        // Reload so middleware and server components see the cleared session cookie.
+        window.location.assign(new URL("/login", window.location.origin).href);
     }
     async function openNotification(n: Notification) {
         if (!n.read) {

@@ -22,3 +22,8 @@ const [edge, backend, ledger] = await Promise.all([routeSource('app/api/stripe/w
   assert.match(backend, /getStripePlanFromPrice/); assert.match(backend, /internal\.billing\.applyVerifiedEvent/);
   assert.match(ledger, /export const applyVerifiedEvent = internalMutation/);
 });
+
+test('successful client checkout reloads server-owned billing state', async () => {
+  const checkout = await routeSource('components/billing/checkout-button.tsx');
+  assert.match(checkout, /if \(v\.ok\)[\s\S]*location\.assign\(new URL\(["']\/dashboard\?upgraded=1["']/);
+});

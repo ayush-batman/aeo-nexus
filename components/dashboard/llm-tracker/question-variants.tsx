@@ -4,8 +4,7 @@ import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
-import { Loader2, Sparkles, Copy, AlertCircle, RefreshCw, Layers } from "lucide-react";
+import { Loader2, Sparkles, Copy, AlertCircle, Layers } from "lucide-react";
 
 export function QuestionVariants() {
     const [baseQuestion, setBaseQuestion] = useState("");

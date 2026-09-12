@@ -9,7 +9,7 @@ import { Progress } from "@/components/ui/progress";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { HelpCenterAudit } from "@/components/dashboard/audit/help-center-audit";
-import { Search, Loader2, CheckCircle, AlertTriangle, AlertCircle, Sparkles, BookOpen, FileText } from "lucide-react";
+import { Search, Loader2, CheckCircle, AlertTriangle, Sparkles, BookOpen, FileText } from "lucide-react";
 
 interface AuditResult {
     url: string;

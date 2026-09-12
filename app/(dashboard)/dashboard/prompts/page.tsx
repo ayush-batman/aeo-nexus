@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Header } from "@/components/dashboard/header";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -10,7 +10,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
     Loader2, Plus, Trash2, Search, Save, Lightbulb, Sparkles,
-    ArrowRight, Bookmark, Copy, Check, ExternalLink, ClipboardList,
+    Bookmark, Copy, Check, ExternalLink, ClipboardList,
     Info, Zap, Compass, Globe, TrendingUp,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -18,7 +18,7 @@ import type { Prompt } from "@/lib/data-access";
 import { useRouter } from "next/navigation";
 import {
     PROMPT_TEMPLATES, CATEGORY_META, fillTemplate,
-    getAllCategories, getTemplatesByCategory,
+    getAllCategories,
     type PromptCategory,
 } from "@/lib/prompts/manual-check-templates";
 
@@ -77,7 +77,17 @@ export default function PromptResearchPage() {
         sourceStatus?: Record<string, string>;
     } | null>(null);
 
-    async function fetchData() {
+    const fetchLibrary = useCallback(async () => {
+        try {
+            const res = await fetch('/api/prompts/library');
+            if (!res.ok) throw new Error('Could not load your saved prompts. Please retry.');
+            setSavedPrompts(await res.json());
+        } catch (error) {
+            setRequestError(error instanceof Error ? error.message : 'Could not load your saved prompts.');
+        }
+    }, []);
+
+    const fetchData = useCallback(async () => {
         setRequestError(null);
         try {
             const [wsRes, activeRes] = await Promise.all([
@@ -98,22 +108,12 @@ export default function PromptResearchPage() {
         } finally {
             setLoading(false);
         }
-    }
-
-    async function fetchLibrary() {
-        try {
-            const res = await fetch('/api/prompts/library');
-            if (!res.ok) throw new Error('Could not load your saved prompts. Please retry.');
-            setSavedPrompts(await res.json());
-        } catch (error) {
-            setRequestError(error instanceof Error ? error.message : 'Could not load your saved prompts.');
-        }
-    }
+    }, [fetchLibrary]);
 
     useEffect(() => {
         const timer = window.setTimeout(() => { void fetchData(); }, 0);
         return () => window.clearTimeout(timer);
-    }, []);
+    }, [fetchData]);
 
     async function handleGenerate() {
         if (!topic.trim()) return;

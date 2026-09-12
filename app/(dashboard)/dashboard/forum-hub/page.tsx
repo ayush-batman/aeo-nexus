@@ -23,7 +23,6 @@ import {
     AlertCircle,
     Radio,
     Radar,
-    Settings,
     Globe,
     Code,
     Flame,

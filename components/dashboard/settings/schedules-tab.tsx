@@ -6,15 +6,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Loader2, Calendar, Plus, Trash2, Play, RefreshCw, Clock, X, CheckCircle, AlertCircle } from "lucide-react";
+import { Loader2, Calendar, Plus, Trash2, RefreshCw, Clock, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { ScheduledScan } from "@/lib/data-access";
 
-interface SchedulesTabProps {
-    workspaceId: string;
-}
-
-export function SchedulesTab({ workspaceId }: SchedulesTabProps) {
+export function SchedulesTab() {
     const [schedules, setSchedules] = useState<ScheduledScan[]>([]);
     const [loading, setLoading] = useState(true);
     const [creating, setCreating] = useState(false);

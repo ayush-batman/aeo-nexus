@@ -28,7 +28,7 @@ export default async function AccuracyPage() {
     let missingTable = false;
     try {
         if (paidTier) summary = await loadAccuracySummary(ctx.workspaceId);
-    } catch (err) {
+    } catch {
         console.warn('[accuracy] evidence load failed');
         missingTable = true;
     }

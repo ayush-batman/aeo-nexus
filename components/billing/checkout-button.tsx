@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { Loader2 } from "lucide-react";
 
 // window.Razorpay is typed globally in the settings page; use a local cast here
@@ -31,6 +32,7 @@ export function CheckoutButton({
     className?: string;
     primary?: boolean;
 }) {
+    const router = useRouter();
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
@@ -46,7 +48,7 @@ export function CheckoutButton({
             const data = await res.json();
 
             if (res.status === 401) {
-                window.location.href = `/signup?plan=${plan}`;
+                router.push(`/signup?plan=${plan}`);
                 return;
             }
             if (!res.ok) {
@@ -82,7 +84,8 @@ export function CheckoutButton({
                         body: JSON.stringify(resp),
                     });
                     if (v.ok) {
-                        window.location.href = "/dashboard?upgraded=1";
+                        // Billing state is server-owned, so reload the document after verification.
+                        window.location.assign(new URL("/dashboard?upgraded=1", window.location.origin).href);
                     } else {
                         const b = await v.json().catch(() => ({}));
                         setError(b?.error || "Payment captured but verification failed. Contact support.");

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import type { Metadata } from "next";
 import { Download } from "lucide-react";
 
@@ -196,12 +197,15 @@ function AssetGrid({ label, assets }: { label: string; assets: Asset[] }) {
 
 function AssetCard({ asset }: { asset: Asset }) {
     const previewBg = asset.bg === 'light' ? 'bg-white' : 'bg-black';
+    const [width, height] = asset.dimensions.split('×').map(value => Number.parseInt(value.trim(), 10));
     return (
         <div className="rounded-md border border-white/[0.06] bg-black overflow-hidden">
             <div className={`h-40 flex items-center justify-center ${previewBg}`}>
-                <img
+                <Image
                     src={`/brand/${asset.filename}`}
                     alt={asset.label}
+                    width={width}
+                    height={height}
                     className="max-h-[70%] max-w-[70%] object-contain"
                 />
             </div>

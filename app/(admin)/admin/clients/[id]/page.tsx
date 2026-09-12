@@ -5,9 +5,7 @@ import {
     Briefcase,
     Calendar,
     CreditCard,
-    ArrowLeft,
-    Mail,
-    Shield
+    ArrowLeft
 } from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";

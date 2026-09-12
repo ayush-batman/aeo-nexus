@@ -14,13 +14,11 @@ import {
     AlertCircle,
     Copy,
     Sparkles,
-    Globe,
     Search,
     Zap,
     Loader2,
     Check,
     AlertTriangle,
-    Info,
     ShieldCheck,
     Network,
     Lightbulb

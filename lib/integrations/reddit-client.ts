@@ -202,7 +202,7 @@ export async function searchReddit(
                         seen.add(p.id);
                     }
                 }
-            } catch (e) { /* ignore global fallback error */ }
+            } catch { /* ignore global fallback error */ }
         }
 
         return {

@@ -175,10 +175,8 @@ export function Sidebar({
             });
             // Wait for the response to fully resolve (cookie is set)
             await res.json();
-            // Small delay to ensure cookie is persisted
-            await new Promise(resolve => setTimeout(resolve, 100));
-            // Full page reload to refresh all server components with new workspace
-            window.location.assign("/dashboard");
+            // Reload so every server component reads the newly selected workspace.
+            window.location.assign(new URL("/dashboard", window.location.origin).href);
         } catch (e) {
             console.error("Failed to switch workspace:", e);
         }
@@ -232,8 +230,8 @@ export function Sidebar({
         } catch {
             // ignore; force the redirect regardless
         }
-        // Hard navigation so the server + middleware re-evaluate with cookies cleared.
-        window.location.assign("/login");
+        // Reload so middleware and server components see the cleared session cookie.
+        window.location.assign(new URL("/login", window.location.origin).href);
     };
 
     return (<>

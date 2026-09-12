@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import Script from "next/script";
 import { Header } from "@/components/dashboard/header";
 import { SchedulesTab } from "@/components/dashboard/settings/schedules-tab";
@@ -33,8 +33,6 @@ import {
     Calendar,
     AlertCircle,
     Zap,
-    Copy,
-    ExternalLink,
 } from "lucide-react";
 import { PLAN_LIMITS, PLAN_PRICES } from "@/lib/config";
 import { ReportsSettingsTabs } from "@/components/dashboard/reports-settings-tabs";
@@ -108,7 +106,6 @@ interface TeamMember {
 
 
 export default function SettingsPage() {
-    const router = useRouter();
     const searchParams = useSearchParams();
     const [activeTab, setActiveTab] = useState(() => {
         const tab = searchParams.get("tab");
@@ -184,14 +181,14 @@ export default function SettingsPage() {
 
     useEffect(() => {
         const loadTimer = window.setTimeout(() => { void fetchData(); }, 0);
-        const successTimer = paymentSuccess
-            ? window.setTimeout(() => setPaymentSuccess(false), 5000)
-            : undefined;
-        return () => {
-            window.clearTimeout(loadTimer);
-            if (successTimer !== undefined) window.clearTimeout(successTimer);
-        };
+        return () => window.clearTimeout(loadTimer);
     }, []);
+
+    useEffect(() => {
+        if (!paymentSuccess) return;
+        const successTimer = window.setTimeout(() => setPaymentSuccess(false), 5000);
+        return () => window.clearTimeout(successTimer);
+    }, [paymentSuccess]);
 
     async function saveAlertPrefs() {
         setSavingAlerts(true);
@@ -799,11 +796,11 @@ export default function SettingsPage() {
                                 )}
 
                                 {activeTab === "api" && workspace && (
-                                    <ApiKeysTab workspaceId={workspace.id} />
+                                    <ApiKeysTab />
                                 )}
 
                                 {activeTab === "schedules" && workspace && (
-                                    <SchedulesTab workspaceId={workspace.id} />
+                                    <SchedulesTab />
                                 )}
                             </>
                         )}

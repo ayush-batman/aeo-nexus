@@ -4,7 +4,6 @@ import { ImageResponse } from 'next/og';
 // Next 15 auto-registers this file's export as the site-wide OG image, and
 // the `metadata.openGraph.images` in app/layout.tsx references it.
 
-export const runtime  = 'edge';
 export const size     = { width: 1200, height: 630 };
 export const contentType = 'image/png';
 export const alt      = 'Aelo, AI visibility with honest data';

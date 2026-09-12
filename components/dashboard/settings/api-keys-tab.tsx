@@ -29,7 +29,7 @@ interface ApiKey {
 
 // Real, self-serve API keys for the Aelo MCP server. A key is read-first and
 // scoped to this workspace; the secret is shown exactly once.
-export function ApiKeysTab({ workspaceId: _workspaceId }: { workspaceId: string }) {
+export function ApiKeysTab() {
     const [keys, setKeys] = useState<ApiKey[]>([]);
     const [loading, setLoading] = useState(true);
     const [creating, setCreating] = useState(false);

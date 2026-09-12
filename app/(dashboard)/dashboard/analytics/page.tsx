@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import { Header } from "@/components/dashboard/header";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
@@ -14,14 +14,11 @@ import {
     MessageSquare,
     FileText,
     Download,
-    Calendar,
-    ArrowRight,
     Loader2,
     AlertCircle,
     RefreshCw,
     Link2,
     Globe,
-    Users,
     Swords,
     PieChart,
     Activity,
@@ -39,7 +36,6 @@ import {
     PieChart as RechartsPieChart,
     Pie,
     Cell,
-    Legend,
 } from "recharts";
 import { motion, type Variants } from "framer-motion";
 import { CitationMap } from "@/components/dashboard/analytics/citation-map";

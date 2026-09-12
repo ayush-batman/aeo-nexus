@@ -3,7 +3,7 @@ import { waitForAnalysis } from '@/lib/client/wait-for-analysis';
 
 import { useState, useTransition } from 'react';
 import Link from 'next/link';
-import { RefreshCw, CheckCircle2, XCircle, Clock, HelpCircle, Lock, ExternalLink, Info } from 'lucide-react';
+import { RefreshCw, CheckCircle2, XCircle, Clock, HelpCircle, ExternalLink, Info } from 'lucide-react';
 import type { AccuracySummary, AccuracyRow } from '@/lib/analytics/accuracy';
 import { UpgradeModal, isPlanGate } from '@/components/billing/upgrade-modal';
 import { LockedPreview } from '@/components/billing/locked-preview';

@@ -24,15 +24,19 @@ test('dashboard shell exposes five primary jobs and an accessible all-tools draw
 });
 
 test('dashboard header and navigation have semantic, reachable controls', async () => {
-  const [header, navigation] = await Promise.all([
+  const [header, navigation, sidebar] = await Promise.all([
     readFile(`${root}/components/dashboard/header.tsx`, 'utf8'),
     readFile(`${root}/components/dashboard/dashboard-navigation.tsx`, 'utf8'),
+    readFile(`${root}/components/dashboard/sidebar.tsx`, 'utf8'),
   ]);
   assert.match(navigation, /aria-label={`Use/);
   assert.match(navigation, /min-h-11 min-w-11/);
   assert.doesNotMatch(header, /placeholder=["']Search\.\.\.["']/);
   assert.doesNotMatch(header, /<div[\s\S]{0,160}onClick=\{\(\) => openNotification/);
   assert.match(header, /role=["']alert["']/);
+  assert.match(header, /location\.assign\(new URL\(["']\/login["']/);
+  assert.match(sidebar, /location\.assign\(new URL\(["']\/dashboard["']/);
+  assert.match(sidebar, /location\.assign\(new URL\(["']\/login["']/);
 });
 
 test('dashboard loading and onboarding failures remain explicit and retryable', async () => {

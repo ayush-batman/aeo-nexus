@@ -5,16 +5,12 @@ import { attributionWidgetCode } from "@/lib/attribution-widget";
 import { Header } from "@/components/dashboard/header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import {
     Users,
-    Loader2,
     Copy,
     Check,
     BarChart3,
-    Sparkles,
     Code,
-    Bot,
     PieChart,
 } from "lucide-react";
 

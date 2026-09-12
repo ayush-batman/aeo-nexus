@@ -38,7 +38,7 @@ export async function withKey(request: Request, scope: 'read' | 'measure' | null
   }
 }
 
-export async function getWorkspaceBrand(reader: ApiReader, _workspaceId: string): Promise<{ name: string; website: string | null; competitors: string[] }> {
+export async function getWorkspaceBrand(reader: ApiReader): Promise<{ name: string; website: string | null; competitors: string[] }> {
   const workspace = await reader.workspace();
   const settings = workspace.settings as Record<string, unknown>;
   return { name: workspace.name, website: typeof settings?.website === 'string' ? settings.website : null,

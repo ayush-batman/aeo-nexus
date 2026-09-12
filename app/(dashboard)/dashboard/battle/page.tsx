@@ -9,8 +9,6 @@ import {
     Swords,
     Loader2,
     Trophy,
-    AlertCircle,
-    ArrowRight,
     TrendingUp,
     TrendingDown,
     Minus
