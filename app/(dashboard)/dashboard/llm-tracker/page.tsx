@@ -450,11 +450,12 @@ export default function LLMTrackerPage() {
                                             <button
                                                 key={platform.id}
                                                 onClick={() => togglePlatform(platform.id)}
+                                                aria-pressed={selectedPlatforms.includes(platform.id)}
                                                 className={cn(
                                                     "flex min-h-10 items-center gap-2 rounded-lg px-3 py-1.5 text-sm transition-colors",
                                                     selectedPlatforms.includes(platform.id)
                                                         ? "bg-[var(--bg-raised)] text-[var(--text-primary)] border border-[var(--border-hover)]"
-                                                        : "bg-[var(--bg-raised)] text-[var(--text-ghost)] border border-transparent hover:border-[var(--border-default)]"
+                                                        : "bg-[var(--bg-raised)] text-[var(--text-secondary)] border border-transparent hover:border-[var(--border-default)]"
                                                 )}
                                             >
                                                 <div className="h-2 w-2 rounded-full bg-[var(--accent-base)]" />
@@ -472,11 +473,12 @@ export default function LLMTrackerPage() {
                                             <button
                                                 key={region.id}
                                                 onClick={() => setScanRegion(region.id)}
+                                                aria-pressed={scanRegion === region.id}
                                                 className={cn(
                                                     "min-h-10 rounded-lg px-2.5 py-1 text-xs transition-colors",
                                                     scanRegion === region.id
                                                         ? "bg-[var(--bg-raised)] text-[var(--text-primary)] border border-[var(--border-hover)]"
-                                                        : "bg-[var(--bg-raised)] text-[var(--text-ghost)] border border-transparent hover:border-[var(--border-default)]"
+                                                        : "bg-[var(--bg-raised)] text-[var(--text-secondary)] border border-transparent hover:border-[var(--border-default)]"
                                                 )}
                                             >
                                                 {region.label}
@@ -492,13 +494,13 @@ export default function LLMTrackerPage() {
                                         competitors.map(c => (
                                             <div key={c} className="flex items-center gap-1 px-2 py-1 rounded bg-[var(--bg-raised)] border border-[var(--border-default)] text-xs text-[var(--text-secondary)]">
                                                 {c}
-                                                <button onClick={() => setCompetitors(prev => prev.filter(x => x !== c))} className="text-[var(--text-ghost)] hover:text-[var(--data-red)]">
+                                                <button aria-label={`Remove ${c}`} onClick={() => setCompetitors(prev => prev.filter(x => x !== c))} className="text-[var(--text-secondary)] hover:text-[var(--data-red)]">
                                                     <X className="w-3 h-3" />
                                                 </button>
                                             </div>
                                         ))
                                     ) : (
-                                        <span className="text-xs text-[var(--text-ghost)]">None, add in Settings or inline</span>
+                                        <span className="text-xs text-[var(--text-secondary)]">None, add in Settings or inline</span>
                                     )}
                                     <div className="flex gap-1">
                                         <Input
@@ -508,7 +510,7 @@ export default function LLMTrackerPage() {
                                             onKeyDown={(e) => e.key === 'Enter' && addCompetitorTag()}
                                             className="h-7 w-28 text-xs"
                                         />
-                                        <Button variant="ghost" size="icon" className="h-7 w-7" onClick={addCompetitorTag} disabled={!newCompetitor.trim()}>
+                                        <Button aria-label="Add competitor" variant="ghost" size="icon" className="h-7 w-7" onClick={addCompetitorTag} disabled={!newCompetitor.trim()}>
                                             <Plus className="w-3 h-3" />
                                         </Button>
                                     </div>
@@ -687,8 +689,8 @@ export default function LLMTrackerPage() {
                                         ))}
                                     </div>
                                 ) : (
-                                    <div className="text-center py-12 text-[var(--text-ghost)]">
-                                        <Search className="w-12 h-12 mx-auto mb-3 opacity-50" />
+                                    <div className="py-12 text-center text-[var(--text-secondary)]">
+                                        <Search aria-hidden="true" className="mx-auto mb-3 h-12 w-12 text-[var(--text-ghost)]" />
                                         <p>No scans yet. Run your first scan above!</p>
                                     </div>
                                 )}

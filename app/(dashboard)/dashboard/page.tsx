@@ -293,7 +293,7 @@ function EvidenceAnswer({ answer, onInspect }: { answer: FocalAnswer | null; onI
         <div aria-hidden="true" className="absolute inset-x-5 bottom-[-7px] top-9 -z-10 border border-[var(--border-default)] bg-[var(--bg-surface)]" />
         <article aria-label={answer ? `Sampled answer from ${answer.platform}` : "Sampled answer placeholder"} className="relative flex min-h-[500px] flex-col bg-[var(--bg-evidence)] px-6 py-7 text-[var(--text-evidence)] shadow-[0_18px_60px_rgba(0,0,0,.16)] sm:px-9 sm:py-9">
             <div className="absolute inset-x-0 top-0 h-[3px] bg-[var(--accent-base)]" aria-hidden="true" />
-            <div className="flex flex-wrap items-start justify-between gap-3 border-b border-[var(--border-evidence)] pb-5 font-mono text-[9px] uppercase tracking-[0.14em] text-[#65716F]">
+            <div className="flex flex-wrap items-start justify-between gap-3 border-b border-[var(--border-evidence)] pb-5 font-mono text-[9px] uppercase tracking-[0.14em] text-[#5F6B68]">
                 <span>{answer ? `${answer.platform} / sampled answer` : "Evidence sheet / waiting"}</span>
                 <span>{answer ? formatDistanceToNow(new Date(answer.createdAt), { addSuffix: true }) : "No completed samples"}</span>
             </div>
@@ -307,18 +307,18 @@ function EvidenceAnswer({ answer, onInspect }: { answer: FocalAnswer | null; onI
                             <p className={answer.brandMentioned ? "text-sm font-medium text-[#356B57]" : "text-sm font-medium text-[#895345]"}>
                                 {answer.brandMentioned ? "Your brand appears in this answer" : "Your brand is absent from this answer"}
                             </p>
-                            <p className="mt-1 font-mono text-[9px] uppercase tracking-[0.12em] text-[#74807D]">{answer.citationCount} provider citation{answer.citationCount === 1 ? "" : "s"} · {answer.providerModel ?? "model not recorded"}</p>
+                            <p className="mt-1 font-mono text-[9px] uppercase tracking-[0.12em] text-[#586560]">{answer.citationCount} provider citation{answer.citationCount === 1 ? "" : "s"} · {answer.providerModel ?? "model not recorded"}</p>
                         </div>
                         <button type="button" onClick={() => onInspect(answer)} className="min-h-10 shrink-0 text-left text-xs font-semibold text-[#3D608C] underline decoration-[#A9BFDF] underline-offset-4 hover:decoration-[#3D608C]">Open full receipt ↗</button>
                     </div>
-                    <p className="mt-5 text-right font-mono text-[8px] uppercase tracking-[0.12em] text-[#9AA39F]">{answerCode}</p>
+                    <p className="mt-5 text-right font-mono text-[9px] uppercase tracking-[0.12em] text-[#586560]">{answerCode}</p>
                 </div>
             </> : <div className="flex min-h-[360px] flex-1 flex-col justify-center">
-                <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-[#74807D]">No answer to show yet</p>
+                <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-[#586560]">No answer to show yet</p>
                 <p className="mt-5 max-w-md text-3xl font-medium leading-tight tracking-[-0.045em]">Your first scan will leave a readable trail.</p>
                 <p className="mt-5 max-w-md text-sm leading-6 text-[#5F6B68]">Aelo will place one real provider answer here—with the prompt, model, citations, and whether your brand appeared. Nothing is invented for the empty state.</p>
             </div>}
-            {!answer && <p className="mt-5 text-right font-mono text-[8px] uppercase tracking-[0.12em] text-[#9AA39F]">{answerCode}</p>}
+            {!answer && <p className="mt-5 text-right font-mono text-[9px] uppercase tracking-[0.12em] text-[#586560]">{answerCode}</p>}
         </article>
         <p className="mt-7 px-1 text-xs leading-5 text-[var(--text-tertiary)]">One real answer from the measured set. Open the receipt before drawing a conclusion from a single sample.</p>
     </div>;
@@ -341,7 +341,7 @@ function EnginePanel({ metric, index }: { metric: VisibilityMetric; index: numbe
 }
 
 function SupportingMetric({ label, value, detail }: { label: string; value: string; detail: string }) {
-    return <div className="min-h-28 bg-[var(--bg-surface)] p-4"><dt className="text-[10px] uppercase tracking-[0.12em] text-[var(--text-tertiary)]">{label}</dt><dd className="mt-3 text-2xl font-medium text-[var(--text-primary)]">{value}</dd><p className="mt-1 text-xs text-[var(--text-tertiary)]">{detail}</p></div>;
+    return <div className="min-h-28 bg-[var(--bg-surface)] p-4"><dt className="text-[10px] uppercase tracking-[0.12em] text-[var(--text-tertiary)]">{label}</dt><dd className="mt-3 text-2xl font-medium text-[var(--text-primary)]">{value}</dd><dd className="mt-1 text-xs text-[var(--text-tertiary)]">{detail}</dd></div>;
 }
 
 function EmptyPanel({ icon: Icon, title, action, href }: { icon: typeof Search; title: string; action: string; href: string }) {
@@ -350,6 +350,6 @@ function EmptyPanel({ icon: Icon, title, action, href }: { icon: typeof Search; 
 
 function JourneyLink({ step, title, detail, href, icon: Icon }: { step: string; title: string; detail: string; href: string; icon: typeof Search }) {
     return <Link href={href} className="group flex min-h-20 items-center gap-4 rounded-lg border border-[var(--border-default)] bg-[var(--bg-surface)] px-4 py-3 transition-colors hover:border-[var(--border-active)] hover:bg-[var(--bg-raised)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-base)]">
-        <span className="text-[10px] text-[var(--text-ghost)]">{step}</span><Icon className="h-4 w-4 text-[var(--text-tertiary)]" /><span className="min-w-0"><span className="block text-sm font-medium text-[var(--text-primary)]">{title}</span><span className="mt-0.5 block text-xs text-[var(--text-tertiary)]">{detail}</span></span><ArrowRight className="ml-auto h-4 w-4 text-[var(--text-ghost)] transition-transform group-hover:translate-x-0.5 group-hover:text-[var(--accent-base)]" />
+        <span className="text-[10px] text-[var(--text-tertiary)]">{step}</span><Icon className="h-4 w-4 text-[var(--text-tertiary)]" /><span className="min-w-0"><span className="block text-sm font-medium text-[var(--text-primary)]">{title}</span><span className="mt-0.5 block text-xs text-[var(--text-tertiary)]">{detail}</span></span><ArrowRight aria-hidden="true" className="ml-auto h-4 w-4 text-[var(--text-tertiary)] transition-transform group-hover:translate-x-0.5 group-hover:text-[var(--accent-base)]" />
     </Link>;
 }

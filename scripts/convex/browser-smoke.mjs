@@ -1,4 +1,5 @@
 import { chromium } from 'playwright';
+import axeCore from 'axe-core';
 
 // Intentionally local-only. No production account, provider or billing is used.
 const origin = process.env.AELO_TEST_ORIGIN ?? 'http://localhost:3000';
@@ -28,6 +29,25 @@ const errors = [];
 const sameOriginFailures = [];
 const timings = [];
 let loginMs = null;
+
+async function assertNoAccessibilityViolations(page, label) {
+  if (process.env.AELO_TEST_AXE !== '1') return;
+  await page.addScriptTag({ content: axeCore.source });
+  const scan = await page.evaluate(async () => axe.run(document, {
+    runOnly: {
+      type: 'tag',
+      values: ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'],
+    },
+  }));
+  if (scan.violations.length) {
+    throw new Error(`Accessibility violations on ${label}: ${JSON.stringify(scan.violations.map(violation => ({
+      id: violation.id,
+      impact: violation.impact,
+      nodes: violation.nodes.length,
+      targets: violation.nodes.slice(0, 12).map(node => node.target),
+    })))}`);
+  }
+}
 // A stalled fetch/browser must fail the check, never leave verification hanging.
 const watchdog = setTimeout(() => {
   console.error('Browser verification exceeded three minutes. Partial timings:', JSON.stringify(timings));
@@ -108,6 +128,7 @@ try {
     });
     await page.setViewportSize({ width: 1440, height: 1000 });
   }
+  await assertNoAccessibilityViolations(page, '/dashboard at 1440px');
   await page.screenshot({ path: '/tmp/aelo-signed-in-desktop.png', fullPage: true });
   console.log('Signed-in route:', new URL(page.url()).pathname);
   console.log('Page:', (await page.locator('body').innerText()).slice(0, 2000));
@@ -148,6 +169,7 @@ try {
         await page.goto(`${origin}${job.path}`, { waitUntil: 'domcontentloaded', timeout: 60000 });
         await page.getByRole('heading', { name: job.heading }).first().waitFor({ timeout: 60000 });
         await page.getByText(job.empty).first().waitFor({ timeout: 30000 });
+        await assertNoAccessibilityViolations(page, `${job.path} at ${viewport.width}px`);
         const usableMs = Math.round(performance.now() - routeStart);
         // Let shell requests settle before the next hard navigation so the
         // check does not manufacture cancellation races that users would not see.

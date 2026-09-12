@@ -19,7 +19,7 @@ This list starts from the current `codex/product-rescue` workspace. The Convex r
 - [ ] Verify all five primary jobs with real test data: Overview, Prompts & Scans, Sources, Actions, and Reports & Settings.
 - [ ] Verify complete, partial, all-failed, stale, empty, loading, retry, and permission-denied states.
 - [x] Confirm public and signed-in browser console and same-origin network requests are clean after the latest UI changes at 1440×1000 and 390×844. The signed-in sweep covered all six primary destinations with a fresh synthetic account.
-- [x] Check public keyboard skip navigation, motion controls, reduced motion, and automated accessibility. Lighthouse accessibility now scores 100 on the production-build homepage.
+- [x] Check public keyboard skip navigation, motion controls, reduced motion, and automated accessibility. Lighthouse accessibility now scores 100 on the production-build homepage; the signed-in WCAG A/AA matrix is also clean across all six primary pages at desktop and mobile widths.
 - [x] Finish signed-in keyboard/focus-return checks and the 200%-zoom equivalent layout pass. The dashboard skip link, main-content focus, tools-drawer focus trap, Escape close, focus return, and a 720 CSS-pixel viewport all passed with no overflow.
 - [x] Check Chromium at 390, 768, 1024, and 1440 pixel widths.
 - [ ] Check Safari at 390, 768, 1024, and 1440 pixel widths. The first automation attempt was blocked because the Mac was locked.

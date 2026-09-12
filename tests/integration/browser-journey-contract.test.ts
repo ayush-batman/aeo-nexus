@@ -60,6 +60,8 @@ test('browser smoke covers every primary signed-in job at desktop and mobile wid
   assert.match(script, /AELO_EXPECT_MISSING_PROVIDERS/);
   assert.match(script, /AELO_ALLOW_TEST_MEASUREMENT/);
   assert.match(script, /AELO_TEST_ACCESSIBILITY/);
+  assert.match(script, /AELO_TEST_AXE/);
+  assert.match(script, /wcag22aa/);
   assert.match(script, /Skip to dashboard content/);
   assert.match(script, /drawer did not return focus to its trigger/);
   assert.match(script, /width: 720, height: 500/);

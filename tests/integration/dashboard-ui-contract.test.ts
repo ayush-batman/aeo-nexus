@@ -41,3 +41,27 @@ test("the five primary dashboard jobs share restrained, evidence-first language"
   assert.match(pages[4], /Prompts &(?:amp;)? Scans/);
   assert.match(pages[5], /ReportsSettingsTabs/);
 });
+
+test("primary dashboard controls expose usable names and semantics", async () => {
+  const [overview, tracker, actions, settings] = await Promise.all([
+    source("app/(dashboard)/dashboard/page.tsx"),
+    source("app/(dashboard)/dashboard/llm-tracker/page.tsx"),
+    source("app/(dashboard)/dashboard/interventions/page.tsx"),
+    source("app/(dashboard)/dashboard/settings/page.tsx"),
+  ]);
+
+  assert.doesNotMatch(overview, /#74807D|#9AA39F|text-\[var\(--text-ghost\)\]">\{step\}/);
+  assert.match(overview, /<dd className="mt-1 text-xs text-\[var\(--text-tertiary\)\]">\{detail\}<\/dd>/);
+  assert.match(tracker, /aria-pressed=\{selectedPlatforms\.includes\(platform\.id\)\}/);
+  assert.match(tracker, /aria-pressed=\{scanRegion === region\.id\}/);
+  assert.match(tracker, /aria-label="Add competitor"/);
+  assert.match(tracker, /aria-label=\{`Remove \$\{c\}`\}/);
+  assert.match(tracker, /py-12 text-center text-\[var\(--text-secondary\)\]/);
+  assert.match(actions, /role="status" aria-label="Loading actions"/);
+  assert.match(actions, /aria-hidden="true"/);
+  for (const id of ["workspace-name", "profile-full-name", "profile-email"]) {
+    assert.match(settings, new RegExp(`htmlFor="${id}"`));
+    assert.match(settings, new RegExp(`id="${id}"`));
+  }
+  assert.match(settings, /aria-label=\{`Remove \$\{comp\}`\}/);
+});

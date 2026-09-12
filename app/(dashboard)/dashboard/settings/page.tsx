@@ -418,10 +418,11 @@ export default function SettingsPage() {
                                             </CardHeader>
                                             <CardContent className="space-y-4">
                                                 <div>
-                                                    <label className="block text-sm font-medium text-[var(--text-secondary)] mb-2">
+                                                    <label htmlFor="workspace-name" className="block text-sm font-medium text-[var(--text-secondary)] mb-2">
                                                         Workspace Name
                                                     </label>
                                                     <Input
+                                                        id="workspace-name"
                                                         value={workspaceName}
                                                         onChange={(e) => setWorkspaceName(e.target.value)}
                                                     />
@@ -449,19 +450,21 @@ export default function SettingsPage() {
                                             <CardContent className="space-y-4">
                                                 <div className="grid grid-cols-2 gap-4">
                                                     <div>
-                                                        <label className="block text-sm font-medium text-[var(--text-secondary)] mb-2">
+                                                        <label htmlFor="profile-full-name" className="block text-sm font-medium text-[var(--text-secondary)] mb-2">
                                                             Full Name
                                                         </label>
                                                         <Input
+                                                            id="profile-full-name"
                                                             value={fullName}
                                                             onChange={(e) => setFullName(e.target.value)}
                                                         />
                                                     </div>
                                                     <div>
-                                                        <label className="block text-sm font-medium text-[var(--text-secondary)] mb-2">
+                                                        <label htmlFor="profile-email" className="block text-sm font-medium text-[var(--text-secondary)] mb-2">
                                                             Email
                                                         </label>
                                                         <Input
+                                                            id="profile-email"
                                                             value={email}
                                                             type="email"
                                                             disabled
@@ -512,8 +515,9 @@ export default function SettingsPage() {
                                                             >
                                                                 {comp}
                                                                 <button
+                                                                    aria-label={`Remove ${comp}`}
                                                                     onClick={() => removeCompetitor(comp)}
-                                                                    className="text-[var(--text-ghost)] hover:text-[var(--data-red)] transition-colors"
+                                                                    className="text-[var(--text-secondary)] hover:text-[var(--data-red)] transition-colors"
                                                                 >
                                                                     <X className="w-3.5 h-3.5" />
                                                                 </button>
@@ -521,7 +525,7 @@ export default function SettingsPage() {
                                                         ))}
                                                     </div>
                                                 ) : (
-                                                    <p className="text-xs text-[var(--text-ghost)]">No competitors added yet.</p>
+                                                    <p className="text-xs text-[var(--text-secondary)]">No competitors added yet.</p>
                                                 )}
                                                 <Button onClick={handleSaveCompetitors} disabled={savingCompetitors}>
                                                     {savingCompetitors ? (
