@@ -1,12 +1,29 @@
 import { chromium } from 'playwright';
 
 // Intentionally local-only. No production account, provider or billing is used.
-const origin = 'http://localhost:3000';
+const origin = process.env.AELO_TEST_ORIGIN ?? 'http://localhost:3000';
+const originUrl = new URL(origin);
+if (!['localhost', '127.0.0.1'].includes(originUrl.hostname)) throw new Error('Browser smoke is local-only');
 const email = process.env.AELO_LOCAL_TEST_EMAIL;
 const password = process.env.AELO_LOCAL_TEST_PASSWORD;
-if (!email?.endsWith('@example.test') || !password) throw new Error('Synthetic local test credentials required');
+const authCookies = process.env.AELO_LOCAL_TEST_AUTH_COOKIES
+  ? JSON.parse(process.env.AELO_LOCAL_TEST_AUTH_COOKIES)
+  : null;
+if (!authCookies && (!email?.endsWith('@example.test') || !password)) throw new Error('Synthetic local test credentials required');
+if (authCookies && (!Array.isArray(authCookies) || authCookies.some(cookie =>
+  !cookie || typeof cookie.name !== 'string' || typeof cookie.value !== 'string' ||
+  !['__Secure-better-auth.session_token', '__Secure-better-auth.convex_jwt'].includes(cookie.name)
+))) throw new Error('Invalid synthetic test session cookies');
+if (process.env.AELO_TEST_ONBOARDING === '1' &&
+    process.env.AELO_EXPECT_MISSING_PROVIDERS !== '1' &&
+    process.env.AELO_ALLOW_TEST_MEASUREMENT !== '1') {
+  throw new Error('Onboarding measurement requires an explicit missing-provider expectation or provider-spend approval');
+}
 const browser = await chromium.launch({ headless: true, ...(process.env.AELO_TEST_CHROME ? { executablePath: process.env.AELO_TEST_CHROME } : {}) });
-const page = await browser.newPage({ viewport: { width: 1440, height: 1000 } });
+const context = await browser.newContext({ viewport: { width: 1440, height: 1000 }, ignoreHTTPSErrors: true });
+if (authCookies && originUrl.protocol !== 'https:') throw new Error('Synthetic session cookies require local HTTPS');
+if (authCookies) await context.addCookies(authCookies.map(cookie => ({ ...cookie, url: origin, secure: true, httpOnly: true, sameSite: 'Lax' })));
+const page = await context.newPage();
 const errors = [];
 const sameOriginFailures = [];
 const timings = [];
@@ -21,15 +38,19 @@ page.on('response', response => { const url = new URL(response.url()); if (url.o
   sameOriginFailures.push({ status: response.status(), path: url.pathname }); });
 try {
   const loginStart = performance.now();
-  await page.goto(`${origin}/login`, { waitUntil: 'domcontentloaded', timeout: 60000 });
-  // Local development can finish hydrating after DOMContentLoaded. Wait for
-  // the auth capability checks so the form click always reaches React.
-  await page.waitForLoadState('networkidle', { timeout: 20000 }).catch(() => {});
-  await page.getByLabel('Email', { exact: true }).fill(email);
-  await page.getByLabel('Password', { exact: true }).fill(password);
-  await page.getByRole('button', { name: 'Sign In', exact: true }).click();
+  if (authCookies) {
+    await page.goto(`${origin}/dashboard`, { waitUntil: 'domcontentloaded', timeout: 60000 });
+  } else {
+    await page.goto(`${origin}/login`, { waitUntil: 'domcontentloaded', timeout: 60000 });
+    // Local development can finish hydrating after DOMContentLoaded. Wait for
+    // the auth capability checks so the form click always reaches React.
+    await page.waitForLoadState('networkidle', { timeout: 20000 }).catch(() => {});
+    await page.getByLabel('Email', { exact: true }).fill(email);
+    await page.getByLabel('Password', { exact: true }).fill(password);
+    await page.getByRole('button', { name: 'Sign In', exact: true }).click();
+  }
   await page.waitForURL(url => ['/dashboard', '/onboarding'].includes(url.pathname), { timeout: 60000 });
-  await page.getByRole('heading', { name: /Welcome to Aelo!|Overview/ }).first().waitFor({ timeout: 60000 });
+  await page.getByRole('heading', { name: /Read what AI says when a buyer asks about your category\.|Overview/ }).first().waitFor({ timeout: 60000 });
   loginMs = Math.round(performance.now() - loginStart);
   console.log('Login to usable page ms:', loginMs);
   for (let sample = 1; sample <= (process.env.AELO_SKIP_TIMINGS === '1' ? 0 : 3); sample++) {
@@ -107,8 +128,8 @@ try {
     const contextGate = new Promise(resolve => { releaseContext = resolve; });
     await page.route('**/api/onboarding/context', async route => { await contextGate; await route.continue(); });
     await page.reload({ waitUntil: 'domcontentloaded' });
-    await page.getByRole('button', { name: 'Get Started', exact: true }).click();
-    await page.getByLabel('Brand/Company Name', { exact: false }).fill('Synthetic Migration Brand');
+    await page.getByRole('button', { name: 'Add my brand', exact: true }).click();
+    await page.getByLabel('Brand or company name', { exact: false }).fill('Synthetic Migration Brand');
     await page.getByLabel('Website', { exact: false }).fill('https://example.test');
     await page.getByLabel('Industry', { exact: true }).selectOption('saas');
     const waitingButton = page.getByRole('button', { name: 'Loading workspace…', exact: true });

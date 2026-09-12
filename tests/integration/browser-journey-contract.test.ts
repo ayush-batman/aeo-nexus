@@ -54,4 +54,12 @@ test('browser smoke covers every primary signed-in job at desktop and mobile wid
   assert.match(script, /usableMs/);
   assert.match(script, /No provider citations measured yet/);
   assert.match(script, /No actions in this stage/);
+  assert.match(script, /AELO_LOCAL_TEST_AUTH_COOKIES/);
+  assert.match(script, /Browser smoke is local-only/);
+  assert.match(script, /Synthetic session cookies require local HTTPS/);
+  assert.match(script, /AELO_EXPECT_MISSING_PROVIDERS/);
+  assert.match(script, /AELO_ALLOW_TEST_MEASUREMENT/);
+  assert.match(script, /Add my brand/);
+  assert.match(script, /Brand or company name/);
+  assert.doesNotMatch(script, /Get Started|Brand\/Company Name/);
 });

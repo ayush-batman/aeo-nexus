@@ -1299,3 +1299,30 @@ are in `CONVEX_IMPORT_RUNBOOK.md`.
 - Live Gemini passed a complete four-sample check. Azure OpenAI is live but its first complete Aelo batch was partial at 3/4; the final output-cap reduction still needs a clean repeat when further provider spend is approved. Anthropic, Perplexity, Resend, Google OAuth, Stripe-test, and Razorpay-test checks require approved non-production credentials; missing-configuration behavior is covered and passes.
 - The approved Supabase-to-Convex test rehearsal passed: two identical read-only REST exports, 337 imported rows, independent all-table parity, and a duplicate-free replay on empty preview target `deafening-robin-567`. The REST source read was non-transactional; production cutover still requires stopped writers or a repeatable-read database export plus a recoverable source backup.
 - Production promotion remains a separate explicit approval.
+
+## Batch 8 — Latest signed-in UI rehearsal
+
+### Completed locally against the approved test backend
+
+- Seeded fresh verified `@example.test` identities directly in the isolated Better Auth component; no production account, customer data, provider key, or billing path was used.
+- Updated the browser rehearsal to follow the shipped onboarding copy and to accept signed Better Auth test cookies only over local HTTPS. The script remains locked to localhost/127.0.0.1 and only accepts the two expected secure cookie names.
+- Added an explicit safety gate: onboarding measurement will not run unless the caller confirms that providers are absent or explicitly approves a test-provider measurement.
+- Rehearsed Overview, Prompts & Scans, Sources, Actions, Reports, and Settings at 1440×1000 and 390×844. All 12 route/viewport combinations rendered with no page errors, same-origin failures, or horizontal overflow.
+- Rechecked API-key behavior through the real Next/Convex boundary: no key 401, read key 200, measurement with a read-only key 403, and revoked key 401.
+- Rehearsed onboarding through brand save and three editable buyer prompts. With no provider credentials on `woozy-starfish-810`, packet submission returned 503 and the UI showed the failure instead of creating a result.
+- Removed the duplicate client console error for that handled packet failure. The visible error remains and the server still records the failed request.
+- The browser-verification pass found meaningful homepage content, the expected controls, no framework error overlay, and no recorded page error.
+
+### Current latency observations
+
+- Login to a usable onboarding page measured 4,722 ms in the final complete sweep.
+- Onboarding context: 691–1,702 ms across three reads; warm median 814 ms.
+- Workspace list: 1,336–1,509 ms; median 1,357 ms.
+- Dashboard summary: 1,429–1,508 ms; median 1,486 ms.
+- Signed-in route readiness ranged from 2,013 to 4,274 ms after compilation was warm. These are local-frontend/US-East test-backend samples, not production p50/p95 or an SLA. India-region distance and the auth bridge remain release risks.
+
+### Verification
+
+- Focused browser, latency, measurement-truth, and app type checks passed after the rehearsal fixes.
+- The full suite, lint, MCP type-check, production build, and final diff review remain required after the preview refresh.
+- No production deployment, production data access, paid provider call, email, OAuth, or payment operation was performed.

@@ -171,5 +171,6 @@ const [backend, packet, page] = await Promise.all([source('convex/activation.ts'
  assert.match(backend,/ctx\.db\.insert\('decisionPackets'/); assert.match(backend,/measurementRunIds: runIds/);
  assert.match(packet,/provider_citation/); assert.match(packet,/rankedAction/);
  assert.match(page,/Open sample receipt/); assert.match(page,/Provider-backed source gaps/);
+ assert.doesNotMatch(page,/console\.error\('Decision packet failed/);
  assert.doesNotMatch(page,/finally \{[\s\S]{0,200}router\.push\('\/dashboard'\)/);
 });

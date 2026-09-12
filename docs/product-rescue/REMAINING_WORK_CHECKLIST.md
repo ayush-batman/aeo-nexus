@@ -15,9 +15,10 @@ This list starts from the current `codex/product-rescue` workspace. The Convex r
 ## 2. Prove the real customer journey in staging
 
 - [ ] Use a synthetic non-production account to retest: homepage/sign-up → onboarding → 3–5 editable buyer prompts → multi-sample scan → decision packet.
+  - Rechecked through brand save and three editable prompts. With providers absent, the packet request failed visibly and persisted no fabricated result; a successful multi-sample packet still needs an approved test provider key.
 - [ ] Verify all five primary jobs with real test data: Overview, Prompts & Scans, Sources, Actions, and Reports & Settings.
 - [ ] Verify complete, partial, all-failed, stale, empty, loading, retry, and permission-denied states.
-- [x] Confirm public-page browser console and same-origin network requests are clean after the latest UI changes at 1440×1000 and 390×844. Signed-in routes still require the test login below.
+- [x] Confirm public and signed-in browser console and same-origin network requests are clean after the latest UI changes at 1440×1000 and 390×844. The signed-in sweep covered all six primary destinations with a fresh synthetic account.
 - [ ] Run keyboard-only, focus-return, reduced-motion, 200% zoom, and automated accessibility checks.
 - [ ] Check Chromium and Safari at 390, 768, 1024, and 1440 pixel widths.
 - [x] Add `npm run test:e2e` for every primary public page at desktop/mobile widths, motion controls, reduced motion, keyboard skip navigation, failed requests, error overlays, and horizontal overflow.

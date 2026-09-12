@@ -214,7 +214,6 @@ export default function OnboardingPage() {
             packetRequest.current = null;
             setCurrentStep(4);
         } catch (error) {
-            console.error('Decision packet failed:', error);
             setError(error instanceof Error ? error.message : 'The packet could not be completed. Please retry.');
         } finally {
             setScanning(false);
