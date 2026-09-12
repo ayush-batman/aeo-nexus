@@ -41,6 +41,7 @@ This list starts from the current `codex/product-rescue` workspace. The Convex r
 
 - [x] Remove the duplicate Overview workspace lookup and extra Next.js-to-Convex summary hop.
 - [x] Queue independent provider samples together under the four-job concurrency cap.
+- [x] Return an immediate durable job receipt to the main tracker, poll the workspace-bound run, show actual saved/failed sample progress, and refresh the completed result without changing the versioned API or Battle response contracts.
 - [ ] Measure signed-in page-load and scan latency in a production-like preview using p50 and p95, not three local samples.
 - [ ] Trace the remaining first-login/auth bridge delay and the 7.97-second backend outlier.
 - [ ] Decide how to reduce India-to-US-East distance for the beachhead audience without splitting the source of truth.
