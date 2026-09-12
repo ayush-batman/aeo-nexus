@@ -17,6 +17,7 @@
     "test:convex": "vitest run --config vitest.convex.config.mts",
     "test:unit": "tsx --test tests/unit/**/*.test.ts",
     "test:integration": "tsx --test tests/integration/**/*.test.ts",
+    "test:e2e": "node scripts/e2e/public-journeys.mjs",
     "scan:dylect": "npx tsx scripts/run-dylect-scan.ts",
     "debug:claude": "npx tsx scripts/debug-claude.ts"
   },

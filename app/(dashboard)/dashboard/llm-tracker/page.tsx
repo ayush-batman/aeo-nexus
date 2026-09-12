@@ -38,13 +38,13 @@ import { formatDistanceToNow } from "date-fns";
 import Link from "next/link";
 import { generateRecommendations, CATEGORY_CONFIG, PRIORITY_CONFIG } from "@/lib/ai/recommendations";
 
-// Platform icons/colors
+// Engine names stay neutral; status and evidence carry the visual meaning.
 const platforms = [
-    { id: "chatgpt", name: "ChatGPT", color: "bg-[var(--data-green)]" },
-    { id: "gemini", name: "Gemini", color: "bg-blue-500" },
-    { id: "perplexity", name: "Perplexity", color: "bg-[var(--accent-base)]" },
-    { id: "claude", name: "Claude", color: "bg-orange-500" },
-    { id: "google_ai_overview", name: "AI Overview", color: "bg-cyan-500" },
+    { id: "chatgpt", name: "ChatGPT" },
+    { id: "gemini", name: "Gemini" },
+    { id: "perplexity", name: "Perplexity" },
+    { id: "claude", name: "Claude" },
+    { id: "google_ai_overview", name: "AI Overview" },
 ];
 
 interface LLMScan {
@@ -401,7 +401,7 @@ export default function LLMTrackerPage() {
                             <CardHeader>
                                 <CardTitle className="text-lg flex items-center gap-2">
                                     <Sparkles className="w-5 h-5 text-[var(--accent-base)]" />
-                                    Run a New Scan
+                                    Run a measurement
                                 </CardTitle>
                             </CardHeader>
                             <CardContent className="space-y-4">
@@ -425,7 +425,7 @@ export default function LLMTrackerPage() {
                                         {isScanning ? (
                                             <>
                                                 <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
-                                                Scanning...
+                                                Collecting samples…
                                             </>
                                         ) : (
                                             <>
@@ -457,7 +457,7 @@ export default function LLMTrackerPage() {
                                                         : "bg-[var(--bg-raised)] text-[var(--text-ghost)] border border-transparent hover:border-[var(--border-default)]"
                                                 )}
                                             >
-                                                <div className={cn("w-2 h-2 rounded-full", platform.color)} />
+                                                <div className="h-2 w-2 rounded-full bg-[var(--accent-base)]" />
                                                 {platform.name}
                                             </button>
                                         ))}
@@ -558,7 +558,7 @@ export default function LLMTrackerPage() {
                                                                     return (
                                                                         <div
                                                                             key={pid}
-                                                                            className={cn("w-2 h-2 rounded-full", p?.color)}
+                                                                            className="h-2 w-2 rounded-full bg-[var(--accent-base)]"
                                                                             title={p?.name}
                                                                         />
                                                                     );

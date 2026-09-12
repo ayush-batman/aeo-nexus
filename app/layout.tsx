@@ -15,18 +15,18 @@ const SITE_URL = (process.env.NEXT_PUBLIC_APP_URL ?? "https://aelohq.com").repla
 
 export const metadata: Metadata = {
   title: {
-    default:  "Aelo: See how ChatGPT, Gemini, Claude and Perplexity actually answer",
+    default:  "Aelo: Know what AI says about your brand",
     template: "%s · Aelo",
   },
   description:
-    "Track your brand's visibility across every major AI engine, with the raw receipts to prove every number. No black-box scores. Sage-honest data.",
+    "Measure how ChatGPT, Gemini, Claude and Perplexity answer about your brand, with repeated samples, confidence ranges and the evidence behind every number.",
   metadataBase: new URL(SITE_URL),
   alternates: {
     canonical: SITE_URL,
   },
   openGraph: {
-    title:       "Aelo: See how AI actually answers questions in your category",
-    description: "Track your brand's visibility across ChatGPT, Gemini, Claude, and Perplexity, with the raw scans behind every number. The receipt is the product.",
+    title:       "Aelo: Know what AI says about your brand",
+    description: "Measure real AI answers across ChatGPT, Gemini, Claude and Perplexity. Keep every sample, confidence range and source receipt.",
     type:        "website",
     url:         SITE_URL,
     siteName:    "Aelo",
@@ -34,8 +34,8 @@ export const metadata: Metadata = {
   },
   twitter: {
     card:        "summary_large_image",
-    title:       "Aelo: See how AI actually answers questions in your category",
-    description: "Track your brand's visibility across ChatGPT, Gemini, Claude, and Perplexity. Every number links to the raw scan.",
+    title:       "Aelo: Know what AI says about your brand",
+    description: "Measure real AI answers across ChatGPT, Gemini, Claude and Perplexity. Every number links back to its evidence.",
     images:      ["/opengraph-image"],
   },
   robots: {

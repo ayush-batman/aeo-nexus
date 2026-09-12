@@ -112,6 +112,17 @@ export const summary = tenantQuery({
       sentiment: v.union(sentimentValidator, v.null()),
       createdAt: v.string(),
     })),
+    focalAnswer: v.union(v.null(), v.object({
+      id: v.string(),
+      platform: v.string(),
+      prompt: v.string(),
+      responseExcerpt: v.string(),
+      brandMentioned: v.boolean(),
+      citationCount: v.number(),
+      providerModel: v.union(v.string(), v.null()),
+      sampleId: v.union(v.string(), v.null()),
+      createdAt: v.string(),
+    })),
     visibilityMetrics: v.array(visibilityMetricValidator),
     topThreads: v.array(v.object({
       id: v.string(),
@@ -168,10 +179,31 @@ export const summary = tenantQuery({
         createdAt: row.createdAt,
       })),
     });
+    const currentEvidenceRows = observations.filter((row) =>
+      row.createdAt >= now - 7 * DAY_MS && row.createdAt <= now);
+    const focalMetricRow = currentEvidenceRows.find((row) =>
+      row.observation.hasEvidence && !row.observation.brand_mentioned)
+      ?? currentEvidenceRows.find((row) => row.observation.hasEvidence);
     const recentMetricRows = observations
       .filter((row) => row.observation.hasEvidence && row.observation.brand_mentioned)
       .slice(0, 5);
-    const recentScanRows = await Promise.all(recentMetricRows.map((row) => ctx.db.get(row.scanId)));
+    const [focalScan, recentScanRows] = await Promise.all([
+      focalMetricRow ? ctx.db.get(focalMetricRow.scanId) : Promise.resolve(null),
+      Promise.all(recentMetricRows.map((row) => ctx.db.get(row.scanId))),
+    ]);
+    const focalAnswer = focalScan ? {
+      id: focalScan.publicId,
+      platform: focalScan.platform === 'chatgpt' ? 'ChatGPT' : focalScan.platform.charAt(0).toUpperCase() + focalScan.platform.slice(1),
+      prompt: focalScan.prompt,
+      responseExcerpt: focalScan.response.length > 720
+        ? `${focalScan.response.slice(0, 717).trimEnd()}…`
+        : focalScan.response,
+      brandMentioned: focalScan.brandMentioned,
+      citationCount: focalScan.citations.filter((citation) => citation.provenance === 'provider_citation').length,
+      providerModel: focalScan.providerModel,
+      sampleId: focalScan.sampleId ?? null,
+      createdAt: new Date(focalScan.createdAt).toISOString(),
+    } : null;
     const recentMentions = recentScanRows.flatMap((row) => row ? [{
       id: row.publicId,
       platform: row.platform === 'chatgpt' ? 'ChatGPT' : row.platform.charAt(0).toUpperCase() + row.platform.slice(1),
@@ -198,6 +230,7 @@ export const summary = tenantQuery({
         pagesNeedingOptimization: contentTruncated ? null : content.filter((row) => row.aeloScore < 60).length,
       },
       recentMentions,
+      focalAnswer,
       visibilityMetrics: measurement.visibilityMetrics,
       topThreads: threads.filter((row) => row.opportunityScore >= 50).slice(0, 3).map((row) => ({
         id: row.publicId,

@@ -162,12 +162,12 @@ export function Header({ title, description }: HeaderProps) {
 
     return (
         <header className="border-b border-[var(--border-default)] bg-[var(--bg-base)]">
-            <div className="mx-auto flex min-h-24 max-w-[1440px] items-center justify-between gap-5 px-5 py-5 sm:px-8 lg:px-10">
+            <div className="mx-auto flex min-h-[84px] max-w-[1480px] items-center justify-between gap-5 px-5 py-4 sm:px-8 lg:px-10">
                 {/* Title */}
                 <div className="flex min-w-0 items-center gap-2.5">
                     <div className="min-w-0">
-                    <p className="mb-1 font-mono text-[10px] uppercase tracking-[0.18em] text-[var(--text-tertiary)]">Aelo / Workspace</p>
-                    <h1 className="text-2xl font-medium tracking-[-0.035em] text-[var(--text-primary)] leading-tight sm:text-[28px]">
+                    <p className="mb-1 font-mono text-[9px] uppercase tracking-[0.18em] text-[var(--text-tertiary)]">Aelo / Workspace brief</p>
+                    <h1 className="text-xl font-medium tracking-[-0.035em] text-[var(--text-primary)] leading-tight sm:text-2xl">
                         {title}
                     </h1>
                     {description && (

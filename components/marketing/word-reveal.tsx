@@ -52,8 +52,8 @@ export function WordReveal({ children, className }: WordRevealProps) {
                     className={cn(
                         "inline-block transition-all duration-700 ease-[cubic-bezier(0.32,0.72,0,1)]",
                         index < visibleWords
-                            ? "translate-y-0 text-[#111936] opacity-100"
-                            : "translate-y-2 text-[#111936] opacity-25",
+                            ? "translate-y-0 text-current opacity-100"
+                            : "translate-y-2 text-current opacity-25",
                     )}
                 >
                     {word}

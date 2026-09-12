@@ -12,49 +12,47 @@
   --font-mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
 
   /* ── BACKGROUNDS (Layered Depth, Sage keeps depth minimal) ── */
-  --bg-base:          #171A1B;
-  --bg-surface:       #1B1F20;
-  --bg-raised:        #202425;
-  --bg-hover:         #282D2E;
-  --bg-active:        #303637;
-  --bg-evidence:      #FDFDFA;
-  --text-evidence:    #202627;
-  --border-evidence:  #D8DEDA;
+  --bg-base:          #131717;
+  --bg-surface:       #181D1D;
+  --bg-raised:        #202626;
+  --bg-hover:         #293130;
+  --bg-active:        #323B3A;
+  --bg-evidence:      #F3F1E9;
+  --text-evidence:    #1D2523;
+  --border-evidence:  #D2D7CF;
 
   /* ── BORDERS ── */
-  --border-default:   #353A3C;
-  --border-subtle:    rgba(244, 245, 242, 0.08);
-  --border-active:    #596264;
+  --border-default:   #343C3B;
+  --border-subtle:    rgba(239, 242, 236, 0.08);
+  --border-active:    #62706D;
 
   /* ── TEXT ── */
-  --text-primary:     #F4F5F2;
-  --text-secondary:   #A0A9AA;
-  --text-tertiary:    #7D8788;
-  --text-ghost:       #5F696A;
-  --text-on-accent:   #202627;
+  --text-primary:     #EFF2EC;
+  --text-secondary:   #A4AEAA;
+  --text-tertiary:    #7C8985;
+  --text-ghost:       #5B6864;
+  --text-on-accent:   #17201F;
 
-  /* ── ACCENT: single high-signal color (Sage discipline)
-        A cool amber-ivory ("beacon"), reads as truth/measurement,
-        distinct from the indigo everyone else uses in this category. ── */
-  --accent-base:      #B9CEF0;
-  --accent-muted:     rgba(185, 206, 240, 0.10);
-  --accent-glow:      rgba(185, 206, 240, 0.16);
-  --accent-hover:     #CAD9F1;
-  --accent-strong:    #DCE6F5;
+  /* ── ACCENT: instrument blue, reserved for measured evidence and action ── */
+  --accent-base:      #A8CBE0;
+  --accent-muted:     rgba(168, 203, 224, 0.11);
+  --accent-glow:      rgba(168, 203, 224, 0.16);
+  --accent-hover:     #BDD9E8;
+  --accent-strong:    #D4E6EF;
 
   /* ── SEMANTIC COLORS ── */
-  --data-green:       #22C55E;
-  --data-green-muted: rgba(34, 197, 94, 0.1);
-  --data-red:         #EF4444;
-  --data-red-muted:   rgba(239, 68, 68, 0.1);
-  --data-teal:        #14B8A6;
-  --data-teal-muted:  rgba(20, 184, 166, 0.1);
-  --data-amber:       #F59E0B;
-  --data-amber-muted: rgba(245, 158, 11, 0.1);
-  --data-violet:      #8B5CF6;
-  --data-violet-muted:rgba(139, 92, 246, 0.1);
-  --data-cyan:        #06B6D4;
-  --data-cyan-muted:  rgba(6, 182, 212, 0.1);
+  --data-green:       #7DB89D;
+  --data-green-muted: rgba(125, 184, 157, 0.11);
+  --data-red:         #D98370;
+  --data-red-muted:   rgba(217, 131, 112, 0.11);
+  --data-teal:        #72B4AA;
+  --data-teal-muted:  rgba(114, 180, 170, 0.11);
+  --data-amber:       #D7B56D;
+  --data-amber-muted: rgba(215, 181, 109, 0.11);
+  --data-violet:      #AA94D6;
+  --data-violet-muted:rgba(170, 148, 214, 0.11);
+  --data-cyan:        #71BFD0;
+  --data-cyan-muted:  rgba(113, 191, 208, 0.11);
 
   /* ── RADIUS ── */
   --radius-sm:        4px;
@@ -72,27 +70,27 @@
 
 html[data-theme="light"] {
   color-scheme: light;
-  --bg-base: #F0F1ED;
-  --bg-surface: #F7F8F4;
-  --bg-raised: #E5E8E2;
-  --bg-hover: #DDE1DB;
-  --bg-active: #D2D7D0;
-  --bg-evidence: #FDFDFA;
-  --text-evidence: #202627;
-  --border-evidence: #D8DEDA;
-  --border-default: #C5CBC5;
-  --border-subtle: rgba(32, 38, 39, 0.09);
-  --border-active: #8D9995;
-  --text-primary: #202627;
-  --text-secondary: #5F6B6C;
-  --text-tertiary: #667273;
-  --text-ghost: #7A8585;
-  --text-on-accent: #FDFDFA;
-  --accent-base: #526D95;
-  --accent-muted: rgba(82, 109, 149, 0.10);
-  --accent-glow: rgba(82, 109, 149, 0.14);
-  --accent-hover: #405B82;
-  --accent-strong: #324C74;
+  --bg-base: #E9ECE7;
+  --bg-surface: #F3F4EF;
+  --bg-raised: #DDE2DC;
+  --bg-hover: #D4DAD3;
+  --bg-active: #C9D0C8;
+  --bg-evidence: #FBFAF5;
+  --text-evidence: #1D2523;
+  --border-evidence: #D2D7CF;
+  --border-default: #BBC4BC;
+  --border-subtle: rgba(29, 37, 35, 0.09);
+  --border-active: #7E8D88;
+  --text-primary: #1D2523;
+  --text-secondary: #53615D;
+  --text-tertiary: #65736F;
+  --text-ghost: #7A8783;
+  --text-on-accent: #F8FAF5;
+  --accent-base: #416A88;
+  --accent-muted: rgba(65, 106, 136, 0.10);
+  --accent-glow: rgba(65, 106, 136, 0.14);
+  --accent-hover: #315873;
+  --accent-strong: #24465E;
   --shadow-sm: 0 1px 2px rgba(32, 38, 39, 0.06);
   --shadow-md: 0 2px 8px rgba(32, 38, 39, 0.06);
   --shadow-lg: 0 12px 32px rgba(32, 38, 39, 0.10);
@@ -164,8 +162,8 @@ code, pre {
   color: var(--text-primary);
 }
 html[data-theme="light"] .aelo-dashboard {
-  background-image: linear-gradient(rgba(32, 38, 39, 0.022) 1px, transparent 1px);
-  background-size: 100% 32px;
+  background-image: linear-gradient(rgba(29, 37, 35, 0.018) 1px, transparent 1px);
+  background-size: 100% 36px;
 }
 .aelo-dashboard button:active,
 .aelo-dashboard a[role="button"]:active { transform: scale(0.98); }
@@ -193,7 +191,7 @@ html[data-theme="light"] .aelo-dashboard {
 }
 
 .marketing-site :focus-visible {
-  outline: 3px solid #6d63f7;
+  outline: 3px solid #a8cbe0;
   outline-offset: 3px;
 }
 
@@ -211,6 +209,55 @@ html[data-theme="light"] .aelo-dashboard {
 .marketing-site button:active,
 .marketing-site a:active {
   transform: scale(0.98);
+}
+
+@keyframes aelo-answer-arrive {
+  from { opacity: 0; transform: translate3d(0, 14px, 0) rotate(0.25deg); }
+  to { opacity: 1; transform: translate3d(0, 0, 0) rotate(0); }
+}
+
+@keyframes aelo-source-resolve {
+  from { opacity: 0.35; transform: scaleX(0.08); }
+  to { opacity: 1; transform: scaleX(1); }
+}
+
+@keyframes aelo-evidence-breathe {
+  0%, 100% { transform: translate3d(0, 0, 0); }
+  50% { transform: translate3d(5px, -5px, 0); }
+}
+
+.aelo-evidence-answer {
+  animation: aelo-answer-arrive 360ms cubic-bezier(0.23, 1, 0.32, 1) both;
+}
+
+.aelo-evidence-source-line {
+  animation: aelo-source-resolve 700ms cubic-bezier(0.23, 1, 0.32, 1) 110ms both;
+}
+
+.aelo-evidence-echo {
+  position: absolute;
+  inset-inline: 16px;
+  border: 1px solid #BBC4BC;
+  background: #DDE2DC;
+  pointer-events: none;
+}
+
+.aelo-evidence-echo-back {
+  inset-block: 24px auto;
+  height: 260px;
+  transform: translate3d(16px, 12px, 0);
+  animation: aelo-evidence-breathe 9s cubic-bezier(0.77, 0, 0.175, 1) infinite;
+}
+
+.aelo-evidence-echo-mid {
+  inset-block: 12px auto;
+  height: 280px;
+  transform: translate3d(8px, 6px, 0);
+  background: #E5E8E2;
+}
+
+.aelo-sample-button[aria-pressed="true"] {
+  color: #1D2523;
 }
 
 /* ========================================

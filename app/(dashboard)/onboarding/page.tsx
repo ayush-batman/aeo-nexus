@@ -8,7 +8,6 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import {
-    Zap,
     ArrowRight,
     ArrowLeft,
     Building,
@@ -16,9 +15,6 @@ import {
     Search,
     CheckCircle,
     Loader2,
-    TrendingUp,
-    MessageSquare,
-    FileText,
     Sparkles,
 } from "lucide-react";
 
@@ -246,32 +242,23 @@ export default function OnboardingPage() {
     }
 
     return (
-        <div className="min-h-screen bg-[var(--bg-base)] flex items-center justify-center p-6">
-            <div className="w-full max-w-2xl">
+        <div className="min-h-screen bg-[var(--bg-base)] px-5 py-10 sm:px-8 lg:px-16 lg:py-14">
+            <div className="mx-auto w-full max-w-4xl">
                 {/* Progress */}
-                <div className="flex items-center justify-center gap-1 sm:gap-2 mb-8">
-                    {steps.map((step, i) => (
-                        <div key={step.id} className="flex items-center">
+                <div className="mb-10 grid grid-cols-5 border-y border-[var(--border-default)]" aria-label="Onboarding progress">
+                    {steps.map((step) => (
+                        <div key={step.id} className={`relative min-w-0 border-r border-[var(--border-subtle)] px-2 py-4 last:border-r-0 sm:px-4 ${currentStep === step.id ? "bg-[var(--bg-raised)]" : ""}`}>
                             <div
-                                className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium transition-all ${currentStep > step.id
-                                    ? "bg-[var(--data-green)] text-white"
-                                    : currentStep === step.id
-                                        ? "bg-[var(--accent-base)] text-white"
-                                        : "bg-[var(--bg-raised)] text-[var(--text-ghost)]"
-                                    }`}
+                                className={`font-mono text-xs ${currentStep >= step.id ? "text-[var(--accent-base)]" : "text-[var(--text-ghost)]"}`}
                             >
                                 {currentStep > step.id ? (
-                                    <CheckCircle className="w-4 h-4" />
+                                    <CheckCircle aria-label={`${step.title} complete`} className="h-4 w-4" />
                                 ) : (
-                                    step.id
+                                    `0${step.id}`
                                 )}
                             </div>
-                            {i < steps.length - 1 && (
-                                <div
-                                    className={`w-5 sm:w-12 h-0.5 mx-1 ${currentStep > step.id ? "bg-[var(--data-green)]" : "bg-[var(--bg-raised)]"
-                                        }`}
-                                />
-                            )}
+                            <p className={`mt-2 truncate text-[10px] sm:text-xs ${currentStep === step.id ? "text-[var(--text-primary)]" : "text-[var(--text-tertiary)]"}`}>{step.title}</p>
+                            {currentStep === step.id ? <span aria-hidden="true" className="absolute inset-x-0 bottom-0 h-0.5 bg-[var(--accent-base)]" /> : null}
                         </div>
                     ))}
                 </div>
@@ -285,36 +272,20 @@ export default function OnboardingPage() {
                 {/* Step 1: Welcome */}
                 {currentStep === 1 && (
                     <Card className="border-[var(--border-default)] bg-[var(--bg-surface)]">
-                        <CardContent className="p-8 text-center">
-                            <div className="w-16 h-16 rounded-2xl bg-[var(--accent-muted)] flex items-center justify-center mx-auto mb-6">
-                                <Zap className="w-8 h-8 text-white" />
-                            </div>
-                            <h1 className="text-3xl font-bold text-[var(--text-primary)] mb-4">
-                                Welcome to Aelo!
-                            </h1>
-                            <p className="text-lg text-[var(--text-secondary)] mb-8 max-w-md mx-auto">
-                                Set up your brand and choose buyer prompts. Your first scan collects repeated answers and may take several minutes.
-                            </p>
-
-                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
-                                <div className="p-4 rounded-lg bg-[var(--bg-raised)]">
-                                    <TrendingUp className="w-6 h-6 text-[var(--accent-base)] mx-auto mb-2" />
-                                    <p className="text-sm text-[var(--text-secondary)]">Track AI Visibility</p>
-                                </div>
-                                <div className="p-4 rounded-lg bg-[var(--bg-raised)]">
-                                    <MessageSquare className="w-6 h-6 text-[var(--accent-base)] mx-auto mb-2" />
-                                    <p className="text-sm text-[var(--text-secondary)]">Discover Forums</p>
-                                </div>
-                                <div className="p-4 rounded-lg bg-[var(--bg-raised)]">
-                                    <FileText className="w-6 h-6 text-[var(--accent-base)] mx-auto mb-2" />
-                                    <p className="text-sm text-[var(--text-secondary)]">Optimize Content</p>
-                                </div>
-                            </div>
-
-                            <Button size="lg" onClick={() => setCurrentStep(2)}>
-                                Get Started
+                        <CardContent className="grid gap-10 p-6 sm:p-8 lg:grid-cols-[.8fr_1.2fr] lg:p-10">
+                            <div>
+                                <p className="font-mono text-xs uppercase tracking-widest text-[var(--accent-base)]">Your first useful result</p>
+                                <h1 className="mt-4 text-4xl font-medium tracking-tight text-[var(--text-primary)] sm:text-5xl">Read what AI says when a buyer asks about your category.</h1>
+                                <p className="mt-5 text-base leading-relaxed text-[var(--text-secondary)]">Add the brand, review three to five editable buyer questions, and let Aelo collect repeated answers. A complete packet can take several minutes.</p>
+                                <Button className="mt-8" size="lg" onClick={() => setCurrentStep(2)}>
+                                Add my brand
                                 <ArrowRight className="w-4 h-4 ml-2" />
-                            </Button>
+                                </Button>
+                            </div>
+                            <div className="bg-[var(--bg-evidence)] p-6 text-[var(--text-evidence)] shadow-[var(--shadow-md)]">
+                                <p className="border-b border-[var(--border-evidence)] pb-4 font-mono text-xs uppercase tracking-widest text-[#65736f]">What the packet keeps</p>
+                                <div className="mt-6 space-y-5">{[["01", "Repeated answers", "Four samples per available, plan-approved engine."], ["02", "Evidence and failures", "Returned citations remain attached; failed samples stay failed."], ["03", "One investigation", "A prompt or source gap with the reason it was ranked."]].map(([number, title, copy]) => <div key={number} className="grid grid-cols-[36px_1fr] gap-3"><span className="font-mono text-xs text-[#416a88]">{number}</span><div><p className="font-semibold">{title}</p><p className="mt-1 text-sm leading-relaxed text-[#53615d]">{copy}</p></div></div>)}</div>
+                            </div>
                         </CardContent>
                     </Card>
                 )}
@@ -328,15 +299,15 @@ export default function OnboardingPage() {
                                     <Building className="w-5 h-5 text-[var(--accent-base)]" />
                                 </div>
                                 <div>
-                                    <h2 className="text-xl font-semibold text-[var(--text-primary)]">Add Your Brand</h2>
-                                    <p className="text-sm text-[var(--text-secondary)]">Tell us about your brand to start tracking</p>
+                                    <h2 className="text-xl font-semibold text-[var(--text-primary)]">Add your brand</h2>
+                                    <p className="text-sm text-[var(--text-secondary)]">This identity is used for exact mention matching.</p>
                                 </div>
                             </div>
 
                             <div className="space-y-4">
                                 <div>
                                     <label htmlFor="onboarding-brand-name" className="block text-sm font-medium text-[var(--text-secondary)] mb-2">
-                                        Brand/Company Name *
+                                    Brand or company name *
                                     </label>
                                     <Input
                                         id="onboarding-brand-name"
@@ -525,26 +496,16 @@ export default function OnboardingPage() {
                             <div className="w-16 h-16 rounded-full bg-[var(--data-green-muted)] flex items-center justify-center mx-auto mb-6">
                                 <CheckCircle className="w-8 h-8 text-[var(--data-green)]" />
                             </div>
-                            <h2 className="text-2xl font-bold text-[var(--text-primary)] mb-4">
-                                You&apos;re All Set!
-                            </h2>
-                            <p className="text-[var(--text-secondary)] mb-8 max-w-md mx-auto">
-                                Your brand &quot;{brandName}&quot; is saved. Open the dashboard to review completed scans or start your first measurement.
-                            </p>
+                                <h2 className="text-2xl font-semibold text-[var(--text-primary)] mb-4">
+                                    Your workspace is ready.
+                                </h2>
+                                <p className="text-[var(--text-secondary)] mb-8 max-w-md mx-auto">
+                                    &quot;{brandName}&quot; is saved. Open Overview to inspect the packet you just created, or Prompts &amp; Scans to start a new measurement.
+                                </p>
 
-                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8 text-left">
-                                <div className="p-4 rounded-lg bg-[var(--bg-raised)]">
-                                    <h3 className="font-medium text-[var(--text-primary)] mb-1">LLM Tracker</h3>
-                                    <p className="text-xs text-[var(--text-ghost)]">Monitor brand mentions across AI platforms</p>
-                                </div>
-                                <div className="p-4 rounded-lg bg-[var(--bg-raised)]">
-                                    <h3 className="font-medium text-[var(--text-primary)] mb-1">Forum Hub</h3>
-                                    <p className="text-xs text-[var(--text-ghost)]">Discover and engage with relevant discussions</p>
-                                </div>
-                                <div className="p-4 rounded-lg bg-[var(--bg-raised)]">
-                                    <h3 className="font-medium text-[var(--text-primary)] mb-1">Content Studio</h3>
-                                    <p className="text-xs text-[var(--text-ghost)]">Optimize content for AI citations</p>
-                                </div>
+                            <div className="mb-8 border-y border-[var(--border-default)] text-left">
+                                <div className="grid gap-1 border-b border-[var(--border-default)] py-4 sm:grid-cols-[160px_1fr]"><h3 className="font-medium text-[var(--text-primary)]">Overview</h3><p className="text-sm text-[var(--text-secondary)]">Read the finding, sampled answer and confidence range.</p></div>
+                                <div className="grid gap-1 py-4 sm:grid-cols-[160px_1fr]"><h3 className="font-medium text-[var(--text-primary)]">Prompts &amp; Scans</h3><p className="text-sm text-[var(--text-secondary)]">Run or schedule the next compatible measurement.</p></div>
                             </div>
 
                             <Button size="lg" onClick={completeOnboarding} disabled={loading}>

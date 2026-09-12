@@ -1,54 +1,22 @@
-import { SolutionPage } from "@/components/marketing/solution-page";
 import type { Metadata } from "next";
+import { SolutionPage } from "@/components/marketing/solution-page";
 
-export const metadata: Metadata = {
-    title: "For India-first Brands · Aelo",
-    description: "₹ pricing. Razorpay. Indian-query nuance. A public monthly India AI Visibility Index.",
-};
+export const metadata: Metadata = { title: "For India-first brands · Aelo", description: "Measure AI answers for Indian buyer questions with rupee pricing and inspectable evidence." };
 
 export default function IndiaSolution() {
-    return (
-        <SolutionPage
-            content={{
-                persona: "India-first Brands",
-                headline: "India is the world's #1 country for ChatGPT users. Own the answer.",
-                subheadline:
-                    "Aelo is built for how Indian buyers actually search the AI, Tier-2 city queries, rupee-anchored intent (\"under 20k\", \"under 5k\"), and comparison prompts against competitors that global tools have never heard of.",
-                problem: {
-                    title: "Every AEO tool is priced in dollars, tuned to US queries, and blind to your competitors.",
-                    body: "'Best CRM for Indian startups', 'Wireless earbuds under ₹5,000', 'Payment gateway that supports UPI + international cards', these are the real intent queries. Global tools have never scored a scan on them. Aelo tracks Indian competitor sets (BoAt vs Boult vs Noise, not JBL vs Sony) and prices in rupees so your CFO stops asking questions.",
-                },
-                capabilities: [
-                    {
-                        title: "Native ₹ pricing + Razorpay",
-                        body: "GST-compliant invoices. UPI, cards, NetBanking. No FX pain, no monthly conversion drift.",
-                    },
-                    {
-                        title: "Indian-query prompt library",
-                        body: "Pre-seeded with Tier-2 city intent, rupee-anchored queries, and category-specific Indian competitor sets.",
-                    },
-                    {
-                        title: "India AI Visibility Index",
-                        body: "A public monthly ranking Aelo publishes for select niches. Your brand can earn a top-10 spot, free PR that compounds.",
-                    },
-                    {
-                        title: "Reddit + Quora + regional forums",
-                        body: "Not just US Reddit. r/IndianStartups, TeamBHP, XBhP, YouTube regional creators, the sources actually influencing Indian AI answers.",
-                    },
-                ],
-                proofPoints: [
-                    "Priced from ₹4,999/mo. India-first, not India-translated.",
-                    "The only AEO tool that understands 'phones under 20k' as an intent query.",
-                    "Featured in the monthly India AI Visibility Index for eligible brands.",
-                    "Convex-backed workspaces with server-enforced organization and role checks.",
-                ],
-                tierRecommendation: {
-                    tierName: "Command",
-                    rationale:
-                        "Command gives you the full loop plus 3 workspaces, enough to track your main brand, one sub-brand, and one competitor for benchmarking.",
-                },
-                ctaCopy: "See what India is asking the AI about your category.",
-            }}
-        />
-    );
+    return <SolutionPage content={{
+        persona: "India-first brands",
+        headline: "Measure the buyer questions that make sense in your market.",
+        subheadline: "Aelo supports rupee pricing and lets teams define prompts around Indian categories, price points, cities and competitor sets without pretending region does not matter.",
+        problem: { title: "Global category prompts can miss local buying context.", body: "A question about software for an Indian startup, a product under a rupee price point, or support for UPI creates a different shortlist. The prompt and measurement region need to remain visible so the result can be interpreted honestly." },
+        capabilities: [
+            { title: "Write local buyer prompts", body: "Define the city, price band, payment need or competitor set that belongs in the actual question." },
+            { title: "Record measurement context", body: "Keep engine, provider model, region and search mode beside the result." },
+            { title: "Inspect Indian source trails", body: "See the provider-backed domains returned for the chosen category without guessing which sites matter." },
+            { title: "Pay in rupees", body: "Configured Indian checkout uses Razorpay; global checkout can use Stripe where available." },
+        ],
+        proofPoints: ["Region and mode travel with each compatible measurement cohort.", "Local and global competitors can be tracked in the same workspace-defined prompt.", "The India Index reports its own evidence and limits when data is available.", "Aelo never fills a missing provider result with a simulated answer."],
+        tierRecommendation: { tierName: "Command", rationale: "Command is intended for teams that need shared investigations and follow-up receipts. Use the free answer to inspect the evidence shape first." },
+        ctaCopy: "Ask the question your market actually asks.",
+    }} />;
 }

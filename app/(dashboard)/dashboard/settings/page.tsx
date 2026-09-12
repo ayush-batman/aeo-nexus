@@ -718,7 +718,7 @@ export default function SettingsPage() {
                                             {/* Content Alerts */}
                                             <div>
                                                 <h3 className="text-sm font-semibold text-[var(--text-secondary)] mb-3 flex items-center gap-2">
-                                                    <div className="w-2 h-2 rounded-full bg-amber-400" />
+                                                        <div className="h-2 w-2 rounded-full bg-[var(--data-amber)]" />
                                                     Content & Citation Alerts
                                                 </h3>
                                                 <div className="space-y-2">
@@ -747,7 +747,7 @@ export default function SettingsPage() {
                                             {/* Digests */}
                                             <div>
                                                 <h3 className="text-sm font-semibold text-[var(--text-secondary)] mb-3 flex items-center gap-2">
-                                                    <div className="w-2 h-2 rounded-full bg-blue-400" />
+                                                        <div className="h-2 w-2 rounded-full bg-[var(--accent-base)]" />
                                                     Reports & Digests
                                                 </h3>
                                                 <div className="space-y-2">

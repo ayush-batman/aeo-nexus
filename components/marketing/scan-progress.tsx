@@ -43,22 +43,22 @@ export function ScanProgress({ brand, prompt }: { brand: string; prompt: string 
     }, [labels.length]);
 
     return (
-        <div className="rounded-2xl border border-[#d9def0] bg-[#f7f8ff] p-6 text-[#111936]">
+        <div className="rounded-sm border border-[#adb8b0] bg-[#fbfaf5] p-6 text-[#1d2523]">
             <style>{`
               @keyframes aelo-cell { 0%,100% { opacity: .12 } 50% { opacity: 1 } }
               @keyframes aelo-spin { to { transform: rotate(360deg) } }
             `}</style>
 
             <div className="flex items-baseline gap-2 mb-5">
-                <span className="flex-shrink-0 text-base font-semibold text-[#111936]">
+                <span className="flex-shrink-0 text-base font-semibold text-[#1d2523]">
                     {brand.trim() || "Your brand"}
                 </span>
-                <span className="truncate text-sm text-[#77819d]">
+                <span className="truncate text-sm text-[#65736f]">
                     &middot; &ldquo;{prompt}&rdquo;
                 </span>
             </div>
 
-            <div className="mb-4 flex items-center gap-4 border-b border-[#dfe3f2] pb-5">
+            <div className="mb-4 flex items-center gap-4 border-b border-[#d2d7cf] pb-5">
                 <div className="grid grid-cols-5 gap-[3px]">
                     {Array.from({ length: 25 }).map((_, i) => {
                         const r = Math.floor(i / 5), c = i % 5;
@@ -67,7 +67,7 @@ export function ScanProgress({ brand, prompt }: { brand: string; prompt: string 
                                 key={i}
                                 style={{
                                     width: 7, height: 7, borderRadius: 1.5,
-                                    background: "#6D63F7",
+                                    background: "#416A88",
                                     animation: "aelo-cell 1.4s ease-in-out infinite",
                                     animationDelay: `${(r + c) * 90}ms`,
                                 }}
@@ -76,8 +76,8 @@ export function ScanProgress({ brand, prompt }: { brand: string; prompt: string 
                     })}
                 </div>
                 <div className="flex flex-col gap-0.5">
-                    <div className="text-sm font-semibold text-[#111936]">Scanning Gemini</div>
-                    <div className="text-xs tabular-nums text-[#77819d]">
+                    <div className="text-sm font-semibold text-[#1d2523]">Scanning Gemini</div>
+                    <div className="text-xs tabular-nums text-[#65736f]">
                         {elapsed.toFixed(1)}s elapsed
                     </div>
                 </div>
@@ -92,29 +92,29 @@ export function ScanProgress({ brand, prompt }: { brand: string; prompt: string 
                             <span className="w-4 h-4 flex items-center justify-center flex-shrink-0">
                                 {done ? (
                                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                                        <circle cx="12" cy="12" r="9" stroke="#148C78" strokeWidth="1.5" />
-                                        <path d="M8.5 12.5l2.4 2.4 4.6-5" stroke="#148C78" strokeWidth="1.6" fill="none" strokeLinecap="round" strokeLinejoin="round" />
+                                        <circle cx="12" cy="12" r="9" stroke="#527D69" strokeWidth="1.5" />
+                                        <path d="M8.5 12.5l2.4 2.4 4.6-5" stroke="#527D69" strokeWidth="1.6" fill="none" strokeLinecap="round" strokeLinejoin="round" />
                                     </svg>
                                 ) : isActive ? (
                                     <span
                                         style={{
                                             width: 16, height: 16, borderRadius: "50%",
-                                            border: "1.8px solid #D9DEF0",
-                                            borderTopColor: "#6D63F7",
+                                            border: "1.8px solid #D2D7CF",
+                                            borderTopColor: "#416A88",
                                             animation: "aelo-spin .7s linear infinite",
                                         }}
                                     />
                                 ) : (
-                                    <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#B7BED1" }} />
+                                    <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#A4AEAA" }} />
                                 )}
                             </span>
                             <span
                                 className={
                                     done
-                                        ? "text-sm text-[#66708b]"
+                                        ? "text-sm text-[#65736f]"
                                         : isActive
-                                            ? "text-sm font-semibold text-[#111936]"
-                                            : "text-sm text-[#9aa2b7]"
+                                            ? "text-sm font-semibold text-[#1d2523]"
+                                            : "text-sm text-[#87928e]"
                                 }
                             >
                                 {label}

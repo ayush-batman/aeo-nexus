@@ -1,200 +1,137 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ArrowRight, Check, CircleDot, Link2, Search, ShieldCheck, Sparkles } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 
+import { EvidenceSequence } from "@/components/marketing/evidence-sequence";
 import { FreeScanWidget } from "@/components/marketing/free-scan-widget";
 import { WordReveal } from "@/components/marketing/word-reveal";
 
 export const metadata: Metadata = {
-    title: "Aelo · See what AI tells your buyers",
-    description: "Run repeated AI visibility scans with confidence, sample counts and real source evidence. See what ChatGPT, Gemini, Claude and Perplexity say about your brand.",
+    title: "Aelo · Know what AI says about your brand",
+    description: "Measure how ChatGPT, Gemini, Claude and Perplexity answer about your brand. Inspect repeated samples, confidence ranges and real provider citations.",
 };
 
-const ENGINE_ROWS = [
-    { name: "ChatGPT", result: "Mentioned in 3 of 4", color: "bg-[#8de6d1]", width: "w-3/4" },
-    { name: "Gemini", result: "Mentioned in 2 of 4", color: "bg-[#f6e76b]", width: "w-1/2" },
-    { name: "Claude", result: "Mentioned in 1 of 4", color: "bg-[#ff9d8f]", width: "w-1/4" },
-    { name: "Perplexity", result: "Mentioned in 3 of 4", color: "bg-[#aaa3ff]", width: "w-3/4" },
-];
+const ENGINES = ["ChatGPT", "Gemini", "Claude", "Perplexity"];
 
 const FAQ = [
-    ["Is this another SEO score?", "No. Aelo asks AI assistants real buyer questions, keeps each answer and reports how often your brand appeared. The score is a summary of those observed samples."],
-    ["Why run the same question more than once?", "AI answers vary. Repeating a prompt shows whether a mention is dependable or a lucky answer. Every result includes its sample count and confidence."],
-    ["Do you count every URL in an answer as a citation?", "No. Aelo separates provider supplied citations from links that only appear inside generated text. The distinction stays visible in the receipt."],
-    ["What happens when an AI provider fails?", "The sample is marked failed and the result becomes partial or unavailable. Aelo does not replace missing evidence with a zero or invented response."],
-    ["Which assistants can Aelo measure?", "Aelo is built for ChatGPT, Gemini, Claude and Perplexity. Availability is reported on every scan because access can differ by plan and provider status."],
+    ["Is this another SEO score?", "No. Aelo asks AI assistants real buyer questions, keeps each answer and reports how often your brand appeared. The score only summarizes those observed samples."],
+    ["Why ask the same question more than once?", "AI answers vary. Repeating a prompt shows whether a mention is dependable or a lucky answer. Every result includes its sample count and confidence range."],
+    ["Does every URL count as a citation?", "No. Aelo separates citations supplied by the provider from links that appear only inside generated text. You can inspect that distinction in the receipt."],
+    ["What happens when a provider fails?", "The sample stays failed and the result becomes partial or unavailable. Aelo does not turn missing evidence into a zero or an invented response."],
+    ["Which assistants can Aelo measure?", "Aelo is built for ChatGPT, Gemini, Claude and Perplexity. Each receipt shows which engines responded because access can differ by plan and provider status."],
     ["Can my team act on the findings?", "Yes. Aelo groups missed prompts, source gaps and competitor mentions into a ranked action queue, then compares the follow up against compatible samples."],
 ];
 
 export default function LandingPage() {
     return (
-        <div className="overflow-hidden bg-[#f7f8ff] text-[#111936]">
-            <section className="px-4 pb-20 pt-16 md:px-6 md:pb-24 md:pt-24">
-                <div className="mx-auto grid max-w-6xl items-center gap-12 lg:grid-cols-[1.08fr_0.92fr] lg:gap-16">
-                    <div>
-                        <div className="mb-6 flex flex-wrap gap-2">
-                            {["ChatGPT", "Gemini", "Claude", "Perplexity"].map((engine, index) => (
-                                <span key={engine} className={index === 0 ? "rounded-full bg-[#dff7f1] px-3 py-2 text-xs font-semibold text-[#17695d]" : index === 1 ? "rounded-full bg-[#fff5c8] px-3 py-2 text-xs font-semibold text-[#6e6119]" : index === 2 ? "rounded-full bg-[#fff0ed] px-3 py-2 text-xs font-semibold text-[#873c34]" : "rounded-full bg-[#eeeaff] px-3 py-2 text-xs font-semibold text-[#5048a7]"}>
-                                    {engine}
-                                </span>
-                            ))}
-                        </div>
-
-                        <h1 className="max-w-[680px] bg-gradient-to-r from-[#111936] to-[#615f8c] bg-clip-text text-5xl font-semibold tracking-tight text-transparent md:text-7xl">
-                            See the answer before your buyer does.
-                        </h1>
-                        <p className="mt-6 max-w-[680px] text-lg leading-relaxed text-[#58627d]">
-                            Aelo asks AI assistants the questions that decide your shortlist. You get repeated samples, confidence and every real source, followed by one clear move to improve.
-                        </p>
-
-                        <div className="mt-8 grid gap-3 text-sm text-[#303b5c] sm:grid-cols-2">
-                            <p className="flex items-center gap-2"><Check className="size-4 text-[#148c78]" /> Every answer stays inspectable</p>
-                            <p className="flex items-center gap-2"><Check className="size-4 text-[#148c78]" /> Failed scans stay failed</p>
-                            <p className="flex items-center gap-2"><Check className="size-4 text-[#148c78]" /> Confidence includes sample count</p>
-                            <p className="flex items-center gap-2"><Check className="size-4 text-[#148c78]" /> Source URLs stay attached</p>
-                        </div>
-                    </div>
-
-                    <div id="scan" className="scroll-mt-28">
-                        <FreeScanWidget />
-                        <p className="mt-4 text-center text-xs text-[#77819d]">The free scan uses Gemini. Your receipt opens in a shareable page.</p>
-                    </div>
-                </div>
-            </section>
-
-            <section className="px-4 pb-20 md:px-6 md:pb-24">
-                <div className="mx-auto max-w-6xl overflow-hidden rounded-3xl bg-[#111936] p-4 text-white shadow-[0_36px_100px_rgba(17,25,54,0.24)] md:p-8">
-                    <div className="mb-6 flex flex-col gap-3 px-2 pt-2 sm:flex-row sm:items-center sm:justify-between">
-                        <div>
-                            <p className="text-xs font-semibold uppercase tracking-widest text-[#8de6d1]">Illustrative evidence view</p>
-                            <h2 className="mt-2 text-2xl font-semibold md:text-3xl">One buyer question. Sixteen observed answers.</h2>
-                        </div>
-                        <span className="w-fit rounded-full bg-white/10 px-3 py-2 text-xs text-white/65">Example structure, not a customer result</span>
-                    </div>
-
-                    <div className="grid gap-3 lg:grid-cols-[1.2fr_0.8fr]">
-                        <div className="rounded-2xl bg-white p-4 text-[#111936] md:p-6">
-                            <div className="flex items-start gap-3 border-b border-[#dfe3f2] pb-5">
-                                <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-[#eeeaff]"><Search className="size-5 text-[#5d53e8]" /></div>
-                                <div><p className="text-xs font-semibold uppercase tracking-widest text-[#77819d]">Buyer prompt</p><p className="mt-1 text-lg font-semibold">Which project wiki is best for an engineering team?</p></div>
-                            </div>
-                            <div className="mt-5 space-y-5">
-                                {ENGINE_ROWS.map((engine) => (
-                                    <div key={engine.name} className="grid gap-2 sm:grid-cols-[108px_1fr_132px] sm:items-center">
-                                        <p className="text-sm font-semibold">{engine.name}</p>
-                                        <div className="h-3 overflow-hidden rounded-full bg-[#eef0f7]"><div className={`h-full rounded-full ${engine.color} ${engine.width}`} /></div>
-                                        <p className="text-xs text-[#66708b] sm:text-right">{engine.result}</p>
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
-
-                        <aside className="grid gap-3 sm:grid-cols-2 lg:grid-cols-1">
-                            <div className="rounded-2xl bg-[#8de6d1] p-5 text-[#103f3a]">
-                                <p className="text-xs font-semibold uppercase tracking-widest">Visibility receipt</p>
-                                <div className="mt-6 flex items-end gap-3"><span className="text-6xl font-semibold tracking-tight">9</span><span className="pb-2 text-sm">mentions from<br />16 samples</span></div>
-                                <p className="mt-5 rounded-xl bg-white/40 px-3 py-2 text-sm font-semibold">Confidence: moderate</p>
-                            </div>
-                            <div className="rounded-2xl bg-[#f6e76b] p-5 text-[#4c4512]">
-                                <p className="text-xs font-semibold uppercase tracking-widest">Next useful move</p>
-                                <p className="mt-4 text-lg font-semibold">Earn a comparison page mention from the sources these assistants already trust.</p>
-                                <div className="mt-5 flex items-center gap-2 text-sm"><Link2 className="size-4" /> 7 provider citations kept</div>
-                            </div>
-                        </aside>
-                    </div>
-                </div>
-            </section>
-
-            <section className="bg-[#dff7f1] px-4 py-24 md:px-6 md:py-32">
+        <div className="overflow-hidden bg-[#e9ece7] text-[#1d2523]">
+            <section className="bg-[#131717] px-4 pb-20 pt-20 text-[#eff2ec] md:px-6 md:pb-24 md:pt-24">
                 <div className="mx-auto max-w-6xl">
-                    <p className="mb-8 text-sm font-semibold uppercase tracking-widest text-[#147667]">Why repeated answers matter</p>
-                    <WordReveal className="max-w-[680px] text-4xl font-semibold leading-tight tracking-tight md:text-6xl">
+                    <div className="mb-12 flex flex-wrap items-center justify-between gap-4 border-b border-[#343c3b] pb-4 font-mono text-xs uppercase tracking-widest text-[#7c8985]">
+                        <span>AI visibility, with receipts</span>
+                        <span className="flex flex-wrap gap-x-5 gap-y-2">
+                            {ENGINES.map((engine, index) => <span key={engine}><span className="mr-2 text-[#a8cbe0]">0{index + 1}</span>{engine}</span>)}
+                        </span>
+                    </div>
+
+                    <div className="grid items-center gap-16 lg:grid-cols-[minmax(0,1.02fr)_minmax(420px,.98fr)]">
+                        <div>
+                            <h1 className="max-w-[680px] bg-gradient-to-r from-white to-[#9b9b9b] bg-clip-text text-5xl font-semibold tracking-tight text-transparent md:text-7xl">
+                                Don’t guess how AI describes your brand.
+                            </h1>
+                            <p className="mt-6 max-w-[680px] text-lg leading-relaxed text-[#a4aeaa]">
+                                Ask the buyer questions that decide your shortlist. Aelo repeats them across AI assistants, then keeps every answer, source and confidence range.
+                            </p>
+                            <div className="mt-8 flex flex-wrap items-center gap-5">
+                                <Link href="#scan" className="inline-flex min-h-11 items-center gap-2 rounded-sm bg-[#a8cbe0] px-4 py-2 text-base font-semibold text-[#17201f] transition-all duration-700 ease-[cubic-bezier(0.32,0.72,0,1)] hover:-translate-y-1 hover:bg-[#bdd9e8] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#eff2ec] focus-visible:ring-offset-4 focus-visible:ring-offset-[#131717]">
+                                    Run one real answer <ArrowRight className="size-4" />
+                                </Link>
+                                <p className="font-mono text-xs uppercase tracking-widest text-[#7c8985]">Gemini · 3 free scans each week · no card</p>
+                            </div>
+                        </div>
+
+                        <div id="scan" className="relative scroll-mt-24 lg:pl-6">
+                            <div aria-hidden="true" className="absolute inset-x-10 bottom-[-16px] top-6 border border-[#343c3b] bg-[#202626]" />
+                            <div className="relative"><FreeScanWidget /></div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section className="px-4 py-20 md:px-6 md:py-24">
+                <div className="mx-auto grid max-w-6xl gap-12 lg:grid-cols-[.72fr_1.28fr] lg:items-start">
+                    <div className="lg:sticky lg:top-28">
+                        <p className="font-mono text-xs uppercase tracking-widest text-[#65736f]">The proof, not the pitch</p>
+                        <h2 className="mt-4 max-w-md text-4xl font-semibold tracking-tight md:text-5xl">One buyer question. Sixteen answers you can open.</h2>
+                        <p className="mt-5 max-w-md text-base leading-relaxed text-[#53615d]">A summary is only useful when your team can challenge it. Every percentage leads back to the prompt, answer, model, sample and returned source evidence.</p>
+                        <Link href="/methodology" className="mt-8 inline-flex min-h-11 items-center gap-2 text-base font-semibold text-[#315873] underline decoration-[#8fb0c3] underline-offset-4 transition-all duration-700 ease-[cubic-bezier(0.32,0.72,0,1)] hover:decoration-[#315873]">Read the method <ArrowRight className="size-4" /></Link>
+                    </div>
+
+                    <EvidenceSequence />
+                </div>
+            </section>
+
+            <section className="bg-[#dbe8ee] px-4 py-24 md:px-6 md:py-32">
+                <div className="mx-auto max-w-6xl">
+                    <p className="mb-8 font-mono text-xs uppercase tracking-widest text-[#416a88]">Why repeated answers matter</p>
+                    <WordReveal className="max-w-[680px] text-4xl font-semibold leading-tight tracking-tight text-[#1d2523] md:text-6xl">
                         One answer can flatter you. Twelve answers can tell you something.
                     </WordReveal>
                 </div>
             </section>
 
-            <section className="px-4 py-24 md:px-6 md:py-32">
+            <section className="bg-[#131717] px-4 py-24 text-[#eff2ec] md:px-6 md:py-32">
                 <div className="mx-auto max-w-6xl">
-                    <div className="max-w-[680px]">
-                        <p className="text-sm font-semibold uppercase tracking-widest text-[#5d53e8]">From question to decision</p>
-                        <h2 className="mt-4 text-4xl font-semibold tracking-tight md:text-5xl">The shortest path from “Are we visible?” to “Do this next.”</h2>
-                    </div>
-
-                    <div className="mt-12 grid gap-4 lg:grid-cols-3">
-                        <article className="rounded-3xl bg-[#eeeaff] p-8">
-                            <div className="flex size-12 items-center justify-center rounded-2xl bg-[#6d63f7] text-white"><CircleDot className="size-6" /></div>
-                            <p className="mt-8 text-xs font-semibold uppercase tracking-widest text-[#5d53e8]">Measure</p>
-                            <h3 className="mt-3 text-2xl font-semibold">Ask the questions that create your shortlist.</h3>
-                            <p className="mt-4 text-base leading-relaxed text-[#58627d]">Choose editable buyer prompts. Aelo repeats them across every available assistant and keeps the raw answer.</p>
-                        </article>
-                        <article className="rounded-3xl bg-[#fff0ed] p-8">
-                            <div className="flex size-12 items-center justify-center rounded-2xl bg-[#ff806e] text-[#57251f]"><ShieldCheck className="size-6" /></div>
-                            <p className="mt-8 text-xs font-semibold uppercase tracking-widest text-[#9b463b]">Understand</p>
-                            <h3 className="mt-3 text-2xl font-semibold">Know whether the signal is dependable.</h3>
-                            <p className="mt-4 text-base leading-relaxed text-[#6e5855]">Sample counts, confidence, provider evidence and partial failures explain exactly what the number can support.</p>
-                        </article>
-                        <article className="rounded-3xl bg-[#fff5c8] p-8">
-                            <div className="flex size-12 items-center justify-center rounded-2xl bg-[#f1d935] text-[#554b0a]"><Sparkles className="size-6" /></div>
-                            <p className="mt-8 text-xs font-semibold uppercase tracking-widest text-[#746617]">Improve</p>
-                            <h3 className="mt-3 text-2xl font-semibold">Work on the gap most likely to move an answer.</h3>
-                            <p className="mt-4 text-base leading-relaxed text-[#6b643c]">See which sources already shape the category, where competitors win and which prompt deserves attention first.</p>
-                        </article>
-                    </div>
-                </div>
-            </section>
-
-            <section className="bg-[#e9efff] px-4 py-24 md:px-6 md:py-32">
-                <div className="mx-auto grid max-w-6xl gap-12 lg:grid-cols-[0.75fr_1.25fr] lg:items-start">
-                    <div className="max-w-[680px]">
-                        <p className="text-sm font-semibold uppercase tracking-widest text-[#5d53e8]">The receipt is the product</p>
-                        <h2 className="mt-4 text-4xl font-semibold tracking-tight md:text-5xl">Trust the number because you can open it.</h2>
-                        <p className="mt-5 text-lg leading-relaxed text-[#58627d]">Every summary leads back to the prompt, returned answer, engine, model, sample count and source evidence behind it.</p>
-                        <Link href="/methodology" className="mt-8 inline-flex items-center gap-2 rounded-full bg-[#111936] px-5 py-3 text-base font-semibold text-white transition-all duration-700 ease-[cubic-bezier(0.32,0.72,0,1)] hover:-translate-y-1">Read the method <ArrowRight className="size-4" /></Link>
-                    </div>
-
-                    <div className="rounded-3xl border border-[#c9d4f5] bg-white p-5 shadow-[0_24px_70px_rgba(49,55,124,0.1)] md:p-8">
-                        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[#dfe3f2] pb-5">
-                            <div><p className="text-xs font-semibold uppercase tracking-widest text-[#77819d]">Evidence ledger</p><p className="mt-1 text-lg font-semibold">Sources observed across returned samples</p></div>
-                            <span className="rounded-full bg-[#dff7f1] px-3 py-2 text-xs font-semibold text-[#17695d]">Provider evidence</span>
+                    <div className="grid gap-12 lg:grid-cols-[.7fr_1.3fr]">
+                        <div>
+                            <p className="font-mono text-xs uppercase tracking-widest text-[#a8cbe0]">From question to decision</p>
+                            <h2 className="mt-4 max-w-md text-4xl font-semibold tracking-tight md:text-5xl">Measure. Inspect. Choose one move.</h2>
                         </div>
-                        <div className="divide-y divide-[#e6e9f3]">
-                            {["g2.com/categories/knowledge-base", "zapier.com/blog/best-wiki-software", "notion.com/help/guides"].map((source, index) => (
-                                <div key={source} className="grid gap-3 py-5 sm:grid-cols-[1fr_auto] sm:items-center">
-                                    <div className="flex min-w-0 items-center gap-3"><span className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-[#eeeaff] text-sm font-semibold text-[#5d53e8]">{index + 1}</span><span className="truncate text-sm font-medium">{source}</span></div>
-                                    <span className="text-xs text-[#77819d]">Observed in {4 - index} samples</span>
-                                </div>
-                            ))}
+                        <div className="grid border-t border-[#343c3b] sm:grid-cols-3">
+                            <Step number="01" title="Ask" body="Choose the buyer questions that shape your shortlist. Edit every prompt before it runs." />
+                            <Step number="02" title="Sample" body="Repeat each question across available assistants. Keep failures visible and out of the score." />
+                            <Step number="03" title="Act" body="Find the prompt and source gap worth attention. Give your team one ranked next move." />
                         </div>
-                        <p className="mt-3 text-xs text-[#77819d]">Illustrative source layout. A live receipt displays only evidence returned by the provider.</p>
+                    </div>
+
+                    <div className="mt-24 grid gap-10 border-t border-[#343c3b] pt-12 lg:grid-cols-2">
+                        <div><p className="font-mono text-xs uppercase tracking-widest text-[#7c8985]">What you can defend</p><h3 className="mt-4 text-3xl font-semibold tracking-tight">A visibility number with its uncertainty attached.</h3><p className="mt-4 max-w-xl text-base leading-relaxed text-[#a4aeaa]">Sample count and confidence stay beside every score. Comparisons only appear when prompt, engine, model, region and method still match.</p></div>
+                        <div><p className="font-mono text-xs uppercase tracking-widest text-[#7c8985]">What you can inspect</p><h3 className="mt-4 text-3xl font-semibold tracking-tight">The sources assistants actually returned.</h3><p className="mt-4 max-w-xl text-base leading-relaxed text-[#a4aeaa]">Provider citations remain separate from links found only in generated prose. Aelo shows the difference instead of inflating the evidence.</p></div>
                     </div>
                 </div>
             </section>
 
             <section className="px-4 py-24 md:px-6 md:py-32">
-                <div className="mx-auto max-w-4xl">
-                    <div className="text-center">
-                        <p className="text-sm font-semibold uppercase tracking-widest text-[#5d53e8]">Questions worth asking</p>
-                        <h2 className="mt-4 text-4xl font-semibold tracking-tight md:text-5xl">What an honest measurement tool should explain.</h2>
+                <div className="mx-auto grid max-w-6xl gap-12 lg:grid-cols-[.65fr_1.35fr]">
+                    <div>
+                        <p className="font-mono text-xs uppercase tracking-widest text-[#416a88]">Questions worth asking</p>
+                        <h2 className="mt-4 max-w-sm text-4xl font-semibold tracking-tight md:text-5xl">What an honest tracker should explain.</h2>
                     </div>
-                    <div className="mt-12 space-y-3">
+                    <div className="border-t border-[#bbc4bc]">
                         {FAQ.map(([question, answer]) => (
-                            <details key={question} className="group rounded-2xl border border-[#d9def0] bg-white p-5 open:border-[#aaa3ff]">
-                                <summary className="flex cursor-pointer list-none items-center justify-between gap-4 text-lg font-semibold"><span>{question}</span><span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-[#eeeaff] text-[#5d53e8] transition-transform duration-700 ease-[cubic-bezier(0.32,0.72,0,1)] group-open:rotate-45">+</span></summary>
-                                <p className="max-w-3xl pt-4 text-base leading-relaxed text-[#58627d]">{answer}</p>
+                            <details key={question} className="group border-b border-[#bbc4bc] py-5">
+                                <summary className="flex min-h-11 cursor-pointer list-none items-center justify-between gap-4 text-lg font-semibold"><span>{question}</span><span className="flex size-8 shrink-0 items-center justify-center text-[#416a88] transition-all duration-700 ease-[cubic-bezier(0.32,0.72,0,1)] group-open:rotate-45">+</span></summary>
+                                <p className="max-w-3xl pb-2 pt-4 text-base leading-relaxed text-[#53615d]">{answer}</p>
                             </details>
                         ))}
                     </div>
                 </div>
             </section>
 
-            <section className="bg-[#ff9d8f] px-4 py-24 text-[#44201c] md:px-6 md:py-32">
-                <div className="mx-auto max-w-4xl text-center">
-                    <h2 className="text-4xl font-semibold tracking-tight md:text-6xl">Your buyers are already asking. See the answer.</h2>
-                    <p className="mx-auto mt-5 max-w-xl text-lg text-[#6e3932]">Run one real Gemini scan. No signup, no card and no invented result when the provider fails.</p>
-                    <Link href="#scan" className="mt-8 inline-flex items-center gap-2 rounded-full bg-[#111936] px-5 py-3 text-base font-semibold text-white transition-all duration-700 ease-[cubic-bezier(0.32,0.72,0,1)] hover:-translate-y-1">Run a real scan <ArrowRight className="size-4" /></Link>
+            <section className="bg-[#a8cbe0] px-4 py-24 text-[#17201f] md:px-6 md:py-32">
+                <div className="mx-auto flex max-w-6xl flex-col justify-between gap-10 lg:flex-row lg:items-end">
+                    <div><p className="font-mono text-xs uppercase tracking-widest text-[#315873]">One question. Real evidence.</p><h2 className="mt-4 max-w-[680px] text-4xl font-semibold tracking-tight md:text-6xl">Your buyers are already asking. Read the answer.</h2></div>
+                    <Link href="#scan" className="inline-flex min-h-11 shrink-0 items-center justify-center gap-2 rounded-sm bg-[#131717] px-4 py-2 text-base font-semibold text-[#eff2ec] transition-all duration-700 ease-[cubic-bezier(0.32,0.72,0,1)] hover:-translate-y-1 hover:bg-[#202626] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#131717] focus-visible:ring-offset-4 focus-visible:ring-offset-[#a8cbe0]">Run one real answer <ArrowRight className="size-4" /></Link>
                 </div>
             </section>
         </div>
     );
+}
+
+function Step({ number, title, body }: { number: string; title: string; body: string }) {
+    return <article className="border-b border-[#343c3b] py-8 sm:border-b-0 sm:border-r sm:px-6 sm:first:pl-0 sm:last:border-r-0 sm:last:pr-0">
+        <p className="font-mono text-xs text-[#7c8985]">{number}</p>
+        <h3 className="mt-8 text-2xl font-semibold">{title}</h3>
+        <p className="mt-4 text-sm leading-relaxed text-[#a4aeaa]">{body}</p>
+    </article>;
 }

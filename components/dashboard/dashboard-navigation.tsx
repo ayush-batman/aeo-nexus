@@ -49,7 +49,7 @@ function setDocumentTheme(theme: Theme) {
     // The selected theme still applies for this visit when storage is unavailable.
   }
   const meta = document.querySelector<HTMLMetaElement>('meta[name="theme-color"]');
-  if (meta) meta.content = theme === "dark" ? "#171A1B" : "#F0F1ED";
+  if (meta) meta.content = theme === "dark" ? "#131717" : "#E9ECE7";
 }
 
 export function DashboardNavigation({
@@ -68,7 +68,6 @@ export function DashboardNavigation({
     });
     return () => {
       window.cancelAnimationFrame(frame);
-      document.documentElement.dataset.theme = "dark";
     };
   }, []);
 
@@ -80,8 +79,8 @@ export function DashboardNavigation({
   }
 
   return (
-    <header className="sticky top-0 z-40 border-b border-[var(--border-default)] bg-[var(--bg-base)] backdrop-blur-xl">
-      <div className="mx-auto flex h-20 max-w-[1440px] items-center gap-7 px-5 sm:px-8 lg:px-10">
+    <header className="sticky top-0 z-40 border-b border-[var(--border-default)] bg-[var(--bg-base)]">
+      <div className="mx-auto flex h-[76px] max-w-[1480px] items-center gap-8 px-5 sm:px-8 lg:px-10">
         <Link
           href="/dashboard"
           aria-label="Aelo overview"
@@ -91,7 +90,7 @@ export function DashboardNavigation({
         </Link>
         <nav
           aria-label="Primary dashboard navigation"
-          className="hidden h-full items-stretch gap-7 lg:flex"
+          className="hidden h-full items-stretch gap-8 lg:flex"
         >
           {jobs.map((job) => {
             const active = job.match(pathname);

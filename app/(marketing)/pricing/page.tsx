@@ -1,116 +1,72 @@
 import type { Metadata } from "next";
-import Link from "next/link";
-import { ArrowRight, Check } from "lucide-react";
+import { Check } from "lucide-react";
 
+import { MarketingCTA, MarketingHero, MarketingSectionHeading } from "@/components/marketing/page-primitives";
 import { BreadcrumbJsonLd, SoftwareApplicationJsonLd } from "@/components/seo/structured-data";
 
 export const metadata: Metadata = {
     title: "Aelo pricing · Start with a real AI answer",
-    description: "Start with three free Gemini scans each week. Paid plans add four engine measurement, recurring scans and team workflows.",
+    description: "Start with three free Gemini scans each week. Paid plans add more engines, recurring scans and team workflows.",
 };
 
 const PLANS = [
-    {
-        name: "Free",
-        price: "₹0",
-        note: "No card",
-        summary: "See one real answer before you commit.",
-        href: "/#scan",
-        cta: "Run a real scan",
-        color: "bg-white",
-        features: ["Three Gemini scans each week", "One tracked brand", "Raw answer and public receipt", "Provider source evidence when available"],
-    },
-    {
-        name: "Radar",
-        price: "₹4,999",
-        note: "each month",
-        summary: "Watch how your brand appears across assistants.",
-        href: "/signup?plan=radar",
-        cta: "Start with Radar",
-        color: "bg-[#dff7f1]",
-        features: ["ChatGPT, Gemini, Claude and Perplexity access", "Recurring measurements", "Confidence and sample counts", "Citation and source views", "Up to two team members"],
-    },
-    {
-        name: "Command",
-        price: "₹14,999",
-        note: "each month",
-        summary: "Turn measurement gaps into assigned work.",
-        href: "/signup?plan=command",
-        cta: "Start with Command",
-        color: "bg-[#eeeaff]",
-        featured: true,
-        features: ["Everything in Radar", "Larger operating limits", "Actions and follow up receipts", "Decision reports", "Up to five team members", "Priority support"],
-    },
-    {
-        name: "Concierge",
-        price: "From ₹50,000",
-        note: "each month",
-        summary: "Add hands on strategy and delivery support.",
-        href: "/contact",
-        cta: "Talk to Aelo",
-        color: "bg-[#fff5c8]",
-        features: ["Everything in Command", "Dedicated strategy support", "Custom prompt research", "Leadership ready reporting", "Up to fifteen team members", "Security review support"],
-    },
-];
+    { name: "Free", price: "₹0", note: "No card", summary: "Inspect one real Gemini answer before committing.", href: "/#scan", cta: "Run one real answer", featured: false, features: ["Three Gemini scans each week", "One tracked brand", "Raw answer and public receipt", "Provider source evidence when returned"] },
+    { name: "Radar", price: "₹4,999", note: "per month", summary: "Measure how your brand appears across available assistants.", href: "/signup?plan=radar", cta: "Choose Radar", featured: false, features: ["Four-engine access when providers are available", "Recurring measurements", "Confidence and sample counts", "Citation and source views", "Up to two team members"] },
+    { name: "Command", price: "₹14,999", note: "per month", summary: "Turn evidence gaps into assigned, measurable work.", href: "/signup?plan=command", cta: "Choose Command", featured: true, features: ["Everything in Radar", "Larger operating limits", "Actions and follow-up receipts", "Decision reports", "Up to five team members", "Priority support"] },
+    { name: "Concierge", price: "From ₹50,000", note: "per month", summary: "Add hands-on strategy and delivery support.", href: "/contact", cta: "Talk to Aelo", featured: false, features: ["Everything in Command", "Dedicated strategy support", "Custom prompt research", "Leadership-ready reporting", "Up to fifteen team members", "Security review support"] },
+] as const;
 
 const FAQ = [
-    ["Can I see a result before paying?", "Yes. The public scan asks Gemini one real buyer question and returns a shareable receipt. A free account supports three Gemini scans each week."],
-    ["Which assistants are included on paid plans?", "Paid organizations can run ChatGPT, Gemini, Claude and Perplexity when each provider is available. Aelo reports unavailable engines instead of replacing them with data from another model."],
-    ["Do failed scans use up a result?", "A provider failure remains recorded as a failure. It does not become a zero visibility score. Quota reservation is designed to stay safe during retries and repeated requests."],
-    ["Can we pay in Indian rupees?", "Yes. The listed prices use Indian rupees and Razorpay. Stripe supports configured global checkout options."],
-    ["Can we cancel?", "Plans are billed in advance and cancellation takes effect at the end of the current billing period. See the terms page for the complete policy."],
-    ["Why does Aelo show sample counts?", "AI answers change between runs. The sample count tells you how much observed evidence sits behind a result, so a single lucky mention does not look dependable."],
-];
+    ["Can I see a result before paying?", "Yes. The public scan asks Gemini one real buyer question and returns a shareable receipt. Failed requests stay failed."],
+    ["Which assistants are included?", "Paid organizations can access ChatGPT, Gemini, Claude and Perplexity when the provider is configured and available. Every scan reports which engines answered."],
+    ["Do failed scans become zero visibility?", "No. Provider failures are recorded separately from successful non-mentions. Quota reservations are also protected against duplicate retries."],
+    ["Can we pay in Indian rupees?", "The listed plans use Indian rupees and Razorpay. Stripe handles configured global checkout options."],
+    ["Why show sample counts?", "AI answers vary. The denominator and confidence range show how much observed evidence sits behind the percentage."],
+] as const;
 
 export default function PricingPage() {
     return (
-        <div className="bg-[#f7f8ff] text-[#111936]">
+        <div className="bg-[#e9ece7] text-[#1d2523]">
             <SoftwareApplicationJsonLd />
             <BreadcrumbJsonLd items={[{ label: "Pricing", path: "/pricing" }]} />
 
-            <section className="px-4 pb-20 pt-16 md:px-6 md:pb-24 md:pt-24">
-                <div className="mx-auto max-w-6xl text-center">
-                    <p className="text-sm font-semibold uppercase tracking-widest text-[#5d53e8]">Pricing</p>
-                    <h1 className="mx-auto mt-5 max-w-[680px] bg-gradient-to-r from-[#111936] to-[#615f8c] bg-clip-text text-5xl font-semibold tracking-tight text-transparent md:text-7xl">Start with one answer. Pay when the work grows.</h1>
-                    <p className="mx-auto mt-6 max-w-[680px] text-lg leading-relaxed text-[#58627d]">No card for the free scan. Paid plans add more assistants, recurring measurement and team workflows.</p>
-                </div>
-            </section>
+            <MarketingHero tone="light" eyebrow="Pricing" title="Start with one answer. Pay when the work becomes recurring." copy={<p>The free scan needs no card. Paid plans add more assistants, scheduled measurement, shared investigations and decision reports.</p>} />
 
             <section className="px-4 pb-24 md:px-6 md:pb-32">
-                <div className="mx-auto grid max-w-6xl gap-4 md:grid-cols-2 xl:grid-cols-4">
-                    {PLANS.map((plan) => (
-                        <article key={plan.name} className={`relative flex flex-col rounded-3xl border p-6 ${plan.featured ? "border-[#6d63f7] shadow-[0_24px_70px_rgba(49,55,124,0.14)]" : "border-[#d9def0]"} ${plan.color}`}>
-                            {plan.featured ? <span className="mb-4 w-fit rounded-full bg-[#6d63f7] px-3 py-2 text-xs font-semibold text-white">Best for active teams</span> : null}
-                            <p className="text-sm font-semibold uppercase tracking-widest text-[#66708b]">{plan.name}</p>
-                            <div className="mt-5"><p className="text-3xl font-semibold tracking-tight">{plan.price}</p><p className="mt-1 text-xs text-[#77819d]">{plan.note}</p></div>
-                            <p className="mt-5 min-h-12 text-sm leading-relaxed text-[#58627d]">{plan.summary}</p>
-                            <div className="my-6 h-px bg-[#111936]/10" />
-                            <ul className="flex-1 space-y-3">
-                                {plan.features.map((feature) => <li key={feature} className="flex items-start gap-2 text-sm leading-relaxed"><Check className="mt-0.5 size-4 shrink-0 text-[#148c78]" />{feature}</li>)}
-                            </ul>
-                            <Link href={plan.href} className={plan.featured ? "mt-8 inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-[#6d63f7] px-4 py-2 text-base font-semibold text-white transition-all duration-700 ease-[cubic-bezier(0.32,0.72,0,1)] hover:-translate-y-1" : "mt-8 inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-[#111936] px-4 py-2 text-base font-semibold text-white transition-all duration-700 ease-[cubic-bezier(0.32,0.72,0,1)] hover:-translate-y-1"}>{plan.cta}<ArrowRight className="size-4" /></Link>
-                        </article>
-                    ))}
+                <div className="mx-auto max-w-6xl border-y border-[#bbc4bc]">
+                    <div className="grid lg:grid-cols-4">
+                        {PLANS.map((plan) => (
+                            <article key={plan.name} className={`relative flex flex-col border-b border-[#bbc4bc] p-6 last:border-b-0 lg:border-b-0 lg:border-r lg:last:border-r-0 ${plan.featured ? "bg-[#131717] text-[#eff2ec]" : ""}`}>
+                                {plan.featured ? <span className="mb-5 w-fit border-l-2 border-[#a8cbe0] pl-3 font-mono text-xs uppercase tracking-widest text-[#a8cbe0]">For active teams</span> : null}
+                                <p className={`font-mono text-xs uppercase tracking-widest ${plan.featured ? "text-[#a4aeaa]" : "text-[#65736f]"}`}>{plan.name}</p>
+                                <p className="mt-6 text-3xl font-semibold tracking-tight">{plan.price}</p>
+                                <p className={`mt-1 text-xs ${plan.featured ? "text-[#7c8985]" : "text-[#65736f]"}`}>{plan.note}</p>
+                                <p className={`mt-6 min-h-16 text-sm leading-relaxed ${plan.featured ? "text-[#a4aeaa]" : "text-[#53615d]"}`}>{plan.summary}</p>
+                                <ul className={`mt-6 flex-1 space-y-3 border-t pt-6 ${plan.featured ? "border-[#343c3b]" : "border-[#bbc4bc]"}`}>
+                                    {plan.features.map((feature) => <li key={feature} className="flex items-start gap-2 text-sm leading-relaxed"><Check aria-hidden="true" className={`mt-0.5 size-4 shrink-0 ${plan.featured ? "text-[#a8cbe0]" : "text-[#416a88]"}`} />{feature}</li>)}
+                                </ul>
+                                <div className="mt-8"><MarketingCTA href={plan.href} inverted={plan.featured}>{plan.cta}</MarketingCTA></div>
+                            </article>
+                        ))}
+                    </div>
                 </div>
-                <p className="mx-auto mt-6 max-w-2xl text-center text-xs text-[#77819d]">Prices shown in Indian rupees. Provider availability is reported per scan. Taxes may apply.</p>
+                <p className="mx-auto mt-6 max-w-2xl text-center text-xs text-[#65736f]">Prices shown in Indian rupees. Taxes may apply. Provider availability is reported on every scan.</p>
             </section>
 
-            <section className="bg-[#111936] px-4 py-24 text-white md:px-6 md:py-32">
-                <div className="mx-auto max-w-6xl">
-                    <div className="grid gap-10 lg:grid-cols-[0.8fr_1.2fr]">
-                        <div><p className="text-sm font-semibold uppercase tracking-widest text-[#8de6d1]">Included by design</p><h2 className="mt-4 text-4xl font-semibold tracking-tight md:text-5xl">No plan can buy a prettier lie.</h2></div>
-                        <div className="grid gap-3 sm:grid-cols-2">
-                            {[['Failures stay visible', 'A provider outage never becomes a zero score.'], ['Evidence stays attached', 'Open the answers and source URLs behind the summary.'], ['Authorization stays server side', 'Workspace roles and plan access are checked before protected work.'], ['Comparisons stay compatible', 'Changed measurement conditions produce an inconclusive verdict.']].map(([title, copy], index) => <article key={title} className={index === 0 ? "rounded-2xl bg-[#8de6d1] p-5 text-[#103f3a]" : index === 1 ? "rounded-2xl bg-[#eeeaff] p-5 text-[#312c74]" : index === 2 ? "rounded-2xl bg-[#fff5c8] p-5 text-[#4c4512]" : "rounded-2xl bg-[#ff9d8f] p-5 text-[#57251f]"}><h3 className="text-lg font-semibold">{title}</h3><p className="mt-2 text-sm leading-relaxed opacity-75">{copy}</p></article>)}
-                        </div>
+            <section className="bg-[#131717] px-4 py-24 text-[#eff2ec] md:px-6 md:py-32">
+                <div className="mx-auto grid max-w-6xl gap-12 lg:grid-cols-[.72fr_1.28fr]">
+                    <MarketingSectionHeading light eyebrow="Included by design" title="No plan can buy a prettier result." copy={<p>Payment changes limits and workflows. It never changes what Aelo counts as evidence.</p>} />
+                    <div className="border-t border-[#343c3b]">
+                        {[["Failures stay visible", "A provider outage cannot become a zero."], ["Evidence stays attached", "Open the answers and exact provider source URLs behind the summary."], ["Access stays server-side", "Workspace, role and plan checks happen before protected work."], ["Comparisons stay compatible", "Changed measurement conditions produce an inconclusive result."]].map(([title, copy]) => <article key={title} className="grid gap-2 border-b border-[#343c3b] py-5 sm:grid-cols-[.7fr_1.3fr]"><h3 className="font-semibold">{title}</h3><p className="text-sm leading-relaxed text-[#a4aeaa]">{copy}</p></article>)}
                     </div>
                 </div>
             </section>
 
             <section className="px-4 py-24 md:px-6 md:py-32">
-                <div className="mx-auto max-w-4xl">
-                    <div className="text-center"><p className="text-sm font-semibold uppercase tracking-widest text-[#5d53e8]">Before you choose</p><h2 className="mt-4 text-4xl font-semibold tracking-tight md:text-5xl">Straight answers about the plans.</h2></div>
-                    <div className="mt-12 space-y-3">
-                        {FAQ.map(([question, answer]) => <details key={question} className="group rounded-2xl border border-[#d9def0] bg-white p-5 open:border-[#aaa3ff]"><summary className="flex cursor-pointer list-none items-center justify-between gap-4 text-lg font-semibold"><span>{question}</span><span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-[#eeeaff] text-[#5d53e8] transition-transform duration-700 ease-[cubic-bezier(0.32,0.72,0,1)] group-open:rotate-45">+</span></summary><p className="max-w-3xl pt-4 text-base leading-relaxed text-[#58627d]">{answer}</p></details>)}
+                <div className="mx-auto grid max-w-6xl gap-12 lg:grid-cols-[.72fr_1.28fr]">
+                    <MarketingSectionHeading eyebrow="Before you choose" title="Straight answers about the plans." />
+                    <div className="border-t border-[#bbc4bc]">
+                        {FAQ.map(([question, answer]) => <details key={question} className="group border-b border-[#bbc4bc] py-5"><summary className="flex min-h-11 cursor-pointer list-none items-center justify-between gap-4 text-lg font-semibold"><span>{question}</span><span className="flex size-8 shrink-0 items-center justify-center text-[#416a88] transition-transform duration-200 group-open:rotate-45">+</span></summary><p className="max-w-3xl pb-2 pt-4 text-base leading-relaxed text-[#53615d]">{answer}</p></details>)}
                     </div>
                 </div>
             </section>

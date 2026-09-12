@@ -56,8 +56,7 @@ export function FreeScanWidget() {
                 if (data?.error === 'scan_failed') requestRef.current = null;
                 setState('error');
                 setErrMsg(
-                    data?.error === 'invalid_brand_name' ? 'Brand name looks off, try a real brand.' :
-                    data?.error === 'invalid_prompt'     ? 'Prompt should be 8–240 characters.' :
+                    data?.error === 'invalid_public_scan' ? 'Use a brand name between 2 and 80 characters and a question between 8 and 240 characters.' :
                     data?.error === 'scan_failed'        ? "Gemini didn't return a response. Try again." :
                     'Something went wrong. Try again in a moment.'
                 );
@@ -76,54 +75,57 @@ export function FreeScanWidget() {
     const disabled = state === 'submitting' || !brand.trim() || !prompt.trim();
 
     return (
-        <div className="w-full rounded-3xl border border-[#cdd6ff] bg-white p-5 text-[#111936] shadow-[0_24px_70px_rgba(49,55,124,0.14)] sm:p-6">
-            <div className="mb-4">
-                <div className="mb-3 flex flex-wrap items-center gap-2">
-                    <span className="inline-flex items-center gap-2 rounded-full bg-[#dff7f1] px-3 py-2 text-xs font-semibold text-[#17695d]">
-                        <span className="size-2 rounded-full bg-[#27a992]" />
-                        Live Gemini scan
-                    </span>
-                    <span className="rounded-full bg-[#fff5c8] px-3 py-2 text-xs font-semibold text-[#6e6119]">No signup</span>
+        <div className="w-full rounded-sm bg-[#f3f1e9] p-6 text-[#1d2523] shadow-[0_24px_80px_rgba(0,0,0,.22)] sm:p-8">
+            <div className="mb-8">
+                <div className="mb-5 flex flex-wrap items-center justify-between gap-3 border-b border-[#d2d7cf] pb-4 font-mono text-xs uppercase tracking-widest text-[#65736f]">
+                    <span className="inline-flex items-center gap-2"><span className="size-2 rounded-full bg-[#7db89d]" />Gemini / live answer</span>
+                    <span>No signup</span>
                 </div>
-                <p className="text-sm leading-relaxed text-[#58627d]">
-                    Ask one question your buyers ask. Aelo returns the answer and keeps the receipt.
+                <p className="max-w-md text-base leading-relaxed text-[#53615d]">
+                    Name your brand. Ask one buyer question. Aelo returns the real answer and keeps the receipt.
                 </p>
             </div>
 
             {state === 'submitting' ? (
                 <ScanProgress brand={brand} prompt={prompt} />
             ) : (
-                <form onSubmit={submit} className="space-y-4">
+                <form onSubmit={submit} className="space-y-6">
                     <div>
-                        <label htmlFor="free-scan-brand" className="mb-2 block text-xs font-semibold text-[#303b5c]">
+                        <label htmlFor="free-scan-brand" className="mb-2 block font-mono text-xs uppercase tracking-widest text-[#53615d]">
                             Your brand
                         </label>
                         <input
                             id="free-scan-brand"
                             type="text"
+                            required
+                            minLength={2}
+                            maxLength={80}
                             value={brand}
                             onChange={(e) => setBrand(e.target.value)}
                             placeholder="Notion"
                             autoComplete="organization"
-                            className="min-h-11 w-full rounded-xl border border-[#cdd6e7] bg-[#f7f8ff] px-3 py-2 text-base text-[#111936] placeholder:text-[#8c96af] transition-all duration-700 ease-[cubic-bezier(0.32,0.72,0,1)] focus:border-[#6d63f7] focus:bg-white focus:outline-none"
+                            className="min-h-11 w-full rounded-sm border border-[#adb8b0] bg-[#fbfaf5] px-3 py-2 text-base text-[#1d2523] placeholder:text-[#87928e] transition-all duration-700 ease-[cubic-bezier(0.32,0.72,0,1)] focus:border-[#416a88] focus:outline-none focus:ring-2 focus:ring-[#a8cbe0]/50"
                         />
                     </div>
                     <div>
-                        <label htmlFor="free-scan-prompt" className="mb-2 block text-xs font-semibold text-[#303b5c]">
+                        <label htmlFor="free-scan-prompt" className="mb-2 block font-mono text-xs uppercase tracking-widest text-[#53615d]">
                             A question your buyers ask
                         </label>
                         <input
                             id="free-scan-prompt"
                             type="text"
+                            required
+                            minLength={8}
+                            maxLength={240}
                             value={prompt}
                             onChange={(e) => setPrompt(e.target.value)}
                             placeholder="Best team wiki for engineering docs in 2026"
-                            className="min-h-11 w-full rounded-xl border border-[#cdd6e7] bg-[#f7f8ff] px-3 py-2 text-base text-[#111936] placeholder:text-[#8c96af] transition-all duration-700 ease-[cubic-bezier(0.32,0.72,0,1)] focus:border-[#6d63f7] focus:bg-white focus:outline-none"
+                            className="min-h-11 w-full rounded-sm border border-[#adb8b0] bg-[#fbfaf5] px-3 py-2 text-base text-[#1d2523] placeholder:text-[#87928e] transition-all duration-700 ease-[cubic-bezier(0.32,0.72,0,1)] focus:border-[#416a88] focus:outline-none focus:ring-2 focus:ring-[#a8cbe0]/50"
                         />
                     </div>
 
                     {errMsg && (
-                        <div role="alert" className="flex items-start gap-2 rounded-xl bg-[#fff0ed] p-3 text-sm text-[#a83c31]">
+                        <div role="alert" className="flex items-start gap-2 rounded-sm bg-[#f0dfd9] p-3 text-sm text-[#895345]">
                             <AlertCircle className="w-3.5 h-3.5 flex-shrink-0 mt-0.5" />
                             <span>{errMsg}</span>
                         </div>
@@ -132,16 +134,16 @@ export function FreeScanWidget() {
                     <button
                         type="submit"
                         disabled={disabled}
-                        className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-[#6d63f7] px-4 py-2 text-base font-semibold text-white transition-all duration-700 ease-[cubic-bezier(0.32,0.72,0,1)] hover:-translate-y-0.5 hover:bg-[#5d53e8] disabled:cursor-not-allowed disabled:bg-[#dcddff] disabled:text-[#5554a7]"
+                        className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-sm bg-[#416a88] px-4 py-2 text-base font-semibold text-white transition-all duration-700 ease-[cubic-bezier(0.32,0.72,0,1)] hover:-translate-y-1 hover:bg-[#315873] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#416a88] focus-visible:ring-offset-4 focus-visible:ring-offset-[#f3f1e9] disabled:cursor-not-allowed disabled:bg-[#c8ceca] disabled:text-[#69746f] disabled:hover:translate-y-0"
                     >
-                        See the real answer
+                        Run one real answer
                         <ArrowRight className="w-3.5 h-3.5" />
                     </button>
                 </form>
             )}
 
-            <p className="mt-4 text-center text-xs text-[#77819d]">
-                Three scans each week. No card. Failed scans stay failed.
+            <p className="mt-5 text-center font-mono text-xs uppercase tracking-widest text-[#74807d]">
+                3 scans each week · no card · failed scans stay failed
             </p>
         </div>
     );

@@ -67,16 +67,27 @@ const [backend, comparison, snapshot] = await Promise.all([source('convex/action
 });
 
 test('marketing examples and provider status are not presented as live evidence', async () => {
-  const [home, footer] = await Promise.all([
+  const [home, evidenceSequence, footer] = await Promise.all([
     source('app/(marketing)/page.tsx'),
+    source('components/marketing/evidence-sequence.tsx'),
     source('components/marketing/footer.tsx'),
   ]);
-  assert.match(home, /Illustrative evidence view/);
-  assert.match(home, /Example structure, not a customer result/);
-  assert.match(home, /A live receipt displays only evidence returned by the provider/);
+  assert.match(evidenceSequence, /Illustrative answer/);
+  assert.match(evidenceSequence, /Illustrative structure, not a customer result/);
+  assert.match(evidenceSequence, /A live receipt only shows answers and evidence returned by the provider/);
   assert.doesNotMatch(home, /No mock data anywhere/);
   assert.doesNotMatch(home, /Live on ChatGPT/);
   assert.doesNotMatch(footer, /All systems operational/);
+});
+
+test('marketing evidence motion stays controllable and respects reduced-motion preferences', async () => {
+  const sequence = await source('components/marketing/evidence-sequence.tsx');
+
+  assert.match(sequence, /aria-pressed=\{activeIndex === index\}/);
+  assert.match(sequence, /Pause sample sequence/);
+  assert.match(sequence, /Play sample sequence/);
+  assert.match(sequence, /prefers-reduced-motion: reduce/);
+  assert.match(sequence, /setIsPlaying\(false\)/);
 });
 
 test('dashboard visibility summaries expose exact counts and Wilson confidence', async () => {
@@ -99,6 +110,7 @@ test('dashboard visibility summaries expose exact counts and Wilson confidence',
     assert.match(navigation, new RegExp(job.replace('&', '&')));
   }
   assert.match(navigation, /aelo-dashboard-theme-v1/);
+  assert.doesNotMatch(navigation, /dataset\.theme = "dark"/);
 });
 
 test('all active visibility surfaces use mention rate and preserve unmeasured state', async () => {

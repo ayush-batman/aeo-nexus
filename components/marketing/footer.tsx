@@ -10,15 +10,15 @@ const LINKS = [
 
 export function MarketingFooter() {
     return (
-        <footer className="bg-[#111936] px-4 pb-4 pt-16 text-white [--accent-base:#8de6d1] [--text-primary:#ffffff] md:px-6 md:pt-24">
+        <footer className="bg-[#131717] px-4 pb-4 pt-16 text-[#eff2ec] [--accent-base:#a8cbe0] [--text-primary:#eff2ec] md:px-6 md:pt-24">
             <div className="mx-auto max-w-6xl">
-                <div className="mb-16 grid overflow-hidden rounded-3xl bg-[#f6e76b] text-[#111936] md:grid-cols-[1.4fr_0.6fr]">
+                <div className="mb-16 grid overflow-hidden rounded-sm bg-[#f3f1e9] text-[#1d2523] md:grid-cols-[1.4fr_0.6fr]">
                     <div className="p-8 md:p-12">
-                        <p className="text-sm font-semibold uppercase tracking-widest text-[#5d5928]">One question. Real answers.</p>
-                        <h2 className="mt-4 max-w-2xl text-4xl font-semibold tracking-tight md:text-5xl">Find out what AI tells your next buyer.</h2>
+                        <p className="font-mono text-xs uppercase tracking-widest text-[#65736f]">One question. Real evidence.</p>
+                        <h2 className="mt-4 max-w-2xl text-4xl font-semibold tracking-tight md:text-5xl">Read what AI tells your next buyer.</h2>
                     </div>
-                    <div className="flex items-end bg-[#8de6d1] p-8 md:justify-end md:p-12">
-                        <Link href="/#scan" className="inline-flex rounded-full bg-[#111936] px-5 py-3 text-base font-semibold text-white transition-all duration-700 ease-[cubic-bezier(0.32,0.72,0,1)] hover:-translate-y-1">Run a real scan</Link>
+                    <div className="flex items-end bg-[#a8cbe0] p-8 md:justify-end md:p-12">
+                        <Link href="/#scan" className="inline-flex rounded-sm bg-[#131717] px-5 py-3 text-base font-semibold text-[#eff2ec] transition-all duration-700 ease-[cubic-bezier(0.32,0.72,0,1)] hover:-translate-y-1">Run one real answer</Link>
                     </div>
                 </div>
 
@@ -26,11 +26,11 @@ export function MarketingFooter() {
                     <div>
                         <AeloWordmark size="lg" />
                         <p className="mt-5 max-w-sm text-base leading-relaxed text-white/60">Evidence for how ChatGPT, Gemini, Claude and Perplexity answer about your brand.</p>
-                        <p className="mt-5 inline-flex rounded-full bg-white/10 px-3 py-2 text-xs text-white/70">Engine availability is reported on every scan</p>
+                        <p className="mt-5 inline-flex border border-white/10 px-3 py-2 font-mono text-xs uppercase tracking-widest text-white/60">Engine availability is reported on every scan</p>
                     </div>
                     {LINKS.map((column) => (
                         <div key={column.title}>
-                            <p className="text-xs font-semibold uppercase tracking-widest text-[#8de6d1]">{column.title}</p>
+                            <p className="font-mono text-xs uppercase tracking-widest text-[#a8cbe0]">{column.title}</p>
                             <ul className="mt-4 space-y-3">
                                 {column.items.map(([label, href]) => (
                                     <li key={href}>

@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
-import { ChevronDown, Menu, X } from "lucide-react";
+import { ChevronDown } from "lucide-react";
 
 import { AeloWordmark } from "@/components/brand/logo";
 import { cn } from "@/lib/utils";
@@ -30,15 +30,15 @@ export function MarketingNav() {
     const [openMobile, setOpenMobile] = useState(false);
 
     return (
-        <header className="pointer-events-none sticky top-0 z-50 px-3 pt-3 [--accent-base:#8de6d1] [--text-primary:#ffffff]">
+        <header className="pointer-events-none sticky top-0 z-50 px-3 pt-3 [--accent-base:#a8cbe0] [--text-primary:#eff2ec]">
             <a
                 href="#main-content"
-                className="pointer-events-auto absolute left-4 top-3 z-[60] -translate-y-24 rounded-full bg-white px-4 py-2 text-sm font-semibold text-[#111936] focus:translate-y-0"
+                className="pointer-events-auto absolute left-4 top-3 z-[60] -translate-y-24 rounded-sm bg-[#eff2ec] px-4 py-2 text-sm font-semibold text-[#17201f] focus:translate-y-0"
             >
                 Skip to content
             </a>
 
-            <div className="pointer-events-auto relative mx-auto flex h-14 max-w-6xl items-center justify-between rounded-full border border-white/10 bg-[#111936]/95 px-4 shadow-[0_12px_40px_rgba(17,25,54,0.22)] backdrop-blur-2xl md:px-5">
+            <div className="pointer-events-auto relative mx-auto flex h-14 max-w-6xl items-center justify-between rounded-full border border-white/10 bg-[#131717]/95 px-4 shadow-[0_12px_40px_rgba(0,0,0,.2)] backdrop-blur-2xl md:px-5">
                 <Link href="/" className="rounded-full p-1 transition-all duration-700 ease-[cubic-bezier(0.32,0.72,0,1)] hover:opacity-80">
                     <AeloWordmark size="md" />
                 </Link>
@@ -53,7 +53,7 @@ export function MarketingNav() {
                                 aria-current={current ? "page" : undefined}
                                 className={cn(
                                     "rounded-full px-3 py-2 text-sm font-medium transition-all duration-700 ease-[cubic-bezier(0.32,0.72,0,1)]",
-                                    current ? "bg-white text-[#111936]" : "text-white/70 hover:bg-white/10 hover:text-white",
+                                    current ? "bg-[#eff2ec] text-[#17201f]" : "text-white/70 hover:bg-white/10 hover:text-white",
                                 )}
                             >
                                 {link.label}
@@ -77,19 +77,19 @@ export function MarketingNav() {
                         </button>
                         {openExplore && (
                             <div className="absolute right-0 top-full w-[560px] pt-3">
-                                <div className="grid grid-cols-2 gap-2 rounded-2xl border border-[#cdd6ff] bg-[#f7f8ff] p-3 text-[#111936] shadow-[0_24px_70px_rgba(17,25,54,0.2)]">
+                                <div className="grid grid-cols-2 gap-2 rounded-2xl border border-[#bbc4bc] bg-[#e9ece7] p-3 text-[#1d2523] shadow-[0_24px_70px_rgba(0,0,0,.2)]">
                                     {EXPLORE_LINKS.map((link, index) => (
                                         <Link
                                             key={link.href}
                                             href={link.href}
                                             onClick={() => setOpenExplore(false)}
                                             className={cn(
-                                                "rounded-xl p-4 transition-all duration-700 ease-[cubic-bezier(0.32,0.72,0,1)] hover:-translate-y-0.5",
-                                                index % 3 === 0 ? "bg-[#dff7f1]" : index % 3 === 1 ? "bg-[#eeeaff]" : "bg-[#fff5c8]",
+                                                "rounded-xl border border-transparent p-4 transition-all duration-700 ease-[cubic-bezier(0.32,0.72,0,1)] hover:-translate-y-0.5 hover:border-[#adb8b0] hover:bg-[#f3f4ef]",
+                                                index === 0 && "bg-[#dbe8ee]",
                                             )}
                                         >
                                             <span className="block text-sm font-semibold">{link.label}</span>
-                                            <span className="mt-1 block text-xs text-[#58627d]">{link.note}</span>
+                                            <span className="mt-1 block text-xs text-[#53615d]">{link.note}</span>
                                         </Link>
                                     ))}
                                 </div>
@@ -102,8 +102,8 @@ export function MarketingNav() {
                     <Link href="/login" className="hidden rounded-full px-3 py-2 text-sm font-medium text-white/70 transition-all duration-700 ease-[cubic-bezier(0.32,0.72,0,1)] hover:text-white sm:inline-flex">
                         Log in
                     </Link>
-                    <Link href="/#scan" className="hidden rounded-full bg-[#f6e76b] px-4 py-2 text-sm font-semibold text-[#111936] transition-all duration-700 ease-[cubic-bezier(0.32,0.72,0,1)] hover:-translate-y-0.5 hover:bg-[#ffef8a] sm:inline-flex">
-                        Run a scan
+                    <Link href="/#scan" className="hidden rounded-full bg-[#a8cbe0] px-4 py-2 text-sm font-semibold text-[#17201f] transition-all duration-700 ease-[cubic-bezier(0.32,0.72,0,1)] hover:-translate-y-0.5 hover:bg-[#bdd9e8] sm:inline-flex">
+                        Run one answer
                     </Link>
                     <button
                         type="button"
@@ -112,7 +112,9 @@ export function MarketingNav() {
                         className="relative flex size-10 items-center justify-center rounded-full bg-white/10 text-white lg:hidden"
                         onClick={() => setOpenMobile((value) => !value)}
                     >
-                        {openMobile ? <X className="size-5" /> : <Menu className="size-5" />}
+                        <span className={cn("absolute h-px w-4 bg-current transition-all duration-700 ease-[cubic-bezier(0.32,0.72,0,1)]", openMobile ? "translate-y-0 rotate-45" : "-translate-y-1.5")} />
+                        <span className={cn("absolute h-px w-4 bg-current transition-all duration-700 ease-[cubic-bezier(0.32,0.72,0,1)]", openMobile ? "opacity-0" : "opacity-100")} />
+                        <span className={cn("absolute h-px w-4 bg-current transition-all duration-700 ease-[cubic-bezier(0.32,0.72,0,1)]", openMobile ? "translate-y-0 -rotate-45" : "translate-y-1.5")} />
                     </button>
                 </div>
             </div>
@@ -121,7 +123,7 @@ export function MarketingNav() {
                 aria-hidden={!openMobile}
                 inert={!openMobile}
                 className={cn(
-                    "pointer-events-auto mx-auto mt-2 max-w-6xl overflow-hidden rounded-3xl border border-white/10 bg-[#111936]/95 backdrop-blur-3xl transition-all duration-700 ease-[cubic-bezier(0.32,0.72,0,1)] lg:hidden",
+                    "pointer-events-auto mx-auto mt-2 max-w-6xl overflow-hidden rounded-3xl border border-white/10 bg-[#131717]/95 backdrop-blur-3xl transition-all duration-700 ease-[cubic-bezier(0.32,0.72,0,1)] lg:hidden",
                     openMobile ? "max-h-[720px] translate-y-0 opacity-100" : "max-h-0 -translate-y-4 border-transparent opacity-0",
                 )}
             >
@@ -140,7 +142,7 @@ export function MarketingNav() {
                             {link.label}
                         </Link>
                     ))}
-                    <Link href="/#scan" onClick={() => setOpenMobile(false)} className="mt-2 rounded-2xl bg-[#f6e76b] px-4 py-3 text-center text-base font-semibold text-[#111936] sm:col-span-2">
+                    <Link href="/#scan" onClick={() => setOpenMobile(false)} className="mt-2 rounded-2xl bg-[#a8cbe0] px-4 py-3 text-center text-base font-semibold text-[#17201f] sm:col-span-2">
                         Run a real scan
                     </Link>
                 </nav>

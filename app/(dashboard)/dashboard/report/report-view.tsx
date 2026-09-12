@@ -104,7 +104,7 @@ export default function ReportView({ paid, brand, report }: { paid: boolean; bra
 
                 {empty ? (
                     <p className="text-sm text-[var(--text-secondary)] py-8 text-center">
-                        No scans in this period yet. Run scans from the LLM Tracker, then generate the report.
+                        No scans in this period yet. Run a measurement in Prompts &amp; Scans, then generate the report.
                     </p>
                 ) : (
                     <>
