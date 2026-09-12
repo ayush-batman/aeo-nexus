@@ -63,11 +63,14 @@ const [scan, backend] = await Promise.all([source('app/api/v1/scan/route.ts'), s
 });
 
 test('signed-in app scans use the same canonical multi-sample and quota contract', async () => {
-const [route, legacy, backend] = await Promise.all([source('app/api/llm/scan/route.ts'), source('app/api/llm/scans/route.ts'), source('convex/measurements.ts')]);
+const [route, legacy, status, tracker, backend] = await Promise.all([source('app/api/llm/scan/route.ts'), source('app/api/llm/scans/route.ts'), source('app/api/llm/runs/[id]/route.ts'), source('app/(dashboard)/dashboard/llm-tracker/page.tsx'), source('convex/measurements.ts')]);
   assert.match(route, /startMeasurement/); assert.match(route, /waitForMeasurement/);
+  assert.match(route, /prefersRespondAsync/); assert.match(route, /status: 202/);
   assert.match(route, /samples: 4/); assert.match(route, /measurement\.status === 'all_failed'/);
   assert.match(backend, /requireRole\(tenant, 'editor'\)/); assert.match(backend, /scanQuotaReservations/);
   assert.match(legacy, /runCanonicalScan\(request\)/);
+  assert.match(status, /progress: run\.progress/);
+  assert.match(tracker, /Prefer: 'respond-async'/); assert.match(tracker, /waitForMeasurementJob/);
   assert.doesNotMatch(route, /scanLLM\(|calculateVisibilityScore|scansThisWeek/);
 });
 

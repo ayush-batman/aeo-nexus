@@ -34,7 +34,8 @@ test("the five primary dashboard jobs share restrained, evidence-first language"
 
   assert.doesNotMatch(combined, /(?:bg|text)-(?:blue|orange|cyan|amber)-(?:400|500|600)/);
   assert.match(pages[0], /Run a measurement/);
-  assert.match(pages[0], /Collecting samples…/);
+  assert.match(pages[0], /Starting measurement…/);
+  assert.match(pages[0], /of \$\{scanProgress\.requested\} saved…/);
   assert.doesNotMatch(pages[0], /Run a New Scan|Scanning\.\.\./);
   assert.match(pages[2], /structured citation evidence/);
   assert.match(pages[3], /A task completed is not a result measured/);

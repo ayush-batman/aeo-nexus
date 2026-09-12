@@ -77,6 +77,7 @@ export default function LLMTrackerPage() {
     const [newPrompt, setNewPrompt] = useState("");
     const [brandName, setBrandName] = useState("");
     const [isScanning, setIsScanning] = useState(false);
+    const [scanProgress, setScanProgress] = useState<{ completed: number; requested: number } | null>(null);
     const [selectedPlatforms, setSelectedPlatforms] = useState<string[]>(["gemini"]);
     const [scans, setScans] = useState<LLMScan[]>([]);
     const [visibilityMetrics, setVisibilityMetrics] = useState<PlatformVisibility[]>([]);
@@ -164,12 +165,16 @@ export default function LLMTrackerPage() {
         if (!newPrompt.trim() || !brandName.trim()) return;
 
         setIsScanning(true);
+        setScanProgress(null);
         setScanError(null);
 
         try {
             const response = await fetch('/api/llm/scans', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: {
+                    'Content-Type': 'application/json',
+                    Prefer: 'respond-async',
+                },
                 body: JSON.stringify({
                     prompt: (REGIONS.find(r => r.id === scanRegion)?.context || '') + newPrompt,
                     brandName,
@@ -200,7 +205,9 @@ export default function LLMTrackerPage() {
 
             if (response.status === 202) {
                 if (!data.statusUrl) throw new Error('Scan queued, but its progress link is missing. Reload to check saved results.');
-                const result = await waitForMeasurementJob(data.statusUrl);
+                const result = await waitForMeasurementJob(data.statusUrl, (progress) => {
+                    setScanProgress({ completed: progress.succeeded + progress.failed, requested: progress.requested });
+                });
                 if (result.status === 'partial') setScanError('Some engine samples failed. Review sample counts and saved evidence.');
             }
 
@@ -210,12 +217,13 @@ export default function LLMTrackerPage() {
             }
 
             setNewPrompt("");
-            // Data will auto-refresh via realtime subscription
+            await fetchData();
         } catch (err) {
             console.error('Scan error:', err);
             setScanError(err instanceof Error ? err.message : 'Failed to run scan. Please check your API keys.');
         } finally {
             setIsScanning(false);
+            setScanProgress(null);
         }
     };
 
@@ -370,7 +378,9 @@ export default function LLMTrackerPage() {
                                         {isScanning ? (
                                             <>
                                                 <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
-                                                Collecting samples…
+                                                {scanProgress
+                                                    ? `${scanProgress.completed} of ${scanProgress.requested} saved…`
+                                                    : 'Starting measurement…'}
                                             </>
                                         ) : (
                                             <>

@@ -79,14 +79,23 @@ export const begin = tenantMutation({
 
 export const get = tenantQuery({
   args: { workspaceId: v.string(), runId: v.string() },
-  returns: v.object({ runId: v.string(), status: v.string(), result: v.union(measurementResult, v.null()), resultUrl: v.union(v.string(), v.null()) }),
+  returns: v.object({
+    runId: v.string(),
+    status: v.string(),
+    progress: v.object({ requested: v.number(), pending: v.number(), running: v.number(), succeeded: v.number(), failed: v.number() }),
+    result: v.union(measurementResult, v.null()),
+    resultUrl: v.union(v.string(), v.null()),
+  }),
   handler: async (ctx, args) => {
     const workspace = await requireWorkspace(ctx, ctx.tenant, args.workspaceId);
     const run = await ctx.db.query('measurementRuns').withIndex('by_public_id', (q) => q.eq('publicId', args.runId)).unique();
     if (!run || run.workspaceId !== workspace._id) throw new Error('measurement_not_found');
     const resultUrl = run.resultStorageId ? await ctx.storage.getUrl(run.resultStorageId) : null;
     if (run.resultStorageId && !resultUrl) throw new Error('measurement_evidence_unavailable');
-    return { runId: run.publicId, status: run.status, result: run.resultStorageId ? null : run.result, resultUrl };
+    const samples = await ctx.db.query('measurementSamples').withIndex('by_run', (q) => q.eq('runId', run._id)).take(32);
+    const progress = { requested: samples.length, pending: 0, running: 0, succeeded: 0, failed: 0 };
+    for (const sample of samples) progress[sample.status] += 1;
+    return { runId: run.publicId, status: run.status, progress, result: run.resultStorageId ? null : run.result, resultUrl };
   },
 });
 

@@ -30,6 +30,7 @@ test('durable workflow persists every successful sample once and returns a four-
   const receipt = await owner.query(api.measurements.get, { workspaceId: context.workspaceId, runId });
   expect(receipt.result).toMatchObject({ runId, status: 'complete', visibilityScore: 50,
     persistence: { status: 'stored', rows: 4 } });
+  expect(receipt.progress).toEqual({ requested: 4, pending: 0, running: 0, succeeded: 4, failed: 0 });
   expect(receipt.result?.engines[0].confidence.sampleCount).toBe(4);
   expect(calls).toBe(4);
   const rows = await t.run(async (ctx) => ({ scans: await ctx.db.query('scans').take(20), quotas: await ctx.db.query('scanQuotaReservations').take(20), run: await ctx.db.query('measurementRuns').first() }));

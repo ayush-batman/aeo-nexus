@@ -7,6 +7,7 @@ import { fetchAuthQuery } from '@/lib/auth-server';
 import { convexRouteError } from '@/lib/convex/http';
 import { startMeasurement, waitForMeasurement } from '@/lib/convex/measurement-server';
 import { getCurrentWorkspaceContext } from '@/lib/data-access';
+import { prefersRespondAsync } from '@/lib/http-prefer';
 
 export const maxDuration = 300;
 
@@ -48,6 +49,15 @@ export async function POST(request: NextRequest) {
             prompt, brandName, brandDomain, competitors, platforms, samples: 4,
             mode: body?.mode === 'battle' ? 'battle' : 'standard',
         });
+        if (prefersRespondAsync(request.headers)) {
+            return NextResponse.json({
+                success: true,
+                runId,
+                runStatus: 'running',
+                statusUrl: `/api/llm/runs/${runId}`,
+                message: 'Your scan is running. Results will appear when all samples finish.',
+            }, { status: 202 });
+        }
         const measurement = await waitForMeasurement(context.workspaceId, runId);
         if (!measurement) return NextResponse.json({ success: true, runId, runStatus: 'running',
             statusUrl: `/api/llm/runs/${runId}`, message: 'Your scan is continuing in the background.' }, { status: 202 });

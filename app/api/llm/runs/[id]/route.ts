@@ -10,6 +10,6 @@ export async function GET(_request: NextRequest, { params }: { params: Promise<{
     if (!context) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     const { id } = await params;
     const run = await readMeasurement(context.workspaceId, id);
-    return evidenceJson({ runId: id, runStatus: run.status, measurement: run.result });
+    return evidenceJson({ runId: id, runStatus: run.status, progress: run.progress, measurement: run.result });
   } catch (error) { return convexRouteError(error); }
 }
