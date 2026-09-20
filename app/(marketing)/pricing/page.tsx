@@ -3,18 +3,12 @@ import { Check } from "lucide-react";
 
 import { MarketingCTA, MarketingHero, MarketingSectionHeading } from "@/components/marketing/page-primitives";
 import { BreadcrumbJsonLd, SoftwareApplicationJsonLd } from "@/components/seo/structured-data";
+import { PUBLIC_PLANS } from "@/lib/billing/plan-catalog";
 
 export const metadata: Metadata = {
     title: "Aelo pricing · Start with a real AI answer",
     description: "Start with three free Gemini scans each week. Paid plans add more engines, recurring scans and team workflows.",
 };
-
-const PLANS = [
-    { name: "Free", price: "₹0", note: "No card", summary: "Inspect one real Gemini answer before committing.", href: "/#scan", cta: "Run one real answer", featured: false, features: ["Three Gemini scans each week", "One tracked brand", "Raw answer and public receipt", "Provider source evidence when returned"] },
-    { name: "Radar", price: "₹4,999", note: "per month", summary: "Measure how your brand appears across available assistants.", href: "/signup?plan=radar", cta: "Choose Radar", featured: false, features: ["Four-engine access when providers are available", "Recurring measurements", "Confidence and sample counts", "Citation and source views", "Up to two team members"] },
-    { name: "Command", price: "₹14,999", note: "per month", summary: "Turn evidence gaps into assigned, measurable work.", href: "/signup?plan=command", cta: "Choose Command", featured: true, features: ["Everything in Radar", "Larger operating limits", "Actions and follow-up receipts", "Decision reports", "Up to five team members", "Priority support"] },
-    { name: "Concierge", price: "From ₹50,000", note: "per month", summary: "Add hands-on strategy and delivery support.", href: "/contact", cta: "Talk to Aelo", featured: false, features: ["Everything in Command", "Dedicated strategy support", "Custom prompt research", "Leadership-ready reporting", "Up to fifteen team members", "Security review support"] },
-] as const;
 
 const FAQ = [
     ["Can I see a result before paying?", "Yes. The public scan asks Gemini one real buyer question and returns a shareable receipt. Failed requests stay failed."],
@@ -35,19 +29,23 @@ export default function PricingPage() {
             <section className="px-4 pb-24 md:px-6 md:pb-32">
                 <div className="mx-auto max-w-6xl border-y border-[#bbc4bc]">
                     <div className="grid lg:grid-cols-4">
-                        {PLANS.map((plan) => (
+                        {PUBLIC_PLANS.map((plan) => {
+                            const href = plan.checkoutKey ? `/signup?plan=${plan.checkoutKey}` : "/#scan";
+                            const cta = plan.checkoutKey ? `Choose ${plan.name}` : "Run one real answer";
+                            return (
                             <article key={plan.name} className={`relative flex flex-col border-b border-[#bbc4bc] p-6 last:border-b-0 lg:border-b-0 lg:border-r lg:last:border-r-0 ${plan.featured ? "bg-[#131717] text-[#eff2ec]" : ""}`}>
                                 {plan.featured ? <span className="mb-5 w-fit border-l-2 border-[#a8cbe0] pl-3 font-mono text-xs uppercase tracking-widest text-[#a8cbe0]">For active teams</span> : null}
                                 <p className={`font-mono text-xs uppercase tracking-widest ${plan.featured ? "text-[#a4aeaa]" : "text-[#586560]"}`}>{plan.name}</p>
-                                <p className="mt-6 text-3xl font-semibold tracking-tight">{plan.price}</p>
-                                <p className={`mt-1 text-xs ${plan.featured ? "text-[#7c8985]" : "text-[#586560]"}`}>{plan.note}</p>
+                                <p className="mt-6 text-3xl font-semibold tracking-tight">{plan.priceLabel}</p>
+                                <p className={`mt-1 text-xs ${plan.featured ? "text-[#7c8985]" : "text-[#586560]"}`}>{plan.billingNote}</p>
                                 <p className={`mt-6 min-h-16 text-sm leading-relaxed ${plan.featured ? "text-[#a4aeaa]" : "text-[#53615d]"}`}>{plan.summary}</p>
                                 <ul className={`mt-6 flex-1 space-y-3 border-t pt-6 ${plan.featured ? "border-[#343c3b]" : "border-[#bbc4bc]"}`}>
-                                    {plan.features.map((feature) => <li key={feature} className="flex items-start gap-2 text-sm leading-relaxed"><Check aria-hidden="true" className={`mt-0.5 size-4 shrink-0 ${plan.featured ? "text-[#a8cbe0]" : "text-[#416a88]"}`} />{feature}</li>)}
+                                    {[plan.scanPromise, ...plan.features].map((feature) => <li key={feature} className="flex items-start gap-2 text-sm leading-relaxed"><Check aria-hidden="true" className={`mt-0.5 size-4 shrink-0 ${plan.featured ? "text-[#a8cbe0]" : "text-[#416a88]"}`} />{feature}</li>)}
                                 </ul>
-                                <div className="mt-8"><MarketingCTA href={plan.href} inverted={plan.featured}>{plan.cta}</MarketingCTA></div>
+                                <div className="mt-8"><MarketingCTA href={href} inverted={plan.featured}>{cta}</MarketingCTA></div>
                             </article>
-                        ))}
+                            );
+                        })}
                     </div>
                 </div>
                 <p className="mx-auto mt-6 max-w-2xl text-center text-xs text-[#586560]">Prices shown in Indian rupees. Taxes may apply. Provider availability is reported on every scan.</p>

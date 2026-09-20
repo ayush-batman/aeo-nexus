@@ -9,13 +9,15 @@ import { AlertCircle, Loader2 } from "lucide-react";
 import { authClient } from "@/lib/auth-client";
 import { AeloWordmark } from "@/components/brand/logo";
 import { GoogleSignInButton } from "@/components/auth/google-button";
-
-const PLAN_LABELS = { radar: "Radar · ₹4,999/mo", command: "Command · ₹14,999/mo" } as const;
+import { planByCheckoutKey } from "@/lib/billing/plan-catalog";
 
 function SignupForm() {
     const searchParams = useSearchParams();
     const planParam = searchParams.get('plan');
-    const selectedPlan = planParam === 'radar' || planParam === 'command' ? planParam : null;
+    const selectedPlanDefinition = planByCheckoutKey(planParam);
+    const selectedPlan = selectedPlanDefinition?.checkoutKey === 'radar' || selectedPlanDefinition?.checkoutKey === 'command'
+        ? selectedPlanDefinition.checkoutKey
+        : null;
     const [name, setName] = useState("");
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
@@ -64,7 +66,10 @@ function SignupForm() {
                     {selectedPlan && (
                         <div className="mb-6 rounded-md border border-[var(--accent-base)]/25 bg-[var(--accent-muted)] p-3 text-center">
                             <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-[var(--text-tertiary)]">Selected after your free trial</p>
-                            <p className="mt-1 text-sm font-medium text-[var(--text-primary)]">{PLAN_LABELS[selectedPlan]}</p>
+                            <p className="mt-1 text-sm font-medium text-[var(--text-primary)]">
+                                {selectedPlanDefinition!.name} · {selectedPlanDefinition!.priceLabel}/mo
+                            </p>
+                            <p className="mt-1 text-xs text-[var(--text-secondary)]">{selectedPlanDefinition!.scanPromise}</p>
                             <p className="mt-1 text-xs text-[var(--text-secondary)]">No checkout or charge happens during signup.</p>
                         </div>
                     )}

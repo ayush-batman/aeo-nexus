@@ -12,6 +12,7 @@ test('dashboard summary is workspace-bound and returns an honest empty state', a
   expect(summary).toMatchObject({
     status: 'complete',
     stats: { llmVisibility: null, llmVisibilitySamples: 0, forumThreadCount: 0 },
+    decisionBrief: { status: 'unmeasured', competitor: null },
     recentMentions: [],
     focalAnswer: null,
     topThreads: [],

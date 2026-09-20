@@ -1,12 +1,27 @@
 import { NextResponse } from 'next/server';
+import { fetchQuery } from 'convex/nextjs';
+
+import { api } from '@/convex/_generated/api';
 
 export const dynamic = 'force-dynamic';
 
 export async function GET() {
-  const googleClientId = process.env.GOOGLE_CLIENT_ID;
-  const googleClientSecret = process.env.GOOGLE_CLIENT_SECRET;
+  let google = false;
+
+  try {
+    const status = await fetchQuery(
+      api.authProviders.status,
+      {},
+      { url: process.env.NEXT_PUBLIC_CONVEX_URL },
+    );
+    google = status.google;
+  } catch {
+    // Fail closed: the sign-in button stays hidden when provider state cannot
+    // be confirmed by the backend that owns the OAuth credentials.
+  }
+
   return NextResponse.json(
-    { google: Boolean(googleClientId && googleClientSecret) },
+    { google },
     { headers: { 'Cache-Control': 'private, max-age=60' } },
   );
 }

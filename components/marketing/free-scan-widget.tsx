@@ -145,6 +145,9 @@ export function FreeScanWidget() {
             <p className="mt-5 text-center font-mono text-xs uppercase tracking-widest text-[#586560]">
                 3 scans each week · no card · failed scans stay failed
             </p>
+            <p className="mt-2 text-center text-xs leading-relaxed text-[#69746f]">
+                Your receipt also previews how Radar adds repeat samples, confidence and source tracking.
+            </p>
         </div>
     );
 }

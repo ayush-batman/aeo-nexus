@@ -28,7 +28,7 @@ export default function SecurityPage() {
                     title: "Auth",
                     body: [
                         "Better Auth runs with Convex and stores authentication records separately from product workspaces.",
-                        "Google sign-in is offered only when its server credentials are configured.",
+                        "Google sign-in is available when the production OAuth credentials are configured. Email/password access remains available as a fallback.",
                         "Protected application requests require a valid session.",
                         "Password reset requires control of the account email.",
                     ],

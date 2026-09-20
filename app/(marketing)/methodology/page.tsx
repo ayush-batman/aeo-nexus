@@ -35,14 +35,18 @@ export default function MethodologyPage() {
             </section>
 
             <section className="bg-[#131717] px-4 py-24 text-[#eff2ec] md:px-6 md:py-32">
-                <div className="mx-auto grid max-w-6xl gap-12 lg:grid-cols-[.72fr_1.28fr] lg:items-start">
-                    <MarketingSectionHeading light eyebrow="Visibility" title="A mention rate. Nothing more mysterious." copy={<p>If a brand appears in 7 of 12 successful answers, observed visibility is 58.3%. Failed or untracked samples stay outside that number and remain visible beside it.</p>} />
-                    <EvidencePanel eyebrow="Illustrative calculation" title="7 mentions / 12 successful samples">
-                        <p className="text-6xl font-semibold tracking-tight">58.3%</p>
-                        <p className="mt-3 font-mono text-xs uppercase tracking-widest text-[#586560]">mentions ÷ successful samples × 100</p>
-                        <div className="mt-8 grid gap-5 border-t border-[#d2d7cf] pt-5 sm:grid-cols-3"><Fact label="Successful" value="12" /><Fact label="Failed" value="2" /><Fact label="Confidence" value="Medium" /></div>
-                        <p className="mt-6 text-sm leading-relaxed text-[#53615d]">The two failed samples are reported, not converted into non-mentions. Illustrative structure, not a customer result.</p>
-                    </EvidencePanel>
+                <div className="mx-auto max-w-6xl">
+                    <MarketingSectionHeading light eyebrow="A real run, including the mistakes" title="One question pattern. 100 calls. The winner changed 45% of the time." copy={<p>This independent ChatGPT and Gemini experiment is why Aelo treats one answer as a receipt, not a visibility score.</p>} />
+                    <div className="mt-12 grid gap-px border border-[#343c3b] bg-[#343c3b] lg:grid-cols-5">
+                        {[
+                            ["01 · Question", "What are the best [category] brands in India?", "The same question pattern was repeated 10 times per category on each engine."],
+                            ["02 · Findings", "45% top-answer volatility", "Across 100 calls, the #1 recommendation changed on 45% of repeated checks."],
+                            ["03 · Gap", "Two data-quality failures", "Blue Tokai and Blue Tokai Coffee Roasters split one entity. An initial Gemini run also exhausted its response budget and produced unreliable output."],
+                            ["04 · Action", "Fix the measurement before interpreting it", "The invalid Gemini run was discarded, the response budget was corrected, brand aliases were normalized, and the identical questions were run again."],
+                            ["05 · Movement", "A corrected 45% result—no invented lift", "The published figure comes from the corrected dataset. The invalid run is not shown as a baseline, and no brand-improvement claim is made without a matched post-action measurement."],
+                        ].map(([stage, title, copy]) => <article key={stage} className="bg-[#171d1c] p-5"><p className="font-mono text-[10px] uppercase tracking-[0.14em] text-[#a8cbe0]">{stage}</p><h2 className="mt-5 text-lg font-semibold leading-snug">{title}</h2><p className="mt-4 text-sm leading-6 text-[#a4aeaa]">{copy}</p></article>)}
+                    </div>
+                    <p className="mt-6 max-w-4xl border-l-2 border-[#a8cbe0] pl-4 text-sm leading-6 text-[#a4aeaa]">Case boundary: this experiment measured recommendation volatility, not market share or the causal effect of an SEO change. Aelo applies the same rule in product: compare only matched prompts, engines, models, regions, modes and scoring versions.</p>
                 </div>
             </section>
 
@@ -77,5 +81,3 @@ export default function MethodologyPage() {
         </div>
     );
 }
-
-function Fact({ label, value }: { label: string; value: string }) { return <div><p className="font-mono text-xs uppercase tracking-widest text-[#586560]">{label}</p><p className="mt-2 text-xl font-semibold">{value}</p></div>; }

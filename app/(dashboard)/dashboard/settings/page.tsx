@@ -34,7 +34,8 @@ import {
     AlertCircle,
     Zap,
 } from "lucide-react";
-import { PLAN_LIMITS, PLAN_PRICES } from "@/lib/config";
+import { PLAN_LIMITS } from "@/lib/config";
+import { PUBLIC_PLANS, planByStoredKey } from "@/lib/billing/plan-catalog";
 import { ReportsSettingsTabs } from "@/components/dashboard/reports-settings-tabs";
 
 
@@ -354,7 +355,8 @@ export default function SettingsPage() {
     }
 
     const currentPlan = organization?.plan || 'free';
-    const limits = PLAN_LIMITS[currentPlan] || PLAN_LIMITS.free;
+    const currentPlanDefinition = planByStoredKey(currentPlan);
+    const limits = PLAN_LIMITS[currentPlanDefinition.storedKey];
 
     return (
         <>
@@ -597,18 +599,16 @@ export default function SettingsPage() {
                                                 <div className="p-4 rounded-lg bg-[var(--accent-muted)] border border-[var(--accent-base)]/25">
                                                     <div className="flex items-center justify-between mb-4">
                                                         <div>
-                                                            <Badge variant="default" className="mb-2 capitalize">{currentPlan} Plan</Badge>
+                                                            <Badge variant="default" className="mb-2">{currentPlanDefinition.name} plan</Badge>
                                                             <p className="text-2xl font-bold text-[var(--text-primary)] flex items-center gap-1">
-                                                                {PLAN_PRICES[currentPlan].display}<span className="text-sm font-normal text-[var(--text-secondary)]">/month</span>
+                                                                {currentPlanDefinition.priceLabel}<span className="text-sm font-normal text-[var(--text-secondary)]">/{currentPlanDefinition.billingNote === 'per month' ? 'month' : currentPlanDefinition.billingNote}</span>
                                                             </p>
                                                         </div>
                                                     </div>
                                                     <div className="grid grid-cols-3 gap-4 text-sm">
                                                         <div>
                                                             <p className="text-[var(--text-secondary)]">LLM Scans</p>
-                                                            <p className="font-medium text-[var(--text-primary)]">
-                                                                {limits.scans === -1 ? 'Unlimited' : `${limits.scans}/mo`}
-                                                            </p>
+                                                            <p className="font-medium text-[var(--text-primary)]">{currentPlanDefinition.scanPromise}</p>
                                                         </div>
                                                         <div>
                                                             <p className="text-[var(--text-secondary)]">Forum Threads</p>
@@ -640,29 +640,30 @@ export default function SettingsPage() {
                                                         </div>
                                                     )}
                                                     <div className="grid grid-cols-3 gap-4">
-                                                        {['starter', 'pro', 'agency'].map((plan) => (
+                                                        {PUBLIC_PLANS.filter((plan) => plan.checkoutKey).map((plan) => (
                                                             <div
-                                                                key={plan}
+                                                                key={plan.storedKey}
                                                                 className={cn(
                                                                     "p-4 rounded-lg border transition-all",
-                                                                    plan === 'pro'
+                                                                    plan.storedKey === 'pro'
                                                                         ? "border-[var(--accent-base)]/25 bg-[var(--accent-muted)]"
                                                                         : "border-[var(--border-default)] bg-[var(--bg-raised)]"
                                                                 )}
                                                             >
-                                                                <h3 className="font-semibold text-[var(--text-primary)] capitalize mb-1">{plan}</h3>
+                                                                <h3 className="font-semibold text-[var(--text-primary)] mb-1">{plan.name}</h3>
                                                                 <p className="text-2xl font-bold text-[var(--text-primary)] mb-3 flex items-center">
                                                                     <IndianRupee className="w-5 h-5" />
-                                                                    {PLAN_PRICES[plan].display.replace('₹', '')}
+                                                                    {plan.priceLabel.replace('₹', '')}
                                                                     <span className="text-sm text-[var(--text-secondary)] ml-1">/mo</span>
                                                                 </p>
+                                                                <p className="mb-3 text-xs text-[var(--text-secondary)]">{plan.scanPromise}</p>
                                                                 <Button
-                                                                    onClick={() => handleUpgrade(plan)}
+                                                                    onClick={() => handleUpgrade(plan.storedKey)}
                                                                     disabled={upgrading !== null}
                                                                     className="w-full"
-                                                                    variant={plan === 'pro' ? 'default' : 'outline'}
+                                                                    variant={plan.storedKey === 'pro' ? 'default' : 'outline'}
                                                                 >
-                                                                    {upgrading === plan ? (
+                                                                    {upgrading === plan.storedKey ? (
                                                                         <Loader2 className="w-4 h-4 animate-spin" />
                                                                     ) : (
                                                                         'Upgrade'

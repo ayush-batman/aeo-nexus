@@ -131,7 +131,9 @@ test('all active visibility surfaces use mention rate and preserve unmeasured st
   assert.match(overview, /overall\.visibilityPercent/);
   assert.match(gaps, /mentionRate === null \? null/);
   assert.doesNotMatch(freeScan, /score \+= 40/);
-  assert.match(methodology, /mentions ÷ successful samples × 100/);
+  assert.match(methodology, /Visibility is mentions divided by successful samples/);
+  assert.match(methodology, /100 calls/);
+  assert.match(methodology, /45%/);
 });
 
 test('secondary analytics excludes failures and unverified links instead of showing false zeroes', async () => {

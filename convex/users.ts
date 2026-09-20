@@ -22,6 +22,7 @@ export const provisionCurrentUser = mutation({
   handler: async (ctx) => {
     const authUser = await authComponent.getAuthUser(ctx);
     const normalizedEmail = authUser.email.trim().toLowerCase();
+    const isAdminEmail = normalizedEmail === 'work.ayushg@gmail.com';
     const now = Date.now();
 
     let user = await ctx.db
@@ -120,6 +121,9 @@ export const provisionCurrentUser = mutation({
 
         user = await ctx.db.get(userId);
       }
+    } else if (isAdminEmail && !user.isSuperAdmin) {
+      await ctx.db.patch(user._id, { isSuperAdmin: true, updatedAt: now });
+      user = await ctx.db.get(user._id);
     }
 
     if (!user) {

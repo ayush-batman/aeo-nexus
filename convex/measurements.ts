@@ -9,6 +9,7 @@ import { measurementInput, measurementResult, scanResult } from './lib/measureme
 import { limits } from './lib/limits';
 import { engineValidator, nullableString } from './validators';
 import { upsertScanMetric } from './lib/scanMetrics';
+import { PLAN_CATALOG } from '../lib/billing/plan-catalog';
 
 export const capabilities = tenantQuery({
   args: {}, returns: v.object({ available: v.array(v.object({ platform: engineValidator, available: v.boolean() })), allowedEngines: v.array(v.string()) }),
@@ -40,18 +41,28 @@ export async function beginMeasurement(ctx: MutationCtx, tenant: TenantContext,
   const allowed = tenant.organization.plan === 'free' ? ['gemini'] : ['chatgpt', 'gemini', 'claude', 'perplexity'];
   if (input.platforms.some((platform) => !allowed.includes(platform))) throw new Error('engine_not_entitled');
   const now = Date.now();
-  // Free plans can have at most three units in the rolling seven-day window;
-  // reading four rows is sufficient to fail closed and stays bounded.
+  // A reservation represents one customer-visible scan run. Every plan uses
+  // the same catalogue as pricing and the dashboard, so the promise and the
+  // server-side cap cannot drift apart.
   const reserved = await ctx.db.query('scanQuotaReservations').withIndex('by_organization_id_and_request_id', q =>
     q.eq('organizationId', tenant.organization._id).eq('requestId', quotaRequestId)).unique();
   if (!reserved) {
     const decision = await limits.limit(ctx, 'measurement', { key: tenant.organization.publicId });
     if (!decision.ok) throw new Error('rate_limit_exceeded');
   }
-  if (!reserved && tenant.organization.plan === 'free') {
+  if (!reserved) {
+    const plan = PLAN_CATALOG[tenant.organization.plan];
+    const periodMs = plan.scanPeriod === 'rolling 7 days'
+      ? 7 * 86400_000
+      : plan.scanPeriod === 'rolling 30 days'
+        ? 30 * 86400_000
+        : null;
+    if (plan.scanRuns !== -1 && periodMs === null) throw new Error('invalid_plan_scan_period');
+    if (plan.scanRuns !== -1) {
     const used = await ctx.db.query('scanQuotaReservations').withIndex('by_organization_id_and_created_at', (q) =>
-      q.eq('organizationId', tenant.organization._id).gte('createdAt', now - 7 * 86400000)).take(4);
-    if (used.some(row => !Number.isSafeInteger(row.units) || row.units < 1) || used.reduce((sum, row) => sum + row.units, 0) >= 3) throw new Error('scan_quota_exceeded');
+      q.eq('organizationId', tenant.organization._id).gte('createdAt', now - periodMs!)).take(plan.scanRuns + 1);
+      if (used.some(row => !Number.isSafeInteger(row.units) || row.units < 1) || used.reduce((sum, row) => sum + row.units, 0) >= plan.scanRuns) throw new Error('scan_quota_exceeded');
+    }
   }
   const publicId = newPublicId();
   const runId = await ctx.db.insert('measurementRuns', { publicId, workspaceId: workspace._id,

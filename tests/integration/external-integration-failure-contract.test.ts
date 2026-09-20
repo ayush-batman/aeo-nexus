@@ -6,16 +6,26 @@ async function source(relativePath: string): Promise<string> {
   return readFile(new URL(`../../${relativePath}`, import.meta.url), 'utf8');
 }
 
-test('Google sign-in is offered only after the server confirms both OAuth credentials', async () => {
-  const [route, button] = await Promise.all([
+test('Google sign-in status comes from the backend that owns the OAuth credentials', async () => {
+  const [route, providerStatus, authConfig, loginPage, signupPage] = await Promise.all([
     source('app/api/auth/providers/route.ts'),
-    source('components/auth/google-button.tsx'),
+    source('convex/authProviders.ts'),
+    source('convex/auth.ts'),
+    source('app/(auth)/login/page.tsx'),
+    source('app/(auth)/signup/page.tsx'),
   ]);
-  assert.match(route, /GOOGLE_CLIENT_ID/);
-  assert.match(route, /GOOGLE_CLIENT_SECRET/);
-  assert.match(route, /Boolean\(googleClientId\s*&&\s*googleClientSecret\)/);
-  assert.match(button, /\/api\/auth\/providers/);
-  assert.match(button, /if \(!googleEnabled\) return null/);
+  assert.match(route, /api\.authProviders\.status/);
+  assert.doesNotMatch(route, /GOOGLE_CLIENT_SECRET/);
+  assert.match(route, /let google = false/);
+  assert.match(providerStatus, /GOOGLE_CLIENT_ID/);
+  assert.match(providerStatus, /GOOGLE_CLIENT_SECRET/);
+  assert.match(authConfig, /googleClientId && googleClientSecret/);
+  assert.match(authConfig, /AUTH_TRUSTED_ORIGINS/);
+  assert.match(authConfig, /trustedOrigins,/);
+  assert.match(authConfig, /socialProviders:/);
+  assert.match(authConfig, /google:/);
+  assert.match(loginPage, /GoogleSignInButton/);
+  assert.match(signupPage, /GoogleSignInButton/);
 });
 
 test('missing provider configuration is represented as an unavailable state, never success', async () => {

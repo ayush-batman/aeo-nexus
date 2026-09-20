@@ -9,6 +9,13 @@ import authConfig from './auth.config';
 import { consumeAuthLimit } from './lib/authLimit';
 
 const siteUrl = process.env.SITE_URL ?? 'http://localhost:3000';
+const trustedOrigins = Array.from(
+  new Set(
+    [siteUrl, ...(process.env.AUTH_TRUSTED_ORIGINS ?? '').split(',')]
+      .map((origin) => origin.trim())
+      .filter(Boolean),
+  ),
+);
 
 export const authComponent = createClient<DataModel>(components.betterAuth);
 
@@ -27,6 +34,7 @@ export function createAuthOptions(ctx: GenericCtx<DataModel>): BetterAuthOptions
 
   return {
     baseURL: siteUrl,
+    trustedOrigins,
     database: authComponent.adapter(ctx),
     secret: process.env.BETTER_AUTH_SECRET,
     rateLimit: {

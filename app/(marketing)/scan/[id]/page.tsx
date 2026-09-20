@@ -5,6 +5,8 @@ import { ArrowRight, ExternalLink } from "lucide-react";
 import { readPublicScan } from "@/lib/convex/public-scan";
 import { PendingReceipt } from "@/components/marketing/pending-receipt";
 import { NewsletterSubscribe } from "@/components/marketing/newsletter-subscribe";
+import { RadarPreview } from "@/components/marketing/radar-preview";
+import { PLAN_CATALOG } from "@/lib/billing/plan-catalog";
 
 export const dynamic = 'force-dynamic';
 async function getScan(id: string) {
@@ -38,6 +40,7 @@ export default async function PublicScanPage(
     { params }: { params: Promise<{ id: string }> },
 ) {
     const { id } = await params;
+    const radar = PLAN_CATALOG.starter;
     const scan = await getScan(id);
     if (!scan) notFound();
 
@@ -198,19 +201,24 @@ export default async function PublicScanPage(
                     this receipt does not establish a likely rank range or a trend.
                 </div>
 
+                <RadarPreview
+                    brandName={scan.brand_name}
+                    prompt={scan.prompt}
+                    status={scan.status}
+                    brandMentioned={scan.brand_mentioned}
+                    citations={scan.citations ?? []}
+                />
+
                 {/* CTA, track over time */}
                 <div className="rounded-lg border border-[var(--accent-base)]/40 bg-black p-6 mb-6">
                     <p className="text-[10px] font-mono uppercase tracking-[0.14em] text-[var(--accent-base)] mb-2">
                         Track this over time
                     </p>
                     <h2 className="text-xl font-medium text-white mb-2 tracking-tight">
-                        This is one snapshot. Aelo tracks it forever.
+                        This is one snapshot. Radar measures it repeatedly.
                     </h2>
                     <p className="text-[14px] text-zinc-400 leading-relaxed mb-5">
-                        Sign up (no card) and Aelo re-runs this prompt daily across ChatGPT, Gemini,
-                        Claude, and Perplexity. You&apos;ll see when {scan.brand_name}&apos;s
-                        position moves, when a new competitor enters the answer, or when the
-                        sentiment shifts.
+                        Start free with Gemini. {radar.name} adds {radar.scanPromise.toLowerCase()} across {radar.engines.join(', ')} when those providers are available, with sample counts, confidence ranges and source evidence.
                     </p>
                     <div className="flex flex-col sm:flex-row gap-2">
                         <Link

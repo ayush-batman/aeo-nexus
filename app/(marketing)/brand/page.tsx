@@ -37,8 +37,11 @@ const WORDMARKS: Asset[] = [
 const SOCIAL: Asset[] = [
     { id: 'favicon',         label: 'Favicon',         filename: 'favicon.svg',         format: 'SVG', intendedUse: 'Browser tab · rounded chip',      dimensions: '32 × 32',    bg: 'dark' },
     { id: 'social-square',   label: 'Social square',   filename: 'social-square.svg',   format: 'SVG', intendedUse: 'Twitter/X + LinkedIn avatar',    dimensions: '1024 × 1024', bg: 'dark' },
-    { id: 'twitter-banner',  label: 'X banner',        filename: 'twitter-banner.svg',  format: 'SVG', intendedUse: 'Twitter/X header',               dimensions: '1500 × 500',  bg: 'dark' },
+    { id: 'twitter-banner',  label: 'X banner (legacy key)', filename: 'twitter-banner.svg', format: 'SVG', intendedUse: 'Legacy Twitter header path',            dimensions: '1500 × 500',  bg: 'dark' },
+    { id: 'x-banner',       label: 'X banner',        filename: 'x-banner.svg',  format: 'SVG', intendedUse: 'Primary X / X thread header',             dimensions: '1500 × 500',  bg: 'dark' },
     { id: 'linkedin-banner', label: 'LinkedIn banner', filename: 'linkedin-banner.svg', format: 'SVG', intendedUse: 'LinkedIn cover',                 dimensions: '1584 × 396',  bg: 'dark' },
+    { id: 'instagram-square',label: 'Instagram square', filename: 'instagram-square.svg', format: 'SVG', intendedUse: 'Instagram profile/header post',   dimensions: '1080 × 1080', bg: 'dark' },
+    { id: 'meta-banner',     label: 'Meta banner',     filename: 'meta-banner.svg',     format: 'SVG', intendedUse: 'Facebook + generic social posts', dimensions: '1200 × 630', bg: 'dark' },
 ];
 
 export default function BrandPage() {

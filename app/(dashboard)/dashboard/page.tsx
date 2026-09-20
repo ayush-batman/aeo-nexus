@@ -74,12 +74,25 @@ interface FocalAnswer {
     createdAt: string;
 }
 
+interface DecisionBrief {
+    status: "actionable" | "inconclusive" | "unmeasured";
+    competitor: string | null;
+    competitorMentions: number;
+    missedAnswerCount: number;
+    prompt: string | null;
+    headline: string;
+    evidence: string;
+    limitation: string;
+    action: { title: string; description: string; href: string };
+}
+
 interface DashboardData {
     status: "complete" | "partial";
     partialReasons: string[];
     stats: DashboardStats;
     recentMentions: RecentMention[];
     focalAnswer: FocalAnswer | null;
+    decisionBrief: DecisionBrief;
     visibilityMetrics: VisibilityMetric[];
     topThreads: ForumThread[];
 }
@@ -182,6 +195,25 @@ function DashboardContent() {
                     title: answer?.prompt ?? "No sampled answer yet",
                     subtitle: answer ? `${answer.platform} · ${formatDistanceToNow(new Date(answer.createdAt), { addSuffix: true })}` : "Run a scan to create the first evidence receipt.",
                 })} />
+            </section>
+
+            <section aria-labelledby="decision-title" className="grid gap-px overflow-hidden rounded-xl border border-[var(--border-default)] bg-[var(--border-default)] lg:grid-cols-[.8fr_1.2fr]">
+                <div className="bg-[var(--bg-evidence)] p-6 text-[var(--text-evidence)] sm:p-8">
+                    <p className="font-mono text-[10px] uppercase tracking-[0.16em] text-[#5F6B68]">One decision from this evidence</p>
+                    <h2 id="decision-title" className="mt-5 max-w-xl text-3xl font-medium leading-tight tracking-[-0.04em] sm:text-4xl">{data.decisionBrief.headline}</h2>
+                    <p className="mt-5 max-w-2xl text-sm leading-6 text-[#3F4947]">{data.decisionBrief.evidence}</p>
+                    <p className="mt-5 border-l-2 border-[#A9BFDF] pl-3 text-xs leading-5 text-[#5F6B68]">{data.decisionBrief.limitation}</p>
+                </div>
+                <div className="flex flex-col justify-between bg-[var(--bg-surface)] p-6 sm:p-8">
+                    <div>
+                        <p className="font-mono text-[10px] uppercase tracking-[0.16em] text-[var(--accent-base)]">Recommended next action</p>
+                        <h3 className="mt-5 text-xl font-medium leading-snug text-[var(--text-primary)]">{data.decisionBrief.action.title}</h3>
+                        <p className="mt-3 max-w-2xl text-sm leading-6 text-[var(--text-secondary)]">{data.decisionBrief.action.description}</p>
+                    </div>
+                    <Link href={data.decisionBrief.action.href} className="mt-8 inline-flex min-h-11 w-fit items-center text-sm font-semibold text-[var(--text-primary)] underline decoration-[var(--border-active)] underline-offset-4 hover:decoration-[var(--accent-base)]">
+                        {data.decisionBrief.status === "actionable" ? "Open this action" : "Collect the needed evidence"}<ArrowRight className="ml-2 h-4 w-4" />
+                    </Link>
+                </div>
             </section>
 
             <section aria-labelledby="engine-evidence-title">

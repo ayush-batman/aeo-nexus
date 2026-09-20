@@ -41,6 +41,18 @@ const visibilityMetricValidator = v.object({
   comparisonPreviousMentions: v.number(),
 });
 
+const decisionBriefValidator = v.object({
+  status: v.union(v.literal('actionable'), v.literal('inconclusive'), v.literal('unmeasured')),
+  competitor: v.union(v.string(), v.null()),
+  competitorMentions: v.number(),
+  missedAnswerCount: v.number(),
+  prompt: v.union(v.string(), v.null()),
+  headline: v.string(),
+  evidence: v.string(),
+  limitation: v.string(),
+  action: v.object({ title: v.string(), description: v.string(), href: v.string() }),
+});
+
 const bootstrapWorkspace = v.object({
   id: v.string(),
   name: v.string(),
@@ -123,6 +135,7 @@ export const summary = tenantQuery({
       sampleId: v.union(v.string(), v.null()),
       createdAt: v.string(),
     })),
+    decisionBrief: decisionBriefValidator,
     visibilityMetrics: v.array(visibilityMetricValidator),
     topThreads: v.array(v.object({
       id: v.string(),
@@ -231,6 +244,7 @@ export const summary = tenantQuery({
       },
       recentMentions,
       focalAnswer,
+      decisionBrief: measurement.decisionBrief,
       visibilityMetrics: measurement.visibilityMetrics,
       topThreads: threads.filter((row) => row.opportunityScore >= 50).slice(0, 3).map((row) => ({
         id: row.publicId,

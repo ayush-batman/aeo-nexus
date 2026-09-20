@@ -65,6 +65,23 @@ export type DashboardMeasurementSummary = {
   partialReasons: string[];
   stats: DashboardMeasurementStats;
   visibilityMetrics: DashboardVisibilityMetric[];
+  decisionBrief: DashboardDecisionBrief;
+};
+
+export type DashboardDecisionBrief = {
+  status: 'actionable' | 'inconclusive' | 'unmeasured';
+  competitor: string | null;
+  competitorMentions: number;
+  missedAnswerCount: number;
+  prompt: string | null;
+  headline: string;
+  evidence: string;
+  limitation: string;
+  action: {
+    title: string;
+    description: string;
+    href: string;
+  };
 };
 
 function comparable(row: DashboardObservation): ComparableMentionSample {
@@ -87,6 +104,78 @@ function comparable(row: DashboardObservation): ComparableMentionSample {
 function platformLabel(platform: string): string {
   if (platform === 'chatgpt') return 'ChatGPT';
   return platform.charAt(0).toUpperCase() + platform.slice(1);
+}
+
+function competitorDecision(input: {
+  current: ReadonlyArray<DashboardObservation>;
+  incomplete: boolean;
+}): DashboardDecisionBrief {
+  const usable = input.current.filter((row) => row.hasEvidence);
+  const missed = usable.filter((row) => !row.brandMentioned);
+  const retryAction = {
+    title: 'Collect another matched sample set',
+    description: 'Re-run the same buyer prompts with matching engines and settings before assigning competitor work.',
+    href: '/dashboard/llm-tracker',
+  };
+
+  if (!usable.length) return {
+    status: 'unmeasured', competitor: null, competitorMentions: 0, missedAnswerCount: 0, prompt: null,
+    headline: 'No decision yet.',
+    evidence: 'Aelo has no usable answers in the current seven-day window.',
+    limitation: 'A competitor lead cannot be measured without successful samples.',
+    action: retryAction,
+  };
+
+  if (input.incomplete || usable.length < 4 || missed.length < 2) return {
+    status: 'inconclusive', competitor: null, competitorMentions: 0, missedAnswerCount: missed.length, prompt: null,
+    headline: 'No defensible competitor lead yet.',
+    evidence: `${usable.length} usable answer${usable.length === 1 ? '' : 's'}; your brand was absent from ${missed.length}.`,
+    limitation: input.incomplete
+      ? 'Some competitor or run evidence is incomplete, so Aelo will not name a leader.'
+      : 'At least four usable answers and two omissions are required before Aelo names a leader.',
+    action: retryAction,
+  };
+
+  const competitors = new Map<string, { name: string; count: number; prompts: Map<string, number> }>();
+  for (const row of missed) {
+    const seen = new Set<string>();
+    for (const rawName of row.competitorsMentioned ?? []) {
+      const name = rawName.trim();
+      const key = name.toLocaleLowerCase('en-US');
+      if (!name || seen.has(key)) continue;
+      seen.add(key);
+      const entry = competitors.get(key) ?? { name, count: 0, prompts: new Map<string, number>() };
+      entry.count += 1;
+      entry.prompts.set(row.prompt, (entry.prompts.get(row.prompt) ?? 0) + 1);
+      competitors.set(key, entry);
+    }
+  }
+  const ranked = [...competitors.values()].sort((a, b) => b.count - a.count || a.name.localeCompare(b.name));
+  const leader = ranked[0];
+  const tied = Boolean(leader && ranked[1]?.count === leader.count);
+  if (!leader || leader.count < 2 || tied) return {
+    status: 'inconclusive', competitor: null, competitorMentions: leader?.count ?? 0, missedAnswerCount: missed.length, prompt: null,
+    headline: tied ? 'The observed competitor lead is tied.' : 'No competitor repeated enough to lead.',
+    evidence: leader
+      ? `${leader.name} appeared in ${leader.count} of ${missed.length} answers that omitted your brand.`
+      : `${missed.length} usable answers omitted your brand without naming a tracked competitor.`,
+    limitation: 'Aelo does not turn a tie or a one-off mention into a winner claim.',
+    action: retryAction,
+  };
+
+  const prompt = [...leader.prompts.entries()]
+    .sort(([aPrompt, aCount], [bPrompt, bCount]) => bCount - aCount || aPrompt.localeCompare(bPrompt))[0]![0];
+  return {
+    status: 'actionable', competitor: leader.name, competitorMentions: leader.count, missedAnswerCount: missed.length, prompt,
+    headline: `${leader.name} led the answers that left you out.`,
+    evidence: `${leader.name} appeared in ${leader.count} of ${missed.length} usable answers that omitted your brand, most often for “${prompt}”.`,
+    limitation: 'This is an observed association in this sample, not proof that any page or source caused the result.',
+    action: {
+      title: `Create one source-gap action for “${prompt}”`,
+      description: `Compare the provider-cited pages that mention ${leader.name}, close one evidence gap, then re-run the same prompt under matching settings.`,
+      href: `/dashboard/interventions?prompt=${encodeURIComponent(prompt)}&competitor=${encodeURIComponent(leader.name)}`,
+    },
+  };
 }
 
 export function summarizeDashboardObservations(input: {
@@ -149,6 +238,10 @@ export function summarizeDashboardObservations(input: {
         brandMentioned: row.brandMentioned,
         competitorsMentioned: row.competitorsMentioned,
       }))).sharePercent;
+  const decisionBrief = competitorDecision({
+    current,
+    incomplete: input.truncated || Boolean(input.partialEvidence) || competitorEvidenceIncomplete,
+  });
 
   return {
     status: partialReasons.length ? 'partial' : 'complete',
@@ -165,5 +258,6 @@ export function summarizeDashboardObservations(input: {
       shareOfVoiceChange: null,
     },
     visibilityMetrics,
+    decisionBrief,
   };
 }

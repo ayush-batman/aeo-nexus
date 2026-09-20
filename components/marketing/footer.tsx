@@ -6,6 +6,7 @@ const LINKS = [
     { title: "Product", items: [["How it works", "/product"], ["Features", "/features"], ["Pricing", "/pricing"], ["Methodology", "/methodology"]] },
     { title: "Explore", items: [["India index", "/india-index"], ["Field notes", "/blog"], ["MCP", "/mcp"], ["Changelog", "/changelog"]] },
     { title: "Company", items: [["About", "/about"], ["Manifesto", "/manifesto"], ["Security", "/security"], ["Contact", "/contact"]] },
+    { title: "Resources", items: [["Sitemap", "/sitemap.xml"], ["RSS", "/rss.xml"]] },
 ];
 
 export function MarketingFooter() {

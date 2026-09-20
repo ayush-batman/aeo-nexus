@@ -1,3 +1,5 @@
+import { planByCheckoutKey, planByStoredKey } from './plan-catalog';
+
 export type BillablePlan = 'starter' | 'pro' | 'agency';
 
 export interface RazorpayPlan {
@@ -11,40 +13,40 @@ type BillingEnvironment = Record<string, string | undefined>;
 
 const RAZORPAY_PLANS: Readonly<Record<string, RazorpayPlan>> = {
   radar: {
-    amount: 499_900,
+    amount: planByCheckoutKey('radar')!.amountPaise,
     currency: 'INR',
     dbPlan: 'starter',
-    displayName: 'Radar',
+    displayName: planByCheckoutKey('radar')!.name,
   },
   starter: {
-    amount: 499_900,
+    amount: planByStoredKey('starter').amountPaise,
     currency: 'INR',
     dbPlan: 'starter',
-    displayName: 'Radar',
+    displayName: planByStoredKey('starter').name,
   },
   command: {
-    amount: 1_499_900,
+    amount: planByCheckoutKey('command')!.amountPaise,
     currency: 'INR',
     dbPlan: 'pro',
-    displayName: 'Command',
+    displayName: planByCheckoutKey('command')!.name,
   },
   pro: {
-    amount: 1_499_900,
+    amount: planByStoredKey('pro').amountPaise,
     currency: 'INR',
     dbPlan: 'pro',
-    displayName: 'Command',
+    displayName: planByStoredKey('pro').name,
   },
   concierge: {
-    amount: 5_000_000,
+    amount: planByCheckoutKey('concierge')!.amountPaise,
     currency: 'INR',
     dbPlan: 'agency',
-    displayName: 'Concierge',
+    displayName: planByCheckoutKey('concierge')!.name,
   },
   agency: {
-    amount: 5_000_000,
+    amount: planByStoredKey('agency').amountPaise,
     currency: 'INR',
     dbPlan: 'agency',
-    displayName: 'Concierge',
+    displayName: planByStoredKey('agency').name,
   },
 };
 
@@ -93,4 +95,3 @@ export function getStripePlanFromPrice(
 
   return null;
 }
-

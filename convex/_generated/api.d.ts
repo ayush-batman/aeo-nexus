@@ -25,6 +25,7 @@ import type * as attributionActions from "../attributionActions.js";
 import type * as auditActions from "../auditActions.js";
 import type * as auth from "../auth.js";
 import type * as authActions from "../authActions.js";
+import type * as authProviders from "../authProviders.js";
 import type * as billing from "../billing.js";
 import type * as billingActions from "../billingActions.js";
 import type * as content from "../content.js";
@@ -105,6 +106,7 @@ declare const fullApi: ApiFromModules<{
   auditActions: typeof auditActions;
   auth: typeof auth;
   authActions: typeof authActions;
+  authProviders: typeof authProviders;
   billing: typeof billing;
   billingActions: typeof billingActions;
   content: typeof content;

@@ -2,8 +2,9 @@
 // Paid (starter+) = all engines, uncapped, premium features.
 import { api } from '@/convex/_generated/api';
 import { fetchAuthQuery } from '@/lib/auth-server';
+import { planByStoredKey, type StoredPlanKey } from '@/lib/billing/plan-catalog';
 
-export type Plan = 'free' | 'starter' | 'pro' | 'agency' | 'enterprise';
+export type Plan = StoredPlanKey;
 
 const PAID_PLANS = new Set<Plan>(['starter', 'pro', 'agency', 'enterprise']);
 
@@ -11,7 +12,8 @@ export type Entitlements = {
     plan: Plan;
     paid: boolean;
     engines: string[];            // scan platforms allowed
-    scansPerWeek: number | null;  // null = unlimited
+    scanRuns: number;
+    scanPeriod: 'rolling 7 days' | 'rolling 30 days' | null;
     brands: number | null;        // null = unlimited
     accuracy: boolean;
     drift: boolean;
@@ -19,13 +21,15 @@ export type Entitlements = {
 };
 
 export function entitlementsForPlan(plan: Plan): Entitlements {
+    const definition = planByStoredKey(plan);
     const paid = PAID_PLANS.has(plan);
     if (paid) {
         return {
             plan,
             paid,
             engines: ['chatgpt', 'gemini', 'claude', 'perplexity'],
-            scansPerWeek: null,
+            scanRuns: definition.scanRuns,
+            scanPeriod: definition.scanPeriod,
             brands: null,
             accuracy: true,
             drift: true,
@@ -36,7 +40,8 @@ export function entitlementsForPlan(plan: Plan): Entitlements {
         plan,
         paid,
         engines: ['gemini'],
-        scansPerWeek: 3,
+        scanRuns: definition.scanRuns,
+        scanPeriod: definition.scanPeriod,
         brands: 1,
         accuracy: false,
         drift: false,

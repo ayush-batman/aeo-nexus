@@ -103,3 +103,56 @@ test('partial or pending measurement runs prevent an improvement claim', () => {
   assert.equal(summary.visibilityMetrics.find((metric) => metric.platform === 'Gemini')?.change, null);
   assert.ok(summary.partialReasons.includes('measurement_failures_or_pending_runs'));
 });
+
+test('a repeated competitor lead produces one evidence-bound action', () => {
+  const summary = summarizeDashboardObservations({
+    observations: [
+      observation({ prompt: 'best AEO platform', brandMentioned: false, competitorsMentioned: ['PeerCo'] }),
+      observation({ prompt: 'best AEO platform', brandMentioned: false, competitorsMentioned: ['peerco', 'Other'] }),
+      observation({ prompt: 'AI visibility software', brandMentioned: false, competitorsMentioned: ['PeerCo'] }),
+      observation({ prompt: 'AI visibility software', brandMentioned: true, competitorsMentioned: ['Other'] }),
+    ],
+    now: NOW,
+    truncated: false,
+  });
+
+  assert.equal(summary.decisionBrief.status, 'actionable');
+  assert.equal(summary.decisionBrief.competitor, 'PeerCo');
+  assert.equal(summary.decisionBrief.competitorMentions, 3);
+  assert.equal(summary.decisionBrief.prompt, 'best AEO platform');
+  assert.match(summary.decisionBrief.evidence, /3 of 3 usable answers/);
+  assert.match(summary.decisionBrief.limitation, /not proof/);
+  assert.match(summary.decisionBrief.action.href, /dashboard\/interventions/);
+});
+
+test('ties remain inconclusive instead of naming a winner', () => {
+  const summary = summarizeDashboardObservations({
+    observations: [
+      observation({ brandMentioned: false, competitorsMentioned: ['Alpha'] }),
+      observation({ brandMentioned: false, competitorsMentioned: ['Alpha'] }),
+      observation({ brandMentioned: false, competitorsMentioned: ['Beta'] }),
+      observation({ brandMentioned: false, competitorsMentioned: ['Beta'] }),
+    ],
+    now: NOW,
+    truncated: false,
+  });
+
+  assert.equal(summary.decisionBrief.status, 'inconclusive');
+  assert.equal(summary.decisionBrief.competitor, null);
+  assert.match(summary.decisionBrief.headline, /tied/);
+});
+
+test('small or incomplete samples recommend more evidence', () => {
+  const summary = summarizeDashboardObservations({
+    observations: [
+      observation({ brandMentioned: false, competitorsMentioned: ['Alpha'] }),
+      observation({ brandMentioned: true, competitorsMentioned: undefined }),
+    ],
+    now: NOW,
+    truncated: false,
+  });
+
+  assert.equal(summary.decisionBrief.status, 'inconclusive');
+  assert.equal(summary.decisionBrief.action.href, '/dashboard/llm-tracker');
+  assert.match(summary.decisionBrief.limitation, /incomplete/);
+});
