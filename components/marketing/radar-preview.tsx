@@ -35,6 +35,7 @@ export function RadarPreview({
 }: RadarPreviewProps) {
     const completed = status === "complete";
     const failed = status === "failed";
+    const pending = status === "queued" || status === "running";
     const providerSources = citations.filter(
         (citation) => citation.provenance === "provider_citation",
     );
@@ -44,8 +45,10 @@ export function RadarPreview({
             citation.fetchValidation !== "invalid" &&
             citation.fetchValidation !== "blocked",
     );
-    const nextStep = !completed
-        ? "Retry the failed sample before drawing a conclusion."
+    const nextStep = pending
+        ? "Wait for this sample to finish before drawing a conclusion."
+        : !completed
+            ? "Retry the failed sample before drawing a conclusion."
         : brandMentioned
             ? "Repeat this question across assistants before treating the mention as stable."
             : "Repeat this question, then inspect which sources appear when competitors are named."
@@ -69,7 +72,11 @@ export function RadarPreview({
                     What this receipt becomes after repeated measurement
                 </h2>
                 <p className="mt-2 max-w-xl text-sm leading-relaxed text-[var(--text-secondary)]">
-                    The first Gemini answer below is real. Everything marked unmeasured is a preview of Radar&apos;s structure, not generated data.
+                    {completed
+                        ? "The first Gemini answer below is real. Everything marked unmeasured is a preview of Radar's structure, not generated data."
+                        : failed
+                            ? "The Gemini sample failed. Everything marked unmeasured is a preview of Radar's structure, not generated data."
+                            : "The Gemini sample is still running. Everything marked unmeasured is a preview of Radar's structure, not generated data."}
                 </p>
             </div>
 
@@ -111,7 +118,9 @@ export function RadarPreview({
 
                     <div className="mt-5 border-l-2 border-[var(--border-active)] pl-3">
                         <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-[var(--text-tertiary)]">Confidence</p>
-                        <p className="mt-1 text-sm text-[var(--text-primary)]">Unavailable from one answer</p>
+                        <p className="mt-1 text-sm text-[var(--text-primary)]">
+                            {completed ? "Unavailable from one answer" : "Unavailable without a successful answer"}
+                        </p>
                         <p className="mt-1 text-xs leading-relaxed text-[var(--text-tertiary)]">Aelo waits for repeated, compatible samples instead of inventing a range.</p>
                     </div>
                 </div>

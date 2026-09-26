@@ -25,6 +25,7 @@
     "@edge-runtime/vm": "^5.0.0",
     "@types/pg": "^8.20.0",
     "@types/react": "19.2.14",
+    "@types/react-dom": "19.2.7",
     "convex-test": "^0.0.56",
     "dotenv": "^17.4.2",
     "eslint": "^9.39.5",

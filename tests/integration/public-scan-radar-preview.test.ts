@@ -10,8 +10,11 @@ test('public scan receipt previews Radar without presenting invented measurement
 
   assert.match(page, /<RadarPreview/);
   assert.match(preview, /The first Gemini answer below is real/);
+  assert.match(preview, /The Gemini sample failed/);
+  assert.match(preview, /The Gemini sample is still running/);
   assert.match(preview, /Not measured yet/);
   assert.match(preview, /Unavailable from one answer/);
+  assert.match(preview, /Unavailable without a successful answer/);
   assert.match(preview, /instead of inventing a range/);
   assert.match(preview, /provenance === "provider_citation"/);
   assert.doesNotMatch(preview, /\b\d{1,3}%\b/);

@@ -49,13 +49,14 @@ export default async function PublicScanPage(
     });
 
     const pending = scan.status === 'queued' || scan.status === 'running';
-    const verdictLabel = pending ? 'Running' : scan.error_message
+    const failed = scan.status === 'failed' || Boolean(scan.error_message);
+    const verdictLabel = pending ? 'Running' : failed
         ? 'Failed'
         : scan.brand_mentioned
             ? scan.mention_position && scan.mention_position <= 3 ? 'Named early' : 'Named'
             : 'Not named';
 
-    const verdictStyle = scan.error_message
+    const verdictStyle = pending || failed
         ? 'text-[var(--text-tertiary)] border-[var(--border-default)] bg-[var(--bg-raised)]'
         : scan.brand_mentioned
             ? 'text-[var(--data-green)] border-[var(--data-green)]/30 bg-[var(--data-green-muted)]'
@@ -76,12 +77,12 @@ export default async function PublicScanPage(
                     <h1 className="text-3xl md:text-4xl font-medium tracking-tighter leading-[1.05] text-white mb-3 text-balance">
                         {scan.brand_name}
                         {", "}
-                        <span className={scan.brand_mentioned === false ? 'text-[var(--data-red)]' : 'text-[var(--data-green)]'}>
+                        <span className={pending || failed ? 'text-[var(--text-secondary)]' : scan.brand_mentioned === false ? 'text-[var(--data-red)]' : 'text-[var(--data-green)]'}>
                             {verdictLabel.toLowerCase()}
                         </span>
                     </h1>
                     <p className="text-[15px] text-zinc-400 leading-relaxed max-w-2xl">
-                        {pending ? "Your scan is running. This page will update when evidence is saved." : scan.error_message ? "The provider did not produce usable evidence. No visibility result is claimed." : "This receipt contains one sampled answer from the Gemini API. Consumer Gemini may answer differently; read the saved evidence below."}
+                        {pending ? "Your scan is running. This page will update when evidence is saved." : failed ? "The provider did not produce usable evidence. No visibility result is claimed." : "This receipt contains one sampled answer from the Gemini API. Consumer Gemini may answer differently; read the saved evidence below."}
                     </p>
                 </div>
 
@@ -145,9 +146,9 @@ export default async function PublicScanPage(
                     </div>
                 )}
 
-                {scan.error_message && (
+                {failed && (
                     <div className="mb-6 rounded-md border border-[var(--data-red)]/30 bg-[var(--data-red-muted)] px-4 py-4 text-[13.5px] text-[var(--data-red)]">
-                        Scan failed: {scan.error_message}. This is what Aelo shows when a
+                        Scan failed: {scan.error_message || 'No usable provider response was saved.'} This is what Aelo shows when a
                         provider fails, no fabricated positive result.
                     </div>
                 )}
