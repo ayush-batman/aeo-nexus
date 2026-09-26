@@ -6,7 +6,6 @@ import {
     Heading,
     Hr,
     Html,
-    Img,
     Link,
     Preview,
     Section,
@@ -19,7 +18,7 @@ interface WelcomeEmailProps {
     firstName?: string;
 }
 
-const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "https://aelonexus.com";
+const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "https://aelohq.com";
 
 export const WelcomeEmail = ({ firstName = "there" }: WelcomeEmailProps) => {
     const previewText = `Welcome to Aelo! Track your brand in the AI era.`;
@@ -32,13 +31,9 @@ export const WelcomeEmail = ({ firstName = "there" }: WelcomeEmailProps) => {
                 <Body className="bg-zinc-50 font-sans">
                     <Container className="mx-auto py-10 px-4 max-w-[600px]">
                         <Section className="bg-white rounded-xl border border-zinc-200 p-8 shadow-sm">
-                            <Img
-                                src={`${baseUrl}/logo.png`}
-                                width="40"
-                                height="40"
-                                alt="Aelo"
-                                className="mx-auto mb-6"
-                            />
+                            <Text className="text-center mb-6" style={{ fontSize: 30, fontWeight: 600, letterSpacing: '-0.08em', color: '#0A0A0B' }}>
+                                aelo<span style={{ marginLeft: 3, fontSize: 15, verticalAlign: 'super', color: '#416A88' }}>↗</span>
+                            </Text>
 
                             <Heading className="text-2xl font-medium text-center text-zinc-900 mb-6 tracking-tight">
                                 Welcome to Aelo.

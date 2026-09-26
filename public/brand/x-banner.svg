@@ -1,17 +1,18 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1500" height="500" viewBox="0 0 1500 500">
   <defs>
     <radialGradient id="xGlow" cx="25%" cy="0%" r="85%">
-      <stop offset="0%" stop-color="#E5D3A6" stop-opacity="0.14" />
-      <stop offset="100%" stop-color="#E5D3A6" stop-opacity="0" />
+      <stop offset="0%" stop-color="#A8CBE0" stop-opacity="0.14" />
+      <stop offset="100%" stop-color="#A8CBE0" stop-opacity="0" />
     </radialGradient>
   </defs>
   <rect width="1500" height="500" fill="#0A0A0B" />
   <rect width="1500" height="500" fill="url(#xGlow)" />
   <g transform="translate(500 132) scale(1.6)">
-    <ellipse cx="50" cy="18" rx="28" ry="8" fill="none" stroke="#E5D3A6" stroke-width="3.2" transform="rotate(-8 50 18)" />
-    <text x="50" y="86" font-family="Inter, Helvetica Neue, Arial, sans-serif" font-size="72" fill="#FAFAFA" text-anchor="middle" font-weight="600">a</text>
+    <text x="38" y="86" font-family="Manrope, Helvetica Neue, Arial, sans-serif" font-size="72" fill="#FAFAFA" text-anchor="middle" font-weight="600">a</text>
+    <path d="M62 18H84V40M84 18 60 42" fill="none" stroke="#A8CBE0" stroke-width="5.5" stroke-linecap="square"/>
   </g>
-  <text x="785" y="236" font-family="Inter, Helvetica Neue, Arial, sans-serif" font-size="66" fill="#FAFAFA" font-weight="600" letter-spacing="-4">aelo</text>
-  <text x="788" y="278" font-family="Inter, Helvetica Neue, Arial, sans-serif" font-size="29" fill="#CFC7B8">AI visibility that survives skepticism.</text>
-  <text x="788" y="316" font-family="JetBrains Mono, ui-monospace, monospace" font-size="18" fill="#A1A1AA">The honest benchmark for brand visibility in AI answers.</text>
+  <text x="785" y="236" font-family="Manrope, Helvetica Neue, Arial, sans-serif" font-size="66" fill="#FAFAFA" font-weight="600" letter-spacing="-4">aelo</text>
+  <path d="M935 154H952V171M952 154 934 172" fill="none" stroke="#A8CBE0" stroke-width="4"/>
+  <text x="788" y="278" font-family="Manrope, Helvetica Neue, Arial, sans-serif" font-size="29" fill="#CFC7B8">AI visibility that survives skepticism.</text>
+  <text x="788" y="316" font-family="IBM Plex Mono, ui-monospace, monospace" font-size="18" fill="#A1A1AA">The honest benchmark for brand visibility in AI answers.</text>
 </svg>

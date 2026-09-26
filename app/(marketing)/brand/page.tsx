@@ -23,15 +23,15 @@ interface Asset {
 }
 
 const MARKS: Asset[] = [
-    { id: 'mark',              label: 'Mark',              filename: 'mark.svg',              format: 'SVG', intendedUse: 'Default, a wearing its halo', dimensions: '512 × 512', bg: 'dark' },
+    { id: 'mark',              label: 'Mark',              filename: 'mark.svg',              format: 'SVG', intendedUse: 'Default, a with reference arrow', dimensions: '512 × 512', bg: 'dark' },
     { id: 'mark-mono-white',   label: 'Mark · mono white', filename: 'mark-mono-white.svg',   format: 'SVG', intendedUse: 'Dark backgrounds',           dimensions: '512 × 512', bg: 'dark' },
     { id: 'mark-mono-black',   label: 'Mark · mono black', filename: 'mark-mono-black.svg',   format: 'SVG', intendedUse: 'Light backgrounds',          dimensions: '512 × 512', bg: 'light' },
 ];
 
 const WORDMARKS: Asset[] = [
-    { id: 'wordmark',              label: 'Wordmark',              filename: 'wordmark.svg',              format: 'SVG', intendedUse: 'Default, halo over the a', dimensions: '360 × 120', bg: 'dark' },
-    { id: 'wordmark-mono-white',   label: 'Wordmark · mono white', filename: 'wordmark-mono-white.svg',   format: 'SVG', intendedUse: 'Dark backgrounds',           dimensions: '360 × 120', bg: 'dark' },
-    { id: 'wordmark-mono-black',   label: 'Wordmark · mono black', filename: 'wordmark-mono-black.svg',   format: 'SVG', intendedUse: 'Light backgrounds',          dimensions: '360 × 120', bg: 'light' },
+    { id: 'wordmark',              label: 'Wordmark',              filename: 'wordmark.svg',              format: 'SVG', intendedUse: 'Default, aelo with reference arrow', dimensions: '320 × 120', bg: 'dark' },
+    { id: 'wordmark-mono-white',   label: 'Wordmark · mono white', filename: 'wordmark-mono-white.svg',   format: 'SVG', intendedUse: 'Dark backgrounds',           dimensions: '320 × 120', bg: 'dark' },
+    { id: 'wordmark-mono-black',   label: 'Wordmark · mono black', filename: 'wordmark-mono-black.svg',   format: 'SVG', intendedUse: 'Light backgrounds',          dimensions: '320 × 120', bg: 'light' },
 ];
 
 const SOCIAL: Asset[] = [
@@ -83,7 +83,7 @@ export default function BrandPage() {
                         Two colors do most of the work.
                     </h2>
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                        <ColorCard name="Beacon"           hex="#E5D3A6" role="Accent · one per view"     borderColor />
+                        <ColorCard name="Reference blue"   hex="#A8CBE0" role="Accent · one per view"     borderColor />
                         <ColorCard name="Sage black"       hex="#0A0A0B" role="Canvas · dominant"          borderColor />
                         <ColorCard name="Data red"         hex="#D43636" role="Negative · warnings only"   />
                         <ColorCard name="Data green"       hex="#5EC08C" role="Confirmed · verdicts only"  />
@@ -98,12 +98,12 @@ export default function BrandPage() {
                         05 · Typography
                     </p>
                     <h2 className="text-2xl md:text-3xl font-medium tracking-tight text-white mb-8">
-                        Inter for prose. JetBrains Mono for signals.
+                        Manrope for reading. IBM Plex Mono for data.
                     </h2>
                     <div className="space-y-3">
-                        <FontRow family="Inter"           weight="500 (Medium)" sample="See how ChatGPT, Gemini, Claude and Perplexity actually answer." />
-                        <FontRow family="Inter"           weight="400 (Regular)" sample="Aelo is the honest measurement layer for AI answer visibility." />
-                        <FontRow family="JetBrains Mono"  weight="400" sample="AI VISIBILITY · HONEST DATA · JULY 2026" />
+                        <FontRow family="Manrope"        weight="500 (Medium)" sample="See how ChatGPT, Gemini, Claude and Perplexity actually answer." />
+                        <FontRow family="Manrope"        weight="400 (Regular)" sample="Aelo is the honest measurement layer for AI answer visibility." />
+                        <FontRow family="IBM Plex Mono" weight="400" sample="AI VISIBILITY · HONEST DATA · SEPTEMBER 2026" />
                     </div>
                 </div>
             </section>
@@ -118,12 +118,12 @@ export default function BrandPage() {
                         A short list. No 40-page PDF.
                     </h2>
                     <div className="space-y-2">
-                        <Rule ok body="Use the ivory-halo mark on dark backgrounds. Default." />
-                        <Rule ok body="Mono variants on backgrounds that fight the ivory halo." />
+                        <Rule ok body="Use the blue-arrow mark on dark backgrounds. Default." />
+                        <Rule ok body="Use a mono variant when the blue arrow loses contrast." />
                         <Rule ok body="Give the mark at least the height of the mark itself as clear space around it." />
                         <Rule ok body="Wordmark reads 'aelo', always lowercase, always." />
-                        <Rule    body="Don't detach the halo or change its tilt. It sits over the a." />
-                        <Rule    body="Don't recolor the halo, the ivory ring of light is the point." />
+                        <Rule    body="Keep the arrow paired with the wordmark or the a mark." />
+                        <Rule    body="The arrow signals a next step, not a promised upward trend." />
                         <Rule    body="Don't add drop-shadows, glows, or gradients. Sage archetype." />
                         <Rule    body="Don't lock the mark inside another shape (circle, square) unless it's the favicon variant." />
                     </div>
@@ -257,7 +257,7 @@ function FontRow({ family, weight, sample }: { family: string; weight: string; s
             </div>
             <div
                 className="text-[18px] text-white leading-snug"
-                style={{ fontFamily: isMono ? '"JetBrains Mono", ui-monospace, monospace' : 'Inter, sans-serif' }}
+                style={{ fontFamily: isMono ? 'var(--font-mono)' : 'var(--font-sans)' }}
             >
                 {sample}
             </div>

@@ -1,16 +1,17 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1080" height="1080" viewBox="0 0 1080 1080">
   <defs>
     <linearGradient id="igGlow" x1="0%" y1="20%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#E5D3A6" stop-opacity="0.12" />
-      <stop offset="100%" stop-color="#E5D3A6" stop-opacity="0" />
+      <stop offset="0%" stop-color="#A8CBE0" stop-opacity="0.12" />
+      <stop offset="100%" stop-color="#A8CBE0" stop-opacity="0" />
     </linearGradient>
   </defs>
   <rect width="1080" height="1080" fill="#0A0A0B" />
   <rect width="1080" height="1080" fill="url(#igGlow)" />
   <g transform="translate(540 440) scale(3.9)">
-    <ellipse cx="0" cy="-4.4" rx="28" ry="8" fill="none" stroke="#E5D3A6" stroke-width="2.8" transform="rotate(-8 0 -4.4)" />
-    <text x="0" y="36" font-family="Inter, Helvetica Neue, Arial, sans-serif" font-size="72" fill="#FAFAFA" text-anchor="middle" font-weight="600">a</text>
+    <text x="-12" y="36" font-family="Manrope, Helvetica Neue, Arial, sans-serif" font-size="72" fill="#FAFAFA" text-anchor="middle" font-weight="600">a</text>
+    <path d="M12 -29H34V-7M34 -29 10 -5" fill="none" stroke="#A8CBE0" stroke-width="5.5" stroke-linecap="square"/>
   </g>
-  <text x="540" y="760" font-family="Inter, Helvetica Neue, Arial, sans-serif" font-size="112" fill="#FAFAFA" text-anchor="middle" font-weight="600" letter-spacing="-4">aelo</text>
-  <text x="540" y="828" font-family="Inter, Helvetica Neue, Arial, sans-serif" font-size="38" fill="#CFC7B8" text-anchor="middle">AI answers are receipts first.</text>
+  <text x="540" y="760" font-family="Manrope, Helvetica Neue, Arial, sans-serif" font-size="112" fill="#FAFAFA" text-anchor="middle" font-weight="600" letter-spacing="-4">aelo</text>
+  <path d="M717 620H748V651M748 620 715 653" fill="none" stroke="#A8CBE0" stroke-width="6"/>
+  <text x="540" y="828" font-family="Manrope, Helvetica Neue, Arial, sans-serif" font-size="38" fill="#CFC7B8" text-anchor="middle">AI answers are receipts first.</text>
 </svg>

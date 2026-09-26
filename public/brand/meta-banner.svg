@@ -1,18 +1,19 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
   <defs>
     <linearGradient id="metaGlow" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#E5D3A6" stop-opacity="0.12" />
-      <stop offset="50%" stop-color="#E5D3A6" stop-opacity="0.03" />
-      <stop offset="100%" stop-color="#E5D3A6" stop-opacity="0" />
+      <stop offset="0%" stop-color="#A8CBE0" stop-opacity="0.12" />
+      <stop offset="50%" stop-color="#A8CBE0" stop-opacity="0.03" />
+      <stop offset="100%" stop-color="#A8CBE0" stop-opacity="0" />
     </linearGradient>
   </defs>
   <rect width="1200" height="630" fill="#0A0A0B" />
   <rect width="1200" height="630" fill="url(#metaGlow)" />
   <g transform="translate(160 175) scale(2.2)">
-    <ellipse cx="50" cy="18" rx="28" ry="8" fill="none" stroke="#E5D3A6" stroke-width="3.2" transform="rotate(-8 50 18)" />
-    <text x="50" y="86" font-family="Inter, Helvetica Neue, Arial, sans-serif" font-size="72" fill="#FAFAFA" text-anchor="middle" font-weight="600">a</text>
+    <text x="38" y="86" font-family="Manrope, Helvetica Neue, Arial, sans-serif" font-size="72" fill="#FAFAFA" text-anchor="middle" font-weight="600">a</text>
+    <path d="M62 18H84V40M84 18 60 42" fill="none" stroke="#A8CBE0" stroke-width="5.5" stroke-linecap="square"/>
   </g>
-  <text x="540" y="340" font-family="Inter, Helvetica Neue, Arial, sans-serif" font-size="72" fill="#FAFAFA" text-anchor="middle" font-weight="600" letter-spacing="-5">aelo</text>
-  <text x="540" y="392" font-family="Inter, Helvetica Neue, Arial, sans-serif" font-size="34" fill="#CFC7B8" text-anchor="middle">AI visibility measured with confidence, not vibes.</text>
-  <text x="540" y="442" font-family="JetBrains Mono, ui-monospace, monospace" font-size="18" fill="#A1A1AA" text-anchor="middle">ChatGPT · Gemini · Claude · Perplexity</text>
+  <text x="540" y="340" font-family="Manrope, Helvetica Neue, Arial, sans-serif" font-size="72" fill="#FAFAFA" text-anchor="middle" font-weight="600" letter-spacing="-5">aelo</text>
+  <path d="M645 250H664V269M664 250 644 270" fill="none" stroke="#A8CBE0" stroke-width="4"/>
+  <text x="540" y="392" font-family="Manrope, Helvetica Neue, Arial, sans-serif" font-size="34" fill="#CFC7B8" text-anchor="middle">AI visibility measured with confidence, not vibes.</text>
+  <text x="540" y="442" font-family="IBM Plex Mono, ui-monospace, monospace" font-size="18" fill="#A1A1AA" text-anchor="middle">ChatGPT · Gemini · Claude · Perplexity</text>
 </svg>

@@ -1,17 +1,18 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1584" height="396" viewBox="0 0 1584 396">
   <defs>
     <linearGradient id="ln" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#E5D3A6" stop-opacity="0.12" />
-      <stop offset="100%" stop-color="#E5D3A6" stop-opacity="0" />
+      <stop offset="0%" stop-color="#A8CBE0" stop-opacity="0.12" />
+      <stop offset="100%" stop-color="#A8CBE0" stop-opacity="0" />
     </linearGradient>
   </defs>
   <rect width="1584" height="396" fill="#0A0A0B" />
   <rect width="1584" height="396" fill="url(#ln)" />
   <g transform="translate(540 84) scale(1.55)">
-    <ellipse cx="50" cy="18" rx="28" ry="8" fill="none" stroke="#E5D3A6" stroke-width="3.2" transform="rotate(-8 50 18)" />
-    <text x="50" y="86" font-family="Inter, Helvetica Neue, Arial, sans-serif" font-size="72" fill="#FAFAFA" text-anchor="middle" font-weight="600">a</text>
+    <text x="38" y="86" font-family="Manrope, Helvetica Neue, Arial, sans-serif" font-size="72" fill="#FAFAFA" text-anchor="middle" font-weight="600">a</text>
+    <path d="M62 18H84V40M84 18 60 42" fill="none" stroke="#A8CBE0" stroke-width="5.5" stroke-linecap="square"/>
   </g>
-  <text x="840" y="188" font-family="Inter, Helvetica Neue, Arial, sans-serif" font-size="64" fill="#FAFAFA" font-weight="600" letter-spacing="-4">aelo</text>
-  <text x="842" y="236" font-family="Inter, Helvetica Neue, Arial, sans-serif" font-size="28" fill="#CFC7B8">Measure AI answers with real citation receipts.</text>
-  <text x="842" y="272" font-family="JetBrains Mono, ui-monospace, monospace" font-size="21" fill="#A1A1AA">AI visibility that your team can act on, today.</text>
+  <text x="840" y="188" font-family="Manrope, Helvetica Neue, Arial, sans-serif" font-size="64" fill="#FAFAFA" font-weight="600" letter-spacing="-4">aelo</text>
+  <path d="M985 111H1002V128M1002 111 984 129" fill="none" stroke="#A8CBE0" stroke-width="4"/>
+  <text x="842" y="236" font-family="Manrope, Helvetica Neue, Arial, sans-serif" font-size="28" fill="#CFC7B8">Measure AI answers with real citation receipts.</text>
+  <text x="842" y="272" font-family="IBM Plex Mono, ui-monospace, monospace" font-size="21" fill="#A1A1AA">AI visibility that your team can act on, today.</text>
 </svg>

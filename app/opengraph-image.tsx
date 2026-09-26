@@ -24,15 +24,12 @@ export default async function OG() {
                     fontFamily:     'system-ui, sans-serif',
                 }}
             >
-                {/* Top: mark + wordmark */}
-                <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-                    <svg width="42" height="42" viewBox="0 0 24 24" fill="none">
-                        <path d="M12 2L2 22h20L12 2z" fill="#E5D3A6" />
-                        <path d="M12 9L7 19h10L12 9z" fill="#000" />
-                    </svg>
-                    <div style={{ fontSize: 32, letterSpacing: '-0.02em', color: '#fff', fontWeight: 500 }}>
+                {/* The same wordmark used in the app and the browser icon. */}
+                <div style={{ display: 'flex', alignItems: 'flex-start', gap: 3 }}>
+                    <div style={{ fontSize: 32, letterSpacing: '-0.08em', color: '#fff', fontWeight: 600 }}>
                         aelo
                     </div>
+                    <div style={{ fontSize: 16, color: '#A8CBE0' }}>↗</div>
                 </div>
 
                 {/* Middle: pitch */}
@@ -84,7 +81,7 @@ export default async function OG() {
                         style={{
                             fontSize:       18,
                             fontFamily:     'monospace',
-                            color:          '#E5D3A6',
+                            color:          '#A8CBE0',
                             letterSpacing:  '0.02em',
                         }}
                     >
