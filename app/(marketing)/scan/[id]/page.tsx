@@ -52,6 +52,9 @@ export default async function PublicScanPage(
 
     const pending = scan.status === 'queued' || scan.status === 'running';
     const failed = scan.status === 'failed' || Boolean(scan.error_message);
+    const uncheckedCitationCount = (scan.citations ?? []).filter(
+        (citation) => !citation.fetchValidation || citation.fetchValidation === 'not_checked',
+    ).length;
     const verdictLabel = pending ? 'Running' : failed
         ? 'Failed'
         : scan.brand_mentioned
@@ -75,6 +78,8 @@ export default async function PublicScanPage(
                         <time dateTime={scan.created_at}>{scanDate}</time>
                         <span>·</span>
                         <span>{scan.platform === 'gemini' ? 'Gemini' : scan.platform}</span>
+                        <span>·</span>
+                        <span>{pending ? 'Model pending' : scan.provider_model ?? 'Model not recorded'}</span>
                     </div>
                     <h1 className="text-3xl md:text-4xl font-medium tracking-tighter leading-[1.05] text-white mb-3 text-balance">
                         {scan.brand_name}
@@ -177,6 +182,10 @@ export default async function PublicScanPage(
                                 Evidence links in this answer
                             </span>
                         </div>
+                        <p className="px-4 pt-3 text-xs leading-relaxed text-zinc-500">
+                            Provider citation means the assistant supplied this link; it does not prove the page supports its answer.
+                            {uncheckedCitationCount > 0 && ` Page content and reachability have not been checked for ${uncheckedCitationCount} ${uncheckedCitationCount === 1 ? 'link' : 'links'}.`}
+                        </p>
                         <div className="px-4 py-3 space-y-1.5">
                             {scan.citations!.slice(0, 10).map((c, i) => {
                                 const unsafe = c.fetchValidation === 'invalid' || c.fetchValidation === 'blocked' || !/^https?:\/\//i.test(c.url);
