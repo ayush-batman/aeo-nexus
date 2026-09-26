@@ -6,6 +6,7 @@ const iso = (value: number | null) => value === null ? null : new Date(value).to
 export function legacyScan(row: Doc<'scans'>, workspaceId: string): LLMScan {
   return { id: row.publicId, workspace_id: workspaceId, platform: row.platform,
     prompt: row.prompt, response: row.response, brand_mentioned: row.brandMentioned,
+    recommendation_status: row.recommendationStatus ?? null, recommendation_evidence: row.recommendationEvidence ?? null,
     mention_position: row.mentionPosition, sentiment: row.sentiment, competitors_mentioned: row.competitorsMentioned,
     citations: row.citations.map((citation) => ({ url: citation.url, title: citation.title,
       is_own_domain: citation.isOwnDomain, provenance: citation.provenance, provider: citation.provider,

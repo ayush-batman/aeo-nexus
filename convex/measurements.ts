@@ -10,6 +10,7 @@ import { limits } from './lib/limits';
 import { engineValidator, nullableString } from './validators';
 import { upsertScanMetric } from './lib/scanMetrics';
 import { PLAN_CATALOG } from '../lib/billing/plan-catalog';
+import { recommendationEvidence } from './lib/recommendationEvidence';
 
 export const capabilities = tenantQuery({
   args: {}, returns: v.object({ available: v.array(v.object({ platform: engineValidator, available: v.boolean() })), allowedEngines: v.array(v.string()) }),
@@ -187,6 +188,9 @@ export const finishSample = internalMutation({
       sentimentScore: result.sentimentScore, sentimentReason: result.sentimentReason, competitorsMentioned: result.competitorsMentioned,
       listItems: result.listItems, analyzerConfidence: result.confidence, analyzerMethod: result.analyzerMethod ?? null,
       analyzerModel: result.analyzerModel ?? null, analyzerPromptVersion: result.analyzerPromptVersion ?? null,
+      ...recommendationEvidence({ status: result.recommendationStatus, evidence: result.recommendationEvidence,
+        method: result.recommendationMethod, response: result.response, brandMentioned: result.brandMentioned,
+        brandName: run.input.brandName }),
       searchMode: result.searchMode ?? null, citations: result.citations.map((citation) => ({ url: citation.url, title: citation.title,
         isOwnDomain: citation.is_own_domain, provenance: citation.provenance, provider: citation.provider,
         sampleId: citation.sample_id, rawProviderReference: citation.raw_provider_reference, fetchValidation: citation.fetch_validation })),

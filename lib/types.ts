@@ -76,6 +76,8 @@ export interface LLMScan {
     prompt: string;
     response: string;
     brand_mentioned: boolean;
+    recommendation_status?: 'recommended' | 'not_recommended' | 'unassessed' | 'not_mentioned' | null;
+    recommendation_evidence?: string | null;
     mention_position: number | null;
     sentiment: 'positive' | 'neutral' | 'negative' | null;
     competitors_mentioned: string[];

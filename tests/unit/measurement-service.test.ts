@@ -7,6 +7,9 @@ function result(platform: ScanResult['platform'], mentioned: boolean, sampleId: 
   return {
     platform, prompt: 'best tools', response: mentioned ? 'Aelo is listed.' : 'Other tools.',
     brandMentioned: mentioned, brandVariants: mentioned ? ['Aelo'] : [], mentionPosition: mentioned ? 1 : null,
+    recommendationStatus: mentioned ? 'recommended' : 'not_mentioned',
+    recommendationEvidence: mentioned ? 'Aelo is listed.' : null,
+    recommendationMethod: mentioned ? 'synthetic-analyzer' : null,
     sentiment: mentioned ? 'positive' : null, sentimentScore: mentioned ? 0.8 : 0,
     sentimentReason: 'fixture', competitorsMentioned: [], competitorPositions: [], citations: [],
     sampleId, listItems: [], confidence: 0.9, timestamp: '2026-08-29T00:00:00.000Z',
@@ -31,6 +34,10 @@ test('canonical run records complete engine and sample receipts', async () => {
   assert.equal(run.samples.length, 4);
   assert.equal(run.samples[0].scorerVersion, 'aelo-brand-scorer.v2');
   assert.equal(run.samples[0].mode, 'standard');
+  assert.equal(run.samples[0].recommendationStatus, 'recommended');
+  assert.equal(run.samples[0].recommendationEvidence, 'Aelo is listed.');
+  assert.equal(run.samples[3].recommendationStatus, 'not_mentioned');
+  assert.equal(run.visibilityScore, 75, 'recommendation metadata must not change the mention score');
 });
 
 test('canonical run distinguishes partial, all-failed, and untracked states', async () => {
@@ -48,6 +55,7 @@ test('canonical run distinguishes partial, all-failed, and untracked states', as
   }, { execute: async () => ({ results: [], errors: [{ platform: 'claude', error: 'offline' }] }) });
   assert.equal(allFailed.status, 'all_failed');
   assert.equal(allFailed.visibilityScore, null);
+  assert.equal(allFailed.samples[0].recommendationStatus, 'unassessed');
 
   const untracked = await runVisibilityMeasurement({
     prompt: 'best tools', brandName: 'Aelo', platforms: [], samples: 1,

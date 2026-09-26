@@ -101,7 +101,45 @@ test('AI sentiment cannot erase a real brand mention, and zero confidence is pre
     assert.equal(result.brandMentioned, true);
     assert.equal(result.confidence, 0);
     assert.equal(result.analyzerModel, 'synthetic-analyzer');
-    assert.equal(result.analyzerPromptVersion, 'aelo-sentiment.v3');
+    assert.equal(result.analyzerPromptVersion, 'aelo-sentiment-recommendation.v4');
+    assert.equal(result.recommendationStatus, 'unassessed');
+  } finally {
+    globalThis.fetch = originalFetch;
+    for (const [key, value] of Object.entries({ GOOGLE_API_KEY: previous.google, GEMINI_API_KEY: previous.gemini, ANTHROPIC_API_KEY: previous.claude })) {
+      if (value === undefined) delete process.env[key]; else process.env[key] = value;
+    }
+  }
+});
+
+test('recommendation classification requires a verbatim brand-bearing answer span', async () => {
+  const previous = { google: process.env.GOOGLE_API_KEY, gemini: process.env.GEMINI_API_KEY, claude: process.env.ANTHROPIC_API_KEY };
+  const originalFetch = globalThis.fetch;
+  for (const key of ['GOOGLE_API_KEY', 'GEMINI_API_KEY']) delete process.env[key];
+  process.env.ANTHROPIC_API_KEY = 'synthetic-never-sent';
+  let classification: Record<string, unknown> = {};
+  let analyzerCalls = 0;
+  globalThis.fetch = async () => { analyzerCalls += 1; return new Response(JSON.stringify({ model: 'synthetic-analyzer', content: [{ text: JSON.stringify({
+    sentiment: 'neutral', sentimentScore: 0, confidence: 0.8, reason: 'Context checked', ...classification,
+  }) }] }), { status: 200 }); };
+  try {
+    classification = { recommendationStatus: 'recommended', recommendationEvidence: 'Buffer is an excellent choice.' };
+    const recommended = await analyzeWithAI({ response: 'Buffer is an excellent choice. Later is another option.', brandName: 'Buffer' });
+    assert.equal(recommended.recommendationStatus, 'recommended');
+    assert.equal(recommended.recommendationEvidence, 'Buffer is an excellent choice.');
+
+    classification = { recommendationStatus: 'not_recommended', recommendationEvidence: 'Alternatives to Buffer include Planable.' };
+    const alternatives = await analyzeWithAI({ response: 'Alternatives to Buffer include Planable.', brandName: 'Buffer' });
+    assert.equal(alternatives.brandMentioned, true);
+    assert.equal(alternatives.recommendationStatus, 'not_recommended');
+
+    classification = { recommendationStatus: 'recommended', recommendationEvidence: 'Buffer is the best choice.' };
+    const invented = await analyzeWithAI({ response: 'Buffer is mentioned alongside Planable.', brandName: 'Buffer' });
+    assert.equal(invented.recommendationStatus, 'unassessed');
+    assert.equal(invented.recommendationEvidence, null);
+
+    const absent = await analyzeWithAI({ response: 'Planable is a good choice.', brandName: 'Buffer' });
+    assert.equal(absent.recommendationStatus, 'not_mentioned');
+    assert.equal(analyzerCalls, 3, 'absent brand must not trigger sentiment analysis');
   } finally {
     globalThis.fetch = originalFetch;
     for (const [key, value] of Object.entries({ GOOGLE_API_KEY: previous.google, GEMINI_API_KEY: previous.gemini, ANTHROPIC_API_KEY: previous.claude })) {

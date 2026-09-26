@@ -29,6 +29,9 @@ export interface ScanResult {
     prompt: string;
     response: string;
     brandMentioned: boolean;
+    recommendationStatus?: 'recommended' | 'not_recommended' | 'unassessed' | 'not_mentioned';
+    recommendationEvidence?: string | null;
+    recommendationMethod?: string | null;
     brandVariants: string[];
     mentionPosition: number | null;
     sentiment: 'positive' | 'neutral' | 'negative' | null;
@@ -216,6 +219,9 @@ export async function scanLLM(options: ScanOptions): Promise<ScanOutput> {
                 prompt,
                 response,
                 brandMentioned: analysis.brandMentioned,
+                recommendationStatus: analysis.recommendationStatus,
+                recommendationEvidence: analysis.recommendationEvidence,
+                recommendationMethod: analysis.recommendationMethod,
                 brandVariants: analysis.brandVariants,
                 mentionPosition: analysis.mentionPosition,
                 sentiment: analysis.sentiment,

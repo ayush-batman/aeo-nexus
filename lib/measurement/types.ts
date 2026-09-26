@@ -31,6 +31,9 @@ export type MeasurementSample = {
   analyzerMethod?: string | null;
   analyzerModel?: string | null;
   analyzerPromptVersion?: string | null;
+  recommendationStatus?: 'recommended' | 'not_recommended' | 'unassessed' | 'not_mentioned';
+  recommendationEvidence?: string | null;
+  recommendationMethod?: string | null;
   status: 'succeeded' | 'failed';
   sampleId: string | null;
   mentioned: boolean | null;

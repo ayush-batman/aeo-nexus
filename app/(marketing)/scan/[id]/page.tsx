@@ -7,6 +7,7 @@ import { PendingReceipt } from "@/components/marketing/pending-receipt";
 import { NewsletterSubscribe } from "@/components/marketing/newsletter-subscribe";
 import { RadarPreview } from "@/components/marketing/radar-preview";
 import { PLAN_CATALOG } from "@/lib/billing/plan-catalog";
+import { recommendationLabel } from "@/lib/measurement/recommendation-label";
 
 export const dynamic = 'force-dynamic';
 async function getScan(id: string) {
@@ -131,6 +132,16 @@ export default async function PublicScanPage(
                         </span>
                     )}
                 </div>
+
+                {!pending && !failed && scan.brand_mentioned && (
+                    <div className="mb-6 rounded-md border border-[var(--border-default)] bg-[var(--bg-raised)] px-4 py-3 text-sm text-[var(--text-secondary)]">
+                        <p className="font-medium text-[var(--text-primary)]">
+                            {recommendationLabel(scan.recommendation_status)}
+                        </p>
+                        {scan.recommendation_evidence && <p className="mt-2">“{scan.recommendation_evidence}”</p>}
+                        <p className="mt-2 text-xs">{scan.recommendation_evidence ? 'AI-classified from the quoted answer; check the full response below. ' : ''}Mention and recommendation are different. This single answer is not a visibility score.</p>
+                    </div>
+                )}
 
                 {/* Raw response */}
                 {scan.response && (

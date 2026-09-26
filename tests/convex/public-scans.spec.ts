@@ -35,3 +35,24 @@ test('public scan watchdog stores terminal states without exposing or deleting e
   expect(await t.query(api.publicScans.get, { id: publicId })).toBeNull();
   expect(await t.run(ctx => ctx.db.get(id))).toMatchObject({ status: 'expired' });
 });
+
+test('public receipts separate recommendation evidence and leave legacy rows unassessed', async () => {
+  const { t } = await fixture();
+  const publicId = crypto.randomUUID();
+  await t.mutation(internal.publicScans.reserve, { id: publicId, ipHash: 'c'.repeat(64), brandName: 'Buffer', prompt: 'Which social tools help small teams?' });
+  const rowId = await t.run(async ctx => {
+    const row = await ctx.db.query('publicScans').withIndex('by_public_id', q => q.eq('publicId', publicId)).unique();
+    await ctx.db.patch(row!._id, { status: 'complete', response: 'Alternatives to Buffer include Planable.', brandMentioned: true });
+    return row!._id;
+  });
+  expect(await t.query(api.publicScans.get, { id: publicId })).toMatchObject({
+    brand_mentioned: true, recommendation_status: null, recommendation_evidence: null,
+  });
+  await t.run(ctx => ctx.db.patch(rowId, {
+    recommendationStatus: 'not_recommended', recommendationEvidence: 'Alternatives to Buffer include Planable.',
+  }));
+  expect(await t.query(api.publicScans.get, { id: publicId })).toMatchObject({
+    brand_mentioned: true, recommendation_status: 'not_recommended',
+    recommendation_evidence: 'Alternatives to Buffer include Planable.',
+  });
+});

@@ -3,11 +3,14 @@ import { query, internalMutation } from './_generated/server';
 import { internal } from './_generated/api';
 import { citationValidator, nullableString, nullableNumber, sentimentValidator } from './validators';
 import { scanResult } from './lib/measurementContract';
+import { recommendationEvidence } from './lib/recommendationEvidence';
 
 const publicReceipt = v.object({ id: v.string(), brand_name: v.string(), prompt: v.string(), platform: v.string(), response: nullableString,
   brand_mentioned: v.union(v.boolean(), v.null()), mention_position: nullableNumber, sentiment: v.union(sentimentValidator, v.null()),
   competitors_mentioned: v.array(v.string()), citations: v.array(citationValidator), error_message: nullableString, created_at: v.string(),
-  status: v.string(), provider_model: nullableString, scorer_version: nullableString, sample_count: v.number() });
+  status: v.string(), provider_model: nullableString, scorer_version: nullableString, sample_count: v.number(),
+  recommendation_status: v.union(v.literal('recommended'), v.literal('not_recommended'), v.literal('unassessed'), v.literal('not_mentioned'), v.null()),
+  recommendation_evidence: nullableString });
 export const get = query({
   args: { id: v.string() }, returns: v.union(publicReceipt, v.null()),
   handler: async (ctx, args) => {
@@ -22,7 +25,8 @@ export const get = query({
       competitors_mentioned: row.competitorsMentioned, citations: row.citations,
       error_message: timedOut ? 'The provider did not finish within the allowed time.' : row.errorMessage,
       created_at: new Date(row.createdAt).toISOString(), status, provider_model: row.providerModel ?? null, scorer_version: row.scorerVersion ?? null,
-      sample_count: row.response && !row.errorMessage ? 1 : 0 };
+      sample_count: row.response && !row.errorMessage ? 1 : 0,
+      recommendation_status: row.recommendationStatus ?? null, recommendation_evidence: row.recommendationEvidence ?? null };
   },
 });
 export const reserve = internalMutation({
@@ -79,7 +83,10 @@ export const finish = internalMutation({
       sentiment: r.sentiment, competitorsMentioned: r.competitorsMentioned, citations: r.citations.map(c => ({ url: c.url, title: c.title,
         isOwnDomain: c.is_own_domain, provenance: c.provenance, provider: c.provider, sampleId: c.sample_id,
         rawProviderReference: c.raw_provider_reference, fetchValidation: c.fetch_validation })),
-      providerModel: r.providerModel ?? null, scorerVersion: r.scorerVersion ?? null, errorMessage: null });
+      providerModel: r.providerModel ?? null, scorerVersion: r.scorerVersion ?? null,
+      ...recommendationEvidence({ status: r.recommendationStatus, evidence: r.recommendationEvidence,
+        method: r.recommendationMethod, response: r.response, brandMentioned: r.brandMentioned,
+        brandName: row.brandName }), errorMessage: null });
     return null;
   },
 });

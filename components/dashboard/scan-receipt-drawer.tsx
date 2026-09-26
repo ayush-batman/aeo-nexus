@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Copy, CheckCircle, ExternalLink, ChevronDown, ChevronUp, Loader2, FileText } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { formatDistanceToNow } from "date-fns";
+import { recommendationLabel } from "@/lib/measurement/recommendation-label";
 
 interface Scan {
     id:                    string;
@@ -13,6 +14,8 @@ interface Scan {
     prompt:                string;
     response:              string;
     brand_mentioned:       boolean;
+    recommendation_status?: 'recommended' | 'not_recommended' | 'unassessed' | 'not_mentioned' | null;
+    recommendation_evidence?: string | null;
     mention_position:      number | null;
     sentiment:             'positive' | 'neutral' | 'negative' | null;
     competitors_mentioned: string[] | null;
@@ -211,6 +214,11 @@ function ScanRow({ scan, expanded, onToggle }: { scan: Scan; expanded: boolean; 
                         )}>
                             {scan.brand_mentioned ? "Mentioned" : "Not named"}
                         </span>
+                        {scan.brand_mentioned && (
+                            <span className="text-[var(--text-secondary)]">
+                                {recommendationLabel(scan.recommendation_status)}
+                            </span>
+                        )}
                         {scan.mention_position !== null && (
                             <span className="text-[var(--text-secondary)]">Pos #{scan.mention_position}</span>
                         )}
@@ -240,6 +248,9 @@ function ScanRow({ scan, expanded, onToggle }: { scan: Scan; expanded: boolean; 
 
             {expanded && (
                 <div className="border-t border-[var(--border-default)] bg-[var(--bg-raised)]/30 px-4 py-4 space-y-3">
+                    {scan.recommendation_evidence && (
+                        <p className="text-xs text-[var(--text-secondary)]">AI-classified recommendation context. Check the full response: “{scan.recommendation_evidence}”</p>
+                    )}
                     <dl className="grid grid-cols-2 gap-x-4 gap-y-2 rounded-md border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-3 text-[10px] font-mono sm:grid-cols-4">
                         <div>
                             <dt className="uppercase tracking-[0.12em] text-[var(--text-tertiary)]">Model</dt>

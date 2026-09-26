@@ -1,5 +1,6 @@
 import { v } from 'convex/values';
 import { engineValidator, measurementModeValidator, measurementStatusValidator, nullableNumber, nullableString, sentimentValidator } from '../validators';
+export const recommendationStatus = v.union(v.literal('recommended'), v.literal('not_recommended'), v.literal('unassessed'), v.literal('not_mentioned'));
 
 export const legacyCitation = v.object({ url: v.string(), title: v.string(), is_own_domain: v.boolean(),
   provenance: v.union(v.literal('provider_citation'), v.literal('link_mentioned'), v.literal('unverified')),
@@ -14,6 +15,7 @@ export const scanResult = v.object({ platform: engineValidator, prompt: v.string
   scorerVersion: v.optional(v.string()), measurementContractVersion: v.optional(v.string()), measurementRunId: v.optional(v.string()),
   sampleNumber: v.optional(v.number()), searchMode: v.optional(v.string()), analyzerMethod: v.optional(v.string()),
   analyzerModel: v.optional(v.string()), analyzerPromptVersion: v.optional(v.string()),
+  recommendationStatus: v.optional(recommendationStatus), recommendationEvidence: v.optional(nullableString), recommendationMethod: v.optional(nullableString),
   winner: v.optional(nullableString), winnerReason: v.optional(v.string()) });
 
 export const measurementInput = v.object({ prompt: v.string(), brandName: v.string(),
@@ -26,6 +28,7 @@ const sample = v.object({ sampleNumber: v.number(), engine: engineValidator, pro
   region: v.string(), mode: measurementModeValidator, scorerVersion: v.string(),
   searchMode: v.optional(nullableString), analyzerMethod: v.optional(nullableString),
   analyzerModel: v.optional(nullableString), analyzerPromptVersion: v.optional(nullableString),
+  recommendationStatus: v.optional(recommendationStatus), recommendationEvidence: v.optional(nullableString), recommendationMethod: v.optional(nullableString),
   status: v.union(v.literal('succeeded'), v.literal('failed')), sampleId: nullableString,
   mentioned: v.union(v.boolean(), v.null()), position: nullableNumber, sentiment: nullableString,
   responseSnippet: nullableString, analyzerConfidence: nullableNumber, citations: v.array(legacyCitation), error: nullableString });
