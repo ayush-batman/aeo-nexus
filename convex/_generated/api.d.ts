@@ -50,6 +50,7 @@ import type * as lib_importRecords from "../lib/importRecords.js";
 import type * as lib_limits from "../lib/limits.js";
 import type * as lib_measurementContract from "../lib/measurementContract.js";
 import type * as lib_publicIds from "../lib/publicIds.js";
+import type * as lib_recommendationEvidence from "../lib/recommendationEvidence.js";
 import type * as lib_rolePolicy from "../lib/rolePolicy.js";
 import type * as lib_scanMetrics from "../lib/scanMetrics.js";
 import type * as lib_snapshot from "../lib/snapshot.js";
@@ -131,6 +132,7 @@ declare const fullApi: ApiFromModules<{
   "lib/limits": typeof lib_limits;
   "lib/measurementContract": typeof lib_measurementContract;
   "lib/publicIds": typeof lib_publicIds;
+  "lib/recommendationEvidence": typeof lib_recommendationEvidence;
   "lib/rolePolicy": typeof lib_rolePolicy;
   "lib/scanMetrics": typeof lib_scanMetrics;
   "lib/snapshot": typeof lib_snapshot;
