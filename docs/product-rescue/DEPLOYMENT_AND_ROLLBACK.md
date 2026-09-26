@@ -2,7 +2,7 @@
 
 ## September 26, 2026 production gate
 
-The new protected preview is Ready at `aeo-nexus-58mwpguan-agrover12344-9741.vercel.app`, with `aelo-rescue-preview.vercel.app` assigned to it. The Vercel Production environment currently names `woozy-starfish-810` as both public Convex cloud and site deployment. That is the documented `aelo-test` development backend, so production promotion is blocked until a distinct, verified production target is configured and the source-to-destination cutover is rehearsed. Preview and Production share Razorpay secret variables; isolate test-mode payment credentials before any payment rehearsal. The September 8 and historical instructions below remain background, not authority to switch live data ownership.
+The new protected preview is Ready at `aeo-nexus-5si3sez8u-agrover12344-9741.vercel.app`, with `aelo-rescue-preview.vercel.app` assigned to it. The Vercel Production environment currently names `woozy-starfish-810` as both public Convex cloud and site deployment. That is the documented `aelo-test` development backend, so production promotion is blocked until a distinct, verified production target is configured and the source-to-destination cutover is rehearsed. Preview and Production share Razorpay secret variables; isolate test-mode payment credentials before any payment rehearsal. The September 8 and historical instructions below remain background, not authority to switch live data ownership.
 
 ## Current Convex rollout — September 8, 2026
 
