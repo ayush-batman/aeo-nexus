@@ -25,3 +25,16 @@ test('public scan rejects an invalid idempotency key before calling the scan bac
   assert.match(route, /if \(!\/\^\[a-f0-9-\]\{36\}\$\/i\.test\(requestId\)\) return NextResponse\.json\(\{ error: 'invalid_public_scan' \}, \{ status: 400 \}\)/);
   assert.match(route, /id: requestId/);
 });
+
+test('homepage free scan opts into immediate durable receipt navigation without changing other API callers', async () => {
+  const [widget, route] = await Promise.all([
+    readFile(new URL('../../components/marketing/free-scan-widget.tsx', import.meta.url), 'utf8'),
+    readFile(new URL('../../app/api/scan/public/route.ts', import.meta.url), 'utf8'),
+  ]);
+  assert.match(widget, /'Prefer': 'respond-async'/);
+  assert.match(route, /if \(prefersRespondAsync\(request\.headers\)\)/);
+  assert.ok(route.indexOf('if (prefersRespondAsync(request.headers))') < route.indexOf('do {'));
+  assert.match(route, /status: 'queued', shareUrl: `\/scan\/\$\{result\.id\}`/);
+  assert.match(route, /statusUrl: `\/api\/scan\/public\/\$\{result\.id\}`/);
+  assert.match(widget, /router\.push\(shareUrl\)/);
+});

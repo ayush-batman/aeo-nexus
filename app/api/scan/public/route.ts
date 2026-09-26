@@ -3,6 +3,7 @@ import { internal } from '@/convex/_generated/api';
 import { callInternal } from '@/lib/convex/admin';
 import { readPublicScan } from '@/lib/convex/public-scan';
 import { convexRouteError } from '@/lib/convex/http';
+import { prefersRespondAsync } from '@/lib/http-prefer';
 export const maxDuration = 300;
 export async function POST(request: NextRequest) {
   try {
@@ -16,6 +17,10 @@ export async function POST(request: NextRequest) {
       ip: request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || request.headers.get('x-real-ip') || 'unknown', brandName, prompt });
     const deadline = Date.now()+230000;
     const rateLimit = { used: result.used, limit: 3, remaining: Math.max(0,3-result.used), windowDays: 7 };
+    if (prefersRespondAsync(request.headers)) {
+      return NextResponse.json({ scanId: result.id, status: 'queued', shareUrl: `/scan/${result.id}`,
+        statusUrl: `/api/scan/public/${result.id}`, rateLimit }, { status: 202 });
+    }
     do {
       const scan = await readPublicScan(result.id);
       if (!scan) throw new Error('public_scan_missing');

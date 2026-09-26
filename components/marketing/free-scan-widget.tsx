@@ -37,7 +37,7 @@ export function FreeScanWidget() {
             if (requestRef.current?.fingerprint !== fingerprint) requestRef.current = { fingerprint, id: crypto.randomUUID() };
             const res = await fetch('/api/scan/public', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'Idempotency-Key': requestRef.current.id },
+                headers: { 'Content-Type': 'application/json', 'Idempotency-Key': requestRef.current.id, 'Prefer': 'respond-async' },
                 body: JSON.stringify({ brandName: brand.trim(), prompt: prompt.trim() }),
             });
 
