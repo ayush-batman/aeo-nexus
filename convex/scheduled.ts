@@ -61,7 +61,10 @@ export const finish = internalMutation({
     const schedule = await ctx.db.get(args.id);
     if (!schedule || schedule.lastRunStatus !== `running:${args.runId}`) return null;
     const run = await ctx.db.query('measurementRuns').withIndex('by_public_id', q => q.eq('publicId', args.runId)).unique();
-    if (!run || run.workspaceId !== schedule.workspaceId) throw new Error('measurement_not_found');
+    if (!run || run.workspaceId !== schedule.workspaceId || (!run.result && run.status !== 'queued' && run.status !== 'running')) {
+      await ctx.db.patch(schedule._id, { lastRunStatus: 'untracked', updatedAt: Date.now() });
+      return null;
+    }
     if (!run.result) { await ctx.scheduler.runAfter(60000, internal.scheduled.finish, args); return null; }
     await ctx.db.patch(schedule._id, { lastRunStatus: run.result.status, updatedAt: Date.now() }); return null;
   },
