@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import type { Metadata } from "next";
+import { cache } from "react";
 import { ArrowRight, ExternalLink } from "lucide-react";
 import { readPublicScan } from "@/lib/convex/public-scan";
 import { PendingReceipt } from "@/components/marketing/pending-receipt";
@@ -11,10 +12,10 @@ import { recommendationLabel } from "@/lib/measurement/recommendation-label";
 import { AnswerNameCandidates } from "@/components/marketing/answer-name-candidates";
 
 export const dynamic = 'force-dynamic';
-async function getScan(id: string) {
+const getScan = cache(async (id: string) => {
     if (!/^[a-f0-9-]{36}$/i.test(id)) return null;
     return readPublicScan(id);
-}
+});
 
 export async function generateMetadata(
     { params }: { params: Promise<{ id: string }> },

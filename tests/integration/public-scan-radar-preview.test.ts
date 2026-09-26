@@ -28,6 +28,13 @@ test('public receipt exposes the saved model and does not imply cited pages were
   assert.match(page, /Provider citation means the assistant supplied this link/);
 });
 
+test('public receipt shares one request-scoped scan read between metadata and page', async () => {
+  const page = await readFile(new URL('../../app/(marketing)/scan/[id]/page.tsx', import.meta.url), 'utf8');
+  assert.match(page, /import \{ cache \} from ["']react["']/);
+  assert.match(page, /const getScan = cache\(async \(id: string\) =>/);
+  assert.equal((page.match(/await getScan\(id\)/g) ?? []).length, 2);
+});
+
 test('public scan rejects an invalid idempotency key before calling the scan backend', async () => {
   const route = await readFile(new URL('../../app/api/scan/public/route.ts', import.meta.url), 'utf8');
   assert.match(route, /if \(!\/\^\[a-f0-9-\]\{36\}\$\/i\.test\(requestId\)\) return NextResponse\.json\(\{ error: 'invalid_public_scan' \}, \{ status: 400 \}\)/);
