@@ -52,6 +52,23 @@ test('packet does not rank content work from fewer than four successful samples'
   assert.equal(packet.rankedAction.type, 'review_measurement');
 });
 
+test('packet does not rank content work when a different question has too few samples', () => {
+  const weak = run({ runId: 'weak', prompt: 'weak question' });
+  const sparse = run({ runId: 'sparse', prompt: 'sparse question', engines: [{ ...run().engines[0], successfulSamples: 2, requestedSamples: 2, mentions: 2, mentionRate: 1 }] });
+  const packet = buildDecisionPacket({ id: 'p5', workspaceId: 'w1', brandName: 'Aelo', measurements: [weak, sparse] });
+  assert.equal(packet.rankedAction.type, 'review_measurement');
+  assert.equal(packet.rankedAction.prompt, 'sparse question');
+});
+
+test('packet does not call missing measurement receipts complete', () => {
+  const missing = buildDecisionPacket({ id: 'p6', workspaceId: 'w1', brandName: 'Aelo', measurements: [run()], expectedRunCount: 2 });
+  const empty = buildDecisionPacket({ id: 'p7', workspaceId: 'w1', brandName: 'Aelo', measurements: [], expectedRunCount: 3 });
+  assert.equal(missing.status, 'untracked');
+  assert.equal(missing.rankedAction.type, 'repair_tracking');
+  assert.equal(empty.status, 'untracked');
+  assert.equal(empty.rankedAction.type, 'repair_tracking');
+});
+
 test('packet does not use a source from a different prompt to explain the weakest prompt', () => {
   const strong = run({ prompt: 'branded comparison', engines: [{ ...run().engines[0], mentions: 4, mentionRate: 1 }] });
   const weak = run({ runId: 'run-2', prompt: 'budget tools', engines: [{ ...run().engines[0], citations: [] }] });

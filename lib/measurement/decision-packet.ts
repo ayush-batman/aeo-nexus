@@ -80,15 +80,20 @@ export function buildDecisionPacket(input: {
   workspaceId: string;
   brandName: string;
   measurements: VisibilityMeasurementRun[];
+  expectedRunCount?: number;
   createdAt?: string;
 }): DecisionPacket {
   const gaps = sourceGaps(input.measurements);
   const weakMeasurement = weakestPrompt(input.measurements);
+  const missingMeasurements = input.measurements.length === 0 ||
+    (input.expectedRunCount !== undefined && input.measurements.length !== input.expectedRunCount);
   const allFailed = input.measurements.length > 0 && input.measurements.every(measurement => measurement.status === 'all_failed');
   const untracked = input.measurements.some(measurement => measurement.persistence.status === 'failed');
   const partial = input.measurements.some(measurement => measurement.status !== 'complete');
-  const status: DecisionPacketStatus = allFailed ? 'all_failed' : untracked ? 'untracked' : partial ? 'partial' : 'complete';
+  const status: DecisionPacketStatus = missingMeasurements ? 'untracked' : allFailed ? 'all_failed' : untracked ? 'untracked' : partial ? 'partial' : 'complete';
   const weakSources = weakMeasurement ? sourceGaps([weakMeasurement]) : [];
+  const underSampled = input.measurements.find(measurement =>
+    measurement.engines.length === 0 || measurement.engines.some(engine => engine.successfulSamples < 4));
 
   let rankedAction: DecisionPacketAction;
   if (status !== 'complete' || !weakMeasurement) {
@@ -100,13 +105,13 @@ export function buildDecisionPacket(input: {
       prompt: null,
       sourceDomain: null,
     };
-  } else if (weakMeasurement.engines.some(engine => engine.successfulSamples < 4)) {
+  } else if (underSampled) {
     rankedAction = {
       rank: 1,
       type: 'review_measurement',
       title: 'Collect more answers before changing content',
-      rationale: 'At least one engine has fewer than four successful answers for this question. Repeat the measurement before treating it as a content gap.',
-      prompt: weakMeasurement.prompt,
+      rationale: 'At least one question has fewer than four successful answers for an engine. Repeat the measurement before ranking content gaps across these questions.',
+      prompt: underSampled.prompt,
       sourceDomain: null,
     };
   } else if (weakMeasurement.engines.every(engine => engine.mentions === engine.successfulSamples)) {

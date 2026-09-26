@@ -9,7 +9,7 @@ export async function loadDecisionPacket(workspaceId: string, packetId?: string)
   if (record.pending) return { packet: null, pending: true, packetId: record.id };
   const runs = await Promise.all(record.runIds.map(runId => readMeasurement(workspaceId, runId)));
   const packet = buildDecisionPacket({ id: record.id, workspaceId, brandName: record.brandName,
-    measurements: runs.flatMap(run => run.result ? [run.result] : []) });
+    measurements: runs.flatMap(run => run.result ? [run.result] : []), expectedRunCount: record.runIds.length });
   packet.createdAt = record.createdAt;
   return { packet, pending: false };
 }

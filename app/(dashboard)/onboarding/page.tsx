@@ -583,7 +583,7 @@ function DecisionPacketView({ packet, onContinue }: { packet: DecisionPacket; on
                     {failed
                         ? "Every provider call failed. Aelo saved the failure state and did not turn it into zero visibility."
                         : packet.status === "untracked"
-                            ? "Answers were collected, but at least one cohort was not stored. Treat this packet as untracked and retry."
+                            ? "At least one measurement receipt is missing or was not stored. Treat this packet as untracked and retry."
                             : "Some provider samples failed. The successful sample count and failures stay visible below."}
                 </div>
             )}
