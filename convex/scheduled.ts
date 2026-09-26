@@ -70,22 +70,41 @@ export const finish = internalMutation({
 export const reconcileInitialJobs = internalMutation({
   args: {}, returns: v.number(),
   handler: async (ctx) => {
-    const queued = await ctx.db.query('measurementJobs').withIndex('by_status_and_available_at', q => q.eq('status', 'queued').lte('availableAt', Date.now())).take(20);
-    for (const job of queued) await ctx.db.patch(job._id, { status: 'skipped', lastError: 'Buyer prompts are required. Start the onboarding measurement to continue.', updatedAt: Date.now() });
-    const running = await ctx.db.query('measurementJobs').withIndex('by_status_and_available_at', q => q.eq('status', 'running')).take(20);
+    const now = Date.now();
+    const queued = await ctx.db.query('measurementJobs').withIndex('by_status_and_available_at', q => q.eq('status', 'queued').lte('availableAt', now)).take(20);
+    for (const job of queued) await ctx.db.patch(job._id, { status: 'skipped', lastError: 'Buyer prompts are required. Start the onboarding measurement to continue.', updatedAt: now });
+    const running = await ctx.db.query('measurementJobs').withIndex('by_status_and_available_at', q => q.eq('status', 'running').lte('availableAt', now)).take(20);
     for (const job of running) {
       const packetId = typeof job.result?.decision_packet_id === 'string' ? job.result.decision_packet_id : null;
       if (!packetId) {
-        await ctx.db.patch(job._id, { status: 'skipped', lastError: 'The old job has no resumable measurement. Start a new onboarding scan.', updatedAt: Date.now(), completedAt: Date.now() });
+        await ctx.db.patch(job._id, { status: 'skipped', lastError: 'The old job has no resumable measurement. Start a new onboarding scan.', updatedAt: now, completedAt: now });
         continue;
       }
       const packet = await ctx.db.query('decisionPackets').withIndex('by_public_id', q => q.eq('publicId', packetId)).unique();
-      if (!packet || packet.workspaceId !== job.workspaceId || !packet.measurementRunIds?.length) continue;
+      if (!packet || packet.workspaceId !== job.workspaceId) {
+        await ctx.db.patch(job._id, { status: 'failed', lastError: 'The onboarding decision packet is missing. Start a new scan.', updatedAt: now, completedAt: now });
+        continue;
+      }
+      if (!packet.measurementRunIds?.length) {
+        await ctx.db.patch(packet._id, { status: 'untracked' });
+        await ctx.db.patch(job._id, { status: 'failed', lastError: 'The onboarding measurement runs are missing. Start a new scan.', updatedAt: now, completedAt: now });
+        continue;
+      }
       const runs = await Promise.all(packet.measurementRunIds.map(id => ctx.db.query('measurementRuns').withIndex('by_public_id', q => q.eq('publicId', id)).unique()));
-      if (runs.some(run => !run?.result)) continue;
+      if (runs.some(run => !run || run.workspaceId !== job.workspaceId || (!run.result && run.status !== 'queued' && run.status !== 'running'))) {
+        await ctx.db.patch(packet._id, { status: 'untracked' });
+        await ctx.db.patch(job._id, { status: 'failed', lastError: 'One or more onboarding measurement receipts are missing. Start a new scan.', updatedAt: now, completedAt: now });
+        continue;
+      }
+      if (runs.some(run => !run?.result)) {
+        // Move unfinished jobs behind newer ones so a small stuck cohort cannot
+        // monopolize every bounded reconciliation pass.
+        await ctx.db.patch(job._id, { availableAt: now + 60_000, updatedAt: now });
+        continue;
+      }
       const status = runs.every(run => run?.status === 'all_failed') ? 'all_failed' as const : runs.every(run => run?.status === 'complete') ? 'complete' as const : 'partial' as const;
       await ctx.db.patch(packet._id, { status });
-      await ctx.db.patch(job._id, { status: status === 'complete' ? 'succeeded' : status === 'all_failed' ? 'failed' : 'partial', completedAt: Date.now(), updatedAt: Date.now() });
+      await ctx.db.patch(job._id, { status: status === 'complete' ? 'succeeded' : status === 'all_failed' ? 'failed' : 'partial', completedAt: now, updatedAt: now });
       if (status !== 'all_failed' && packet.createdBy) {
         await ctx.scheduler.runAfter(0, internal.mailActions.firstResults, { packetId: packet._id });
       }

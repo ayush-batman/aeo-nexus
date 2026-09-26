@@ -48,6 +48,40 @@ test('terminal scan records without receipts are not left pending forever', asyn
   const record = await owner.query(api.activation.get, { workspaceId: context.workspaceId, packetId });
   expect(record).toMatchObject({ pending: false });
   expect(record?.readableRunIds).toHaveLength(3);
+  await t.mutation(internal.scheduled.reconcileInitialJobs, {});
+  const state = await t.run(async ctx => {
+    const workspace = await ctx.db.query('workspaces').withIndex('by_public_id', q => q.eq('publicId', context.workspaceId)).unique();
+    return {
+      packet: await ctx.db.query('decisionPackets').withIndex('by_public_id', q => q.eq('publicId', packetId)).unique(),
+      job: await ctx.db.query('measurementJobs').withIndex('by_workspace_id_and_purpose', q =>
+        q.eq('workspaceId', workspace!._id).eq('purpose', 'initial_visibility')).first(),
+    };
+  });
+  expect(state.packet?.status).toBe('untracked');
+  expect(state.job?.status).toBe('failed');
+});
+test('unfinished jobs rotate so the oldest twenty cannot monopolize reconciliation', async () => {
+  const { t, owner, context } = await fixture();
+  const packetId = crypto.randomUUID();
+  await owner.mutation(api.activation.begin, { workspaceId: context.workspaceId,
+    prompts: ['Buyer question one?', 'Buyer question two?', 'Buyer question three?'], requestId: packetId });
+  const now = Date.now();
+  const originalJobId = await t.run(async ctx => {
+    const workspace = await ctx.db.query('workspaces').withIndex('by_public_id', q => q.eq('publicId', context.workspaceId)).unique();
+    const original = await ctx.db.query('measurementJobs').withIndex('by_workspace_id_and_purpose', q =>
+      q.eq('workspaceId', workspace!._id).eq('purpose', 'initial_visibility')).first();
+    for (let index = 0; index < 20; index++) {
+      await ctx.db.insert('measurementJobs', { publicId: crypto.randomUUID(), workspaceId: workspace!._id,
+        organizationId: workspace!.organizationId, purpose: 'initial_visibility', status: 'running',
+        attempts: 0, maxAttempts: 3, availableAt: now - 1, claimToken: null, claimExpiresAt: null,
+        lastError: null, result: { decision_packet_id: packetId }, createdAt: now, updatedAt: now, completedAt: null });
+    }
+    return original!._id;
+  });
+  await t.mutation(internal.scheduled.reconcileInitialJobs, {});
+  expect((await t.run(ctx => ctx.db.get(originalJobId)))?.availableAt).toBe(now);
+  await t.mutation(internal.scheduled.reconcileInitialJobs, {});
+  expect((await t.run(ctx => ctx.db.get(originalJobId)))?.availableAt).toBe(now + 60_000);
 });
 test('monthly recurrence clamps to month end rather than silently skipping February', () => {
   expect(new Date(nextScheduledTime('monthly', Date.parse('2026-01-31T10:00:00Z'))).toISOString()).toBe('2026-02-28T10:00:00.000Z');
@@ -78,6 +112,7 @@ test('first-results mail waits for persisted runs and is scheduled only once', a
       persist: async () => {} });
     await t.run((ctx) => ctx.db.patch(run._id, { status: 'partial', result, updatedAt: Date.now() }));
   }
+  vi.advanceTimersByTime(60_000);
   await t.mutation(internal.scheduled.reconcileInitialJobs, {});
   await t.mutation(internal.scheduled.reconcileInitialJobs, {});
   scheduled = await t.run((ctx) => ctx.db.system.query('_scheduled_functions').collect());
