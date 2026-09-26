@@ -36,3 +36,23 @@ test('scheduled scans stop waiting for missing or terminal receipts but keep wai
   expect(state.pending?.lastRunStatus).toBe('running:pending-run');
   expect(state.scheduled.filter(item => item.name === 'scheduled:finish')).toHaveLength(1);
 });
+
+test('a schedule with no workspace pauses instead of blocking every dispatch', async () => {
+  const { t, context } = await fixture();
+  const dueAt = Date.now();
+  const scheduleId = await t.run(async ctx => {
+    const workspace = await ctx.db.query('workspaces').withIndex('by_public_id', q => q.eq('publicId', context.workspaceId)).unique();
+    if (!workspace) throw new Error('missing_test_workspace');
+    const id = await ctx.db.insert('scheduledScans', { publicId: crypto.randomUUID(), workspaceId: workspace._id,
+      prompt: 'Who measures AI visibility?', platforms: ['gemini'], competitors: [], frequency: 'weekly',
+      lastRunAt: null, nextRunAt: dueAt, status: 'active', claimToken: null, claimExpiresAt: null,
+      lastRunStatus: null, createdAt: dueAt, updatedAt: dueAt });
+    // This deletion is confined to the synthetic, in-memory test database.
+    await ctx.db.delete(workspace._id);
+    return id;
+  });
+  await t.mutation(internal.scheduled.runOne, { id: scheduleId, dueAt });
+  const schedule = await t.run(ctx => ctx.db.get(scheduleId));
+  expect(schedule).toMatchObject({ status: 'paused', lastRunStatus: 'skipped_workspace_missing' });
+  expect(await t.mutation(internal.scheduled.dispatch, {})).toBe(0);
+});

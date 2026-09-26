@@ -29,7 +29,11 @@ export const runOne = internalMutation({
     if (!schedule || schedule.status !== 'active' || schedule.nextRunAt !== args.dueAt || schedule.nextRunAt > Date.now()) return null;
     const workspace = await ctx.db.get(schedule.workspaceId);
     const organization = workspace && await ctx.db.get(workspace.organizationId);
-    if (!workspace || !organization) throw new Error('schedule_workspace_missing');
+    if (!workspace || !organization) {
+      await ctx.db.patch(schedule._id, { status: 'paused', lastRunStatus: 'skipped_workspace_missing',
+        claimToken: null, claimExpiresAt: null, updatedAt: Date.now() });
+      return null;
+    }
     const membership = await ctx.db.query('memberships').withIndex('by_organization_role', q => q.eq('organizationId', organization._id).eq('role', 'owner')).first()
       ?? await ctx.db.query('memberships').withIndex('by_organization_role', q => q.eq('organizationId', organization._id).eq('role', 'admin')).first();
     const user = membership && await ctx.db.get(membership.userId);
