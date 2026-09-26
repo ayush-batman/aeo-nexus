@@ -42,3 +42,14 @@ test('partial and legacy runs cannot generate a clean visibility action', () => 
   assert.match(partialInsights[0].detail, /3 samples succeeded and 1 failed/);
   assert.deepEqual(buildInsights([row({ measurement_run_id: null })]), []);
 });
+
+test('an empty saved answer without a failure code still blocks ranked advice', () => {
+  const rows = [
+    ...Array.from({ length: 3 }, (_, index) => row({ sample_number: index + 1 })),
+    row({ sample_number: 4, response: '   ', brand_mentioned: false }),
+  ];
+  const insights = buildInsights(rows);
+  assert.match(insights[0].title, /Partial evidence/);
+  assert.match(insights[0].detail, /failed or had no usable answer/);
+  assert.doesNotMatch(insights[0].title, /appeared where you were absent/);
+});

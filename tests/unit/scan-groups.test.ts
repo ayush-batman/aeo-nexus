@@ -51,3 +51,16 @@ test('groups expose failures and deduplicate citations without weakening provena
   assert.equal(group.citations[0].provenance, 'provider_citation');
 });
 
+test('an empty saved answer is not counted as a measured non-mention or mention', () => {
+  const group = groupRecentScans([
+    row({ id: 'usable', response: 'A real answer', brand_mentioned: true }),
+    row({ id: 'empty', response: '   ', brand_mentioned: false }),
+    row({ id: 'empty-flagged', response: '', brand_mentioned: true }),
+  ])[0];
+
+  assert.equal(group.sampleCount, 1);
+  assert.equal(group.failedSamples, 2);
+  assert.equal(group.mentionCount, 1);
+  assert.equal(group.visibilityPercent, 100);
+  assert.equal(group.confidence.sampleCount, 1);
+});

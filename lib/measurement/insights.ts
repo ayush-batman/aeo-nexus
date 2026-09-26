@@ -44,7 +44,7 @@ export function buildInsights(scans: readonly LLMScan[]): Insight[] {
       insights.push({
         id: `partial-${slug(group.prompt)}`, category: 'audit', priority: 'high',
         title: `Partial evidence for "${short}"`,
-        detail: `${group.sampleCount} samples succeeded and ${group.failedSamples} failed in the latest run. No action is ranked until the provider failure is reviewed.`,
+        detail: `${group.sampleCount} samples succeeded and ${group.failedSamples} failed or had no usable answer in the latest run. No action is ranked until the incomplete run is reviewed.`,
         actionLabel: 'Review run', actionHref: '/dashboard/llm-tracker', targetPrompt: group.prompt,
       });
       continue;

@@ -45,7 +45,7 @@ export function groupRecentScans(scans: readonly LLMScan[]): RecentScanGroup[] {
   }
 
   return [...grouped.entries()].map(([key, rows]) => {
-    const successful = rows.filter((row) => !row.failure_code);
+    const successful = rows.filter((row) => !row.failure_code && row.response.trim().length > 0);
     const mentionCount = successful.filter((row) => row.brand_mentioned).length;
     const confidence = estimateMentionConfidence(mentionCount, successful.length);
     const positions = successful.flatMap((row) =>
@@ -82,4 +82,3 @@ export function groupRecentScans(scans: readonly LLMScan[]): RecentScanGroup[] {
     };
   });
 }
-

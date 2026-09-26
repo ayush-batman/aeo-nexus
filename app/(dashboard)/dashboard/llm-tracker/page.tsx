@@ -532,7 +532,7 @@ export default function LLMTrackerPage() {
                                                                 </div>
                                                             )}
 
-                                                            {scan.failedSamples > 0 && <span className="text-[var(--data-red)]">{scan.failedSamples} failed sample{scan.failedSamples > 1 ? 's' : ''}</span>}
+                                                            {scan.failedSamples > 0 && <span className="text-[var(--data-red)]">{scan.failedSamples} unusable sample{scan.failedSamples > 1 ? 's' : ''}</span>}
 
                                                             <span className="text-[var(--text-tertiary)]">
                                                                 {formatDistanceToNow(new Date(scan.scannedAt), { addSuffix: true })}
