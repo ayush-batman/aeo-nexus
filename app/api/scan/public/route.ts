@@ -22,7 +22,8 @@ export async function POST(request: NextRequest) {
       if (scan.status === 'failed') return NextResponse.json({ error: 'scan_failed', scanId: result.id, message: scan.error_message }, { status: 502 });
       if (scan.status === 'complete') return NextResponse.json({ ok: true, scanId: result.id, shareUrl: `/scan/${result.id}`, result: {
         platform: scan.platform, brandMentioned: scan.brand_mentioned, mentionPosition: scan.mention_position, sentiment: scan.sentiment,
-        competitorsMentioned: scan.competitors_mentioned, citations: scan.citations, response: scan.response, sampleCount: scan.sample_count,
+        competitorsMentioned: scan.competitors_mentioned, competitorTrackingStatus: scan.competitor_tracking_status,
+        answerNameCandidates: scan.answer_name_candidates, citations: scan.citations, response: scan.response, sampleCount: scan.sample_count,
       }, rateLimit });
       await new Promise(resolve => setTimeout(resolve, 1000));
     } while (Date.now() < deadline);

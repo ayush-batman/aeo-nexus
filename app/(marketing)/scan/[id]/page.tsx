@@ -8,6 +8,7 @@ import { NewsletterSubscribe } from "@/components/marketing/newsletter-subscribe
 import { RadarPreview } from "@/components/marketing/radar-preview";
 import { PLAN_CATALOG } from "@/lib/billing/plan-catalog";
 import { recommendationLabel } from "@/lib/measurement/recommendation-label";
+import { AnswerNameCandidates } from "@/components/marketing/answer-name-candidates";
 
 export const dynamic = 'force-dynamic';
 async function getScan(id: string) {
@@ -132,6 +133,10 @@ export default async function PublicScanPage(
                         </span>
                     )}
                 </div>
+
+                {!pending && !failed && scan.competitor_tracking_status === 'not_configured' && (
+                    <AnswerNameCandidates candidates={scan.answer_name_candidates} />
+                )}
 
                 {!pending && !failed && scan.brand_mentioned && (
                     <div className="mb-6 rounded-md border border-[var(--border-default)] bg-[var(--bg-raised)] px-4 py-3 text-sm text-[var(--text-secondary)]">

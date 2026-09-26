@@ -4,13 +4,16 @@ import { internal } from './_generated/api';
 import { citationValidator, nullableString, nullableNumber, sentimentValidator } from './validators';
 import { scanResult } from './lib/measurementContract';
 import { recommendationEvidence } from './lib/recommendationEvidence';
+import { extractAnswerNameCandidates } from '../lib/ai/answer-name-candidates';
 
 const publicReceipt = v.object({ id: v.string(), brand_name: v.string(), prompt: v.string(), platform: v.string(), response: nullableString,
   brand_mentioned: v.union(v.boolean(), v.null()), mention_position: nullableNumber, sentiment: v.union(sentimentValidator, v.null()),
   competitors_mentioned: v.array(v.string()), citations: v.array(citationValidator), error_message: nullableString, created_at: v.string(),
   status: v.string(), provider_model: nullableString, scorer_version: nullableString, sample_count: v.number(),
   recommendation_status: v.union(v.literal('recommended'), v.literal('not_recommended'), v.literal('unassessed'), v.literal('not_mentioned'), v.null()),
-  recommendation_evidence: nullableString });
+  recommendation_evidence: nullableString,
+  competitor_tracking_status: v.literal('not_configured'),
+  answer_name_candidates: v.array(v.object({ name: v.string(), evidence: v.string() })) });
 export const get = query({
   args: { id: v.string() }, returns: v.union(publicReceipt, v.null()),
   handler: async (ctx, args) => {
@@ -26,7 +29,12 @@ export const get = query({
       error_message: timedOut ? 'The provider did not finish within the allowed time.' : row.errorMessage,
       created_at: new Date(row.createdAt).toISOString(), status, provider_model: row.providerModel ?? null, scorer_version: row.scorerVersion ?? null,
       sample_count: row.response && !row.errorMessage ? 1 : 0,
-      recommendation_status: row.recommendationStatus ?? null, recommendation_evidence: row.recommendationEvidence ?? null };
+      recommendation_status: row.recommendationStatus ?? null, recommendation_evidence: row.recommendationEvidence ?? null,
+      // The public scan supplies no configured competitor set. These are only
+      // verbatim formatted names from its saved answer, not measured rivals.
+      competitor_tracking_status: 'not_configured' as const,
+      answer_name_candidates: status === 'complete' && row.response
+        ? extractAnswerNameCandidates(row.response, row.brandName) : [] };
   },
 });
 export const reserve = internalMutation({

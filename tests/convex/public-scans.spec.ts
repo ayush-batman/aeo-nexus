@@ -56,3 +56,21 @@ test('public receipts separate recommendation evidence and leave legacy rows una
     recommendation_evidence: 'Alternatives to Buffer include Planable.',
   });
 });
+
+test('public receipt exposes answer-backed name candidates without pretending rivals were tracked', async () => {
+  const { t } = await fixture();
+  const publicId = crypto.randomUUID();
+  await t.mutation(internal.publicScans.reserve, { id: publicId, ipHash: 'd'.repeat(64), brandName: 'Buffer', prompt: 'Which alternatives to Buffer work for teams?' });
+  const response = 'Alternatives to Buffer:\n* **Hootsuite** is a scheduling tool.\n* **Planable** offers approval workflows.\n* **Buffer** is the product to replace.';
+  await t.run(async ctx => {
+    const row = await ctx.db.query('publicScans').withIndex('by_public_id', q => q.eq('publicId', publicId)).unique();
+    await ctx.db.patch(row!._id, { status: 'complete', response, brandMentioned: true });
+  });
+  expect(await t.query(api.publicScans.get, { id: publicId })).toMatchObject({
+    competitors_mentioned: [], competitor_tracking_status: 'not_configured',
+    answer_name_candidates: [
+      { name: 'Hootsuite', evidence: '* **Hootsuite** is a scheduling tool.' },
+      { name: 'Planable', evidence: '* **Planable** offers approval workflows.' },
+    ],
+  });
+});
