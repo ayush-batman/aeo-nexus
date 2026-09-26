@@ -10,6 +10,7 @@ import { RadarPreview } from "@/components/marketing/radar-preview";
 import { PLAN_CATALOG } from "@/lib/billing/plan-catalog";
 import { recommendationLabel } from "@/lib/measurement/recommendation-label";
 import { AnswerNameCandidates } from "@/components/marketing/answer-name-candidates";
+import { buildPublicScanMetadata } from "@/lib/measurement/public-scan-metadata";
 
 export const dynamic = 'force-dynamic';
 const getScan = cache(async (id: string) => {
@@ -22,21 +23,8 @@ export async function generateMetadata(
 ): Promise<Metadata> {
     const { id } = await params;
     const scan = await getScan(id);
-    if (!scan) return { title: 'Scan not found · Aelo' };
-
-    const verdict = scan.status !== "complete" ? scan.status : scan.brand_mentioned
-        ? `mentioned${scan.mention_position ? ` at #${scan.mention_position}` : ''}`
-        : 'not mentioned';
-
-    return {
-        title: `${scan.brand_name}, ${verdict} on Gemini · Aelo`,
-        description: `Live Gemini scan for "${scan.prompt}", ${scan.brand_name} was ${verdict}. Verify the raw response yourself.`,
-        openGraph: {
-            title: `${scan.brand_name}, ${verdict} on Gemini`,
-            description: `Live scan: "${scan.prompt}", verify the raw response.`,
-            type: 'article',
-        },
-    };
+    if (!scan) return { title: 'Scan not found' };
+    return buildPublicScanMetadata(scan);
 }
 
 export default async function PublicScanPage(
@@ -58,11 +46,12 @@ export default async function PublicScanPage(
     ).length;
     const verdictLabel = pending ? 'Running' : failed
         ? 'Failed'
+        : scan.brand_mentioned === null ? 'Mention unassessed'
         : scan.brand_mentioned
             ? scan.mention_position && scan.mention_position <= 3 ? 'Named early' : 'Named'
             : 'Not named';
 
-    const verdictStyle = pending || failed
+    const verdictStyle = pending || failed || scan.brand_mentioned === null
         ? 'text-[var(--text-tertiary)] border-[var(--border-default)] bg-[var(--bg-raised)]'
         : scan.brand_mentioned
             ? 'text-[var(--data-green)] border-[var(--data-green)]/30 bg-[var(--data-green-muted)]'
@@ -85,7 +74,7 @@ export default async function PublicScanPage(
                     <h1 className="text-3xl md:text-4xl font-medium tracking-tighter leading-[1.05] text-white mb-3 text-balance">
                         {scan.brand_name}
                         {", "}
-                        <span className={pending || failed ? 'text-[var(--text-secondary)]' : scan.brand_mentioned === false ? 'text-[var(--data-red)]' : 'text-[var(--data-green)]'}>
+                        <span className={pending || failed || scan.brand_mentioned === null ? 'text-[var(--text-secondary)]' : scan.brand_mentioned === false ? 'text-[var(--data-red)]' : 'text-[var(--data-green)]'}>
                             {verdictLabel.toLowerCase()}
                         </span>
                     </h1>

@@ -24,6 +24,13 @@ test('completed preview shows only observed evidence and withholds confidence', 
   assert.doesNotMatch(html, /prose-only\.example/);
 });
 
+test('completed legacy answer with unknown mention status is not shown as a missed mention', () => {
+  const html = renderToStaticMarkup(createElement(RadarPreview, { ...base, status: 'complete', brandMentioned: null }));
+  assert.match(html, /Mention not assessed/);
+  assert.match(html, /Inspect this answer before interpreting its mention status/);
+  assert.doesNotMatch(html, /No mention observed/);
+});
+
 test('failed preview does not claim a real answer or a confidence range', () => {
   const html = renderToStaticMarkup(createElement(RadarPreview, { ...base, status: 'failed', brandMentioned: null, citations: [] }));
   assert.match(html, /The Gemini sample failed/);

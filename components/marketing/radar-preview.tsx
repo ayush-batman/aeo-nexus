@@ -51,7 +51,9 @@ export function RadarPreview({
             ? "Retry the failed sample before drawing a conclusion."
         : brandMentioned
             ? "Repeat this question across assistants before treating the mention as stable."
-            : "Repeat this question, then inspect which sources appear when competitors are named."
+            : brandMentioned === false
+                ? "Repeat this question, then inspect which sources appear when competitors are named."
+                : "Inspect this answer before interpreting its mention status. Then repeat the question across assistants.";
 
     return (
         <section
@@ -95,7 +97,7 @@ export function RadarPreview({
                             const isReceipt = index === 0 && (completed || failed);
                             const sampleLabel = isReceipt
                                 ? completed
-                                    ? brandMentioned ? "Mention observed" : "No mention observed"
+                                    ? brandMentioned === null ? "Mention not assessed" : brandMentioned ? "Mention observed" : "No mention observed"
                                     : "Sample failed"
                                 : "Not measured yet";
                             return (
@@ -107,7 +109,7 @@ export function RadarPreview({
                                     <span className={`size-2 rounded-full ${
                                         isReceipt
                                             ? completed
-                                                ? brandMentioned ? "bg-[var(--data-green)]" : "bg-[var(--data-red)]"
+                                                ? brandMentioned === null ? "bg-[var(--text-tertiary)]" : brandMentioned ? "bg-[var(--data-green)]" : "bg-[var(--data-red)]"
                                                 : "bg-[var(--data-amber)]"
                                             : "border border-[var(--border-active)]"
                                     }`} />
