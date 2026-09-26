@@ -13,7 +13,7 @@ export type DecisionPacketSourceGap = {
 
 export type DecisionPacketAction = {
   rank: 1;
-  type: 'earn_source_mention' | 'publish_direct_answer' | 'repair_tracking';
+  type: 'review_cited_source' | 'review_site_answer' | 'review_measurement' | 'repair_tracking';
   title: string;
   rationale: string;
   prompt: string | null;
@@ -63,16 +63,16 @@ function sourceGaps(measurements: VisibilityMeasurementRun[]): DecisionPacketSou
     .slice(0, 5);
 }
 
-function weakestPrompt(measurements: VisibilityMeasurementRun[]): string | null {
+function weakestPrompt(measurements: VisibilityMeasurementRun[]): VisibilityMeasurementRun | null {
   const ranked = measurements
-    .filter(measurement => measurement.status !== 'all_failed' && measurement.status !== 'untracked')
+    .filter(measurement => measurement.status === 'complete' && measurement.persistence.status === 'stored')
     .map(measurement => ({
-      prompt: measurement.prompt,
+      measurement,
       rate: measurement.engines.reduce((sum, engine) => sum + engine.mentions, 0) /
         Math.max(1, measurement.engines.reduce((sum, engine) => sum + engine.successfulSamples, 0)),
     }))
     .sort((a, b) => a.rate - b.rate);
-  return ranked[0]?.prompt ?? null;
+  return ranked[0]?.measurement ?? null;
 }
 
 export function buildDecisionPacket(input: {
@@ -83,38 +83,58 @@ export function buildDecisionPacket(input: {
   createdAt?: string;
 }): DecisionPacket {
   const gaps = sourceGaps(input.measurements);
-  const weakPrompt = weakestPrompt(input.measurements);
+  const weakMeasurement = weakestPrompt(input.measurements);
   const allFailed = input.measurements.length > 0 && input.measurements.every(measurement => measurement.status === 'all_failed');
   const untracked = input.measurements.some(measurement => measurement.persistence.status === 'failed');
   const partial = input.measurements.some(measurement => measurement.status !== 'complete');
   const status: DecisionPacketStatus = allFailed ? 'all_failed' : untracked ? 'untracked' : partial ? 'partial' : 'complete';
+  const weakSources = weakMeasurement ? sourceGaps([weakMeasurement]) : [];
 
   let rankedAction: DecisionPacketAction;
-  if (allFailed || !weakPrompt) {
+  if (status !== 'complete' || !weakMeasurement) {
     rankedAction = {
       rank: 1,
       type: 'repair_tracking',
-      title: 'Restore an AI engine, then retry this packet',
-      rationale: 'No successful cohort exists yet, so Aelo cannot rank a visibility action honestly.',
+      title: 'Review the incomplete measurement before changing content',
+      rationale: 'No complete, saved set of prompt measurements is available. Aelo cannot rank a content action from this packet honestly.',
       prompt: null,
       sourceDomain: null,
     };
-  } else if (gaps[0]) {
+  } else if (weakMeasurement.engines.some(engine => engine.successfulSamples < 4)) {
     rankedAction = {
       rank: 1,
-      type: 'earn_source_mention',
-      title: `Earn a relevant mention on ${gaps[0].domain}`,
-      rationale: `This domain supplied ${gaps[0].citations} provider-backed citation${gaps[0].citations === 1 ? '' : 's'} across the measured answers and does not currently point to your own domain.`,
-      prompt: weakPrompt,
-      sourceDomain: gaps[0].domain,
+      type: 'review_measurement',
+      title: 'Collect more answers before changing content',
+      rationale: 'At least one engine has fewer than four successful answers for this question. Repeat the measurement before treating it as a content gap.',
+      prompt: weakMeasurement.prompt,
+      sourceDomain: null,
+    };
+  } else if (weakMeasurement.engines.every(engine => engine.mentions === engine.successfulSamples)) {
+    rankedAction = {
+      rank: 1,
+      type: 'review_measurement',
+      title: 'Keep measuring before changing content',
+      rationale: 'The brand appeared in every successful answer in this packet. Aelo has not observed a mention gap to fix.',
+      prompt: weakMeasurement.prompt,
+      sourceDomain: null,
+    };
+  } else if (weakSources[0]) {
+    const citedSource = weakSources[0];
+    rankedAction = {
+      rank: 1,
+      type: 'review_cited_source',
+      title: `Review ${citedSource.domain}'s coverage of ${input.brandName}`,
+      rationale: `This domain appeared in provider citations for the weakest measured question. Aelo has not checked whether this page already mentions ${input.brandName}; inspect it before deciding whether to pitch an update.`,
+      prompt: weakMeasurement.prompt,
+      sourceDomain: citedSource.domain,
     };
   } else {
     rankedAction = {
       rank: 1,
-      type: 'publish_direct_answer',
-      title: 'Publish a direct answer for the weakest buyer prompt',
-      rationale: 'The brand has a measured prompt gap, but providers returned no grounded external source that Aelo can recommend targeting.',
-      prompt: weakPrompt,
+      type: 'review_site_answer',
+      title: 'Review your answer to the weakest buyer question',
+      rationale: 'The brand was absent from some saved answers and the provider returned no cited external page for this question. Aelo has not checked whether your website already answers it; review existing content before publishing anything new.',
+      prompt: weakMeasurement.prompt,
       sourceDomain: null,
     };
   }

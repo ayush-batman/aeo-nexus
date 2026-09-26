@@ -70,6 +70,7 @@ export default function OnboardingPage() {
     const [loading, setLoading] = useState(false);
     const [scanning, setScanning] = useState(false);
     const [enriching, setEnriching] = useState(false);
+    const [autoFillEvidenceStatus, setAutoFillEvidenceStatus] = useState<string | null>(null);
     const [prompts, setPrompts] = useState<string[]>([]);
     const [decisionPacket, setDecisionPacket] = useState<DecisionPacket | null>(null);
     const [error, setError] = useState<string | null>(null);
@@ -91,6 +92,7 @@ export default function OnboardingPage() {
             }
 
             if (data.data) {
+                setAutoFillEvidenceStatus(data.data.evidenceStatus || null);
                 setBrandName(data.data.name || brandName);
                 setDescription(data.data.description || '');
                 setTargetAudience(data.data.targetAudience || '');
@@ -328,7 +330,10 @@ export default function OnboardingPage() {
                                                 className="pl-10"
                                                 placeholder="https://example.com"
                                                 value={website}
-                                                onChange={(e) => setWebsite(e.target.value)}
+                                                onChange={(e) => {
+                                                    setWebsite(e.target.value);
+                                                    if (autoFillEvidenceStatus) setAutoFillEvidenceStatus('changed_website');
+                                                }}
                                             />
                                         </div>
                                         <Button
@@ -346,8 +351,45 @@ export default function OnboardingPage() {
                                         </Button>
                                     </div>
                                     <p className="text-xs text-[var(--text-ghost)] mt-2">
-                                        Enter your URL and we&apos;ll auto-detect your brand details.
+                                        Enter your URL for suggested brand details. Review them before continuing.
                                     </p>
+                                </div>
+
+                                {autoFillEvidenceStatus && (
+                                    <p className="text-xs text-[var(--text-secondary)]" role="status">
+                                        {autoFillEvidenceStatus === 'changed_website'
+                                            ? 'The website changed after auto-fill. Review these details or run auto-fill again.'
+                                            : autoFillEvidenceStatus === 'unverified_ai_suggestions'
+                                            ? 'These are AI suggestions based on website content, not verified facts. Check the description and audience below.'
+                                            : 'These details came from page metadata. Check them against your website before saving.'}
+                                    </p>
+                                )}
+
+                                <div>
+                                    <label htmlFor="onboarding-description" className="block text-sm font-medium text-[var(--text-secondary)] mb-2">
+                                        What your brand does
+                                    </label>
+                                    <textarea
+                                        id="onboarding-description"
+                                        className="min-h-24 w-full rounded-lg border border-[var(--border-default)] bg-[var(--bg-raised)] px-3 py-2 text-sm text-[var(--text-primary)] focus:outline-none focus:ring-1 focus:ring-[var(--accent-base)]/40"
+                                        value={description}
+                                        maxLength={10000}
+                                        onChange={(event) => setDescription(event.target.value)}
+                                        placeholder="Describe the product or service in your own words"
+                                    />
+                                </div>
+
+                                <div>
+                                    <label htmlFor="onboarding-audience" className="block text-sm font-medium text-[var(--text-secondary)] mb-2">
+                                        Who it serves
+                                    </label>
+                                    <Input
+                                        id="onboarding-audience"
+                                        value={targetAudience}
+                                        maxLength={2000}
+                                        onChange={(event) => setTargetAudience(event.target.value)}
+                                        placeholder="For example, small marketing teams"
+                                    />
                                 </div>
 
                                 <div>
@@ -603,7 +645,8 @@ function DecisionPacketView({ packet, onContinue }: { packet: DecisionPacket; on
 
             {packet.sourceGaps.length > 0 && (
                 <section aria-labelledby="source-gaps-title">
-                    <h3 id="source-gaps-title" className="text-sm font-medium text-[var(--text-primary)]">Provider-backed source gaps</h3>
+                    <h3 id="source-gaps-title" className="text-sm font-medium text-[var(--text-primary)]">Sources the providers cited</h3>
+                    <p className="mt-1 text-xs text-[var(--text-secondary)]">A citation is not proof that a page lacks your brand. Open it before treating it as an opportunity.</p>
                     <div className="mt-2 divide-y divide-[var(--border-subtle)] rounded-lg border border-[var(--border-default)]">
                         {packet.sourceGaps.slice(0, 3).map(gap => (
                             <a key={gap.domain} href={gap.exampleUrl} target="_blank" rel="noreferrer" className="flex min-h-11 flex-col items-start justify-between gap-1 px-3 py-2 text-sm hover:bg-[var(--bg-raised)] sm:flex-row sm:items-center sm:gap-3">

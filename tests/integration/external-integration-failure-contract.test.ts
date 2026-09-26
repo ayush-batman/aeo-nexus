@@ -28,6 +28,18 @@ test('Google sign-in status comes from the backend that owns the OAuth credentia
   assert.match(signupPage, /GoogleSignInButton/);
 });
 
+test('email signup is not offered when the backend cannot send verification mail', async () => {
+  const [route, providerStatus, signupPage] = await Promise.all([
+    source('app/api/auth/providers/route.ts'),
+    source('convex/authProviders.ts'),
+    source('app/(auth)/signup/page.tsx'),
+  ]);
+  assert.match(providerStatus, /RESEND_API_KEY && process\.env\.AELO_AUTH_EMAIL_FROM/);
+  assert.match(route, /\{ google, email \}/);
+  assert.match(signupPage, /Email signup is unavailable right now/);
+  assert.match(signupPage, /disabled=\{loading \|\| emailAvailable !== true\}/);
+});
+
 test('missing provider configuration is represented as an unavailable state, never success', async () => {
   const [scanner, scanRoute, mailAction, billing, contactRoute, contactPage] = await Promise.all([
     source('lib/ai/llm-scanner.ts'),

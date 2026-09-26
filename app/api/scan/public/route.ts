@@ -10,7 +10,9 @@ export async function POST(request: NextRequest) {
     if (!body || typeof body.brandName !== 'string' || typeof body.prompt !== 'string') return NextResponse.json({ error: 'invalid_public_scan' }, { status: 400 });
     const brandName = body.brandName.trim(), prompt = body.prompt.trim();
     if (brandName.length < 2 || brandName.length > 80 || prompt.length < 8 || prompt.length > 240) return NextResponse.json({ error: 'invalid_public_scan' }, { status: 400 });
-    const result = await callInternal('action', internal.publicScanActions.start, { id: request.headers.get('idempotency-key') || crypto.randomUUID(),
+    const requestId = request.headers.get('idempotency-key') || crypto.randomUUID();
+    if (!/^[a-f0-9-]{36}$/i.test(requestId)) return NextResponse.json({ error: 'invalid_public_scan' }, { status: 400 });
+    const result = await callInternal('action', internal.publicScanActions.start, { id: requestId,
       ip: request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || request.headers.get('x-real-ip') || 'unknown', brandName, prompt });
     const deadline = Date.now()+230000;
     const rateLimit = { used: result.used, limit: 3, remaining: Math.max(0,3-result.used), windowDays: 7 };

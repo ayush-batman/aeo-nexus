@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -24,9 +24,23 @@ function SignupForm() {
     const [error, setError] = useState<string | null>(null);
     const [success, setSuccess] = useState<string | null>(null);
     const [loading, setLoading] = useState(false);
+    const [emailAvailable, setEmailAvailable] = useState<boolean | null>(null);
+
+    useEffect(() => {
+        let active = true;
+        fetch('/api/auth/providers')
+            .then(async (response) => response.ok ? response.json() as Promise<{ email?: boolean }> : null)
+            .then((status) => { if (active) setEmailAvailable(status?.email === true); })
+            .catch(() => { if (active) setEmailAvailable(false); });
+        return () => { active = false; };
+    }, []);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+        if (!emailAvailable) {
+            setError('Email signup is unavailable right now. Please use Google sign-up.');
+            return;
+        }
         setError(null);
         setSuccess(null);
         setLoading(true);
@@ -88,6 +102,12 @@ function SignupForm() {
 
                     <GoogleSignInButton label="Sign up with Google" selectedPlan={selectedPlan} />
 
+                    {emailAvailable === false && (
+                        <p className="mb-4 text-sm text-[var(--text-secondary)]" role="status">
+                            Email signup is unavailable right now. Use Google sign-up if shown above.
+                        </p>
+                    )}
+
                     <form onSubmit={handleSubmit} className="space-y-4">
                         <div>
                             <label htmlFor="signup-name" className="block text-sm font-medium text-[var(--text-secondary)] mb-2">
@@ -145,14 +165,14 @@ function SignupForm() {
                             </Link>
                         </div>
 
-                        <Button type="submit" className="w-full" disabled={loading}>
+                        <Button type="submit" className="w-full" disabled={loading || emailAvailable !== true}>
                             {loading ? (
                                 <>
                                     <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                                     Creating Account...
                                 </>
                             ) : (
-                                "Create Account"
+                                emailAvailable === null ? "Checking signup…" : "Create Account"
                             )}
                         </Button>
                     </form>

@@ -29,17 +29,44 @@ function run(overrides: Partial<VisibilityMeasurementRun> = {}): VisibilityMeasu
   };
 }
 
-test('packet ranks a provider-backed external source for the weakest prompt', () => {
+test('packet does not claim a cited page lacks the brand without checking that page', () => {
   const packet = buildDecisionPacket({ id: 'p1', workspaceId: 'w1', brandName: 'Aelo', measurements: [run()] });
   assert.equal(packet.status, 'complete');
   assert.equal(packet.sourceGaps[0]?.domain, 'example.com');
-  assert.equal(packet.rankedAction.type, 'earn_source_mention');
+  assert.equal(packet.rankedAction.type, 'review_cited_source');
+  assert.match(packet.rankedAction.title, /Review/);
+  assert.match(packet.rankedAction.rationale, /has not checked whether this page already mentions Aelo/);
   assert.equal(packet.rankedAction.prompt, 'best answer engine tracker');
 });
 
+test('packet does not recommend visibility work when every successful answer names the brand', () => {
+  const complete = run({ engines: [{ ...run().engines[0], mentions: 4, mentionRate: 1 }] });
+  const packet = buildDecisionPacket({ id: 'p2', workspaceId: 'w1', brandName: 'Aelo', measurements: [complete] });
+  assert.equal(packet.rankedAction.type, 'review_measurement');
+  assert.doesNotMatch(packet.rankedAction.title, /earn|publish/i);
+});
+
+test('packet does not rank content work from fewer than four successful samples', () => {
+  const sparse = run({ engines: [{ ...run().engines[0], successfulSamples: 2, requestedSamples: 2, mentions: 1, mentionRate: 0.5 }] });
+  const packet = buildDecisionPacket({ id: 'p4', workspaceId: 'w1', brandName: 'Aelo', measurements: [sparse] });
+  assert.equal(packet.rankedAction.type, 'review_measurement');
+});
+
+test('packet does not use a source from a different prompt to explain the weakest prompt', () => {
+  const strong = run({ prompt: 'branded comparison', engines: [{ ...run().engines[0], mentions: 4, mentionRate: 1 }] });
+  const weak = run({ runId: 'run-2', prompt: 'budget tools', engines: [{ ...run().engines[0], citations: [] }] });
+  const packet = buildDecisionPacket({ id: 'p3', workspaceId: 'w1', brandName: 'Aelo', measurements: [strong, weak] });
+  assert.equal(packet.rankedAction.prompt, 'budget tools');
+  assert.equal(packet.rankedAction.sourceDomain, null);
+});
+
 test('packet is partial or untracked without hiding provider and persistence failures', () => {
-  assert.equal(buildDecisionPacket({ id: 'p', workspaceId: 'w', brandName: 'A', measurements: [run({ status: 'partial' })] }).status, 'partial');
-  assert.equal(buildDecisionPacket({ id: 'p', workspaceId: 'w', brandName: 'A', measurements: [run({ persistence: { status: 'failed', rows: 0, error: 'db' } })] }).status, 'untracked');
+  const partial = buildDecisionPacket({ id: 'p', workspaceId: 'w', brandName: 'A', measurements: [run({ status: 'partial' })] });
+  const untracked = buildDecisionPacket({ id: 'p', workspaceId: 'w', brandName: 'A', measurements: [run({ persistence: { status: 'failed', rows: 0, error: 'db' } })] });
+  assert.equal(partial.status, 'partial');
+  assert.equal(untracked.status, 'untracked');
+  assert.equal(partial.rankedAction.type, 'repair_tracking');
+  assert.equal(untracked.rankedAction.type, 'repair_tracking');
 });
 
 test('all-failed packet recommends repair rather than inventing an action gap', () => {

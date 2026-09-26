@@ -185,7 +185,8 @@ const [backend, packet, page] = await Promise.all([source('convex/activation.ts'
  assert.match(backend,/samples: 4/); assert.match(backend,/beginMeasurement/);
  assert.match(backend,/ctx\.db\.insert\('decisionPackets'/); assert.match(backend,/measurementRunIds: runIds/);
  assert.match(packet,/provider_citation/); assert.match(packet,/rankedAction/);
- assert.match(page,/Open sample receipt/); assert.match(page,/Provider-backed source gaps/);
+ assert.match(page,/Open sample receipt/); assert.match(page,/Sources the providers cited/);
+ assert.match(page,/A citation is not proof that a page lacks your brand/);
  assert.doesNotMatch(page,/console\.error\('Decision packet failed/);
  assert.doesNotMatch(page,/finally \{[\s\S]{0,200}router\.push\('\/dashboard'\)/);
 });
