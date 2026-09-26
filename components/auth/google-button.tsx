@@ -15,7 +15,7 @@ function GoogleIcon() {
     );
 }
 
-export function GoogleSignInButton({ label = "Continue with Google", selectedPlan }: { label?: string; selectedPlan?: "radar" | "command" | null }) {
+export function GoogleSignInButton({ label = "Continue with Google", selectedPlan, showDivider = true }: { label?: string; selectedPlan?: "radar" | "command" | null; showDivider?: boolean }) {
     const [googleEnabled, setGoogleEnabled] = useState(false);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -68,11 +68,11 @@ export function GoogleSignInButton({ label = "Continue with Google", selectedPla
             </button>
             {error && <p className="mt-2 text-xs text-[var(--data-red)]" role="alert">{error}</p>}
         </div>
-        <div className="flex items-center gap-3 my-6" aria-hidden="true">
+        {showDivider && <div className="flex items-center gap-3 my-6" aria-hidden="true">
             <div className="flex-1 h-px bg-[var(--border-default)]" />
             <span className="text-xs text-[var(--text-tertiary)]">or</span>
             <div className="flex-1 h-px bg-[var(--border-default)]" />
-        </div>
+        </div>}
         </>
     );
 }

@@ -36,8 +36,9 @@ test('email signup is not offered when the backend cannot send verification mail
   ]);
   assert.match(providerStatus, /RESEND_API_KEY && process\.env\.AELO_AUTH_EMAIL_FROM/);
   assert.match(route, /\{ google, email \}/);
+  assert.match(route, /email = status\.email === true/);
   assert.match(signupPage, /Email signup is unavailable right now/);
-  assert.match(signupPage, /disabled=\{loading \|\| emailAvailable !== true\}/);
+  assert.match(signupPage, /emailAvailable === true && <form/);
 });
 
 test('missing provider configuration is represented as an unavailable state, never success', async () => {

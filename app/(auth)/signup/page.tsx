@@ -74,7 +74,7 @@ function SignupForm() {
                         Create your account
                     </h1>
                     <p className="text-sm text-[var(--text-secondary)] text-center mb-8">
-                        No card. First scan in under a minute.
+                        No card. Start with real AI answers.
                     </p>
 
                     {selectedPlan && (
@@ -100,15 +100,21 @@ function SignupForm() {
                         </div>
                     )}
 
-                    <GoogleSignInButton label="Sign up with Google" selectedPlan={selectedPlan} />
+                    <GoogleSignInButton label="Sign up with Google" selectedPlan={selectedPlan} showDivider={emailAvailable === true} />
 
                     {emailAvailable === false && (
-                        <p className="mb-4 text-sm text-[var(--text-secondary)]" role="status">
+                        <p className="mt-5 text-sm text-[var(--text-secondary)]" role="status">
                             Email signup is unavailable right now. Use Google sign-up if shown above.
                         </p>
                     )}
 
-                    <form onSubmit={handleSubmit} className="space-y-4">
+                    {emailAvailable === null && (
+                        <p className="mb-4 text-sm text-[var(--text-secondary)]" role="status">
+                            Checking sign-up options…
+                        </p>
+                    )}
+
+                    {emailAvailable === true && <form onSubmit={handleSubmit} className="space-y-4">
                         <div>
                             <label htmlFor="signup-name" className="block text-sm font-medium text-[var(--text-secondary)] mb-2">
                                 Full Name
@@ -165,17 +171,17 @@ function SignupForm() {
                             </Link>
                         </div>
 
-                        <Button type="submit" className="w-full" disabled={loading || emailAvailable !== true}>
+                        <Button type="submit" className="w-full" disabled={loading}>
                             {loading ? (
                                 <>
                                     <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                                     Creating Account...
                                 </>
                             ) : (
-                                emailAvailable === null ? "Checking signup…" : "Create Account"
+                                "Create Account"
                             )}
                         </Button>
-                    </form>
+                    </form>}
 
                     <div className="mt-6 text-center text-sm text-[var(--text-secondary)]">
                         Already have an account?{" "}

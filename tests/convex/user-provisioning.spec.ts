@@ -26,6 +26,11 @@ test('provisions the configured owner email as a super-admin on first login', as
   const user = await t.run((ctx) => ctx.db.query('users').withIndex('by_normalized_email',
     (q) => q.eq('normalizedEmail', 'work.ayushg@gmail.com')).unique());
   expect(user?.isSuperAdmin).toBe(true);
+  const scheduled = await t.run((ctx) => ctx.db.system.query('_scheduled_functions').collect());
+  expect(scheduled.filter((item) => item.name === 'mailActions:welcome')).toHaveLength(1);
+  await owner.mutation(api.users.provisionCurrentUser, {});
+  const afterSecondLogin = await t.run((ctx) => ctx.db.system.query('_scheduled_functions').collect());
+  expect(afterSecondLogin.filter((item) => item.name === 'mailActions:welcome')).toHaveLength(1);
 });
 
 test('unverified owner email cannot elevate an existing account', async () => {
@@ -85,4 +90,6 @@ test('verified owner email gains admin when claiming its imported account', asyn
     (q) => q.eq('normalizedEmail', 'work.ayushg@gmail.com')).unique());
   expect(user?.isSuperAdmin).toBe(true);
   expect(user?.authSubject).toBe(authUser._id);
+  const scheduled = await t.run((ctx) => ctx.db.system.query('_scheduled_functions').collect());
+  expect(scheduled.filter((item) => item.name === 'mailActions:welcome')).toHaveLength(0);
 });

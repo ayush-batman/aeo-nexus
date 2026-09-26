@@ -4,6 +4,12 @@
 
 The new protected preview is Ready at `aeo-nexus-5si3sez8u-agrover12344-9741.vercel.app`, with `aelo-rescue-preview.vercel.app` assigned to it. The Vercel Production environment currently names `woozy-starfish-810` as both public Convex cloud and site deployment. That is the documented `aelo-test` development backend, so production promotion is blocked until a distinct, verified production target is configured and the source-to-destination cutover is rehearsed. Preview and Production share Razorpay secret variables; isolate test-mode payment credentials before any payment rehearsal. The September 8 and historical instructions below remain background, not authority to switch live data ownership.
 
+### Transactional email release gate
+
+The `aelo-test` Convex deployment `woozy-starfish-810` currently has `SITE_URL` and Google OAuth credentials, but `npx convex env list --names-only --deployment woozy-starfish-810` on September 26 showed **no** `RESEND_API_KEY`, `AELO_AUTH_EMAIL_FROM`, or `AELO_EMAIL_FROM`. Do not claim verification, password reset, welcome, first-results, or weekly messages work there yet. A verified address under an owned sending domain and a test-scoped Resend key must be configured on that Convex deployment (not just Vercel); `AELO_AUTH_EMAIL_FROM` is for verification/reset and `AELO_EMAIL_FROM` for lifecycle/alerts. Confirm `SITE_URL` points to the exact test preview origin. Keep the key out of chat, logs, Git, and `.env` files committed to the repository.
+
+After explicit approval to deploy the email code to `aelo-test`, use a verified non-production account (the owner offered `work.ayushg@gmail.com`) and check: verification/reset link delivery and expiry, one welcome after a *new* verified account, no repeat welcome on sign-in, a complete/partial first-results message only after receipt persistence, no results-ready mail on all-failed, one weekly digest when evidence qualifies, opt-out for optional alerts, and delivery ledger states. Provider acceptance is not inbox delivery; inspect Resend delivery/bounce events. Do not trigger real billing or production customer mail. Existing accounts are not automatically backfilled with welcome mail.
+
 ## Current Convex rollout — September 8, 2026
 
 The current branch uses Convex, not Supabase/Upstash, at runtime. **The legacy rollout below is historical and must not be executed for the current branch.** Follow `CONVEX_IMPORT_RUNBOOK.md` for data transfer and `CONVEX_RUNTIME_CHECKPOINT.md` for current verification evidence.

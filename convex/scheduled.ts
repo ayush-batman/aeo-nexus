@@ -86,6 +86,9 @@ export const reconcileInitialJobs = internalMutation({
       const status = runs.every(run => run?.status === 'all_failed') ? 'all_failed' as const : runs.every(run => run?.status === 'complete') ? 'complete' as const : 'partial' as const;
       await ctx.db.patch(packet._id, { status });
       await ctx.db.patch(job._id, { status: status === 'complete' ? 'succeeded' : status === 'all_failed' ? 'failed' : 'partial', completedAt: Date.now(), updatedAt: Date.now() });
+      if (status !== 'all_failed' && packet.createdBy) {
+        await ctx.scheduler.runAfter(0, internal.mailActions.firstResults, { packetId: packet._id });
+      }
     }
     return queued.length + running.length;
   },

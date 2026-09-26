@@ -1,6 +1,7 @@
 import { afterEach, expect, test, vi } from 'vitest';
 import { internal } from '../../convex/_generated/api';
 import { fixture } from './fixtures';
+import { runVisibilityMeasurement } from '../../lib/measurement/service';
 
 afterEach(() => vi.unstubAllEnvs());
 async function delivery() {
@@ -41,4 +42,78 @@ test('missing email provider configuration never records a successful delivery',
   const { t, id } = await delivery();
   await expect(t.action(internal.mailActions.deliver, { id })).rejects.toThrow('email_not_configured');
   expect(await t.run(ctx => ctx.db.get(id))).toMatchObject({ status: 'sending', providerId: null });
+});
+test('welcome queues once for a verified account and uses the configured site origin', async () => {
+  vi.stubEnv('SITE_URL', 'https://preview.example.test/path');
+  const { t, context } = await fixture();
+  const ids = await t.run(async ctx => ({
+    workspaceId: (await ctx.db.query('workspaces').withIndex('by_public_id', q => q.eq('publicId', context.workspaceId)).unique())!._id,
+    userId: (await ctx.db.query('users').first())!._id,
+  }));
+  await t.action(internal.mailActions.welcome, ids);
+  await t.action(internal.mailActions.welcome, ids);
+  const rows = await t.run(ctx => ctx.db.query('emailDeliveries').take(10));
+  expect(rows).toHaveLength(1);
+  expect(rows[0]).toMatchObject({ kind: 'welcome', status: 'pending', recipientEmail: 'local-owner@example.test' });
+  expect(rows[0].html).toContain('https://preview.example.test/onboarding');
+  expect(rows[0].html).not.toContain('aelohq.com');
+});
+test('first-results mail labels partial evidence and is not muted by alert preferences', async () => {
+  vi.stubEnv('SITE_URL', 'https://preview.example.test');
+  vi.stubEnv('AELO_EMAIL_FROM', 'Aelo <updates@example.test>');
+  const { t, context } = await fixture();
+  const input = { prompt: 'Which product?', brandName: 'Aelo', platforms: ['gemini' as const], samples: 4 };
+  let call = 0;
+  const result = await runVisibilityMeasurement(input, { runId: 'synthetic-mail-run',
+    execute: async () => ++call === 1 ? { results: [{ platform: 'gemini', prompt: input.prompt,
+      response: 'Aelo is one option.', brandMentioned: true, brandVariants: [], mentionPosition: 1,
+      sentiment: 'neutral', sentimentScore: 0, sentimentReason: 'Synthetic test', competitorsMentioned: [],
+      competitorPositions: [], citations: [], sampleId: 'synthetic-mail-sample', listItems: [], confidence: 1,
+      timestamp: new Date().toISOString() }], errors: [] } : { results: [], errors: [{ platform: 'gemini', error: 'synthetic_failure' }] },
+    persist: async () => {} });
+  const packetId = await t.run(async ctx => {
+    const workspace = await ctx.db.query('workspaces').withIndex('by_public_id', q => q.eq('publicId', context.workspaceId)).unique();
+    const user = await ctx.db.query('users').first();
+    await ctx.db.patch(workspace!._id, { name: 'Aelo\r\nBcc: other@example.test' });
+    await ctx.db.insert('alertPreferences', { publicId: crypto.randomUUID(), workspaceId: workspace!._id,
+      alertType: 'first_results', enabled: false, createdAt: Date.now(), updatedAt: Date.now() });
+    await ctx.db.insert('measurementRuns', { publicId: result.runId, workspaceId: workspace!._id,
+      organizationId: workspace!.organizationId, requestId: 'test-first-results', input, status: 'partial', result,
+      workflowId: null, createdAt: Date.now(), updatedAt: Date.now() });
+    return ctx.db.insert('decisionPackets', { publicId: crypto.randomUUID(), workspaceId: workspace!._id,
+      contractVersion: 'test', status: 'partial', prompts: ['Buyer question'], packet: {}, measurementRunIds: [result.runId],
+      createdBy: user!._id, createdAt: Date.now() });
+  });
+  await t.action(internal.mailActions.firstResults, { packetId });
+  await t.action(internal.mailActions.firstResults, { packetId });
+  const rows = await t.run(ctx => ctx.db.query('emailDeliveries').take(10));
+  expect(rows).toHaveLength(1);
+  expect(rows[0]).toMatchObject({ kind: 'first_results', status: 'pending' });
+  expect(rows[0].subject).not.toMatch(/[\r\n]/);
+  expect(rows[0].html).toContain('Your first results are partial');
+  expect(rows[0].html).toContain('https://preview.example.test/onboarding');
+  expect(await t.mutation(internal.mail.claim, { id: rows[0]._id })).toMatchObject({ email: 'local-owner@example.test' });
+  const failedPacketId = await t.run(async ctx => {
+    const workspace = await ctx.db.query('workspaces').withIndex('by_public_id', q => q.eq('publicId', context.workspaceId)).unique();
+    const user = await ctx.db.query('users').first();
+    await ctx.db.insert('measurementRuns', { publicId: 'synthetic-unsaved-run', workspaceId: workspace!._id,
+      organizationId: workspace!.organizationId, requestId: 'test-unsaved-results', input, status: 'partial',
+      result: { ...result, runId: 'synthetic-unsaved-run', persistence: { status: 'failed', rows: 0, error: 'synthetic_storage_failure' } },
+      workflowId: null, createdAt: Date.now(), updatedAt: Date.now() });
+    return ctx.db.insert('decisionPackets', { publicId: crypto.randomUUID(), workspaceId: workspace!._id,
+      contractVersion: 'test', status: 'partial', prompts: ['Buyer question'], packet: {},
+      measurementRunIds: ['synthetic-unsaved-run'], createdBy: user!._id, createdAt: Date.now() });
+  });
+  await t.action(internal.mailActions.firstResults, { packetId: failedPacketId });
+  expect(await t.run(ctx => ctx.db.query('emailDeliveries').take(10))).toHaveLength(1);
+});
+test('missing site origin fails safely before lifecycle mail is queued', async () => {
+  vi.stubEnv('SITE_URL', '');
+  const { t, context } = await fixture();
+  const ids = await t.run(async ctx => ({
+    workspaceId: (await ctx.db.query('workspaces').withIndex('by_public_id', q => q.eq('publicId', context.workspaceId)).unique())!._id,
+    userId: (await ctx.db.query('users').first())!._id,
+  }));
+  await expect(t.action(internal.mailActions.welcome, ids)).rejects.toThrow('email_site_url_not_configured');
+  expect(await t.run(ctx => ctx.db.query('emailDeliveries').take(10))).toHaveLength(0);
 });

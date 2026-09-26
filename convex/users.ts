@@ -1,6 +1,7 @@
 import { v } from 'convex/values';
 
 import { mutation, query } from './_generated/server';
+import { internal } from './_generated/api';
 import { authComponent } from './auth';
 import { newPublicId } from './lib/publicIds';
 import { requireTenant } from './lib/tenant';
@@ -119,6 +120,9 @@ export const provisionCurrentUser = mutation({
           updatedAt: now,
           completedAt: null,
         });
+
+        // Imported-account claims and later logins must not resend this.
+        await ctx.scheduler.runAfter(0, internal.mailActions.welcome, { workspaceId, userId });
 
         user = await ctx.db.get(userId);
       }

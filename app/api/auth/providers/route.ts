@@ -15,8 +15,8 @@ export async function GET() {
       {},
       { url: process.env.NEXT_PUBLIC_CONVEX_URL },
     );
-    google = status.google;
-    email = status.email;
+    google = status.google === true;
+    email = status.email === true;
   } catch {
     // Fail closed: the sign-in button stays hidden when provider state cannot
     // be confirmed by the backend that owns the OAuth credentials.

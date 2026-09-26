@@ -1,86 +1,31 @@
-import {
-    Body,
-    Button,
-    Container,
-    Head,
-    Heading,
-    Hr,
-    Html,
-    Link,
-    Preview,
-    Section,
-    Text,
-    Tailwind,
-} from "@react-email/components";
-import * as React from "react";
+import { Body, Button, Container, Head, Heading, Html, Preview, Section, Text } from '@react-email/components';
 
-interface WelcomeEmailProps {
-    firstName?: string;
+export default function WelcomeEmail({ firstName, baseUrl }: { firstName: string; baseUrl: string }) {
+  return (
+    <Html>
+      <Head />
+      <Preview>Start with the questions your buyers actually ask.</Preview>
+      <Body style={{ backgroundColor: '#F6F5F2', color: '#202522', fontFamily: 'Arial, sans-serif' }}>
+        <Container style={{ maxWidth: 560, margin: '0 auto', padding: '36px 16px' }}>
+          <Section style={{ border: '1px solid #D8D8D2', backgroundColor: '#FFFFFF', padding: 32 }}>
+            <Text style={{ fontSize: 13, fontWeight: 700, letterSpacing: 1.5, margin: '0 0 32px' }}>AELO</Text>
+            <Heading style={{ fontSize: 26, fontWeight: 500, lineHeight: 1.2, margin: '0 0 20px' }}>Your workspace is ready.</Heading>
+            <Text style={{ fontSize: 15, lineHeight: 1.6 }}>Hi {firstName},</Text>
+            <Text style={{ fontSize: 15, lineHeight: 1.6 }}>
+              Aelo measures the answers AI assistants give to your buyers. To start, add your brand and three to five questions a buyer might ask before choosing a product like yours.
+            </Text>
+            <Text style={{ fontSize: 15, lineHeight: 1.6 }}>
+              We&apos;ll save each returned answer and show which sources the provider cited. If a scan fails, you&apos;ll see the failure rather than a made-up score.
+            </Text>
+            <Button href={`${baseUrl}/onboarding`} style={{ display: 'inline-block', backgroundColor: '#202522', color: '#FFFFFF', padding: '13px 20px', textDecoration: 'none', marginTop: 16 }}>
+              Set up your first measurement
+            </Button>
+          </Section>
+          <Text style={{ color: '#606862', fontSize: 12, lineHeight: 1.5, marginTop: 20 }}>
+            This account email was sent because you created a verified Aelo account. It is not a marketing subscription.
+          </Text>
+        </Container>
+      </Body>
+    </Html>
+  );
 }
-
-const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "https://aelohq.com";
-
-export const WelcomeEmail = ({ firstName = "there" }: WelcomeEmailProps) => {
-    const previewText = `Welcome to Aelo! Track your brand in the AI era.`;
-
-    return (
-        <Html>
-            <Head />
-            <Preview>{previewText}</Preview>
-            <Tailwind>
-                <Body className="bg-zinc-50 font-sans">
-                    <Container className="mx-auto py-10 px-4 max-w-[600px]">
-                        <Section className="bg-white rounded-xl border border-zinc-200 p-8 shadow-sm">
-                            <Text className="text-center mb-6" style={{ fontSize: 30, fontWeight: 600, letterSpacing: '-0.08em', color: '#0A0A0B' }}>
-                                aelo<span style={{ marginLeft: 3, fontSize: 15, verticalAlign: 'super', color: '#416A88' }}>↗</span>
-                            </Text>
-
-                            <Heading className="text-2xl font-medium text-center text-zinc-900 mb-6 tracking-tight">
-                                Welcome to Aelo.
-                            </Heading>
-
-                            <Text className="text-base text-zinc-700 mb-4">
-                                Hi {firstName},
-                            </Text>
-
-                            <Text className="text-base text-zinc-700 mb-6 leading-relaxed">
-                                Aelo measures how ChatGPT, Gemini, Claude, and Perplexity actually answer questions in your category, with the raw receipts, not a black-box score. Your first workspace is ready.
-                            </Text>
-
-                            <Text className="text-base text-zinc-700 mb-8 leading-relaxed">
-                                Head to your dashboard, add your top 3 competitors, and run your first scan. You&apos;ll have your first honest receipt in under 10 minutes.
-                            </Text>
-
-                            <Section className="text-center mb-8">
-                                <Button
-                                    className="bg-[var(--accent-base)] hover:bg-[var(--accent-base)] text-white font-medium py-3 px-6 rounded-lg text-center mx-auto block w-fit"
-                                    href={`${baseUrl}/dashboard`}
-                                >
-                                    Go to Dashboard
-                                </Button>
-                            </Section>
-
-                            <Hr className="border-t border-zinc-200 my-6" />
-
-                            <Text className="text-sm text-[var(--text-ghost)] mb-4 leading-relaxed">
-                                Need help getting started? Check out our <Link href={`${baseUrl}/help`} className="text-[var(--accent-base)] underline">docs</Link> or just reply to this email!
-                            </Text>
-
-                            <Text className="text-sm text-[var(--text-secondary)]">
-, The Aelo Team
-                            </Text>
-
-                        </Section>
-
-                        <Text className="text-xs text-center text-[var(--text-secondary)] mt-8">
-                            © {new Date().getFullYear()} Aelo. All rights reserved.<br />
-                            You are receiving this email because you signed up for an Aelo account.
-                        </Text>
-                    </Container>
-                </Body>
-            </Tailwind>
-        </Html>
-    );
-};
-
-export default WelcomeEmail;
