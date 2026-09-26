@@ -1,5 +1,9 @@
 # Aelo product-rescue deployment and rollback
 
+## September 26, 2026 production gate
+
+The new protected preview is Ready at `aeo-nexus-58mwpguan-agrover12344-9741.vercel.app`, with `aelo-rescue-preview.vercel.app` assigned to it. The Vercel Production environment currently names `woozy-starfish-810` as both public Convex cloud and site deployment. That is the documented `aelo-test` development backend, so production promotion is blocked until a distinct, verified production target is configured and the source-to-destination cutover is rehearsed. Preview and Production share Razorpay secret variables; isolate test-mode payment credentials before any payment rehearsal. The September 8 and historical instructions below remain background, not authority to switch live data ownership.
+
 ## Current Convex rollout — September 8, 2026
 
 The current branch uses Convex, not Supabase/Upstash, at runtime. **The legacy rollout below is historical and must not be executed for the current branch.** Follow `CONVEX_IMPORT_RUNBOOK.md` for data transfer and `CONVEX_RUNTIME_CHECKPOINT.md` for current verification evidence.
