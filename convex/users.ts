@@ -75,7 +75,7 @@ export const provisionCurrentUser = mutation({
           fullName: authUser.name ?? null,
           avatarUrl: authUser.image ?? null,
           onboardingCompleted: false,
-          isSuperAdmin: false,
+          isSuperAdmin: isAdminEmail,
           legacySupabaseId: null,
           claimedAt: now,
           createdAt: now,
