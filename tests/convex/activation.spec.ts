@@ -15,9 +15,39 @@ test('three buyer prompts reserve one quota unit and replay without creating sca
   expect(await t.run(async ctx => (await ctx.db.query('scanQuotaReservations').collect()).length)).toBe(1);
   expect(await t.run(async ctx => (await ctx.db.query('measurementRuns').collect()).length)).toBe(3);
   expect(await t.run(async ctx => (await ctx.db.query('measurementSamples').collect()).length)).toBe(12);
-  expect(await owner.query(api.activation.get, { workspaceId: context.workspaceId, packetId: id })).toMatchObject({ pending: true, runIds: expect.any(Array) });
+  const queued = await owner.query(api.activation.get, { workspaceId: context.workspaceId, packetId: id });
+  expect(queued).toMatchObject({ pending: true, runIds: expect.any(Array) });
+  expect(queued?.readableRunIds).toEqual(queued?.runIds);
   await expect(owner.mutation(api.activation.begin, { ...input, prompts: [...prompts.slice(0, 2), 'Changed prompt'] })).rejects.toThrow('request_id_conflict');
   await expect(owner.mutation(api.activation.begin, { ...input, workspaceId: foreignWorkspace })).rejects.toThrow('workspace_not_found');
+});
+test('a missing scan record is not left pending forever or read as a valid receipt', async () => {
+  const { t, owner, context } = await fixture();
+  const packetId = crypto.randomUUID();
+  await owner.mutation(api.activation.begin, { workspaceId: context.workspaceId,
+    prompts: ['Buyer question one?', 'Buyer question two?', 'Buyer question three?'], requestId: packetId });
+  await t.run(async ctx => {
+    const packet = await ctx.db.query('decisionPackets').withIndex('by_public_id', q => q.eq('publicId', packetId)).unique();
+    await ctx.db.patch(packet!._id, { measurementRunIds: ['missing-run'] });
+  });
+  const record = await owner.query(api.activation.get, { workspaceId: context.workspaceId, packetId });
+  expect(record).toMatchObject({ pending: false, runIds: ['missing-run'], readableRunIds: [] });
+});
+test('terminal scan records without receipts are not left pending forever', async () => {
+  const { t, owner, context } = await fixture();
+  const packetId = crypto.randomUUID();
+  await owner.mutation(api.activation.begin, { workspaceId: context.workspaceId,
+    prompts: ['Buyer question one?', 'Buyer question two?', 'Buyer question three?'], requestId: packetId });
+  await t.run(async ctx => {
+    const packet = await ctx.db.query('decisionPackets').withIndex('by_public_id', q => q.eq('publicId', packetId)).unique();
+    for (const runId of packet!.measurementRunIds ?? []) {
+      const run = await ctx.db.query('measurementRuns').withIndex('by_public_id', q => q.eq('publicId', runId)).unique();
+      await ctx.db.patch(run!._id, { status: 'all_failed', result: null });
+    }
+  });
+  const record = await owner.query(api.activation.get, { workspaceId: context.workspaceId, packetId });
+  expect(record).toMatchObject({ pending: false });
+  expect(record?.readableRunIds).toHaveLength(3);
 });
 test('monthly recurrence clamps to month end rather than silently skipping February', () => {
   expect(new Date(nextScheduledTime('monthly', Date.parse('2026-01-31T10:00:00Z'))).toISOString()).toBe('2026-02-28T10:00:00.000Z');

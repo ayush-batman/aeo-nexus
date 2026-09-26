@@ -49,16 +49,18 @@ export const begin = tenantMutation({
 export const get = tenantQuery({
   args: { workspaceId: v.string(), packetId: v.optional(v.string()) },
   returns: v.union(v.null(), v.object({ id: v.string(), brandName: v.string(), createdAt: v.string(),
-    legacyPacket: v.any(), runIds: v.array(v.string()), pending: v.boolean() })),
+    legacyPacket: v.any(), runIds: v.array(v.string()), readableRunIds: v.array(v.string()), pending: v.boolean() })),
   handler: async (ctx, args) => {
     const workspace = await requireWorkspace(ctx, ctx.tenant, args.workspaceId);
     const packet = args.packetId
       ? await ctx.db.query('decisionPackets').withIndex('by_public_id', q => q.eq('publicId', args.packetId!)).unique()
       : await ctx.db.query('decisionPackets').withIndex('by_workspace_id_and_created_at', q => q.eq('workspaceId', workspace._id)).order('desc').first();
     if (!packet || packet.workspaceId !== workspace._id) return null;
-    const runs = await Promise.all((packet.measurementRunIds ?? []).map(id => ctx.db.query('measurementRuns').withIndex('by_public_id', q => q.eq('publicId', id)).unique()));
+    const runIds = packet.measurementRunIds ?? [];
+    const runs = await Promise.all(runIds.map(id => ctx.db.query('measurementRuns').withIndex('by_public_id', q => q.eq('publicId', id)).unique()));
     return { id: packet.publicId, brandName: typeof packet.packet?.brandName === 'string' ? packet.packet.brandName : workspace.name,
       createdAt: new Date(packet.createdAt).toISOString(), legacyPacket: packet.measurementRunIds ? null : packet.packet,
-      runIds: packet.measurementRunIds ?? [], pending: runs.some(run => !run?.result) };
+      runIds, readableRunIds: runIds.filter((_, index) => runs[index]?.workspaceId === workspace._id),
+      pending: runs.some(run => run?.workspaceId === workspace._id && !run.result && (run.status === 'queued' || run.status === 'running')) };
   },
 });
