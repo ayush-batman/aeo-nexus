@@ -15,8 +15,11 @@ test('the current brand favicon is the only browser icon source', async () => {
   assert.equal(await missing('app/favicon.ico'), true, 'legacy convention favicon must stay removed');
   const layout = await readFile('app/layout.tsx', 'utf8');
   const favicon = await readFile('public/brand/favicon.svg', 'utf8');
+  const touchIcon = await readFile('public/brand/social-square.svg', 'utf8');
 
-  assert.match(layout, /url:\s*["']\/brand\/favicon\.svg["']/);
-  assert.match(favicon, /stroke="#E5D3A6"/);
-  assert.match(favicon, />a<\/text>/);
+  assert.match(layout, /url:\s*["']\/brand\/favicon\.svg\?v=20260926-arrow["']/);
+  assert.match(favicon, /M62 18H84V40M84 18 60 42/);
+  assert.match(touchIcon, /M62 18H84V40M84 18 60 42/);
+  assert.doesNotMatch(favicon, /<ellipse\b|<text\b/);
+  assert.doesNotMatch(touchIcon, /<ellipse\b|<text\b/);
 });
