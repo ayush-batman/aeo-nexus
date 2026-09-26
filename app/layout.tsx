@@ -50,7 +50,7 @@ export const metadata: Metadata = {
   },
   icons: {
     icon: [
-      { url: "/brand/favicon.svg", type: "image/svg+xml" },
+      { url: "/brand/favicon.svg?v=20260926", type: "image/svg+xml" },
     ],
     apple: [
       { url: "/brand/social-square.svg", sizes: "1024x1024", type: "image/svg+xml" },

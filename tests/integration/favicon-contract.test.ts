@@ -16,7 +16,9 @@ test('the current brand favicon is the only browser icon source', async () => {
   const layout = await readFile('app/layout.tsx', 'utf8');
   const favicon = await readFile('public/brand/favicon.svg', 'utf8');
 
-  assert.match(layout, /url:\s*["']\/brand\/favicon\.svg["']/);
+  assert.match(layout, /url:\s*["']\/brand\/favicon\.svg\?v=20260926["']/);
   assert.match(favicon, /stroke="#E5D3A6"/);
-  assert.match(favicon, />a<\/text>/);
+  assert.match(favicon, /Manrope 600 outline/);
+  assert.match(favicon, /<path d="M444\.7 -30/);
+  assert.doesNotMatch(favicon, /<text\b/, 'favicon must not depend on a browser font fallback');
 });
