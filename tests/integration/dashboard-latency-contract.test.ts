@@ -65,3 +65,15 @@ test('workspace switching uses one tenant-bound read and never reloads after a d
   assert.ok(sidebar.indexOf('if (!res.ok) throw') < sidebar.indexOf('window.location.assign(new URL("/dashboard"'));
   assert.match(sidebar, /role="alert"[^>]*>\{switchError\}/);
 });
+
+test('warm dashboard navigation rechecks access without a blocking workspace spinner', async () => {
+  const guard = await source('components/onboarding-check.tsx');
+
+  assert.match(guard, /\[attempt, pathname, router\]/);
+  assert.match(guard, /if \(!readyBootstrap\.current\) setState\("checking"\)/);
+  assert.ok(guard.indexOf('if (controller.signal.aborted) return;') < guard.indexOf('if (response.status === 401)'));
+  assert.match(guard, /if \(response\.status === 401\) \{[\s\S]*?readyBootstrap\.current = null;[\s\S]*?setState\("checking"\);[\s\S]*?router\.replace\("\/login"\)/);
+  assert.match(guard, /if \(!response\.ok\) throw new Error/);
+  assert.match(guard, /readyBootstrap\.current = data as DashboardBootstrap/);
+  assert.match(guard, /setState\("error"\)/);
+});

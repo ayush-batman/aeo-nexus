@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, useEffect, useState } from "react";
+import { createContext, useContext, useEffect, useRef, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { AlertCircle, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -24,6 +24,7 @@ export function OnboardingCheck({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const [state, setState] = useState<"checking" | "ready" | "error">("checking");
   const [bootstrap, setBootstrap] = useState<DashboardBootstrap | null>(null);
+  const readyBootstrap = useRef<DashboardBootstrap | null>(null);
   const [attempt, setAttempt] = useState(0);
 
   useEffect(() => {
@@ -41,14 +42,30 @@ export function OnboardingCheck({ children }: { children: React.ReactNode }) {
     }
     const controller = new AbortController();
     const timer = window.setTimeout(async () => {
-      setState("checking");
+      // Recheck access on navigation without replacing an already-open
+      // workspace with a full-page spinner. Every data read still verifies
+      // the session and tenant on the server.
+      if (!readyBootstrap.current) setState("checking");
       try {
         const response = await fetch("/api/onboarding/context", { cache: "no-store", signal: controller.signal });
         const data = await response.json().catch(() => ({}));
-        if (response.status === 401) { router.replace("/login"); return; }
-        if (!response.ok) throw new Error(data.error || "Workspace status could not be loaded.");
-        if (!data.onboardingCompleted && !data.hasBrand) { router.replace("/onboarding"); return; }
         if (controller.signal.aborted) return;
+        if (response.status === 401) {
+          readyBootstrap.current = null;
+          setBootstrap(null);
+          setState("checking");
+          router.replace("/login");
+          return;
+        }
+        if (!response.ok) throw new Error(data.error || "Workspace status could not be loaded.");
+        if (!data.onboardingCompleted && !data.hasBrand) {
+          readyBootstrap.current = null;
+          setBootstrap(null);
+          setState("checking");
+          router.replace("/onboarding");
+          return;
+        }
+        readyBootstrap.current = data as DashboardBootstrap;
         setBootstrap(data as DashboardBootstrap);
         setState("ready");
       } catch (error) {
