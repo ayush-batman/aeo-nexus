@@ -5,6 +5,7 @@ import { legacyScan, legacyThread } from './convex/records';
 import { getConvexWorkspaceContext } from './convex/session';
 import type { LLMScan, ForumThread } from './types';
 import { estimateMentionConfidence } from './measurement/confidence';
+import { hasUsableAnswer } from './measurement/usable-answer';
 import type { MeasurementConfidenceLevel } from './measurement/types';
 import {
     aggregateMentionMetric,
@@ -102,8 +103,8 @@ export async function getVisibilityMetrics(
     const metrics: PlatformVisibility[] = [];
 
     for (const platform of platforms) {
-        const currentPlatformScans = recentScans.filter(s => s.platform === platform && !s.failure_code);
-        const previousPlatformScans = previousScans.filter(s => s.platform === platform && !s.failure_code);
+        const currentPlatformScans = recentScans.filter(s => s.platform === platform && hasUsableAnswer(s));
+        const previousPlatformScans = previousScans.filter(s => s.platform === platform && hasUsableAnswer(s));
 
         const currentMetric = aggregateMentionMetric(currentPlatformScans.map((scan) => ({ mentioned: scan.brand_mentioned })));
         const comparable = (scan: typeof currentPlatformScans[number]): ComparableMentionSample => ({
@@ -231,7 +232,7 @@ export async function getDashboardStats(
     const shareOfVoiceChange: number | null = null;
 
     const recentScans = (await readScanPages(workspaceId, { since: Date.now() - 7 * 86400000 }))
-        .filter((row) => !row.failure_code);
+        .filter(hasUsableAnswer);
 
     if (recentScans && recentScans.length > 0) {
         shareOfVoice = shareOfVoiceMetric(recentScans.map((scan) => ({

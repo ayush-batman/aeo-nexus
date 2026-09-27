@@ -1,5 +1,6 @@
 import type { Citation, LLMScan } from '../types';
 import { estimateMentionConfidence } from './confidence';
+import { hasUsableAnswer } from './usable-answer';
 
 export type RecentScanGroup = {
   key: string;
@@ -45,7 +46,7 @@ export function groupRecentScans(scans: readonly LLMScan[]): RecentScanGroup[] {
   }
 
   return [...grouped.entries()].map(([key, rows]) => {
-    const successful = rows.filter((row) => !row.failure_code && row.response.trim().length > 0);
+    const successful = rows.filter(hasUsableAnswer);
     const mentionCount = successful.filter((row) => row.brand_mentioned).length;
     const confidence = estimateMentionConfidence(mentionCount, successful.length);
     const positions = successful.flatMap((row) =>

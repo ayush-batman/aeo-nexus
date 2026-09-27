@@ -128,6 +128,8 @@ test('all active visibility surfaces use mention rate and preserve unmeasured st
   assert.match(metrics, /estimateMentionConfidence/);
   assert.match(metrics, /minimumSamplesPerCohort = 4/);
   assert.match(dataAccess, /compareCompatibleMentionMetrics/);
+  assert.match(dataAccess, /s\.platform === platform && hasUsableAnswer\(s\)/);
+  assert.match(dataAccess, /\.filter\(hasUsableAnswer\)/);
   assert.doesNotMatch(dataAccess, /calculatePlatformScore/);
   assert.match(overview, /withKey\(request, 'read'/);
   assert.match(overview, /overall\.visibilityPercent/);
