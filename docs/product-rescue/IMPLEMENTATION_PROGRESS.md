@@ -1,10 +1,10 @@
 # Aelo Product Rescue — Implementation Progress
 
-## September 27 auth-latency trace — code only
+## September 27 auth-latency trace — test preview deployed
 
 - Branch commit `f5f11bf` adds allowlisted workspace-bootstrap timing for session lookup and backend read, plus a fast 401 when the session cookie is absent. The cookie remains only a hint: a forged present cookie still goes through verified token and tenant checks. Logs and the `Server-Timing` response header contain durations/status only, not user IDs, email, tokens, prompts, or error text.
 - In a local production-build browser check, an unauthenticated request returned 401 with a 1 ms server timing and no session/backend phase; a forged cookie returned 401 after a 459 ms verified session lookup. Both had `Cache-Control: no-store` and no page errors. These are two local observations, not p50/p95 or a signed-in first-login result.
-- 258 Node tests, 74 Convex tests, lint, both type checks, the 142-page production build, and diff hygiene passed. This heartbeat pushed code to the existing branch but did **not** deploy it; the protected test preview still serves code commit `7235bc4`. Production, test backend data, and billing were not changed.
+- 258 Node tests, 74 Convex tests, lint, both type checks, the 142-page production build, and diff hygiene passed before the preview update. Vercel Preview `dpl_4ZJW6xk3hxwcSgh6N8hdWpBaGzMK` is Ready and assigned to `https://aelo-rescue-preview.vercel.app`; it includes code through `f5f11bf`. The stable alias returned 200 for `/`, `/login`, and `/signup`; signed-out `/dashboard` redirected, `/api/v1/brands` returned 401, and the scan-summary and workspace-switch routes returned 401 with valid request shapes. The recent deployment error-log query returned no records. These are HTTP checks, not a completed signed-in browser journey. Production, test backend data, and billing were not changed.
 
 ## September 27 first-login failure bound
 
