@@ -17,6 +17,7 @@ async function delivery() {
 }
 test('email retry freezes the complete provider request and stops after acceptance', async () => {
   vi.stubEnv('AELO_EMAIL_FROM', 'original@example.test');
+  vi.stubEnv('RESEND_API_KEY', 'synthetic-key');
   const { t, id } = await delivery();
   const first = await t.mutation(internal.mail.claim, { id });
   vi.stubEnv('AELO_EMAIL_FROM', 'changed@example.test');
@@ -41,7 +42,9 @@ test('missing email provider configuration never records a successful delivery',
   vi.stubEnv('RESEND_API_KEY', '');
   const { t, id } = await delivery();
   await expect(t.action(internal.mailActions.deliver, { id })).rejects.toThrow('email_not_configured');
-  expect(await t.run(ctx => ctx.db.get(id))).toMatchObject({ status: 'sending', providerId: null });
+  expect(await t.run(ctx => ctx.db.get(id))).toMatchObject({ status: 'pending', attempts: 0, firstAttemptAt: null, providerId: null });
+  vi.stubEnv('RESEND_API_KEY', 'synthetic-key');
+  expect(await t.mutation(internal.mail.claim, { id })).toMatchObject({ email: 'local-owner@example.test' });
 });
 test('welcome queues once for a verified account and uses the configured site origin', async () => {
   vi.stubEnv('SITE_URL', 'https://preview.example.test/path');
@@ -61,6 +64,7 @@ test('welcome queues once for a verified account and uses the configured site or
 test('first-results mail labels partial evidence and is not muted by alert preferences', async () => {
   vi.stubEnv('SITE_URL', 'https://preview.example.test');
   vi.stubEnv('AELO_EMAIL_FROM', 'Aelo <updates@example.test>');
+  vi.stubEnv('RESEND_API_KEY', 'synthetic-key');
   const { t, context } = await fixture();
   const input = { prompt: 'Which product?', brandName: 'Aelo', platforms: ['gemini' as const], samples: 4 };
   let call = 0;

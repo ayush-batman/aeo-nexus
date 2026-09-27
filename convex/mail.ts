@@ -22,7 +22,7 @@ export const claim=internalMutation({args:{id:v.id('emailDeliveries')},returns:v
   // old delivery after that window; manual reconciliation is required.
   if(row.firstAttemptAt!==null && Date.now()-row.firstAttemptAt>=23*3600000)throw new Error('email_reconciliation_required');
   const from=row.sender??process.env.AELO_EMAIL_FROM;
-  if(!from)throw new Error('email_not_configured');
+  if(!from || !process.env.RESEND_API_KEY)throw new Error('email_not_configured');
   // Freeze every provider request field with the first attempt, including sender.
   await ctx.db.patch(row._id,{sender:from,status:'sending',attempts:row.attempts+1,firstAttemptAt:row.firstAttemptAt??Date.now(),updatedAt:Date.now()});
   return {publicId:row.publicId,email:row.recipientEmail,from,subject:row.subject,html:row.html};
