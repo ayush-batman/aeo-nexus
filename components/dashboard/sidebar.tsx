@@ -96,6 +96,8 @@ export function Sidebar({
     const [activeWorkspace, setActiveWorkspace] = useState<Workspace | null>(() =>
         bootstrap?.workspaces.find((workspace) => workspace.id === bootstrap.workspaceId) ?? bootstrap?.workspaces[0] ?? null);
     const [showWsSwitcher, setShowWsSwitcher] = useState(false);
+    const [switchingWorkspaceId, setSwitchingWorkspaceId] = useState<string | null>(null);
+    const [switchError, setSwitchError] = useState<string | null>(null);
     const [showNewBrand, setShowNewBrand] = useState(false);
     const [newBrandName, setNewBrandName] = useState("");
     const [newBrandWebsite, setNewBrandWebsite] = useState("");
@@ -161,20 +163,25 @@ export function Sidebar({
     }, []);
 
     async function switchWorkspace(ws: Workspace) {
-        setActiveWorkspace(ws);
-        setShowWsSwitcher(false);
+        if (switchingWorkspaceId) return;
+        setSwitchingWorkspaceId(ws.id);
+        setSwitchError(null);
         try {
             const res = await fetch("/api/workspaces/switch", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ workspaceId: ws.id }),
             });
-            // Wait for the response to fully resolve (cookie is set)
-            await res.json();
+            if (!res.ok) throw new Error("Workspace switch was denied.");
+            setActiveWorkspace(ws);
+            setShowWsSwitcher(false);
             // Reload so every server component reads the newly selected workspace.
             window.location.assign(new URL("/dashboard", window.location.origin).href);
-        } catch (e) {
-            console.error("Failed to switch workspace:", e);
+        } catch {
+            setShowWsSwitcher(true);
+            setSwitchError("Could not switch workspaces. Check your access and try again.");
+        } finally {
+            setSwitchingWorkspaceId(null);
         }
     }
 
@@ -285,11 +292,13 @@ export function Sidebar({
                     {/* Dropdown */}
                     {showWsSwitcher && (
                         <div className="absolute left-3 right-3 top-full mt-1 z-50 bg-[var(--bg-raised)] border border-[var(--border-default)] rounded-lg shadow-lg overflow-hidden">
+                            {switchError && <p role="alert" className="border-b border-[var(--border-default)] px-3 py-2 text-xs text-[var(--data-red)]">{switchError}</p>}
                             <div className="p-1 max-h-48 overflow-y-auto">
                                 {workspaces.map((ws) => (
                                     <button
                                         key={ws.id}
                                         onClick={() => switchWorkspace(ws)}
+                                        disabled={switchingWorkspaceId !== null}
                                         className={cn(
                                             "w-full flex items-center justify-between px-3 py-2 rounded-md text-sm transition-colors",
                                             activeWorkspace?.id === ws.id

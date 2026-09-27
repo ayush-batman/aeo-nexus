@@ -49,3 +49,19 @@ test('overview reads its live summary directly after the authorized bootstrap', 
   assert.match(route, /fetchAuthQuery\(api\.dashboard\.summary/);
   assert.match(backend, /requireWorkspace\(ctx, ctx\.tenant, args\.workspaceId\)/);
 });
+
+test('workspace switching uses one tenant-bound read and never reloads after a denied switch', async () => {
+  const [route, backend, sidebar] = await Promise.all([
+    source('app/api/workspaces/switch/route.ts'),
+    source('convex/workspaces.ts'),
+    source('components/dashboard/sidebar.tsx'),
+  ]);
+
+  assert.match(route, /fetchAuthQuery\(api\.workspaces\.get, \{ workspaceId: body\.workspaceId \}\)/);
+  assert.doesNotMatch(route, /getConvexWorkspaceContext/);
+  assert.match(backend, /export const get = tenantQuery\(/);
+  assert.match(backend, /requireWorkspace\(ctx, ctx\.tenant, args\.workspaceId\)/);
+  assert.match(sidebar, /if \(!res\.ok\) throw new Error\("Workspace switch was denied\."\)/);
+  assert.ok(sidebar.indexOf('if (!res.ok) throw') < sidebar.indexOf('window.location.assign(new URL("/dashboard"'));
+  assert.match(sidebar, /role="alert"[^>]*>\{switchError\}/);
+});
