@@ -1,5 +1,9 @@
 # Aelo Product Rescue — Implementation Progress
 
+## September 27 code-only follow-up
+
+- Prompt-specific `/api/v1` scan reads now use a workspace-and-prompt database index before paging instead of fetching all workspace scans and filtering afterward. Exact prompt, date-window, API-key, and failed-sample behavior have regression coverage. This reduces unnecessary reads for prompt-filtered endpoints such as volatility; it is not a measured live latency improvement. The additive Convex index and functions are committed but not deployed under the current safe-build hold.
+
 ## Preview checkpoint — September 26, 2026
 
 - Commit `e69fc01` contains the Google provider-status fix, shared plan catalogue and quota enforcement, evidence-bound dashboard decision brief, real methodology case, and free-scan Radar preview. Its focused and full suites, lint, both type checks, and webpack production build passed before the GitHub push.

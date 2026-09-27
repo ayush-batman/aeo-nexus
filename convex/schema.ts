@@ -183,6 +183,7 @@ export default defineSchema({
     .index('by_workspace_platform_created_at', ['workspaceId', 'platform', 'createdAt'])
     .index('by_workspace_id_and_created_at', ['workspaceId', 'createdAt'])
     .index('by_workspace_id_and_measurement_run_id', ['workspaceId', 'measurementRunId'])
+    .index('by_workspace_prompt_created_at', ['workspaceId', 'prompt', 'createdAt'])
     .index('by_workspace_id_prompt_platform_created_at', [
       'workspaceId',
       'prompt',

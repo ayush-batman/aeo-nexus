@@ -14,7 +14,9 @@ export function apiReader(context: ApiKeyContext) {
       let cursor: string | null = null;
       do {
         const page: FunctionReturnType<typeof internal.apiReads.scans> = await callInternal('query', internal.apiReads.scans, {
-          keyId: context.keyId, since: opts.since, before: opts.before, paginationOpts: { numItems: 100, cursor },
+          // Empty prompt has always meant "no filter" for this reader.
+          keyId: context.keyId, since: opts.since, before: opts.before, prompt: opts.prompt || undefined,
+          paginationOpts: { numItems: 100, cursor },
         });
         rows.push(...page.page.filter((row) => !opts.prompt || row.prompt === opts.prompt).map((row) => legacyScan(row, context.workspaceId)));
         cursor = page.isDone ? null : page.continueCursor;

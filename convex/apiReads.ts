@@ -29,12 +29,17 @@ export const workspace = internalQuery({
 });
 
 export const scans = internalQuery({
-  args: { keyId: v.string(), paginationOpts: paginationOptsValidator, since: v.optional(v.number()), before: v.optional(v.number()) },
+  args: { keyId: v.string(), paginationOpts: paginationOptsValidator, since: v.optional(v.number()), before: v.optional(v.number()), prompt: v.optional(v.string()) },
   returns: v.object({ page: v.array(scanDocument), continueCursor: v.string(), isDone: v.boolean() }),
   handler: async (ctx, args) => {
     const { workspace } = await requireKey(ctx, args.keyId, 'read');
-    const page = await ctx.db.query('scans').withIndex('by_workspace_id_and_created_at', (q) =>
-      q.eq('workspaceId', workspace._id).gte('createdAt', args.since ?? 0).lt('createdAt', args.before ?? Number.MAX_SAFE_INTEGER))
+    const prompt = args.prompt;
+    const source = prompt === undefined
+      ? ctx.db.query('scans').withIndex('by_workspace_id_and_created_at', (q) =>
+          q.eq('workspaceId', workspace._id).gte('createdAt', args.since ?? 0).lt('createdAt', args.before ?? Number.MAX_SAFE_INTEGER))
+      : ctx.db.query('scans').withIndex('by_workspace_prompt_created_at', (q) =>
+          q.eq('workspaceId', workspace._id).eq('prompt', prompt).gte('createdAt', args.since ?? 0).lt('createdAt', args.before ?? Number.MAX_SAFE_INTEGER));
+    const page = await source
       .order('desc').paginate({ ...args.paginationOpts, numItems: Math.min(5, Math.max(1, args.paginationOpts.numItems)) });
     return { page: page.page.filter((row) => !row.failureCode), continueCursor: page.continueCursor, isDone: page.isDone };
   },

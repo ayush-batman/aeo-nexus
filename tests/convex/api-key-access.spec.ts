@@ -52,3 +52,36 @@ test('shared API limiter counts across separate calls and does not mutate denied
   expect(denied.ok).toBe(false);
   expect(denied.retryAfter).toBeGreaterThan(0);
 });
+
+test('prompt-filtered API reads use the exact question and time window', async () => {
+  const { t, owner, context } = await fixture();
+  const created = await owner.action(api.apiKeyActions.create, {
+    workspaceId: context.workspaceId, name: 'Prompt read', scopes: ['read'],
+  });
+  await t.run(async (ctx) => {
+    const workspace = await ctx.db.query('workspaces')
+      .withIndex('by_public_id', (q) => q.eq('publicId', context.workspaceId)).unique();
+    if (!workspace) throw new Error('missing_test_workspace');
+    const base = {
+      workspaceId: workspace._id, platform: 'gemini' as const, response: 'A saved answer',
+      brandMentioned: true, brandVariants: [], mentionPosition: 1, sentiment: null,
+      sentimentScore: null, sentimentReason: null, competitorsMentioned: [], listItems: [],
+      analyzerConfidence: null, analyzerMethod: null, analyzerModel: null, citations: [],
+      winner: null, winnerReason: null, measurementRunId: null,
+      measurementContractVersion: null, sampleNumber: null, providerModel: null,
+      measurementRegion: null, measurementMode: null, scorerVersion: null,
+      failureCode: null, failureMessage: null,
+    };
+    await ctx.db.insert('scans', { ...base, publicId: 'target-in-window', prompt: 'Which brand?', createdAt: 200 });
+    await ctx.db.insert('scans', { ...base, publicId: 'failed-target', prompt: 'Which brand?',
+      response: '', brandMentioned: false, failureCode: 'provider_failed', createdAt: 250 });
+    await ctx.db.insert('scans', { ...base, publicId: 'other-in-window', prompt: 'Different question', createdAt: 300 });
+    await ctx.db.insert('scans', { ...base, publicId: 'target-after-window', prompt: 'Which brand?', createdAt: 400 });
+  });
+  const args = { keyId: created.key.id, since: 100, before: 350,
+    paginationOpts: { numItems: 100, cursor: null } };
+  const filtered = await t.query(internal.apiReads.scans, { ...args, prompt: 'Which brand?' });
+  expect(filtered.page.map((row) => row.publicId)).toEqual(['target-in-window']);
+  const unfiltered = await t.query(internal.apiReads.scans, args);
+  expect(unfiltered.page.map((row) => row.publicId)).toEqual(['other-in-window', 'target-in-window']);
+});
