@@ -2,7 +2,7 @@ import { paginationOptsValidator } from 'convex/server';
 import { v } from 'convex/values';
 import schema from './schema';
 import { tenantQuery, requireWorkspace } from './lib/tenant';
-import { engineValidator } from './validators';
+import { citationProvenanceValidator, engineValidator, nullableString, sentimentValidator } from './validators';
 
 // Reuse the full schema validators so stored evidence crosses this boundary
 // without erasing provenance or weakening its type checks.
@@ -27,6 +27,41 @@ export const scans = tenantQuery({
     const result = await source.order('desc').paginate({ ...args.paginationOpts,
       numItems: Math.min(5, Math.max(1, args.paginationOpts.numItems)) });
     return { page: result.page, isDone: result.isDone, continueCursor: result.continueCursor };
+  },
+});
+
+// Analytics needs evidence metadata, not the full generated answer or raw
+// provider payload. Keep the full-record reader's small page cap for receipts.
+export const analyticsScans = tenantQuery({
+  args: { workspaceId: v.string(), paginationOpts: paginationOptsValidator,
+    since: v.number(), before: v.number() },
+  returns: v.object({
+    page: v.array(v.object({
+      id: v.string(), platform: engineValidator, prompt: v.string(),
+      brand_mentioned: v.boolean(), sentiment: v.union(sentimentValidator, v.null()),
+      competitors_mentioned: v.array(v.string()),
+      citations: v.array(v.object({ url: v.string(),
+        is_own_domain: v.boolean(), provenance: citationProvenanceValidator })),
+      failure_code: nullableString, created_at: v.string(),
+    })),
+    isDone: v.boolean(), continueCursor: v.string(),
+  }),
+  handler: async (ctx, args) => {
+    const workspace = await requireWorkspace(ctx, ctx.tenant, args.workspaceId);
+    if (!Number.isSafeInteger(args.since) || !Number.isSafeInteger(args.before) ||
+        args.since < 0 || args.before <= args.since) throw new Error('invalid_scan_window');
+    const result = await ctx.db.query('scans').withIndex('by_workspace_id_and_created_at', (q) =>
+      q.eq('workspaceId', workspace._id).gte('createdAt', args.since).lt('createdAt', args.before))
+      .order('desc').paginate({ ...args.paginationOpts,
+        numItems: Math.min(50, Math.max(1, args.paginationOpts.numItems)) });
+    return { page: result.page.map((row) => ({
+      id: row.publicId, platform: row.platform, prompt: row.prompt,
+      brand_mentioned: row.brandMentioned, sentiment: row.sentiment,
+      competitors_mentioned: row.competitorsMentioned,
+      citations: row.citations.map((citation) => ({ url: citation.url,
+        is_own_domain: citation.isOwnDomain, provenance: citation.provenance })),
+      failure_code: row.failureCode, created_at: new Date(row.createdAt).toISOString(),
+    })), isDone: result.isDone, continueCursor: result.continueCursor };
   },
 });
 

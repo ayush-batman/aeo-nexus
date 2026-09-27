@@ -39,6 +39,7 @@ import {
 } from "recharts";
 import { motion, type Variants } from "framer-motion";
 import { CitationMap } from "@/components/dashboard/analytics/citation-map";
+import { loadScanSummaries, type ScanSummaryPage } from "@/lib/analytics/load-scan-summaries";
 
 // Framer Motion Variants
 const containerVariants: Variants = {
@@ -68,7 +69,7 @@ interface LLMScan {
     brand_mentioned: boolean;
     sentiment: "positive" | "neutral" | "negative" | null;
     competitors_mentioned: string[] | null;
-    citations: { url: string; title: string; is_own_domain: boolean; provenance?: string }[] | null;
+    citations: { url: string; is_own_domain: boolean; provenance: string }[];
     failure_code?: string | null;
     created_at: string;
 }
@@ -114,39 +115,48 @@ export default function AnalyticsPage() {
     const [visibilityMetrics, setVisibilityMetrics] = useState<PlatformVisibility[]>([]);
     const [scans, setScans] = useState<LLMScan[]>([]);
     const [timeRange, setTimeRange] = useState<TimeRange>("30d");
+    const [reloadVersion, setReloadVersion] = useState(0);
     const [exporting, setExporting] = useState(false);
     const reportRef = useRef<HTMLDivElement>(null);
 
-    const fetchData = useCallback(async () => {
+    const fetchData = useCallback(async (signal: AbortSignal) => {
         try {
             setError(null);
-
-            const [statsRes, scansRes] = await Promise.all([
-                fetch("/api/dashboard/stats"),
-                fetch("/api/llm/scans?limit=200"),
-            ]);
-
-            if (!statsRes.ok || !scansRes.ok) {
-                throw new Error("Analytics inputs could not be loaded.");
-            }
-
+            setLoading(true);
+            setStats(null);
+            setVisibilityMetrics([]);
+            setScans([]);
+            const before = Date.now() + 1;
+            // Week-over-week cards need both weeks even when the selected chart is seven days.
+            const days = timeRange === "all" ? null : Math.max(14, timeRange === "7d" ? 7 : timeRange === "30d" ? 30 : 90);
+            const since = days === null ? 0 : before - days * 86400_000;
+            const statsPromise = fetch("/api/dashboard/stats", { signal, cache: "no-store" });
+            const scansPromise = loadScanSummaries<LLMScan>(async (cursor) => {
+                const params = new URLSearchParams({ since: String(since), before: String(before) });
+                if (cursor) params.set("cursor", cursor);
+                const response = await fetch(`/api/analytics/scan-summaries?${params}`, { signal, cache: "no-store" });
+                if (!response.ok) throw new Error("Analytics samples could not be loaded.");
+                return response.json() as Promise<ScanSummaryPage<LLMScan>>;
+            });
+            const [statsRes, scanRows] = await Promise.all([statsPromise, scansPromise]);
+            if (!statsRes.ok) throw new Error("Analytics summary could not be loaded.");
             const statsData = await statsRes.json();
+            if (signal.aborted) return;
             setStats(statsData.stats);
             setVisibilityMetrics(statsData.visibilityMetrics || []);
-
-            const scansData = await scansRes.json();
-            setScans(scansData.scans || []);
+            setScans(scanRows);
         } catch {
-            setError("Analytics evidence could not be loaded. Retry before trusting this view.");
+            if (!signal.aborted) setError("Analytics evidence could not be loaded completely. Retry before trusting this view, or choose a shorter period.");
         } finally {
-            setLoading(false);
+            if (!signal.aborted) setLoading(false);
         }
-    }, []);
+    }, [timeRange]);
 
     useEffect(() => {
-        const timer = window.setTimeout(() => { void fetchData(); }, 0);
-        return () => window.clearTimeout(timer);
-    }, [fetchData]);
+        const controller = new AbortController();
+        const timer = window.setTimeout(() => { void fetchData(controller.signal); }, 0);
+        return () => { window.clearTimeout(timer); controller.abort(); };
+    }, [fetchData, reloadVersion]);
 
     // Filter scans by time range
     const successfulScans = scans.filter(scan => !scan.failure_code);
@@ -477,7 +487,11 @@ export default function AnalyticsPage() {
                                 key={range}
                                 variant="ghost"
                                 size="sm"
-                                onClick={() => setTimeRange(range)}
+                                onClick={() => {
+                                    setLoading(true);
+                                    if (range === timeRange) setReloadVersion((version) => version + 1);
+                                    else setTimeRange(range);
+                                }}
                                 className={cn(
                                     "rounded-lg px-4 transition-all duration-300",
                                     timeRange === range
@@ -508,7 +522,7 @@ export default function AnalyticsPage() {
                             )}
                             PDF Report
                         </Button>
-                        <Button variant="outline" size="sm" onClick={() => { setLoading(true); fetchData(); }} className="bg-[var(--bg-surface)] border-[var(--border-default)] hover:bg-[var(--bg-raised)] hover:text-white rounded-xl">
+                        <Button variant="outline" size="sm" onClick={() => { setLoading(true); setReloadVersion((version) => version + 1); }} className="bg-[var(--bg-surface)] border-[var(--border-default)] hover:bg-[var(--bg-raised)] hover:text-white rounded-xl">
                             <RefreshCw className="w-4 h-4 mr-2 text-[var(--accent-base)]" />
                             Sync Data
                         </Button>
@@ -519,7 +533,7 @@ export default function AnalyticsPage() {
                     <div role="alert" className="flex items-center gap-3 p-4 rounded-lg bg-[var(--data-red-muted)] border border-[var(--data-red)]/25">
                         <AlertCircle className="w-5 h-5 text-[var(--data-red)]" />
                         <p className="flex-1 text-sm text-[var(--data-red)]">{error}</p>
-                        <Button variant="outline" size="sm" onClick={() => { setLoading(true); void fetchData(); }}>
+                        <Button variant="outline" size="sm" onClick={() => { setLoading(true); setReloadVersion((version) => version + 1); }}>
                             <RefreshCw className="mr-2 h-4 w-4" />Retry
                         </Button>
                     </div>
