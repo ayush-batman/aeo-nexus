@@ -105,6 +105,17 @@ const [route, workspace, activation, recurrence] = await Promise.all([
   assert.match(recurrence, /reconcileInitialJobs/);
 });
 
+test('prompt research loads the authorized active workspace even when older than the workspace list cap', async () => {
+  const [route, page] = await Promise.all([
+    source('app/api/workspaces/route.ts'),
+    source('app/(dashboard)/dashboard/prompts/page.tsx'),
+  ]);
+  assert.match(route, /getConvexWorkspaceContext\(\)/);
+  assert.match(route, /searchParams\.get\('current'\) === '1'[\s\S]*api\.workspaces\.get, \{ workspaceId: context\.workspaceId \}/);
+  assert.match(page, /fetch\('\/api\/workspaces\?current=1'/);
+  assert.doesNotMatch(page, /\.find\(\(ws\) => ws\.id === active\.workspaceId\)/);
+});
+
 test('workspace brand limits are enforced under an organization lock', async () => {
 const workspace = await source('convex/workspaces.ts');
   assert.match(workspace, /export const create = tenantMutation/);

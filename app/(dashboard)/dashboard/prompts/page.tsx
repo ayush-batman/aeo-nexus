@@ -28,7 +28,6 @@ interface GeneratedPrompt {
 }
 
 interface WorkspaceSummary {
-    id: string;
     name?: string;
     settings?: { industry?: string; target_audience?: string };
 }
@@ -90,13 +89,10 @@ export default function PromptResearchPage() {
     const fetchData = useCallback(async () => {
         setRequestError(null);
         try {
-            const [wsRes, activeRes] = await Promise.all([
-                fetch('/api/workspaces', { cache: 'no-store' }),
-                fetch('/api/onboarding/context', { cache: 'no-store' }),
-            ]);
-            if (!wsRes.ok || !activeRes.ok) throw new Error('Could not load your workspace. Please retry.');
-            const [wsData, active] = await Promise.all([wsRes.json(), activeRes.json()]);
-            const workspace = (wsData.workspaces as WorkspaceSummary[] | undefined)?.find((ws) => ws.id === active.workspaceId);
+            const response = await fetch('/api/workspaces?current=1', { cache: 'no-store' });
+            if (!response.ok) throw new Error('Could not load your workspace. Please retry.');
+            const data = await response.json();
+            const workspace = data.workspace as WorkspaceSummary | undefined;
             if (!workspace) throw new Error('Your workspace could not be found.');
             setBrandName(workspace.name || '');
             setIndustry(workspace.settings?.industry || '');

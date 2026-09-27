@@ -8,11 +8,16 @@ function legacyWorkspace(row: { publicId: string; name: string; settings: unknow
     return { id: row.publicId, name: row.name, settings: row.settings, created_at: new Date(row.createdAt).toISOString() };
 }
 
-export async function GET() {
+export async function GET(request: NextRequest) {
     try {
-        if (!await getConvexWorkspaceContext()) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        const context = await getConvexWorkspaceContext();
+        if (!context) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        if (request.nextUrl.searchParams.get('current') === '1') {
+            const workspace = await fetchAuthQuery(api.workspaces.get, { workspaceId: context.workspaceId });
+            return NextResponse.json({ workspace: legacyWorkspace(workspace) }, { headers: { 'Cache-Control': 'no-store' } });
+        }
         const workspaces = await fetchAuthQuery(api.workspaces.list, {});
-        return NextResponse.json({ workspaces: workspaces.map(legacyWorkspace) });
+        return NextResponse.json({ workspaces: workspaces.map(legacyWorkspace) }, { headers: { 'Cache-Control': 'no-store' } });
     } catch (error) { return convexRouteError(error); }
 }
 
