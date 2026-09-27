@@ -491,6 +491,13 @@ const batchResultValidator = v.object({
   complete: v.boolean(),
 });
 
+async function requireOpenImportRun(ctx: MutationCtx, manifestHash: string): Promise<void> {
+  const run = await ctx.db.query('importRuns')
+    .withIndex('by_manifest_hash', (q) => q.eq('manifestHash', manifestHash)).unique();
+  if (!run) throw new Error('import_run_not_started');
+  if (run.status !== 'running') throw new Error('import_run_closed');
+}
+
 export const materializeTenantBatch = internalMutation({
   args: {
     manifestHash: v.string(),
@@ -503,6 +510,7 @@ export const materializeTenantBatch = internalMutation({
   },
   returns: batchResultValidator,
   handler: async (ctx, args) => {
+    await requireOpenImportRun(ctx, args.manifestHash);
     const staged = await ctx.db
       .query('importStaging')
       .withIndex('by_manifest_table_public_id', (q) => {
@@ -548,6 +556,7 @@ export const materializeCriticalBatch = internalMutation({
   },
   returns: batchResultValidator,
   handler: async (ctx, args) => {
+    await requireOpenImportRun(ctx, args.manifestHash);
     const staged = await ctx.db
       .query('importStaging')
       .withIndex('by_manifest_table_public_id', (q) => {
@@ -597,6 +606,7 @@ export const materializeRemainingBatch = internalMutation({
   },
   returns: batchResultValidator,
   handler: async (ctx, args) => {
+    await requireOpenImportRun(ctx, args.manifestHash);
     const staged = await ctx.db.query('importStaging')
       .withIndex('by_manifest_table_public_id', (q) => {
         const prefix = q.eq('manifestHash', args.manifestHash).eq('sourceTable', args.sourceTable);

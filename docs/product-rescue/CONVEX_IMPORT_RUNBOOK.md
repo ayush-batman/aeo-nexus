@@ -68,6 +68,8 @@ payloads under the same manifest. Only after all files verify again does the run
 materialize parents before children in ten-record transactions. It stops on unresolved
 parents, cross-workspace references, invalid destination fields, or unsafe account
 re-import. Fix the cause and rerun the same command to resume through repeat-safe batches.
+Low-level materialization also requires an open import run and refuses writes once that
+run is marked complete, even if an operator calls a batch function directly.
 
 Comparison checks source/staging/destination counts, extra destination rows, membership
 roles, shared record fields, citation URLs, mention/answer/failure counts, API-key state,

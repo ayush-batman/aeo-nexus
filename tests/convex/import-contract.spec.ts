@@ -5,12 +5,15 @@ import { expect, test } from 'vitest';
 
 import { internal } from '../../convex/_generated/api';
 import schema from '../../convex/schema';
+import { EXPORT_TABLES } from '../../scripts/convex/migration-transform';
 
 const modules = import.meta.glob('../../convex/**/*.ts');
 const manifestHash = 'a'.repeat(64);
+const expectedCounts = Object.fromEntries(EXPORT_TABLES.map((table) => [table, 0]));
 
 test('tenant import resolves foreign keys and is repeat-safe', async () => {
   const t = convexTest(schema, modules);
+  await t.mutation(internal.importControl.begin, { manifestHash, sourceLabel: 'synthetic', expectedCounts });
   const now = Date.now();
   const staged = [
     {
@@ -87,10 +90,28 @@ test('tenant import resolves foreign keys and is repeat-safe', async () => {
     workspaces: (await ctx.db.query('workspaces').take(10)).length,
   }));
   expect(counts).toEqual({ organizations: 1, users: 1, memberships: 1, workspaces: 1 });
+
+  await t.run(async (ctx) => {
+    const run = await ctx.db.query('importRuns')
+      .withIndex('by_manifest_hash', (q) => q.eq('manifestHash', manifestHash)).unique();
+    if (!run) throw new Error('missing_import_run');
+    await ctx.db.patch(run._id, { status: 'complete', completedAt: now });
+    const stagedOrg = await ctx.db.query('importStaging')
+      .withIndex('by_manifest_table_public_id', (q) => q.eq('manifestHash', manifestHash)
+        .eq('sourceTable', 'organizations')).unique();
+    if (!stagedOrg) throw new Error('missing_staged_organization');
+    await ctx.db.patch(stagedOrg._id, { payload: { ...stagedOrg.payload, name: 'Stale organization' } });
+  });
+  await expect(t.mutation(internal.imports.materializeTenantBatch, {
+    manifestHash, sourceTable: 'organizations', afterPublicId: null,
+  })).rejects.toThrow('import_run_closed');
+  const organization = await t.run(async (ctx) => ctx.db.query('organizations').take(1));
+  expect(organization[0].name).toBe('Imported Organization');
 });
 
 test('critical evidence, API keys, and billing events import without fabrication', async () => {
   const t = convexTest(schema, modules);
+  await t.mutation(internal.importControl.begin, { manifestHash, sourceLabel: 'synthetic', expectedCounts });
   const now = Date.now();
   const organizationPublicId = '11111111-1111-4111-8111-111111111111';
   const userPublicId = '22222222-2222-4222-8222-222222222222';

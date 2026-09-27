@@ -4,6 +4,7 @@ import { expect, test } from 'vitest';
 import { internal } from '../../convex/_generated/api';
 import schema from '../../convex/schema';
 import { remainingImportTables, type RemainingSourceTable } from '../../convex/lib/importRecords';
+import { EXPORT_TABLES } from '../../scripts/convex/migration-transform';
 
 const modules = import.meta.glob('../../convex/**/*.ts');
 const manifestHash = 'b'.repeat(64);
@@ -11,6 +12,10 @@ const now = 1_788_048_000_000;
 
 async function setup() {
   const t = convexTest(schema, modules);
+  await t.mutation(internal.importControl.begin, {
+    manifestHash, sourceLabel: 'synthetic',
+    expectedCounts: Object.fromEntries(EXPORT_TABLES.map((table) => [table, 0])),
+  });
   await t.run(async (ctx) => {
     const org = await ctx.db.insert('organizations', {
       publicId: 'org', name: 'Synthetic organization', plan: 'pro',
