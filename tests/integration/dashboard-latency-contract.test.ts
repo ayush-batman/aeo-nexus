@@ -134,3 +134,18 @@ test('notification badge does not page through full history on every refresh', a
   assert.match(header, /unreadCount > 9 \? "9\+" : unreadCount/);
   assert.match(header, /if \(unreadCount >= 10\) void fetchNotifications\(\)/);
 });
+
+test('marking all notifications uses bounded server requests and waits for completion', async () => {
+  const [route, header] = await Promise.all([
+    source('app/api/alerts/notifications/route.ts'),
+    source('components/dashboard/header.tsx'),
+  ]);
+  assert.match(route, /const \{ more \} = await fetchAuthMutation\(api\.alerts\.markRead/);
+  assert.match(route, /success: true, more/);
+  assert.doesNotMatch(route, /while \(more\)|do \{/);
+  assert.match(header, /for \(let batch = 0; batch < 50; batch\+\+\)/);
+  assert.match(header, /if \(!result\.more\) \{/);
+  assert.match(header, /if \(!complete\) throw new Error/);
+  assert.match(header, /await fetchNotifications\(\)/);
+  assert.doesNotMatch(header, /setUnreadCount\(0\)/);
+});

@@ -33,6 +33,7 @@ export function Header({ title, description }: HeaderProps) {
     const [showUserMenu, setShowUserMenu] = useState(false);
     const [notificationError, setNotificationError] = useState<string | null>(null);
     const [notificationClock, setNotificationClock] = useState(0);
+    const [isMarkingAllRead, setIsMarkingAllRead] = useState(false);
     const userMenuRef = useRef<HTMLDivElement>(null);
 
     const fetchNotifications = useCallback(async () => {
@@ -69,18 +70,38 @@ export function Header({ title, description }: HeaderProps) {
     }, []);
 
     async function markAllRead() {
+        if (isMarkingAllRead) return;
+        setIsMarkingAllRead(true);
         try {
-            const response = await fetch("/api/alerts/notifications", {
-                method: "PATCH",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ markAllRead: true }),
-            });
-            if (!response.ok) throw new Error("Notifications could not be updated.");
-            setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
-            setUnreadCount(0);
-            setNotificationError(null);
+            // The server clears up to 100 per request. Stop after a bounded
+            // number of requests so a bad response cannot keep the UI busy forever.
+            let complete = false;
+            for (let batch = 0; batch < 50; batch++) {
+                const response = await fetch("/api/alerts/notifications", {
+                    method: "PATCH",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ markAllRead: true }),
+                    signal: AbortSignal.timeout(20_000),
+                });
+                const result = await response.json().catch(() => null);
+                if (!response.ok || result?.success !== true || typeof result.more !== "boolean") {
+                    throw new Error("Notifications could not be updated. Mark all read to retry.");
+                }
+                if (!result.more) {
+                    complete = true;
+                    break;
+                }
+            }
+            if (!complete) throw new Error("Some notifications are still unread. Mark all read to continue.");
+            // A new alert may arrive while batches run. Read the current count
+            // rather than claiming zero from the earlier snapshot.
+            await fetchNotifications();
         } catch (error) {
-            setNotificationError(error instanceof Error ? error.message : "Notifications could not be updated.");
+            await fetchNotifications();
+            setNotificationError(error instanceof Error && error.name !== "TimeoutError"
+                ? error.message : "Notifications could not be updated. Mark all read to retry.");
+        } finally {
+            setIsMarkingAllRead(false);
         }
     }
 
@@ -217,9 +238,11 @@ export function Header({ title, description }: HeaderProps) {
                                         {unreadCount > 0 && (
                                             <button
                                                 onClick={markAllRead}
-                                                className="min-h-10 px-2 text-[10px] font-medium text-[var(--accent-base)] hover:text-[var(--text-primary)] transition-colors"
+                                                disabled={isMarkingAllRead}
+                                                aria-live="polite"
+                                                className="min-h-10 px-2 text-[10px] font-medium text-[var(--accent-base)] hover:text-[var(--text-primary)] transition-colors disabled:opacity-60"
                                             >
-                                                Mark all read
+                                                {isMarkingAllRead ? "Marking…" : "Mark all read"}
                                             </button>
                                         )}
                                         <button

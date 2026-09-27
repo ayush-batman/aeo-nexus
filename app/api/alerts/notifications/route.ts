@@ -24,10 +24,11 @@ export async function PATCH(request: Request) {
     if (!Array.isArray(ids) || ids.length > 100 || ids.some(id => typeof id !== 'string') || (!ids.length && body?.markAllRead !== true)) {
       return NextResponse.json({ error: 'Provide notification IDs or markAllRead' }, { status: 400 });
     }
-    let more = false;
-    do {
-      ({ more } = await fetchAuthMutation(api.alerts.markRead, { workspaceId: context.workspaceId, ids, markAllRead: body.markAllRead === true }));
-    } while (more);
-    return NextResponse.json({ success: true });
+    // One bounded mutation per request avoids a long-running serverless request
+    // when a workspace has accumulated many unread notifications.
+    const { more } = await fetchAuthMutation(api.alerts.markRead, {
+      workspaceId: context.workspaceId, ids, markAllRead: body.markAllRead === true,
+    });
+    return NextResponse.json({ success: true, more });
   } catch (error) { return convexRouteError(error); }
 }
