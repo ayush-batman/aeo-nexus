@@ -1,5 +1,13 @@
 # Aelo product-rescue deployment and rollback
 
+## September 27, 2026 read-only release check
+
+Vercel CLI access to `agrover12344-9741/aeo-nexus` is restored. Its current Production deployment is the September 13 build (`bf8dbc5`), not the latest rescue branch. A read-only pull of the Production environment confirmed both public Convex URLs still point to the `aelo-test` **Development** deployment `woozy-starfish-810`. The temporary local environment copy was removed immediately after checking only those public URLs; no secret values were displayed or changed.
+
+The Convex dashboard shows a distinct **Production** deployment, `laudable-orca-31`, under the existing `aelo-test` project. This may be the production target; do not create another project merely because the September 26 checkpoint did not identify it. Its dashboard says it was last deployed seven days ago and has **no backup yet**. Its environment-variable names include Gemini and Google OAuth settings, but not `RESEND_API_KEY`, `AELO_AUTH_EMAIL_FROM`, or `AELO_EMAIL_FROM`. Names alone do not establish that any provider works or that this deployment contains the intended production data. Convex CLI access to the selected project failed, so no functions or data were queried. No production data, billing, settings, or deployment was changed.
+
+Before connecting Vercel Production to `laudable-orca-31`, verify its ownership and current data state without using customer data for tests; create a recoverable backup of the correct source and destination; confirm the server key belongs to that deployment; complete the import/parity and auth/API-key/billing/file checks; configure and test required integrations on an approved non-production target. A production switch still requires separate explicit approval.
+
 ## September 26, 2026 production gate
 
 The new protected preview is Ready at `aeo-nexus-5si3sez8u-agrover12344-9741.vercel.app`, with `aelo-rescue-preview.vercel.app` assigned to it. The Vercel Production environment currently names `woozy-starfish-810` as both public Convex cloud and site deployment. That is the documented `aelo-test` development backend, so production promotion is blocked until a distinct, verified production target is configured and the source-to-destination cutover is rehearsed. Preview and Production share Razorpay secret variables; isolate test-mode payment credentials before any payment rehearsal. The September 8 and historical instructions below remain background, not authority to switch live data ownership.
