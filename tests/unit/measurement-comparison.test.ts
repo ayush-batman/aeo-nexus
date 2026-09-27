@@ -67,3 +67,49 @@ test('overlapping confidence intervals remain inconclusive', () => {
   assert.equal(result.verdict, 'inconclusive');
   assert.equal(result.visibility_change, 25);
 });
+
+test('rank change is not reported when position evidence comes from different cohorts', () => {
+  const baseline = {
+    ...snapshot('prompt a', 'gemini', 8, 8),
+    ...snapshot('prompt b', 'gemini', 0, 8),
+  };
+  const followup = {
+    ...snapshot('prompt a', 'gemini', 0, 8),
+    ...snapshot('prompt b', 'gemini', 8, 8),
+  };
+  baseline['prompt a'].gemini.position = 1;
+  followup['prompt b'].gemini.position = 5;
+
+  const result = compareVisibilitySnapshots(baseline, followup);
+  assert.equal(result.comparable_pairs, 2);
+  assert.equal(result.visibility_change, 0);
+  assert.equal(result.position_change, null);
+});
+
+test('rank change is not reported when position sample mix shifts between cohorts', () => {
+  const baseline = {
+    ...snapshot('prompt a', 'gemini', 7, 8),
+    ...snapshot('prompt b', 'gemini', 1, 8),
+  };
+  const followup = {
+    ...snapshot('prompt a', 'gemini', 1, 8),
+    ...snapshot('prompt b', 'gemini', 7, 8),
+  };
+  baseline['prompt a'].gemini.position = 1;
+  followup['prompt a'].gemini.position = 1;
+  baseline['prompt b'].gemini.position = 5;
+  followup['prompt b'].gemini.position = 5;
+
+  const result = compareVisibilitySnapshots(baseline, followup);
+  assert.equal(result.visibility_change, 0);
+  assert.equal(result.position_change, null);
+});
+
+test('rank change remains available for matching position cohorts', () => {
+  const baseline = snapshot('prompt a', 'gemini', 4, 8);
+  const followup = snapshot('prompt a', 'gemini', 4, 8);
+  baseline['prompt a'].gemini.position = 2;
+  followup['prompt a'].gemini.position = 3;
+
+  assert.equal(compareVisibilitySnapshots(baseline, followup).position_change, 1);
+});

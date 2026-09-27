@@ -62,8 +62,10 @@ export function compareVisibilitySnapshots(
   let baselinePositionSamples = 0;
   let followupPositionSum = 0;
   let followupPositionSamples = 0;
+  let unmatchedPositionEvidence = false;
   let comparablePairs = 0;
   const weights: Array<[number, number]> = [];
+  const positionWeights: Array<[number, number]> = [];
 
   for (const [prompt, followupEngines] of Object.entries(followup)) {
     const baselineEngines = baseline[prompt];
@@ -97,11 +99,13 @@ export function compareVisibilitySnapshots(
       const followupPositionCount = validCount(followupPoint.position_sample_count)
         ? followupPoint.position_sample_count
         : 0;
-      if (baselinePoint.position !== null && Number.isFinite(baselinePoint.position) && baselinePoint.position >= 1 && baselinePositionCount > 0 && baselinePositionCount <= baselineMentionCount) {
+      const hasBaselinePosition = baselinePoint.position !== null && Number.isFinite(baselinePoint.position) && baselinePoint.position >= 1 && baselinePositionCount > 0 && baselinePositionCount <= baselineMentionCount;
+      const hasFollowupPosition = followupPoint.position !== null && Number.isFinite(followupPoint.position) && followupPoint.position >= 1 && followupPositionCount > 0 && followupPositionCount <= followupMentionCount;
+      if (hasBaselinePosition !== hasFollowupPosition) unmatchedPositionEvidence = true;
+      if (hasBaselinePosition && hasFollowupPosition && baselinePoint.position !== null && followupPoint.position !== null) {
+        positionWeights.push([baselinePositionCount, followupPositionCount]);
         baselinePositionSum += baselinePoint.position * baselinePositionCount;
         baselinePositionSamples += baselinePositionCount;
-      }
-      if (followupPoint.position !== null && Number.isFinite(followupPoint.position) && followupPoint.position >= 1 && followupPositionCount > 0 && followupPositionCount <= followupMentionCount) {
         followupPositionSum += followupPoint.position * followupPositionCount;
         followupPositionSamples += followupPositionCount;
       }
@@ -113,8 +117,9 @@ export function compareVisibilitySnapshots(
   const baselineRate = baselineConfidence.mentionRate;
   const followupRate = followupConfidence.mentionRate;
   const changedMix = weights.some(([before, after]) => before * followupSamples !== after * baselineSamples);
+  const changedPositionMix = unmatchedPositionEvidence || positionWeights.some(([before, after]) => before * followupPositionSamples !== after * baselinePositionSamples);
   const visibilityChange = changedMix || baselineRate === null || followupRate === null ? null : Math.round((followupRate - baselineRate) * 100);
-  const positionChange = !changedMix && baselinePositionSamples > 0 && followupPositionSamples > 0
+  const positionChange = !changedMix && !changedPositionMix && baselinePositionSamples > 0 && followupPositionSamples > 0
     ? Math.round(((followupPositionSum / followupPositionSamples) - (baselinePositionSum / baselinePositionSamples)) * 10) / 10
     : null;
 
