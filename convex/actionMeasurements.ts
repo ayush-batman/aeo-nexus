@@ -59,24 +59,42 @@ export const finish = internalMutation({
     if (!job || job.status !== 'running') return null;
     const action = await ctx.db.get(job.actionId), workspace = await ctx.db.get(job.workspaceId);
     if (!action || !workspace || action.workspaceId !== job.workspaceId) throw new Error('action_not_found');
-    const runs = await Promise.all(job.runIds.map(id => ctx.db.query('measurementRuns').withIndex('by_public_id', q => q.eq('publicId', id)).unique()));
-    if (runs.some(run => !run?.result)) { await ctx.scheduler.runAfter(60000, internal.actionMeasurements.finish, args); return null; }
-    if (runs.every(run => run?.status === 'all_failed')) {
+    const fetchedRuns = await Promise.all(job.runIds.map(id => ctx.db.query('measurementRuns').withIndex('by_public_id', q => q.eq('publicId', id)).unique()));
+    const runs: Doc<'measurementRuns'>[] = [];
+    for (const run of fetchedRuns) {
+      if (!run || run.workspaceId !== job.workspaceId) {
+        await ctx.db.patch(job._id, { status: 'untracked', updatedAt: Date.now() });
+        return null;
+      }
+      runs.push(run);
+    }
+    if (runs.length === 0) {
+      await ctx.db.patch(job._id, { status: 'untracked', updatedAt: Date.now() });
+      return null;
+    }
+    if (runs.some(run => run.status === 'queued' || run.status === 'running')) {
+      await ctx.scheduler.runAfter(60000, internal.actionMeasurements.finish, args);
+      return null;
+    }
+    if (runs.every(run => run.status === 'all_failed')) {
       await ctx.db.patch(job._id, { status: 'all_failed', updatedAt: Date.now() }); return null;
+    }
+    if (runs.some(run => run.status === 'untracked' || !run.result)) {
+      await ctx.db.patch(job._id, { status: 'untracked', updatedAt: Date.now() });
+      return null;
     }
     const scans: Doc<'scanMetrics'>[] = [];
     for (const run of runs) {
-      if (!run || run.workspaceId !== job.workspaceId) throw new Error('measurement_not_found');
       scans.push(...await ctx.db.query('scanMetrics').withIndex('by_workspace_run', q => q.eq('workspaceId', job.workspaceId).eq('measurementRunId', run.publicId)).take(32));
     }
     const impact = snapshotFromObservations(scans.map(s => s.observation), action.targetPrompts);
-    const expectedCohorts = runs.flatMap(run => run?.input.platforms.map(engine => ({ prompt: run.input.prompt, engine })) ?? []);
+    const expectedCohorts = runs.flatMap(run => run.input.platforms.map(engine => ({ prompt: run.input.prompt, engine })));
     const summary = compareVisibilitySnapshots(job.baseline || {}, impact, undefined, expectedCohorts);
     await ctx.db.patch(action._id, { impactSnapshot: impact, impactSummary: summary, status: 'measured', updatedAt: Date.now() });
     await ctx.db.insert('actionEvents', { publicId: crypto.randomUUID(), actionId: action._id, workspaceId: job.workspaceId,
       actorId: job.actorId, eventType: 'measured', fromStatus: action.status, toStatus: 'measured', changes: { impact_summary: summary },
       idempotencyKey: `measured:${job.publicId}`, createdAt: Date.now() });
-    await ctx.db.patch(job._id, { status: runs.every(run => run?.status === 'complete') ? 'complete' : 'partial', updatedAt: Date.now() });
+    await ctx.db.patch(job._id, { status: runs.every(run => run.status === 'complete') ? 'complete' : 'partial', updatedAt: Date.now() });
     return null;
   },
 });

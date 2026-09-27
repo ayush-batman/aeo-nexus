@@ -103,6 +103,11 @@ export default function ActionsPage() {
           setError('Some samples failed. Review the evidence before interpreting this comparison.');
           return true;
         }
+        if (result.status === 'untracked') {
+          await load();
+          setError('The follow-up ended without a usable measurement receipt. No impact claim was made. Retry the measurement.');
+          return true;
+        }
       }
       await load();
       return true;

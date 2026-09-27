@@ -45,6 +45,12 @@ const [route, backend, snapshots] = await Promise.all([
   for (const field of ['provider_model','measurement_region','measurement_mode','scorer_version','measurement_contract_version','search_mode','analyzer_method','analyzer_model','analyzer_prompt_version']) assert.ok(snapshots.includes(field));
 });
 
+test('untracked action measurements show a retryable failure instead of a false result', async () => {
+  const page = await readFile(new URL('../../app/(dashboard)/dashboard/interventions/page.tsx', import.meta.url), 'utf8');
+  assert.match(page, /result\.status === 'untracked'/);
+  assert.match(page, /No impact claim was made\. Retry the measurement/);
+});
+
 test('action rows and audit events mutate in one service-role database transaction', async () => {
 const [actions, measurements] = await Promise.all([
     readFile(new URL('../../convex/actions.ts', import.meta.url), 'utf8'),
