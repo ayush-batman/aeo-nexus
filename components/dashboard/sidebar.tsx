@@ -96,6 +96,12 @@ export function Sidebar({
     const [activeWorkspace, setActiveWorkspace] = useState<Workspace | null>(() =>
         bootstrap?.workspaces.find((workspace) => workspace.id === bootstrap.workspaceId) ?? bootstrap?.workspaces[0] ?? null);
     const [showWsSwitcher, setShowWsSwitcher] = useState(false);
+    // undefined means the first paged read has not completed yet.
+    const [workspaceCursor, setWorkspaceCursor] = useState<string | null | undefined>(undefined);
+    const [loadingWorkspaces, setLoadingWorkspaces] = useState(false);
+    const [workspaceLoadError, setWorkspaceLoadError] = useState<string | null>(null);
+    const loadingWorkspacesRef = useRef(false);
+    const focusAfterWorkspacePageRef = useRef<string | null>(null);
     const [switchingWorkspaceId, setSwitchingWorkspaceId] = useState<string | null>(null);
     const [switchError, setSwitchError] = useState<string | null>(null);
     const [showNewBrand, setShowNewBrand] = useState(false);
@@ -161,6 +167,51 @@ export function Sidebar({
         document.addEventListener("mousedown", handleClick);
         return () => document.removeEventListener("mousedown", handleClick);
     }, []);
+
+    useEffect(() => {
+        const workspaceId = focusAfterWorkspacePageRef.current;
+        if (!workspaceId) return;
+        const options = wsRef.current?.querySelectorAll<HTMLButtonElement>("[data-workspace-id]");
+        const target = [...(options ?? [])].find((option) => option.dataset.workspaceId === workspaceId)
+            ?? wsRef.current?.querySelector<HTMLButtonElement>("button[aria-expanded]");
+        target?.focus();
+        focusAfterWorkspacePageRef.current = null;
+    }, [workspaces]);
+
+    async function loadWorkspacePage(cursor: string | null) {
+        if (loadingWorkspacesRef.current) return;
+        loadingWorkspacesRef.current = true;
+        setLoadingWorkspaces(true);
+        setWorkspaceLoadError(null);
+        try {
+            const params = new URLSearchParams({ page: "1" });
+            if (cursor) params.set("cursor", cursor);
+            const response = await fetch(`/api/workspaces?${params}`, { cache: "no-store" });
+            if (!response.ok) throw new Error("Workspace list unavailable");
+            const data = await response.json();
+            if (!Array.isArray(data.workspaces) || (data.nextCursor !== null && typeof data.nextCursor !== "string")) {
+                throw new Error("Invalid workspace list");
+            }
+            const page = data.workspaces as Workspace[];
+            if (cursor) focusAfterWorkspacePageRef.current = page[0]?.id ?? activeWorkspace?.id ?? null;
+            setWorkspaces((previous) => {
+                const rows = cursor ? [...previous, ...page] : [...(activeWorkspace ? [activeWorkspace] : []), ...page];
+                return [...new Map(rows.map((workspace) => [workspace.id, workspace])).values()];
+            });
+            setWorkspaceCursor(data.nextCursor);
+        } catch {
+            setWorkspaceLoadError("Could not load older brands. Try again.");
+        } finally {
+            loadingWorkspacesRef.current = false;
+            setLoadingWorkspaces(false);
+        }
+    }
+
+    function toggleWorkspaceSwitcher() {
+        const opening = !showWsSwitcher;
+        setShowWsSwitcher(opening);
+        if (opening && workspaceCursor === undefined) void loadWorkspacePage(null);
+    }
 
     async function switchWorkspace(ws: Workspace) {
         if (switchingWorkspaceId) return;
@@ -275,11 +326,12 @@ export function Sidebar({
             {!collapsed && (
                 <div className="px-3 py-2 border-b border-[var(--border-subtle)] relative" ref={wsRef}>
                     <button
-                        onClick={() => setShowWsSwitcher(!showWsSwitcher)}
+                        onClick={toggleWorkspaceSwitcher}
+                        aria-expanded={showWsSwitcher}
                         className="w-full flex items-center justify-between px-3 py-2 rounded-md bg-[var(--bg-surface)] border border-[var(--border-default)] hover:border-[var(--border-active)] transition-colors text-left"
                     >
                         <div className="flex items-center gap-2 min-w-0">
-                            <div className="w-5 h-5 rounded bg-[var(--accent-muted)] flex items-center justify-center text-[var(--accent-base)] text-[10px] font-bold flex-shrink-0">
+                            <div aria-hidden="true" className="w-5 h-5 rounded bg-[var(--accent-muted)] flex items-center justify-center text-[var(--accent-base)] text-[10px] font-bold flex-shrink-0">
                                 {(activeWorkspace?.name || "B")[0].toUpperCase()}
                             </div>
                             <span className="text-sm font-medium text-[var(--text-primary)] truncate">
@@ -297,17 +349,18 @@ export function Sidebar({
                                 {workspaces.map((ws) => (
                                     <button
                                         key={ws.id}
+                                        data-workspace-id={ws.id}
                                         onClick={() => switchWorkspace(ws)}
                                         disabled={switchingWorkspaceId !== null}
                                         className={cn(
-                                            "w-full flex items-center justify-between px-3 py-2 rounded-md text-sm transition-colors",
+                                            "w-full min-h-10 flex items-center justify-between px-3 py-2 rounded-md text-sm transition-colors",
                                             activeWorkspace?.id === ws.id
                                                 ? "bg-[var(--accent-muted)] text-[var(--text-primary)]"
                                                 : "text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] hover:text-[var(--text-primary)]"
                                         )}
                                     >
                                         <div className="flex items-center gap-2">
-                                            <div className="w-5 h-5 rounded bg-[var(--bg-surface)] flex items-center justify-center text-[10px] font-bold text-[var(--text-secondary)]">
+                                            <div aria-hidden="true" className="w-5 h-5 rounded bg-[var(--bg-surface)] flex items-center justify-center text-[10px] font-bold text-[var(--text-secondary)]">
                                                 {ws.name[0].toUpperCase()}
                                             </div>
                                             <span className="truncate">{ws.name}</span>
@@ -318,6 +371,18 @@ export function Sidebar({
                                     </button>
                                 ))}
                             </div>
+
+                            {loadingWorkspaces && <p role="status" className="border-t border-[var(--border-default)] px-3 py-2 text-xs text-[var(--text-secondary)]">Loading brands…</p>}
+                            {workspaceLoadError && <p role="alert" className="border-t border-[var(--border-default)] px-3 py-2 text-xs text-[var(--data-red)]">{workspaceLoadError}</p>}
+                            {!loadingWorkspaces && (workspaceCursor || workspaceLoadError) && (
+                                <button
+                                    type="button"
+                                    onClick={() => void loadWorkspacePage(workspaceCursor ?? null)}
+                                    className="w-full min-h-10 border-t border-[var(--border-default)] px-3 py-2 text-left text-xs font-medium text-[var(--accent-base)] hover:bg-[var(--accent-muted)] focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-[var(--accent-base)]"
+                                >
+                                    {workspaceLoadError ? "Retry loading brands" : "Load older brands"}
+                                </button>
+                            )}
 
                             <div className="border-t border-[var(--border-default)] p-1">
                                 {showNewBrand ? (

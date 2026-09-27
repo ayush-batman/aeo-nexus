@@ -66,6 +66,24 @@ test('workspace switching uses one tenant-bound read and never reloads after a d
   assert.match(sidebar, /role="alert"[^>]*>\{switchError\}/);
 });
 
+test('brand switcher can load older tenant-bound brands without changing the legacy list response', async () => {
+  const [route, backend, sidebar] = await Promise.all([
+    source('app/api/workspaces/route.ts'),
+    source('convex/workspaces.ts'),
+    source('components/dashboard/sidebar.tsx'),
+  ]);
+  assert.match(backend, /export const listPage = tenantQuery/);
+  assert.match(backend, /by_organization_id_and_created_at/);
+  assert.match(route, /searchParams\.get\('page'\) === '1'[\s\S]*api\.workspaces\.listPage/);
+  assert.match(route, /nextCursor: result\.isDone \? null : result\.continueCursor/);
+  assert.match(route, /return NextResponse\.json\(\{ workspaces: workspaces\.map\(legacyWorkspace\) \}/);
+  assert.match(sidebar, /Load older brands/);
+  assert.match(sidebar, /params\.set\("cursor", cursor\)/);
+  assert.match(sidebar, /Retry loading brands/);
+  assert.match(sidebar, /focusAfterWorkspacePageRef\.current = page\[0\]\?\.id/);
+  assert.match(sidebar, /target\?\.focus\(\)/);
+});
+
 test('warm dashboard navigation rechecks access without a blocking workspace spinner', async () => {
   const guard = await source('components/onboarding-check.tsx');
 

@@ -115,3 +115,33 @@ test('dashboard bootstrap keeps an authorized active workspace outside the newes
   expect(bootstrap?.workspaceId).toBe(context.workspaceId);
   expect(bootstrap?.workspaces.some((workspace) => workspace.id === context.workspaceId)).toBe(true);
 });
+
+test('workspace pages reach older brands without leaking another organization', async () => {
+  const { t, owner, context, foreignWorkspace } = await fixture();
+  await t.run(async (ctx) => {
+    const original = await ctx.db.query('workspaces').withIndex('by_public_id', (q) =>
+      q.eq('publicId', context.workspaceId)).unique();
+    if (!original) throw new Error('missing_fixture_workspace');
+    for (let index = 0; index < 100; index++) {
+      await ctx.db.insert('workspaces', {
+        publicId: `paged-workspace-${index}`,
+        organizationId: original.organizationId,
+        name: `Paged ${index}`,
+        logoUrl: null,
+        settings: {},
+        createdAt: original.createdAt + index + 1,
+        updatedAt: original.createdAt + index + 1,
+      });
+    }
+  });
+
+  const first = await owner.query(api.workspaces.listPage, { paginationOpts: { numItems: 1000, cursor: null } });
+  expect(first.page).toHaveLength(100);
+  expect(first.isDone).toBe(false);
+  expect(first.page.every((workspace) => workspace.publicId !== foreignWorkspace)).toBe(true);
+  const second = await owner.query(api.workspaces.listPage, {
+    paginationOpts: { numItems: 100, cursor: first.continueCursor },
+  });
+  expect(second.page.map((workspace) => workspace.publicId)).toEqual([context.workspaceId]);
+  expect(second.isDone).toBe(true);
+});

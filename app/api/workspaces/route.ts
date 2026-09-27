@@ -16,6 +16,15 @@ export async function GET(request: NextRequest) {
             const workspace = await fetchAuthQuery(api.workspaces.get, { workspaceId: context.workspaceId });
             return NextResponse.json({ workspace: legacyWorkspace(workspace) }, { headers: { 'Cache-Control': 'no-store' } });
         }
+        if (request.nextUrl.searchParams.get('page') === '1') {
+            const cursor = request.nextUrl.searchParams.get('cursor');
+            if (cursor !== null && (cursor.length < 1 || cursor.length > 4096)) {
+                return NextResponse.json({ error: 'Invalid workspace cursor' }, { status: 400 });
+            }
+            const result = await fetchAuthQuery(api.workspaces.listPage, { paginationOpts: { cursor, numItems: 100 } });
+            return NextResponse.json({ workspaces: result.page.map(legacyWorkspace),
+                nextCursor: result.isDone ? null : result.continueCursor }, { headers: { 'Cache-Control': 'no-store' } });
+        }
         const workspaces = await fetchAuthQuery(api.workspaces.list, {});
         return NextResponse.json({ workspaces: workspaces.map(legacyWorkspace) }, { headers: { 'Cache-Control': 'no-store' } });
     } catch (error) { return convexRouteError(error); }

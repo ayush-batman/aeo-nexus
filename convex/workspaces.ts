@@ -1,3 +1,4 @@
+import { paginationOptsValidator } from 'convex/server';
 import { v } from 'convex/values';
 
 import { newPublicId } from './lib/publicIds';
@@ -41,6 +42,28 @@ export const list = tenantQuery({
       createdAt,
       updatedAt,
     }));
+  },
+});
+
+export const listPage = tenantQuery({
+  args: { paginationOpts: paginationOptsValidator },
+  returns: v.object({ page: v.array(workspaceValidator), isDone: v.boolean(), continueCursor: v.string() }),
+  handler: async (ctx, args) => {
+    const result = await ctx.db
+      .query('workspaces')
+      .withIndex('by_organization_id_and_created_at', (q) =>
+        q.eq('organizationId', ctx.tenant.organization._id),
+      )
+      .order('desc')
+      .paginate({ ...args.paginationOpts, numItems: Math.min(100, Math.max(1, args.paginationOpts.numItems)) });
+
+    return {
+      page: result.page.map(({ publicId, name, logoUrl, settings, createdAt, updatedAt }) => ({
+        publicId, name, logoUrl, settings, createdAt, updatedAt,
+      })),
+      isDone: result.isDone,
+      continueCursor: result.continueCursor,
+    };
   },
 });
 
