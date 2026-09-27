@@ -32,6 +32,21 @@ test('latest four-sample run reports the exact denominator and confidence range'
   assert.equal(insights[0].actionHref, '/dashboard/sources');
 });
 
+test('inconsistent coverage opens saved answers when links lack provider citation evidence', () => {
+  const rows = Array.from({ length: 4 }, (_, index) => row({
+    sample_number: index + 1,
+    response: index === 0 ? 'Aelo measures AI answers.' : 'Another tool measures AI answers.',
+    brand_mentioned: index === 0,
+    citations: [{ url: 'https://example.com/in-prose', title: 'Mentioned link', is_own_domain: false, provenance: 'link_mentioned' }],
+  }));
+  const [insight] = buildInsights(rows);
+  assert.match(insight.title, /Inconsistent coverage/);
+  assert.equal(insight.actionLabel, 'Review evidence');
+  assert.equal(insight.actionHref, '/dashboard/llm-tracker');
+  const [withCitation] = buildInsights(rows.map((scan) => ({ ...scan, citations: [{ ...scan.citations[0], provenance: 'provider_citation' }] })));
+  assert.equal(withCitation.actionHref, '/dashboard/sources');
+});
+
 test('partial and legacy runs cannot generate a clean visibility action', () => {
   const partial = [
     ...Array.from({ length: 3 }, (_, index) => row({ sample_number: index + 1 })),

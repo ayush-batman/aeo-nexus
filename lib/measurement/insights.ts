@@ -78,7 +78,8 @@ export function buildInsights(scans: readonly LLMScan[]): Insight[] {
         id: `weak-${slug(group.prompt)}`, category: 'visibility', priority: 'medium',
         title: `Inconsistent coverage for "${short}"`,
         detail: `Your brand appeared in ${group.mentionCount} of ${group.sampleCount} successful samples (${Math.round(group.mentionRate * 100)}%). ${confidence}`,
-        actionLabel: 'Review sources', actionHref: '/dashboard/sources', targetPrompt: group.prompt,
+        actionLabel: providerSource ? 'Review sources' : 'Review evidence',
+        actionHref: providerSource ? '/dashboard/sources' : '/dashboard/llm-tracker', targetPrompt: group.prompt,
       });
     } else if (group.averageMentionPosition !== null && group.averageMentionPosition > 3) {
       insights.push({
