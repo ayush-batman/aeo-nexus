@@ -1,5 +1,10 @@
 # Aelo Product Rescue — Implementation Progress
 
+## September 27 production release check — blocked
+
+- Read-only Vercel Production configuration still points both public Convex URLs at the `woozy-starfish-810` **test** deployment and lacks `AELO_EXPECTED_PRODUCTION_CONVEX_DEPLOYMENT`. The current branch's production guard rejects that configuration; promoting the preview without a verified production backend would be unsafe. The latest Production deployment remains the older September 13 build. No production deployment or environment change was made.
+- The protected test preview remains Ready. A browser check showed the login form and Google sign-in button; signup rendered Google sign-up but explicitly said email signup is unavailable. A full signed-in Google callback, onboarding, scan, and decision packet were not exercised in this check. The candidate `laudable-orca-31` Convex Production dashboard currently reports no backups. No customer data was opened or changed.
+
 ## September 27 auth-latency trace — test preview deployed
 
 - Branch commit `f5f11bf` adds allowlisted workspace-bootstrap timing for session lookup and backend read, plus a fast 401 when the session cookie is absent. The cookie remains only a hint: a forged present cookie still goes through verified token and tenant checks. Logs and the `Server-Timing` response header contain durations/status only, not user IDs, email, tokens, prompts, or error text.

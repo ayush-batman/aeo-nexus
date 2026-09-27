@@ -1,5 +1,9 @@
 # Aelo product-rescue deployment and rollback
 
+## September 27 production release decision
+
+Production promotion remains blocked. A fresh read-only Vercel Production environment pull confirms both public Convex URLs still target the `woozy-starfish-810` test deployment, while the required expected-production target variable is absent. The current branch deliberately rejects this configuration during a Production build and on production-host requests. The `laudable-orca-31` candidate Production deployment under `aelo-test` currently reports no backups. The protected preview is Ready, but browser signup says email signup is unavailable and the full signed-in journey is unverified. No production deployment, configuration change, backup, customer-data access, or billing action was performed.
+
 ## September 27, 2026 test deployment checkpoint
 
 Code through `f5f11bf` is deployed to Ready Vercel Preview `dpl_4ZJW6xk3hxwcSgh6N8hdWpBaGzMK`. The stable alias `https://aelo-rescue-preview.vercel.app` points to it. Its matching `woozy-starfish-810` **test** Convex backend was last updated for the Analytics functions at `c8fdbf6`; later commits changed only frontend/server routes and test configuration. This is the test version the team has been building, not a production cutover. The scan-summary and workspace-switch routes return 401 without a session when given valid request shapes. Production still points to the test backend and must not be promoted until its separate target, backup, keys, data, and integration gates below are verified. The user's September 27 request authorized test deployment work but did not resolve those production safety checks.
