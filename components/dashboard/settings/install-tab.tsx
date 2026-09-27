@@ -5,11 +5,14 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Copy, CheckCircle, Zap, ExternalLink, AlertCircle, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { classifyActivitySummary } from "@/lib/analytics/install-verification";
 
 interface Props {
     workspaceId:   string;
     workspaceName: string;
 }
+
+type VerificationStatus = "checking" | "verified" | "not_detected" | "inconclusive" | "error";
 
 const subscribeToOrigin = () => () => {};
 
@@ -22,8 +25,8 @@ export function InstallTab({ workspaceId, workspaceName }: Props) {
         () => "",
     );
     const [copied, setCopied] = useState(false);
-    const [verifying, setVerifying] = useState(true);
-    const [verified, setVerified] = useState(false);
+    const [verificationStatus, setVerificationStatus] = useState<VerificationStatus>("checking");
+    const [verificationAttempt, setVerificationAttempt] = useState(0);
     const [aiVisits, setAiVisits] = useState(0);
     const [totalVisits, setTotalVisits] = useState(0);
     const [summaryPartial, setSummaryPartial] = useState(false);
@@ -47,31 +50,30 @@ export function InstallTab({ workspaceId, workspaceName }: Props) {
         return () => { cancelled = true; };
     }, []);
 
-    // Poll analytics summary once on mount. If any track events landed for
-    // this workspace, we're verified, no other signal needed.
+    // Only a successful activity read may classify the snippet as detected or
+    // not detected. A failed request is not evidence that tracking is absent.
     useEffect(() => {
         let cancelled = false;
+        const controller = new AbortController();
         (async () => {
             try {
-                const res = await fetch("/api/analytics/summary", { cache: "no-store" });
+                const signal = AbortSignal.any([controller.signal, AbortSignal.timeout(15_000)]);
+                const res = await fetch("/api/analytics/summary", { cache: "no-store", signal });
                 if (!res.ok) throw new Error();
-                const data = await res.json();
+                const data: unknown = await res.json();
                 if (cancelled) return;
-                const total = data?.totalVisits ?? 0;
-                const ai = data?.aiVisits ?? 0;
-                setTotalVisits(total);
-                setAiVisits(ai);
-                setSummaryPartial(data?.partial === true);
-                setExaminedEvents(typeof data?.examinedEvents === "number" ? data.examinedEvents : 0);
-                setVerified(total > 0);
+                const summary = classifyActivitySummary(data);
+                setTotalVisits(summary.totalVisits);
+                setAiVisits(summary.aiVisits);
+                setSummaryPartial(summary.partial);
+                setExaminedEvents(summary.examinedEvents);
+                setVerificationStatus(summary.status);
             } catch {
-                if (!cancelled) setVerified(false);
-            } finally {
-                if (!cancelled) setVerifying(false);
+                if (!cancelled) setVerificationStatus("error");
             }
         })();
-        return () => { cancelled = true; };
-    }, []);
+        return () => { cancelled = true; controller.abort(); };
+    }, [verificationAttempt, workspaceId]);
 
     const snippet = origin && ingestToken
         ? `<script id="aeo-pixel" src="${origin}/aelo-pixel.js" data-workspace-id="${workspaceId}" data-ingest-token="${ingestToken}" async></script>`
@@ -104,7 +106,7 @@ export function InstallTab({ workspaceId, workspaceName }: Props) {
                                 the first request arrives.
                             </p>
                         </div>
-                        <VerifyBadge verifying={verifying} verified={verified} />
+                        <VerifyBadge status={verificationStatus} />
                     </div>
                 </CardHeader>
                 <CardContent className="space-y-5">
@@ -139,12 +141,39 @@ export function InstallTab({ workspaceId, workspaceName }: Props) {
                     </div>
 
                     {/* Reality check */}
-                    {verified ? (
+                    {verificationStatus === "checking" ? (
+                        <div role="status" className="flex items-center gap-2.5 p-3 rounded-md bg-[var(--bg-raised)] border border-[var(--border-default)] text-sm text-[var(--text-secondary)]">
+                            <Loader2 className="w-4 h-4 animate-spin motion-reduce:animate-none" />
+                            Checking for recent pageviews…
+                        </div>
+                    ) : verificationStatus === "error" ? (
+                        <div role="alert" className="flex items-start gap-2.5 p-3 rounded-md bg-[var(--data-red-muted)] border border-[var(--data-red)]/25">
+                            <AlertCircle className="w-4 h-4 mt-0.5 text-[var(--data-red)] flex-shrink-0" />
+                            <div className="text-sm">
+                                <div className="font-medium text-[var(--text-primary)]">Site activity could not be checked.</div>
+                                <p className="mt-0.5 text-xs text-[var(--text-secondary)]">We cannot tell whether tracking is installed right now.</p>
+                                <Button variant="outline" size="sm" className="mt-3 min-h-10" onClick={() => {
+                                    setVerificationStatus("checking");
+                                    setVerificationAttempt(value => value + 1);
+                                }}>
+                                    Retry check
+                                </Button>
+                            </div>
+                        </div>
+                    ) : verificationStatus === "inconclusive" ? (
+                        <div role="status" className="flex items-start gap-2.5 p-3 rounded-md bg-[var(--bg-raised)] border border-[var(--border-default)]">
+                            <AlertCircle className="w-4 h-4 mt-0.5 text-[var(--text-tertiary)] flex-shrink-0" />
+                            <div className="text-sm">
+                                <div className="font-medium text-[var(--text-primary)]">No pageviews found in the checked events.</div>
+                                <p className="mt-0.5 text-xs text-[var(--text-secondary)]">Only the newest {examinedEvents.toLocaleString()} events were checked. Older activity may exist.</p>
+                            </div>
+                        </div>
+                    ) : verificationStatus === "verified" ? (
                         <div className="flex items-start gap-2.5 p-3 rounded-md bg-[var(--data-green-muted)] border border-[var(--data-green)]/25">
                             <CheckCircle className="w-4 h-4 mt-0.5 text-[var(--data-green)] flex-shrink-0" />
                             <div className="text-sm">
                                 <div className="font-medium text-[var(--text-primary)]">
-                                    Installed. {summaryPartial && "At least "}{totalVisits} visits captured
+                                    Pageviews observed. {summaryPartial && "At least "}{totalVisits} visits captured
                                     {aiVisits > 0 && <> · {summaryPartial && "at least "}{aiVisits} from AI</>}.
                                 </div>
                                 <div className="text-[var(--text-secondary)] text-xs mt-0.5">
@@ -161,11 +190,10 @@ export function InstallTab({ workspaceId, workspaceName }: Props) {
                             <AlertCircle className="w-4 h-4 mt-0.5 text-[var(--text-tertiary)] flex-shrink-0" />
                             <div className="text-sm">
                                 <div className="font-medium text-[var(--text-primary)]">
-                                    Not detected yet.
+                                    No pageviews observed yet.
                                 </div>
                                 <div className="text-[var(--text-secondary)] text-xs mt-0.5">
-                                    Once you deploy the snippet, refresh this page, verification
-                                    happens on the first pageview.
+                                    After adding the snippet, open your site once and retry this check.
                                 </div>
                             </div>
                         </div>
@@ -208,11 +236,11 @@ export function InstallTab({ workspaceId, workspaceName }: Props) {
     );
 }
 
-function VerifyBadge({ verifying, verified }: { verifying: boolean; verified: boolean }) {
-    if (verifying) {
+function VerifyBadge({ status }: { status: VerificationStatus }) {
+    if (status === "checking") {
         return (
             <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-sm border border-[var(--border-default)] bg-[var(--bg-raised)] text-[10px] font-mono uppercase tracking-[0.12em] text-[var(--text-secondary)]">
-                <Loader2 className="w-3 h-3 animate-spin" />
+                <Loader2 className="w-3 h-3 animate-spin motion-reduce:animate-none" />
                 Checking
             </span>
         );
@@ -221,13 +249,15 @@ function VerifyBadge({ verifying, verified }: { verifying: boolean; verified: bo
         <span
             className={cn(
                 "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-sm border font-mono text-[10px] uppercase tracking-[0.12em]",
-                verified
+                status === "verified"
                     ? "border-[var(--data-green)]/30 bg-[var(--data-green-muted)] text-[var(--data-green)]"
-                    : "border-[var(--border-default)] bg-[var(--bg-raised)] text-[var(--text-tertiary)]",
+                    : status === "error"
+                        ? "border-[var(--data-red)]/30 bg-[var(--data-red-muted)] text-[var(--data-red)]"
+                        : "border-[var(--border-default)] bg-[var(--bg-raised)] text-[var(--text-tertiary)]",
             )}
         >
-            {verified ? <CheckCircle className="w-3 h-3" /> : <AlertCircle className="w-3 h-3" />}
-            {verified ? "Verified" : "Not detected"}
+            {status === "verified" ? <CheckCircle className="w-3 h-3" /> : <AlertCircle className="w-3 h-3" />}
+            {status === "verified" ? "Activity found" : status === "error" ? "Check failed" : status === "inconclusive" ? "Inconclusive" : "No activity yet"}
         </span>
     );
 }

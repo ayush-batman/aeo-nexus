@@ -160,7 +160,7 @@ test('install analytics bounds event reads and labels incomplete traffic totals'
   assert.match(route, /numItems: 500/);
   assert.match(helper, /MAX_TRAFFIC_SUMMARY_PAGES = 10/);
   assert.match(helper, /partial: true/);
-  assert.match(installTab, /setSummaryPartial\(data\?\.partial === true\)/);
+  assert.match(installTab, /setSummaryPartial\(summary\.partial\)/);
   assert.match(installTab, /Only the newest \{examinedEvents\.toLocaleString\(\)\} events were checked/);
   assert.doesNotMatch(route, /while \(cursor\)/);
 });

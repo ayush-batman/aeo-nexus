@@ -543,7 +543,7 @@ export default function SettingsPage() {
                                 )}
 
                                 {activeTab === "install" && workspace && (
-                                    <InstallTab workspaceId={workspace.id} workspaceName={workspace.name || ""} />
+                                    <InstallTab key={workspace.id} workspaceId={workspace.id} workspaceName={workspace.name || ""} />
                                 )}
 
                                 {activeTab === "team" && (

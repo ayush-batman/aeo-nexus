@@ -53,6 +53,18 @@ const [loading, gate, route, errors] = await Promise.all([
  assert.match(route,/convexRouteError/); assert.match(errors,/status: 503/);
 });
 
+test('install verification does not mistake an API failure for missing tracking', async () => {
+  const installTab = await readFile(`${root}/components/dashboard/settings/install-tab.tsx`, 'utf8');
+  assert.match(installTab, /type VerificationStatus = "checking" \| "verified" \| "not_detected" \| "inconclusive" \| "error"/);
+  assert.match(installTab, /if \(!res\.ok\) throw new Error\(\)/);
+  assert.match(installTab, /setVerificationStatus\("error"\)/);
+  assert.match(installTab, /Site activity could not be checked\./);
+  assert.match(installTab, /Retry check/);
+  assert.match(installTab, /classifyActivitySummary\(data\)/);
+  assert.match(installTab, /controller\.abort\(\)/);
+  assert.doesNotMatch(installTab, /catch \{[\s\S]{0,100}setVerified\(false\)/);
+});
+
 test('core controls meet target sizes and respect reduced motion', async () => {
   const [button, dialog, styles] = await Promise.all([
     readFile(`${root}/components/ui/button.tsx`, 'utf8'),
