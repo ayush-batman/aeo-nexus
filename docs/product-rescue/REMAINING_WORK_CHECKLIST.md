@@ -1,6 +1,6 @@
 # Aelo remaining-work checklist
 
-Updated: September 12, 2026
+Updated: September 27, 2026
 
 This list starts from the current `codex/product-rescue` workspace. The Convex runtime migration, measurement-trust rules, authorization hardening, migration rehearsal, and first visual-system pass are complete in code. Aelo is a tested release candidate, not yet a production-verified release.
 
@@ -10,7 +10,7 @@ This list starts from the current `codex/product-rescue` workspace. The Convex r
 - [x] Re-run the focused dashboard/measurement tests after that review.
 - [x] Run the code release gates: 174 Node tests, 50 Convex tests, lint, app type-check, MCP type-check, the 142-route production build, public production-server browser checks, and dependency audit. Diff hygiene and the final scoped commit are recorded at handoff.
 - [x] Commit the current UI pass as a scoped, reversible commit.
-- [x] Redeploy the protected non-production preview so it contains the latest zero-warning and visual changes. The stable alias now points to the Ready deployment created on September 12, 2026.
+- [x] Redeploy the protected non-production preview so it contains the latest code. The stable alias points to Ready deployment `dpl_BFhptk5foMqUFdRjyfr3tSxjDCuT` created September 27, 2026; the matching Convex test backend is updated.
 
 ## 2. Prove the real customer journey in staging
 
@@ -39,6 +39,7 @@ This list starts from the current `codex/product-rescue` workspace. The Convex r
 
 ## 4. Solve and prove latency
 
+- [x] Remove the secondary Analytics screen's silent 200-sample truncation and transfer compact, paged summaries while preserving the bounded full-answer reader. Live p50/p95 improvement remains unmeasured.
 - [x] Remove the duplicate Overview workspace lookup and extra Next.js-to-Convex summary hop.
 - [x] Queue independent provider samples together under the four-job concurrency cap.
 - [x] Return an immediate durable job receipt to the main tracker, poll the workspace-bound run, show actual saved/failed sample progress, and refresh the completed result without changing the versioned API or Battle response contracts.

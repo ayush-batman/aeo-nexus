@@ -1,5 +1,9 @@
 # Aelo product-rescue deployment and rollback
 
+## September 27, 2026 test deployment checkpoint
+
+The latest branch commit `c8fdbf6` is deployed to the `woozy-starfish-810` **test** Convex backend and Ready Vercel Preview `dpl_BFhptk5foMqUFdRjyfr3tSxjDCuT`. The stable alias `https://aelo-rescue-preview.vercel.app` points to that build. This is the test version the team has been building; it is not a production cutover. The new scan-summary route returns 401 without a session. Production still points to the test backend and must not be promoted until its separate target, backup, keys, data, and integration gates below are verified. The user's September 27 request authorized deployment work but did not resolve those safety checks.
+
 ## September 27, 2026 read-only release check
 
 Vercel CLI access to `agrover12344-9741/aeo-nexus` is restored. Its current Production deployment is the September 13 build (`bf8dbc5`), not the latest rescue branch. A read-only pull of the Production environment confirmed both public Convex URLs still point to the `aelo-test` **Development** deployment `woozy-starfish-810`. The temporary local environment copy was removed immediately after checking only those public URLs; no secret values were displayed or changed.

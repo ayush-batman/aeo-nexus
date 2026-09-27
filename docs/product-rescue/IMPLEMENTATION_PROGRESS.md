@@ -1,8 +1,15 @@
 # Aelo Product Rescue — Implementation Progress
 
+## September 27 test deployment and Analytics follow-up
+
+- The current `codex/product-rescue` commit `c8fdbf6` is pushed to GitHub. Convex functions were deployed to the verified `aelo-test` Development deployment `woozy-starfish-810`; Vercel Preview `dpl_BFhptk5foMqUFdRjyfr3tSxjDCuT` is Ready, and `https://aelo-rescue-preview.vercel.app` points to it. Vercel Production and `aelohq.com` were not changed.
+- The secondary Analytics screen no longer silently treats the newest 200 scan rows as “All Time.” A tenant-bound, indexed Convex read returns only the fields needed for Analytics in pages of at most 50; the browser loads the complete selected time window before rendering or exporting. If a later page fails or history exceeds the 10,000-sample safety bound, the screen withholds totals and shows a retry/shorter-window error. The full-answer receipt reader keeps its protective five-record cap. This removes unnecessary answer/raw-provider payload transfer and page round trips; a production latency improvement has **not** been measured.
+- Regression proof: 253 Node tests and 74 Convex tests pass; lint, app and MCP type checks, and the 142-page webpack production build pass. The test backend push and Vercel build both succeeded. The new preview route returns 401 without a session; `/signup` returns 200. A local browser with the development-only navigation bypass showed the Analytics error/retry state at desktop and 390px mobile without fake numbers, overflow, or framework overlay. A populated signed-in browser check remains open because the bypass deliberately does not grant data access.
+- Google signup on the deployed preview renders and reaches Google's account chooser with the preview callback. The complete callback/session was not exercised because the offered `work.ayushg@gmail.com` account was not signed in there. Email signup remains unavailable because the test Convex deployment has no sending key. Neither outcome is being called a passed end-to-end signup test.
+
 ## September 27 code-only follow-up
 
-- Prompt-specific `/api/v1` scan reads now use a workspace-and-prompt database index before paging instead of fetching all workspace scans and filtering afterward. Exact prompt, date-window, API-key, and failed-sample behavior have regression coverage. This reduces unnecessary reads for prompt-filtered endpoints such as volatility; it is not a measured live latency improvement. The additive Convex index and functions are committed but not deployed under the current safe-build hold.
+- Prompt-specific `/api/v1` scan reads now use a workspace-and-prompt database index before paging instead of fetching all workspace scans and filtering afterward. Exact prompt, date-window, API-key, and failed-sample behavior have regression coverage. This reduces unnecessary reads for prompt-filtered endpoints such as volatility; it is not a measured live latency improvement. The additive Convex index and functions were deployed to the test backend in the September 27 test deployment above.
 
 ## Preview checkpoint — September 26, 2026
 
