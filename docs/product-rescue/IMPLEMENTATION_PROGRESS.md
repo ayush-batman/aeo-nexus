@@ -1,5 +1,11 @@
 # Aelo Product Rescue — Implementation Progress
 
+## September 27 auth-latency trace — code only
+
+- Branch commit `f5f11bf` adds allowlisted workspace-bootstrap timing for session lookup and backend read, plus a fast 401 when the session cookie is absent. The cookie remains only a hint: a forged present cookie still goes through verified token and tenant checks. Logs and the `Server-Timing` response header contain durations/status only, not user IDs, email, tokens, prompts, or error text.
+- In a local production-build browser check, an unauthenticated request returned 401 with a 1 ms server timing and no session/backend phase; a forged cookie returned 401 after a 459 ms verified session lookup. Both had `Cache-Control: no-store` and no page errors. These are two local observations, not p50/p95 or a signed-in first-login result.
+- 258 Node tests, 74 Convex tests, lint, both type checks, the 142-page production build, and diff hygiene passed. This heartbeat pushed code to the existing branch but did **not** deploy it; the protected test preview still serves code commit `7235bc4`. Production, test backend data, and billing were not changed.
+
 ## September 27 first-login failure bound
 
 - Branch commit `7235bc4` is pushed and Ready Vercel Preview `dpl_CwY4hU72gDwmoc1qurUyRusH253h` is assigned to `https://aelo-rescue-preview.vercel.app`. The backend remains the verified `woozy-starfish-810` test deployment; no backend function changed in this batch. The preview `/signup` returned 200 and the workspace-switch route returned 401 without a session. Production was not changed.

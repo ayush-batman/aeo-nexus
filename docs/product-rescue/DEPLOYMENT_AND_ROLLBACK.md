@@ -2,7 +2,7 @@
 
 ## September 27, 2026 test deployment checkpoint
 
-The latest branch code commit `7235bc4` is deployed to Ready Vercel Preview `dpl_CwY4hU72gDwmoc1qurUyRusH253h`. The stable alias `https://aelo-rescue-preview.vercel.app` points to it. Its matching `woozy-starfish-810` **test** Convex backend was last updated for the Analytics functions at `c8fdbf6`; later commits changed only frontend/server routes and test configuration. This is the test version the team has been building, not a production cutover. The scan-summary and workspace-switch routes return 401 without a session. Production still points to the test backend and must not be promoted until its separate target, backup, keys, data, and integration gates below are verified. The user's September 27 request authorized deployment work but did not resolve those safety checks.
+Code commit `7235bc4` is deployed to Ready Vercel Preview `dpl_CwY4hU72gDwmoc1qurUyRusH253h`. The stable alias `https://aelo-rescue-preview.vercel.app` points to it. The branch has newer code-only auth timing through `f5f11bf`, which the overnight heartbeat has **not** deployed. Its matching `woozy-starfish-810` **test** Convex backend was last updated for the Analytics functions at `c8fdbf6`; later commits changed only frontend/server routes and test configuration. This is the test version the team has been building, not a production cutover. The scan-summary and workspace-switch routes return 401 without a session. Production still points to the test backend and must not be promoted until its separate target, backup, keys, data, and integration gates below are verified. The user's September 27 request authorized deployment work but did not resolve those safety checks.
 
 ## September 27, 2026 read-only release check
 

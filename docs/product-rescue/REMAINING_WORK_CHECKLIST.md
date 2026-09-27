@@ -10,7 +10,8 @@ This list starts from the current `codex/product-rescue` workspace. The Convex r
 - [x] Re-run the focused dashboard/measurement tests after that review.
 - [x] Run the code release gates: 174 Node tests, 50 Convex tests, lint, app type-check, MCP type-check, the 142-route production build, public production-server browser checks, and dependency audit. Diff hygiene and the final scoped commit are recorded at handoff.
 - [x] Commit the current UI pass as a scoped, reversible commit.
-- [x] Redeploy the protected non-production preview so it contains the latest code. The stable alias points to Ready deployment `dpl_CwY4hU72gDwmoc1qurUyRusH253h` created September 27, 2026; the matching Convex test backend is updated.
+- [x] Redeploy the protected non-production preview through code commit `7235bc4`. The stable alias points to Ready deployment `dpl_CwY4hU72gDwmoc1qurUyRusH253h` created September 27, 2026; the matching Convex test backend is updated.
+- [ ] Deploy the newer auth-timing branch code to the protected preview after the overnight no-deploy period; branch HEAD `f5f11bf` is ahead of the preview.
 
 ## 2. Prove the real customer journey in staging
 
@@ -49,6 +50,7 @@ This list starts from the current `codex/product-rescue` workspace. The Convex r
 - [ ] Trace the remaining first-login/auth bridge delay and the 7.97-second backend outlier.
 - [ ] Decide how to reduce India-to-US-East distance for the beachhead audience without splitting the source of truth.
 - [ ] Add visible latency and failure monitoring for auth, dashboard reads, each model provider, scan persistence, webhooks, and email jobs.
+  - The branch now records privacy-safe auth-bootstrap phases and a browser-visible timing header. It is not deployed by the overnight heartbeat, and the other paths plus alerting remain open.
 - [ ] Set release budgets for first useful dashboard paint, warm navigation, scan start, per-provider completion, and complete decision packet.
 - [ ] Re-run the measurements under representative workspace size and bounded concurrent load.
 
