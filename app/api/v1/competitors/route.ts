@@ -1,4 +1,5 @@
 import { withKey, getWorkspaceBrand } from '@/lib/api-v1';
+import { resolveApiWindow } from '@/lib/api-window';
 import { shareOfVoiceMetric } from '@/lib/measurement/metrics';
 
 // GET /api/v1/competitors?window=30d  — share of voice: how often each brand
@@ -10,8 +11,10 @@ function nameOf(x: unknown): string | null {
 }
 
 export async function GET(request: Request) {
-  const w = new URL(request.url).searchParams.get('window') || '30d';
-  const days = w === '7d' ? 7 : w === '90d' ? 90 : 30;
+  const { window: w, days } = resolveApiWindow(
+    new URL(request.url).searchParams.get('window'),
+    [['7d', 7], ['30d', 30], ['90d', 90]], '30d',
+  );
   return withKey(request, 'read', async (ctx, admin) => {
     const brand = await getWorkspaceBrand(admin);
     const data = await admin.scans({ since: Date.now() - days * 86400000 });

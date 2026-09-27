@@ -1,4 +1,5 @@
 import { withKey } from '@/lib/api-v1';
+import { resolveApiWindow } from '@/lib/api-window';
 
 // GET /api/v1/citations?window=30d&citesYou=&limit=50 — citation/link receipts
 // with provenance. Only provider_citation means the provider supplied it.
@@ -12,8 +13,10 @@ function domainOf(url: string): string {
 
 export async function GET(request: Request) {
   const url = new URL(request.url);
-  const w = url.searchParams.get('window') || '30d';
-  const days = w === '7d' ? 7 : w === '90d' ? 90 : 30;
+  const { window: w, days } = resolveApiWindow(
+    url.searchParams.get('window'),
+    [['7d', 7], ['30d', 30], ['90d', 90]], '30d',
+  );
   const citesYouParam = url.searchParams.get('citesYou');
   const citesYou = citesYouParam === null ? undefined : citesYouParam === 'true';
   const limit = Math.min(100, Math.max(1, Number(url.searchParams.get('limit')) || 50));
