@@ -89,6 +89,8 @@ test('workspace bootstrap records auth and backend timings without user or provi
   ]);
 
   assert.match(route, /getConvexDashboardBootstrap\(timings\)/);
+  assert.match(route, /if \(!getSessionCookie\(request\)\)/);
+  assert.ok(route.indexOf('if (!getSessionCookie(request))') < route.indexOf('getConvexDashboardBootstrap(timings)'));
   assert.match(route, /workspaceBootstrapTelemetry\(response\.status, performance\.now\(\) - started, timings\)/);
   assert.match(route, /response\.headers\.set\('Server-Timing', telemetry\.serverTiming\)/);
   assert.match(route, /response\.headers\.set\('Cache-Control', 'no-store'\)/);

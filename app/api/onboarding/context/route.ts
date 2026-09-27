@@ -1,22 +1,26 @@
-import { NextResponse } from 'next/server';
+import { type NextRequest, NextResponse } from 'next/server';
+import { getSessionCookie } from 'better-auth/cookies';
 import { getConvexDashboardBootstrap } from '@/lib/convex/session';
 import { convexRouteError } from '@/lib/convex/http';
 import { workspaceBootstrapTelemetry, type WorkspaceBootstrapTimings } from '@/lib/observability/workspace-bootstrap';
 
-export async function GET() {
+export async function GET(request: NextRequest) {
     const started = performance.now();
     const timings: WorkspaceBootstrapTimings = { tokenMs: null, backendMs: null, provisioned: false };
     let response: NextResponse;
     try {
-        const context = await getConvexDashboardBootstrap(timings);
-
-        if (!context) {
+        // A missing cookie can be rejected locally; a present cookie is only
+        // a hint and still goes through the verified token and tenant query.
+        if (!getSessionCookie(request)) {
             response = NextResponse.json(
                 { error: 'Unauthorized or no workspace found' },
                 { status: 401 }
             );
         } else {
-            response = NextResponse.json(context);
+            const context = await getConvexDashboardBootstrap(timings);
+            response = context
+                ? NextResponse.json(context)
+                : NextResponse.json({ error: 'Unauthorized or no workspace found' }, { status: 401 });
         }
     } catch (error) {
         response = convexRouteError(error);
