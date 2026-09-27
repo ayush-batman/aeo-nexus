@@ -19,6 +19,24 @@ export type DashboardBootstrap = {
 const DashboardBootstrapContext = createContext<DashboardBootstrap | null>(null);
 export function useDashboardBootstrap() { return useContext(DashboardBootstrapContext); }
 
+function isDashboardBootstrap(value: unknown): value is DashboardBootstrap {
+  if (!value || typeof value !== "object") return false;
+  const data = value as Record<string, unknown>;
+  return typeof data.userId === "string"
+    && typeof data.orgId === "string"
+    && typeof data.workspaceId === "string"
+    && typeof data.onboardingCompleted === "boolean"
+    && typeof data.hasBrand === "boolean"
+    && typeof data.plan === "string"
+    && typeof data.paid === "boolean"
+    && Array.isArray(data.workspaces)
+    && data.workspaces.every((workspace: unknown) => {
+      if (!workspace || typeof workspace !== "object") return false;
+      const row = workspace as Record<string, unknown>;
+      return typeof row.id === "string" && typeof row.name === "string" && typeof row.created_at === "string";
+    });
+}
+
 export function OnboardingCheck({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
@@ -47,8 +65,8 @@ export function OnboardingCheck({ children }: { children: React.ReactNode }) {
       // the session and tenant on the server.
       if (!readyBootstrap.current) setState("checking");
       try {
-        const response = await fetch("/api/onboarding/context", { cache: "no-store", signal: controller.signal });
-        const data = await response.json().catch(() => ({}));
+        const signal = AbortSignal.any([controller.signal, AbortSignal.timeout(20_000)]);
+        const response = await fetch("/api/onboarding/context", { cache: "no-store", signal });
         if (controller.signal.aborted) return;
         if (response.status === 401) {
           readyBootstrap.current = null;
@@ -57,7 +75,10 @@ export function OnboardingCheck({ children }: { children: React.ReactNode }) {
           router.replace("/login");
           return;
         }
-        if (!response.ok) throw new Error(data.error || "Workspace status could not be loaded.");
+        if (!response.ok) throw new Error("Workspace status could not be loaded.");
+        const data: unknown = await response.json();
+        if (controller.signal.aborted) return;
+        if (!isDashboardBootstrap(data)) throw new Error("Invalid workspace status.");
         if (!data.onboardingCompleted && !data.hasBrand) {
           readyBootstrap.current = null;
           setBootstrap(null);
@@ -65,11 +86,11 @@ export function OnboardingCheck({ children }: { children: React.ReactNode }) {
           router.replace("/onboarding");
           return;
         }
-        readyBootstrap.current = data as DashboardBootstrap;
-        setBootstrap(data as DashboardBootstrap);
+        readyBootstrap.current = data;
+        setBootstrap(data);
         setState("ready");
-      } catch (error) {
-        if (controller.signal.aborted || (error instanceof Error && error.name === "AbortError")) return;
+      } catch {
+        if (controller.signal.aborted) return;
         setState("error");
       }
     }, 0);
