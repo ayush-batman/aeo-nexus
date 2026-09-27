@@ -5,6 +5,7 @@ import { fetchMutation, fetchQuery } from 'convex/nextjs';
 import { api } from '../../convex/_generated/api';
 import { getToken } from '../auth-server';
 import { resolveProvisionedWorkspace } from './workspace-resolution';
+import type { WorkspaceBootstrapTimings } from '../observability/workspace-bootstrap';
 
 export const getConvexWorkspaceContext = cache(async () => {
   const token = await getToken();
@@ -19,13 +20,27 @@ export const getConvexWorkspaceContext = cache(async () => {
   );
 });
 
-export const getConvexDashboardBootstrap = cache(async () => {
-  const token = await getToken();
+export const getConvexDashboardBootstrap = cache(async (timings?: WorkspaceBootstrapTimings) => {
+  const tokenStarted = performance.now();
+  let token: string | undefined;
+  try {
+    token = await getToken();
+  } finally {
+    if (timings) timings.tokenMs = performance.now() - tokenStarted;
+  }
   if (!token) return null;
   const activeWorkspacePublicId = (await cookies()).get('active-workspace-id')?.value ?? null;
   const options = { token, url: process.env.NEXT_PUBLIC_CONVEX_URL };
-  return resolveProvisionedWorkspace(
-    () => fetchQuery(api.dashboard.bootstrap, { activeWorkspacePublicId }, options),
-    () => fetchMutation(api.users.provisionCurrentUser, {}, options),
-  );
+  const backendStarted = performance.now();
+  try {
+    return await resolveProvisionedWorkspace(
+      () => fetchQuery(api.dashboard.bootstrap, { activeWorkspacePublicId }, options),
+      () => {
+        if (timings) timings.provisioned = true;
+        return fetchMutation(api.users.provisionCurrentUser, {}, options);
+      },
+    );
+  } finally {
+    if (timings) timings.backendMs = performance.now() - backendStarted;
+  }
 });

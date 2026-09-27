@@ -81,3 +81,19 @@ test('warm dashboard navigation rechecks access without a blocking workspace spi
   assert.match(guard, /setState\("error"\)/);
   assert.doesNotMatch(guard, /error\.name === "AbortError"/);
 });
+
+test('workspace bootstrap records auth and backend timings without user or provider payloads', async () => {
+  const [route, session] = await Promise.all([
+    source('app/api/onboarding/context/route.ts'),
+    source('lib/convex/session.ts'),
+  ]);
+
+  assert.match(route, /getConvexDashboardBootstrap\(timings\)/);
+  assert.match(route, /workspaceBootstrapTelemetry\(response\.status, performance\.now\(\) - started, timings\)/);
+  assert.match(route, /response\.headers\.set\('Server-Timing', telemetry\.serverTiming\)/);
+  assert.match(route, /response\.headers\.set\('Cache-Control', 'no-store'\)/);
+  assert.match(session, /timings\.tokenMs = performance\.now\(\) - tokenStarted/);
+  assert.match(session, /timings\.backendMs = performance\.now\(\) - backendStarted/);
+  assert.match(session, /timings\.provisioned = true/);
+  assert.doesNotMatch(route, /console\.(?:info|log|error)\([^\n]*(?:context|error\.message|token|workspaceId)/);
+});
