@@ -151,7 +151,10 @@ export function Header({ title, description }: HeaderProps) {
                 return;
             }
             setNotifications(prev => prev.map(x => x.id === n.id ? { ...x, read: true } : x));
-            setUnreadCount(prev => Math.max(0, prev - 1));
+            // A displayed 9+ may represent any larger count. Refresh after
+            // marking one read rather than claiming it dropped to exactly 9.
+            setUnreadCount(prev => prev >= 10 ? 10 : Math.max(0, prev - 1));
+            if (unreadCount >= 10) void fetchNotifications();
         }
         const href = notifTypeHref[n.type];
         if (href) {
@@ -206,7 +209,7 @@ export function Header({ title, description }: HeaderProps) {
                                         </span>
                                         {unreadCount > 0 && (
                                             <span className="badge badge-violet">
-                                                {unreadCount} new
+                                                {unreadCount > 9 ? "9+" : unreadCount} new
                                             </span>
                                         )}
                                     </div>

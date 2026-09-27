@@ -1,5 +1,4 @@
 import { NextResponse } from 'next/server';
-import type { FunctionReturnType } from 'convex/server';
 import { api } from '@/convex/_generated/api';
 import { fetchAuthQuery, fetchAuthMutation } from '@/lib/auth-server';
 import { getConvexWorkspaceContext } from '@/lib/convex/session';
@@ -8,16 +7,12 @@ export async function GET() {
   try {
     const context = await getConvexWorkspaceContext();
     if (!context) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    const notifications: FunctionReturnType<typeof api.alerts.notifications>['page'] = [];
-    let unreadCount = 0;
-    let cursor: string | null = null;
-    do {
-      const result: FunctionReturnType<typeof api.alerts.notifications> = await fetchAuthQuery(api.alerts.notifications, { workspaceId: context.workspaceId, paginationOpts: { cursor, numItems: 100 } });
-      unreadCount += result.page.filter(n => !n.read).length;
-      if (notifications.length < 20) notifications.push(...result.page.slice(0, 20 - notifications.length));
-      cursor = result.isDone ? null : result.continueCursor;
-    } while (cursor);
-    return NextResponse.json({ notifications, unreadCount });
+    const [recent, unreadCount] = await Promise.all([
+      fetchAuthQuery(api.alerts.notifications, { workspaceId: context.workspaceId, paginationOpts: { cursor: null, numItems: 20 } }),
+      fetchAuthQuery(api.alerts.unreadBadgeCount, { workspaceId: context.workspaceId }),
+    ]);
+    return NextResponse.json({ notifications: recent.page, unreadCount,
+      unreadCountMayBeHigher: unreadCount === 10 }, { headers: { 'Cache-Control': 'no-store' } });
   } catch (error) { return convexRouteError(error); }
 }
 export async function PATCH(request: Request) {

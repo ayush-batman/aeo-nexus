@@ -117,3 +117,20 @@ test('workspace bootstrap records auth and backend timings without user or provi
   assert.match(session, /timings\.provisioned = true/);
   assert.doesNotMatch(route, /console\.(?:info|log|error)\([^\n]*(?:context|error\.message|token|workspaceId)/);
 });
+
+test('notification badge does not page through full history on every refresh', async () => {
+  const [route, alerts, header] = await Promise.all([
+    source('app/api/alerts/notifications/route.ts'),
+    source('convex/alerts.ts'),
+    source('components/dashboard/header.tsx'),
+  ]);
+  assert.match(route, /Promise\.all\(\[/);
+  assert.match(route, /numItems: 20/);
+  assert.match(route, /api\.alerts\.unreadBadgeCount/);
+  assert.match(route, /unreadCountMayBeHigher: unreadCount === 10/);
+  assert.doesNotMatch(route, /while \(cursor\)/);
+  assert.match(alerts, /export const unreadBadgeCount = tenantQuery/);
+  assert.match(alerts, /by_workspace_id_and_read[\s\S]*\.take\(10\)/);
+  assert.match(header, /unreadCount > 9 \? "9\+" : unreadCount/);
+  assert.match(header, /if \(unreadCount >= 10\) void fetchNotifications\(\)/);
+});

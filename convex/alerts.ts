@@ -43,6 +43,18 @@ export const notifications = tenantQuery({
         title: n.title, message: n.message, read: n.read, metadata: n.metadata, created_at: new Date(n.createdAt).toISOString() })) };
   },
 });
+
+// The UI labels ten or more unread notifications as "9+". Count only the
+// indexed first ten, instead of paging through an unbounded history.
+export const unreadBadgeCount = tenantQuery({
+  args: { workspaceId: v.string() }, returns: v.number(),
+  handler: async (ctx, args) => {
+    const workspace = await requireWorkspace(ctx, ctx.tenant, args.workspaceId);
+    const unread = await ctx.db.query('notifications').withIndex('by_workspace_id_and_read', q =>
+      q.eq('workspaceId', workspace._id).eq('read', false)).take(10);
+    return unread.length;
+  },
+});
 export const markRead = tenantMutation({
   args: { workspaceId: v.string(), ids: v.array(v.string()), markAllRead: v.boolean() }, returns: v.object({ more: v.boolean() }),
   handler: async (ctx, args) => {

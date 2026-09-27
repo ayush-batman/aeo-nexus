@@ -22,3 +22,31 @@ test('empty notification pagination returns only its public contract', async () 
   });
   expect(result).toEqual({ page: [], isDone: true, continueCursor: expect.any(String) });
 });
+
+test('notification badge count is bounded and workspace-bound', async () => {
+  const { t, owner, context, foreignWorkspace } = await fixture();
+  const ids = await t.run(async ctx => {
+    const workspace = await ctx.db.query('workspaces').withIndex('by_public_id', q =>
+      q.eq('publicId', context.workspaceId)).unique();
+    const foreign = await ctx.db.query('workspaces').withIndex('by_public_id', q =>
+      q.eq('publicId', foreignWorkspace)).unique();
+    if (!workspace || !foreign) throw new Error('missing_fixture_workspace');
+    const publicIds: string[] = [];
+    for (let index = 0; index < 12; index++) {
+      const publicId = `badge-unread-${index}`;
+      publicIds.push(publicId);
+      await ctx.db.insert('notifications', { publicId, workspaceId: workspace._id, type: 'visibility_drop',
+        title: 'Synthetic alert', message: 'Test only', read: false, metadata: {}, dedupeKey: null, createdAt: index });
+    }
+    await ctx.db.insert('notifications', { publicId: 'badge-read', workspaceId: workspace._id, type: 'visibility_drop',
+      title: 'Already read', message: 'Test only', read: true, metadata: {}, dedupeKey: null, createdAt: 13 });
+    await ctx.db.insert('notifications', { publicId: 'foreign-badge-unread', workspaceId: foreign._id, type: 'visibility_drop',
+      title: 'Private alert', message: 'Test only', read: false, metadata: {}, dedupeKey: null, createdAt: 14 });
+    return publicIds;
+  });
+  expect(await owner.query(api.alerts.unreadBadgeCount, { workspaceId: context.workspaceId })).toBe(10);
+  await expect(owner.query(api.alerts.unreadBadgeCount, { workspaceId: foreignWorkspace })).rejects.toThrow('workspace_not_found');
+  await expect(t.query(api.alerts.unreadBadgeCount, { workspaceId: context.workspaceId })).rejects.toThrow('Unauthenticated');
+  await owner.mutation(api.alerts.markRead, { workspaceId: context.workspaceId, ids: ids.slice(0, 3), markAllRead: false });
+  expect(await owner.query(api.alerts.unreadBadgeCount, { workspaceId: context.workspaceId })).toBe(9);
+});
