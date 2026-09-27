@@ -60,6 +60,8 @@ test('intervention receipts use multi-sample matched cohorts and allow inconclus
 const [backend, comparison, snapshot] = await Promise.all([source('convex/actionMeasurements.ts'),source('lib/measurement/comparison.ts'),source('lib/interventions.ts')]);
  assert.match(backend,/beginMeasurement/); assert.match(backend,/samples: 4/);
  assert.match(backend,/compareVisibilitySnapshots/);
+ assert.match(backend,/expectedCohorts = runs\.flatMap/);
+ assert.match(backend,/compareVisibilitySnapshots\(job\.baseline \|\| \{\}, impact, undefined, expectedCohorts\)/);
  assert.match(comparison,/followupConfidence\.interval\.lower > baselineConfidence\.interval\.upper/);
  assert.match(comparison,/'inconclusive'/);
  assert.match(snapshot,/rows\.length < 8/);

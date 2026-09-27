@@ -53,6 +53,7 @@ export function compareVisibilitySnapshots(
   baseline: ComparableSnapshot,
   followup: ComparableSnapshot,
   measuredAt = new Date().toISOString(),
+  expectedCohorts: ReadonlyArray<{ prompt: string; engine: string }> = [],
 ): InterventionImpactSummary {
   let baselineSamples = 0;
   let baselineMentions = 0;
@@ -64,6 +65,7 @@ export function compareVisibilitySnapshots(
   let followupPositionSamples = 0;
   let unmatchedPositionEvidence = false;
   let comparablePairs = 0;
+  const matchedCohorts = new Set<string>();
   const weights: Array<[number, number]> = [];
   const positionWeights: Array<[number, number]> = [];
 
@@ -87,6 +89,7 @@ export function compareVisibilitySnapshots(
       ) continue;
 
       comparablePairs++;
+      matchedCohorts.add(JSON.stringify([prompt, engine]));
       weights.push([baselineCount, followupCount]);
       baselineSamples += baselineCount;
       baselineMentions += baselineMentionCount;
@@ -116,10 +119,11 @@ export function compareVisibilitySnapshots(
   const followupConfidence = estimateMentionConfidence(followupMentions, followupSamples);
   const baselineRate = baselineConfidence.mentionRate;
   const followupRate = followupConfidence.mentionRate;
+  const missingExpectedCohort = expectedCohorts.some(({ prompt, engine }) => !matchedCohorts.has(JSON.stringify([prompt, engine])));
   const changedMix = weights.some(([before, after]) => before * followupSamples !== after * baselineSamples);
   const changedPositionMix = unmatchedPositionEvidence || positionWeights.some(([before, after]) => before * followupPositionSamples !== after * baselinePositionSamples);
-  const visibilityChange = changedMix || baselineRate === null || followupRate === null ? null : Math.round((followupRate - baselineRate) * 100);
-  const positionChange = !changedMix && !changedPositionMix && baselinePositionSamples > 0 && followupPositionSamples > 0
+  const visibilityChange = missingExpectedCohort || changedMix || baselineRate === null || followupRate === null ? null : Math.round((followupRate - baselineRate) * 100);
+  const positionChange = !missingExpectedCohort && !changedMix && !changedPositionMix && baselinePositionSamples > 0 && followupPositionSamples > 0
     ? Math.round(((followupPositionSum / followupPositionSamples) - (baselinePositionSum / baselinePositionSamples)) * 10) / 10
     : null;
 
@@ -128,8 +132,9 @@ export function compareVisibilitySnapshots(
     ? 'No matching prompt, engine, model, region, mode, and scorer cohorts have at least 4 successful samples before and after the action.'
     : 'The 95% repeatability intervals overlap, so the observed change is inconclusive. Repeated AI answers are not independent samples of all users.';
 
-  if (changedMix) reason = 'The relative sample counts changed across prompt/engine cohorts. Repeat the same sampling mix before comparing the pooled rates.';
-  if (!changedMix && baselineConfidence.interval && followupConfidence.interval) {
+  if (missingExpectedCohort) reason = 'At least one requested prompt/engine pair lacks compatible before-and-after evidence with 4 successful samples each. The partial result cannot establish an overall change.';
+  else if (changedMix) reason = 'The relative sample counts changed across prompt/engine cohorts. Repeat the same sampling mix before comparing the pooled rates.';
+  if (!missingExpectedCohort && !changedMix && baselineConfidence.interval && followupConfidence.interval) {
     if (followupConfidence.interval.lower > baselineConfidence.interval.upper) {
       verdict = 'improved';
       reason = 'The follow-up mention rate is higher with non-overlapping 95% repeatability intervals. This is observed answer behavior, not proof that the action caused the change.';

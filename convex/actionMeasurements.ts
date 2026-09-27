@@ -70,7 +70,8 @@ export const finish = internalMutation({
       scans.push(...await ctx.db.query('scanMetrics').withIndex('by_workspace_run', q => q.eq('workspaceId', job.workspaceId).eq('measurementRunId', run.publicId)).take(32));
     }
     const impact = snapshotFromObservations(scans.map(s => s.observation), action.targetPrompts);
-    const summary = compareVisibilitySnapshots(job.baseline || {}, impact);
+    const expectedCohorts = runs.flatMap(run => run?.input.platforms.map(engine => ({ prompt: run.input.prompt, engine })) ?? []);
+    const summary = compareVisibilitySnapshots(job.baseline || {}, impact, undefined, expectedCohorts);
     await ctx.db.patch(action._id, { impactSnapshot: impact, impactSummary: summary, status: 'measured', updatedAt: Date.now() });
     await ctx.db.insert('actionEvents', { publicId: crypto.randomUUID(), actionId: action._id, workspaceId: job.workspaceId,
       actorId: job.actorId, eventType: 'measured', fromStatus: action.status, toStatus: 'measured', changes: { impact_summary: summary },

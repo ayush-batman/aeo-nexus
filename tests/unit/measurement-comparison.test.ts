@@ -113,3 +113,35 @@ test('rank change remains available for matching position cohorts', () => {
 
   assert.equal(compareVisibilitySnapshots(baseline, followup).position_change, 1);
 });
+
+test('an action cannot claim improvement from only one of its requested cohorts', () => {
+  const baseline = {
+    ...snapshot('prompt a', 'gemini', 0, 8),
+    ...snapshot('prompt b', 'gemini', 0, 8),
+  };
+  const followup = {
+    ...snapshot('prompt a', 'gemini', 8, 8),
+    ...snapshot('prompt b', 'gemini', 3, 3),
+  };
+  const expected = [
+    { prompt: 'prompt a', engine: 'gemini' },
+    { prompt: 'prompt b', engine: 'gemini' },
+  ];
+
+  const partial = compareVisibilitySnapshots(baseline, followup, undefined, expected);
+  assert.equal(partial.comparable_pairs, 1);
+  assert.equal(partial.verdict, 'inconclusive');
+  assert.equal(partial.visibility_change, null);
+  assert.equal(partial.position_change, null);
+  assert.match(partial.reason, /requested prompt\/engine pair lacks compatible/);
+
+  const missing = compareVisibilitySnapshots(baseline, snapshot('prompt a', 'gemini', 8, 8), undefined, expected);
+  assert.equal(missing.verdict, 'inconclusive');
+  assert.equal(missing.visibility_change, null);
+
+  followup['prompt b'] = snapshot('prompt b', 'gemini', 8, 8)['prompt b'];
+  const complete = compareVisibilitySnapshots(baseline, followup, undefined, expected);
+  assert.equal(complete.comparable_pairs, 2);
+  assert.equal(complete.verdict, 'improved');
+  assert.equal(complete.visibility_change, 100);
+});
