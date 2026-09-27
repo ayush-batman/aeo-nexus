@@ -149,3 +149,18 @@ test('marking all notifications uses bounded server requests and waits for compl
   assert.match(header, /await fetchNotifications\(\)/);
   assert.doesNotMatch(header, /setUnreadCount\(0\)/);
 });
+
+test('install analytics bounds event reads and labels incomplete traffic totals', async () => {
+  const [route, helper, installTab] = await Promise.all([
+    source('app/api/analytics/summary/route.ts'),
+    source('lib/analytics/traffic-summary.ts'),
+    source('components/dashboard/settings/install-tab.tsx'),
+  ]);
+  assert.match(route, /summarizeTrafficEvents\(/);
+  assert.match(route, /numItems: 500/);
+  assert.match(helper, /MAX_TRAFFIC_SUMMARY_PAGES = 10/);
+  assert.match(helper, /partial: true/);
+  assert.match(installTab, /setSummaryPartial\(data\?\.partial === true\)/);
+  assert.match(installTab, /Only the newest \{examinedEvents\.toLocaleString\(\)\} events were checked/);
+  assert.doesNotMatch(route, /while \(cursor\)/);
+});

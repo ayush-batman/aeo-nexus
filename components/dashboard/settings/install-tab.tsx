@@ -26,6 +26,8 @@ export function InstallTab({ workspaceId, workspaceName }: Props) {
     const [verified, setVerified] = useState(false);
     const [aiVisits, setAiVisits] = useState(0);
     const [totalVisits, setTotalVisits] = useState(0);
+    const [summaryPartial, setSummaryPartial] = useState(false);
+    const [examinedEvents, setExaminedEvents] = useState(0);
     const [ingestToken, setIngestToken] = useState("");
     const [tokenError, setTokenError] = useState(false);
 
@@ -59,6 +61,8 @@ export function InstallTab({ workspaceId, workspaceName }: Props) {
                 const ai = data?.aiVisits ?? 0;
                 setTotalVisits(total);
                 setAiVisits(ai);
+                setSummaryPartial(data?.partial === true);
+                setExaminedEvents(typeof data?.examinedEvents === "number" ? data.examinedEvents : 0);
                 setVerified(total > 0);
             } catch {
                 if (!cancelled) setVerified(false);
@@ -140,11 +144,12 @@ export function InstallTab({ workspaceId, workspaceName }: Props) {
                             <CheckCircle className="w-4 h-4 mt-0.5 text-[var(--data-green)] flex-shrink-0" />
                             <div className="text-sm">
                                 <div className="font-medium text-[var(--text-primary)]">
-                                    Installed. {totalVisits} visits captured
-                                    {aiVisits > 0 && <> · {aiVisits} from AI</>}.
+                                    Installed. {summaryPartial && "At least "}{totalVisits} visits captured
+                                    {aiVisits > 0 && <> · {summaryPartial && "at least "}{aiVisits} from AI</>}.
                                 </div>
                                 <div className="text-[var(--text-secondary)] text-xs mt-0.5">
-                                    Attribution is live. See the source breakdown in{" "}
+                                    {summaryPartial && <>Only the newest {examinedEvents.toLocaleString()} events were checked; older events in the last 30 days are not counted. </>}
+                                    See the source breakdown in{" "}
                                     <a href="/dashboard/attribution" className="text-[var(--accent-base)] hover:underline">
                                         Attribution
                                     </a>.
