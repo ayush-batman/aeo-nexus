@@ -1,5 +1,10 @@
 # Aelo Product Rescue — Implementation Progress
 
+## September 27 older-workspace selection — code only
+
+- Dashboard bootstrap previously searched only the newest 100 workspaces, so an authorized older active workspace silently became the newest brand. It now verifies an out-of-window active workspace by indexed public ID and organization, then includes that workspace in the returned picker list. Foreign workspace IDs still fall back without leaking tenant data.
+- The new 101-workspace regression failed before the fix and passed after it. Full gates passed: 258 Node tests, 75 Convex tests, lint, direct lint of the changed Convex file, app and MCP type checks, the 142-page webpack build, and diff hygiene. No backend push, browser verification of this changed function, deployment, or production data change was performed during the no-deploy background run. The picker still lists only the newest 100 plus the selected older workspace; complete pagination remains separate work.
+
 ## September 27 production release check — blocked
 
 - Read-only configuration in the accessible `agrover12344-9741/aeo-nexus` Vercel project's Production environment still points both public Convex URLs at the `woozy-starfish-810` **test** deployment and lacks `AELO_EXPECTED_PRODUCTION_CONVEX_DEPLOYMENT`. The current branch's production guard rejects that configuration. The project's latest Production deployment remains the older September 13 build. This account lists zero owned domains and cannot inspect `aelohq.com`; therefore its Production environment must **not** be described as the verified runtime configuration of the live custom domain. Public DNS sends `aelohq.com` to Vercel, with GoDaddy nameservers, but does not establish which Vercel account or backend serves it. No production deployment, domain, or environment change was made.

@@ -76,7 +76,17 @@ export const bootstrap = tenantQuery({
     const rows = await ctx.db.query('workspaces').withIndex('by_organization_id_and_created_at', (q) =>
       q.eq('organizationId', ctx.tenant.organization._id)).order('desc').take(100);
     if (!rows.length) return null;
-    const active = rows.find((row) => row.publicId === args.activeWorkspacePublicId) ?? rows[0];
+    const activeWorkspacePublicId = args.activeWorkspacePublicId;
+    let active = rows.find((row) => row.publicId === activeWorkspacePublicId);
+    if (!active && activeWorkspacePublicId) {
+      // The recent list is bounded, but an older selected workspace must not
+      // silently become another brand. Verify its organization by indexed ID.
+      const requested = await ctx.db.query('workspaces').withIndex('by_public_id', (q) =>
+        q.eq('publicId', activeWorkspacePublicId)).unique();
+      if (requested?.organizationId === ctx.tenant.organization._id) active = requested;
+    }
+    active ??= rows[0];
+    const visibleRows = rows.some((row) => row._id === active._id) ? rows : [...rows, active];
     const product = await ctx.db.query('products').withIndex('by_workspace_id', (q) =>
       q.eq('workspaceId', active._id)).first();
     return {
@@ -87,7 +97,7 @@ export const bootstrap = tenantQuery({
       hasBrand: Boolean(product),
       plan: ctx.tenant.organization.plan,
       paid: ctx.tenant.organization.plan !== 'free',
-      workspaces: rows.map((row) => ({
+      workspaces: visibleRows.map((row) => ({
         id: row.publicId,
         name: row.name,
         settings: row.settings,

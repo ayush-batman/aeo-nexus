@@ -89,3 +89,29 @@ test('dashboard bootstrap returns only the signed-in organization and honors its
   });
   expect(bootstrap?.workspaces.every((workspace) => workspace.id !== foreignWorkspace)).toBe(true);
 });
+
+test('dashboard bootstrap keeps an authorized active workspace outside the newest 100', async () => {
+  const { t, owner, context } = await fixture();
+  await t.run(async (ctx) => {
+    const original = await ctx.db.query('workspaces').withIndex('by_public_id', (q) =>
+      q.eq('publicId', context.workspaceId)).unique();
+    if (!original) throw new Error('missing_fixture_workspace');
+    for (let index = 0; index < 100; index++) {
+      await ctx.db.insert('workspaces', {
+        publicId: `newer-workspace-${index}`,
+        organizationId: original.organizationId,
+        name: `Newer ${index}`,
+        logoUrl: null,
+        settings: {},
+        createdAt: original.createdAt + index + 1,
+        updatedAt: original.createdAt + index + 1,
+      });
+    }
+  });
+
+  const bootstrap = await owner.query(api.dashboard.bootstrap, {
+    activeWorkspacePublicId: context.workspaceId,
+  });
+  expect(bootstrap?.workspaceId).toBe(context.workspaceId);
+  expect(bootstrap?.workspaces.some((workspace) => workspace.id === context.workspaceId)).toBe(true);
+});
