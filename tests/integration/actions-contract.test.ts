@@ -48,7 +48,14 @@ const [route, backend, snapshots] = await Promise.all([
 test('untracked action measurements show a retryable failure instead of a false result', async () => {
   const page = await readFile(new URL('../../app/(dashboard)/dashboard/interventions/page.tsx', import.meta.url), 'utf8');
   assert.match(page, /result\.status === 'untracked'/);
-  assert.match(page, /No impact claim was made\. Retry the measurement/);
+  assert.match(page, /No new impact claim was made; any dated verdict is from an earlier scan/);
+});
+
+test('Actions guards imported placeholder summaries and dates any shown verdict', async () => {
+  const page = await readFile(new URL('../../app/(dashboard)/dashboard/interventions/page.tsx', import.meta.url), 'utf8');
+  assert.match(page, /parseActionImpactReceipt\(item\.impact_summary\)/);
+  assert.match(page, /Measured \{summary\.measured_at\.slice\(0, 10\)\}/);
+  assert.doesNotMatch(page, /item\.impact_summary as ImpactSummary/);
 });
 
 test('action rows and audit events mutate in one service-role database transaction', async () => {

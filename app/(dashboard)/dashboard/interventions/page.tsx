@@ -8,20 +8,12 @@ import { Header } from "@/components/dashboard/header";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import type { Insight } from "@/lib/insights";
+import { parseActionImpactReceipt, type ActionImpactReceipt } from "@/lib/measurement/action-impact-receipt";
 
 type Status = "planned" | "in_progress" | "completed" | "measured";
 type Priority = "high" | "medium" | "low";
 type Member = { id: string; full_name: string | null; email: string };
 type ActionEvent = { id: string; action_id: string; event_type: string; created_at: string };
-type ImpactSummary = {
-  visibility_change: number | null;
-  position_change: number | null;
-  verdict: "improved" | "no_change" | "regressed" | "inconclusive";
-  measured_at: string;
-  reason?: string;
-  baseline_sample_count?: number;
-  followup_sample_count?: number;
-};
 type TeamAction = {
   id: string;
   title: string;
@@ -35,7 +27,7 @@ type TeamAction = {
   target_engines: string[];
   status: Status;
   action_taken_at: string | null;
-  impact_summary: ImpactSummary | Record<string, never>;
+  impact_summary: unknown;
   created_at: string;
 };
 type Payload = {
@@ -105,7 +97,7 @@ export default function ActionsPage() {
         }
         if (result.status === 'untracked') {
           await load();
-          setError('The follow-up ended without a usable measurement receipt. No impact claim was made. Retry the measurement.');
+          setError('The follow-up ended without a usable receipt. No new impact claim was made; any dated verdict is from an earlier scan. Retry the measurement.');
           return true;
         }
       }
@@ -123,7 +115,7 @@ export default function ActionsPage() {
     total: data?.interventions.length ?? 0,
     open: data?.interventions.filter(item => item.status !== "measured").length ?? 0,
     awaiting: data?.interventions.filter(item => item.status === "completed").length ?? 0,
-    improved: data?.interventions.filter(item => (item.impact_summary as ImpactSummary).verdict === "improved").length ?? 0,
+    improved: data?.interventions.filter(item => parseActionImpactReceipt(item.impact_summary)?.verdict === "improved").length ?? 0,
   }), [data]);
 
   return <>
@@ -179,7 +171,7 @@ export default function ActionsPage() {
 }
 
 function ActionCard({ item, members, events, canEdit, busy, onPatch, onMeasure }: { item: TeamAction; members: Member[]; events: ActionEvent[]; canEdit: boolean; busy: boolean; onPatch: (patch: Record<string, unknown>) => void; onMeasure: () => void }) {
-  const summary = item.impact_summary as ImpactSummary;
+  const summary = parseActionImpactReceipt(item.impact_summary);
   const next = NEXT_STATUS[item.status];
   return <article className="border-b border-[var(--border-default)] py-6">
     <div className="flex items-center justify-between gap-2 text-[10px] uppercase tracking-widest"><span className={priorityColor(item.priority)}>{item.priority}</span><span className="text-[var(--text-tertiary)]">{formatDistanceToNow(new Date(item.created_at), { addSuffix: true })}</span></div>
@@ -209,6 +201,14 @@ function CreateActionForm({ members, currentUserId, busy, onCancel, onSubmit }: 
 }
 
 function Field({ id, label, value, onChange, required, type = "text", placeholder }: { id: string; label: string; value: string; onChange: (value: string) => void; required?: boolean; type?: string; placeholder?: string }) { return <div><label htmlFor={id} className="mb-1.5 block text-xs text-[var(--text-secondary)]">{label}</label><input id={id} type={type} value={value} required={required} placeholder={placeholder} onChange={event => onChange(event.target.value)} className="min-h-11 w-full rounded-md border border-[var(--border-default)] bg-[var(--bg-raised)] px-3 text-sm text-[var(--text-primary)]" /></div>; }
-function Receipt({ summary }: { summary: ImpactSummary }) { const delta = summary.visibility_change === null ? "Not comparable" : summary.visibility_change > 0 ? `+${summary.visibility_change}` : String(summary.visibility_change); return <div className="mt-3 rounded-md border border-[var(--border-subtle)] bg-[var(--bg-raised)] p-3"><div className="flex items-center gap-1.5 text-[10px] uppercase tracking-widest text-[var(--text-tertiary)]"><CheckCircle2 className="h-3 w-3" />Verdict · {summary.verdict.replace('_', ' ')}</div><div className={cn("mt-1 text-2xl tabular-nums", summary.verdict === "improved" ? "text-[var(--accent-base)]" : summary.verdict === "regressed" ? "text-[var(--data-red)]" : "text-[var(--text-primary)]")}>{delta} <span className="text-xs text-[var(--text-tertiary)]">pts</span></div>{summary.reason && <p className="mt-1 text-[11px] text-[var(--text-secondary)]">{summary.reason}</p>}{typeof summary.baseline_sample_count === "number" && <p className="mt-1 text-[10px] text-[var(--text-tertiary)]">n={summary.baseline_sample_count} before · n={summary.followup_sample_count} after</p>}</div>; }
+function Receipt({ summary }: { summary: ActionImpactReceipt }) {
+  const delta = summary.visibility_change === null ? "Not comparable" : summary.visibility_change > 0 ? `+${summary.visibility_change}` : String(summary.visibility_change);
+  return <div className="mt-3 rounded-md border border-[var(--border-subtle)] bg-[var(--bg-raised)] p-3">
+    <div className="flex items-center gap-1.5 text-[10px] uppercase tracking-widest text-[var(--text-tertiary)]"><CheckCircle2 className="h-3 w-3" />Verdict · {summary.verdict.replace('_', ' ')}</div>
+    <div className={cn("mt-1 text-2xl tabular-nums", summary.verdict === "improved" ? "text-[var(--accent-base)]" : summary.verdict === "regressed" ? "text-[var(--data-red)]" : "text-[var(--text-primary)]")}>{delta} <span className="text-xs text-[var(--text-tertiary)]">pts</span></div>
+    <p className="mt-1 text-[11px] text-[var(--text-secondary)]">{summary.reason}</p>
+    <p className="mt-1 text-[10px] text-[var(--text-tertiary)]">Measured {summary.measured_at.slice(0, 10)} · n={summary.baseline_sample_count} before · n={summary.followup_sample_count} after</p>
+  </div>;
+}
 function priorityColor(priority: Priority) { return priority === "high" ? "text-[var(--data-red)]" : priority === "medium" ? "text-[var(--data-amber)]" : "text-[var(--text-tertiary)]"; }
 function BoardSkeleton() { return <div role="status" aria-label="Loading actions" className="space-y-4">{LANES.map(lane => <div key={lane.status} aria-hidden="true" className="h-32 animate-pulse border-y border-[var(--border-subtle)] bg-[var(--bg-surface)]" />)}</div>; }
