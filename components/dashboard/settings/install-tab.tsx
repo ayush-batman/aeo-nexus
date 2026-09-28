@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useSyncExternalStore } from "react";
+import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Copy, CheckCircle, Zap, ExternalLink, AlertCircle, Loader2 } from "lucide-react";
@@ -32,23 +32,35 @@ export function InstallTab({ workspaceId, workspaceName }: Props) {
     const [summaryPartial, setSummaryPartial] = useState(false);
     const [examinedEvents, setExaminedEvents] = useState(0);
     const [ingestToken, setIngestToken] = useState("");
-    const [tokenError, setTokenError] = useState(false);
+    const [tokenStatus, setTokenStatus] = useState<"loading" | "ready" | "error">("loading");
+    const [tokenAttempt, setTokenAttempt] = useState(0);
+    const copyButtonRef = useRef<HTMLButtonElement>(null);
+    const tokenRetryButtonRef = useRef<HTMLButtonElement>(null);
 
     useEffect(() => {
         let cancelled = false;
-        fetch("/api/analytics/install-token", { cache: "no-store" })
-            .then(async (response) => {
+        const controller = new AbortController();
+        (async () => {
+            try {
+                const signal = AbortSignal.any([controller.signal, AbortSignal.timeout(15_000)]);
+                const response = await fetch("/api/analytics/install-token", { cache: "no-store", signal });
                 if (!response.ok) throw new Error();
-                return response.json();
-            })
-            .then((data) => {
-                if (!cancelled && typeof data.ingestToken === "string") setIngestToken(data.ingestToken);
-            })
-            .catch(() => {
-                if (!cancelled) setTokenError(true);
-            });
-        return () => { cancelled = true; };
-    }, []);
+                const data: unknown = await response.json();
+                if (cancelled) return;
+                if (!data || typeof data !== "object" ||
+                    !("ingestToken" in data) || typeof data.ingestToken !== "string" || !data.ingestToken) {
+                    throw new Error("Invalid install token response");
+                }
+                const restoreFocus = document.activeElement === tokenRetryButtonRef.current;
+                setIngestToken(data.ingestToken);
+                setTokenStatus("ready");
+                if (restoreFocus) requestAnimationFrame(() => copyButtonRef.current?.focus());
+            } catch {
+                if (!cancelled) setTokenStatus("error");
+            }
+        })();
+        return () => { cancelled = true; controller.abort(); };
+    }, [tokenAttempt]);
 
     // Only a successful activity read may classify the snippet as detected or
     // not detected. A failed request is not evidence that tracking is absent.
@@ -117,6 +129,7 @@ export function InstallTab({ workspaceId, workspaceName }: Props) {
                                 Paste before <code className="font-mono text-[10px] bg-[var(--bg-raised)] px-1 py-0.5 rounded">&lt;/head&gt;</code>
                             </label>
                             <Button
+                                ref={copyButtonRef}
                                 variant="outline"
                                 size="sm"
                                 onClick={handleCopy}
@@ -136,8 +149,23 @@ export function InstallTab({ workspaceId, workspaceName }: Props) {
                             </Button>
                         </div>
                         <pre className="p-4 rounded-md border border-[var(--border-default)] bg-[var(--bg-raised)] text-[12px] font-mono text-[var(--text-primary)] leading-relaxed overflow-x-auto whitespace-pre-wrap break-all">
-                            {snippet || (tokenError ? "Analytics signing is not configured yet." : "Loading…")}
+                            {snippet || (tokenStatus === "error" ? "Install snippet unavailable." : "Loading…")}
                         </pre>
+                        {(tokenStatus === "error" || (tokenStatus === "loading" && tokenAttempt > 0)) && (
+                            <div role={tokenStatus === "error" ? "alert" : "status"} className="mt-3 text-sm text-[var(--text-secondary)]">
+                                {tokenStatus === "error"
+                                    ? "The snippet could not be loaded right now. Your tracking setup has not been checked."
+                                    : "Retrying the snippet request…"}
+                                <Button ref={tokenRetryButtonRef} variant="outline" size="sm" className="mt-2 min-h-10 block"
+                                    aria-disabled={tokenStatus === "loading"} onClick={() => {
+                                        if (tokenStatus === "loading") return;
+                                        setTokenStatus("loading");
+                                        setTokenAttempt(value => value + 1);
+                                    }}>
+                                    {tokenStatus === "loading" ? "Retrying…" : "Retry snippet"}
+                                </Button>
+                            </div>
+                        )}
                     </div>
 
                     {/* Reality check */}

@@ -65,6 +65,17 @@ test('install verification does not mistake an API failure for missing tracking'
   assert.doesNotMatch(installTab, /catch \{[\s\S]{0,100}setVerified\(false\)/);
 });
 
+test('install snippet failures stay retryable and do not claim signing is misconfigured', async () => {
+  const installTab = await readFile(`${root}/components/dashboard/settings/install-tab.tsx`, 'utf8');
+  assert.match(installTab, /setTokenStatus\("error"\)/);
+  assert.match(installTab, /setTokenAttempt\(value => value \+ 1\)/);
+  assert.match(installTab, /Retry snippet/);
+  assert.match(installTab, /Install snippet unavailable\./);
+  assert.match(installTab, /document\.activeElement === tokenRetryButtonRef\.current/);
+  assert.match(installTab, /copyButtonRef\.current\?\.focus\(\)/);
+  assert.doesNotMatch(installTab, /Analytics signing is not configured yet\./);
+});
+
 test('core controls meet target sizes and respect reduced motion', async () => {
   const [button, dialog, styles] = await Promise.all([
     readFile(`${root}/components/ui/button.tsx`, 'utf8'),
