@@ -1,5 +1,11 @@
 # Aelo product-rescue deployment and rollback
 
+## September 28 migration-package preflight
+
+The restored Supabase source reports Healthy. Its Free-plan backup screen says scheduled project backups are unavailable; the dashboard lists no last backup. The current read-only source comparison below matches the saved 337-row application export, and `import-convex.ts --dry-run` verifies all 27 saved tables and records without contacting Convex. A read-only count found 16 Supabase Auth identities versus 15 application users; comparing normalized emails in memory found all 15 application users in Auth and one Auth identity without an application profile. The source Storage API lists zero buckets. No email addresses or record contents were printed. The importer does not transfer Supabase passwords or sessions, so account claiming still needs a signed-in staging check. This is an application-data package, **not** a full database or Auth backup.
+
+The current branch's local gates pass: 271 Node tests, 78 Convex tests, lint, app and MCP type checks, and a 142-page webpack production build. The build used local configuration; it does not prove that the live Vercel Production environment can build or that signed-in journeys pass there. No production source or destination write, deployment, scan, email, or billing action occurred in this preflight.
+
 ## September 28 evening — live-backend lineage check
 
 The owner created a new deployment-scoped Convex key for `laudable-orca-31` and saved it in the live `ayush-batmans-projects/aeo-nexus` Vercel project as a **Production-only secret** named `CONVEX_SERVER_KEY`. The Vercel settings page confirms the variable's presence and scope, not the key's value or a successful authenticated request. Vercel says a new deployment is needed before this setting takes effect; none was started. `AELO_EXPECTED_PRODUCTION_CONVEX_DEPLOYMENT` remains unset.
