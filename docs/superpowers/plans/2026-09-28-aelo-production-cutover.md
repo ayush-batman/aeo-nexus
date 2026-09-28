@@ -52,7 +52,7 @@ npx convex deployment create ayush-grover:aelo-production:prod --type prod --def
 ```
 
 - [x] **Step 2:** Verify the new deployment's URL, team, type, and empty tables in the Convex dashboard. Do not select it as the local development deployment or overwrite `.env.local`. Verified Production `jovial-scorpion-617` at `https://jovial-scorpion-617.convex.cloud`, with no tables.
-- [ ] **Step 3:** Create a deployment-scoped key using `npx convex deployment token create` with `--deployment ayush-grover:aelo-production:prod --save-env` and a private ignored path; never print its value.
+- [x] **Step 3:** Create a short-lived, deployment-scoped migration key for `jovial-scorpion-617` in the verified dashboard. It has deploy, data read/write, internal-function, backup-view, and backup-import rights only. The initial key lacked backup rights and was revoked after a replacement was created; neither key value was committed. Convex's CLI import requires both `deployment:backups:view` and `deployment:backups:import` in addition to data permissions.
 
 ### Task 3: Push schema, import, and prove parity
 
@@ -61,9 +61,9 @@ npx convex deployment create ayush-grover:aelo-production:prod --type prod --def
 **Interfaces:** Consumes Task 1's verified export and Task 2's deployment key; produces all-table source/staging/destination parity.
 
 - [x] **Step 1:** Run `npm test` (274 node + 78 Convex tests), `npm run lint`, `npm run typecheck`, `npm run typecheck:mcp`, and `npm run build -- --webpack`; all passed on this package.
-- [ ] **Step 1A:** Deploy the checked Convex functions only to the newly verified destination with the scoped key; do not select the old `aelo-test` deployment by default.
-- [ ] **Step 2:** Verify the destination is still empty. Run `scripts/convex/import-convex.ts` with `CONVEX_IMPORT_URL`, `CONVEX_IMPORT_ADMIN_KEY`, `--input`, and `--confirm-target` bound to the exact new origin. Stop immediately on any missing parent, changed staged payload, or target mismatch.
-- [ ] **Step 3:** Run `scripts/convex/check-parity.ts` against the same export and exact origin **before** the live-Aelo merge. Require every table, membership, citation, quota, billing, and job-state comparison to pass. Once the 19-row merge is applied, this legacy-only checker will correctly see extra rows; use the separate union snapshot comparison instead of misreporting a parity failure.
+- [x] **Step 1A:** Deployed the checked Convex functions and schema only to verified `ayush-grover/aelo-production` Production `jovial-scorpion-617`; deployment/type-check and schema validation passed. The old `aelo-test` deployment was not targeted.
+- [x] **Step 2:** Verified the destination was empty, then imported the stable 337-record/27-table export with `scripts/convex/import-convex.ts` and exact-target confirmation. The importer reported verified counts.
+- [x] **Step 3:** Independently ran `scripts/convex/check-parity.ts` against that export and exact origin **before** the live-Aelo merge; all 27 tables passed.
 
 ### Task 3A: Preserve the currently live Aelo workspace
 
@@ -73,8 +73,8 @@ npx convex deployment create ayush-grover:aelo-production:prod --type prod --def
 
 - [x] **Step 1:** Take and verify a fresh backup of `laudable-orca-31`, including file storage. Inventory all app and Better Auth table counts without printing customer records. The existing owner email appears in the Supabase export under a different public ID, so reject any merge that creates a second `users.normalizedEmail` row. The backup is in Convex's 7-day recovery store and privately downloaded with SHA-256 prefix `f32c104c8d2470e5`.
 - [x] **Step 2:** Add synthetic regression tests for ID remapping, single-owner identity, raw scan/citation preservation, quota reservation, active-job rejection, replay collisions, and parity tampering. Focused and full tests, lint, both type checks, and build pass.
-- [ ] **Step 3:** Export a target-before snapshot. Use the guarded package builder to prepare JSONL files for the nine application tables above, preserving `_id`, `_creationTime`, raw evidence, and all references except the deliberate organization consolidation. Apply each with `npx convex import --table <table> --append <private-file> --deployment ayush-grover:aelo-production:prod`; never use `--replace`. Official Convex import docs confirm single-table append and ID preservation. A failed partial append must be recovered from a target-before backup or completed only after exact per-ID parity checks, not blindly rerun.
-- [ ] **Step 4:** Export the destination after the merge and run `merge-live-aelo.ts --verify-after` against the prepared package and before/after snapshots. Require exact document parity for all 19 rows and unchanged imported owner/organization/membership. Verify the owner can select both legacy and Aelo workspaces after a verified non-production sign-in.
+- [x] **Step 3:** Took and privately downloaded a file-inclusive target-before snapshot. The guarded package builder prepared 19 historical documents across nine tables with preserved `_id`, `_creationTime`, raw evidence, and references except the deliberate organization consolidation. Applied all nine JSONL files with deployment-key-bound `npx convex import --table <table> --append`; none used `--replace`. One initial import request failed at permission checking before writing any row; the independent legacy parity check still passed, and a corrected key was used.
+- [x] **Step 4 (data parity):** Took and privately downloaded a file-inclusive target-after snapshot. `merge-live-aelo.ts --verify-after` passed exact document parity for all 19 rows and unchanged imported owner/organization/membership. Owner sign-in and workspace selection remain unverified; they are a Task 4 release gate.
 
 The package builder's offline preflight ran against the actual downloaded old-live backup and found all 22 app records, terminal historical jobs, zero stored files, zero pending component work, and a valid 19-record relationship graph. Scans and scan metrics refer to a measurement run by its **public** ID; samples refer to the Convex document ID. The builder and synthetic tests enforce that distinction.
 
@@ -98,6 +98,8 @@ The package builder's offline preflight ran against the actual downloaded old-li
 - [ ] **Step 1:** Quiesce or account for writes on both old sources, then repeat each source's count/hash comparison against the exported snapshots. If either source changed, stop the cutover. Refresh the snapshot and restart in a fresh isolated destination, or build and verify an explicitly approved delta path; the current guarded importer does **not** support an automatic post-completion delta.
 - [ ] **Step 2:** Point the live Vercel project at the verified deployment. Confirm the custom domain serves the intended commit and backend, then run bounded sign-in, read-only dashboard/API, and error-log checks.
 - [ ] **Step 3:** Keep Supabase and the prior Vercel deployment intact. If a gate fails, restore only the matching prior app/backend pair; reconcile writes before any data-owner reversal. Record exact deployment IDs, results, and rollback location without secrets.
+
+The read-only Supabase REST export was repeated after the 337-row import and 19-row merge. Its source fingerprint and all 27 table counts, missing flags, and SHA-256 hashes still match the import source. This does **not** yet establish that the separate, currently live `laudable-orca-31` source has stayed unchanged; refresh or account for that source immediately before cutover.
 
 ## Self-review
 
