@@ -14,6 +14,7 @@ export async function summarizeTrafficEvents<T extends TrafficEvent>(
   let aiVisits = 0;
   let examinedEvents = 0;
   let cursor: string | null = null;
+  const seenCursors = new Set<string>();
 
   for (let pageNumber = 0; pageNumber < MAX_TRAFFIC_SUMMARY_PAGES; pageNumber++) {
     const result = await fetchPage(cursor);
@@ -28,6 +29,8 @@ export async function summarizeTrafficEvents<T extends TrafficEvent>(
     }
     if (result.isDone) return { totalVisits, aiVisits, sources, events, examinedEvents, partial: false };
     if (!result.continueCursor) throw new Error('missing_traffic_cursor');
+    if (seenCursors.has(result.continueCursor)) throw new Error('repeated_traffic_cursor');
+    seenCursors.add(result.continueCursor);
     cursor = result.continueCursor;
   }
 

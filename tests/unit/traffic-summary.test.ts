@@ -42,3 +42,13 @@ test('traffic summary fails rather than repeating a page without a cursor', asyn
     page: [{ event_type: 'pageview', ai_source: null }], isDone: false, continueCursor: '',
   })), /missing_traffic_cursor/);
 });
+
+test('traffic summary rejects a cursor loop instead of double-counting events', async () => {
+  let calls = 0;
+  await assert.rejects(() => summarizeTrafficEvents(async () => {
+    calls++;
+    return { page: [{ event_type: 'pageview', ai_source: 'chatgpt' }], isDone: false,
+      continueCursor: calls === 1 ? 'page-one' : calls === 2 ? 'page-two' : 'page-one' };
+  }), /repeated_traffic_cursor/);
+  assert.equal(calls, 3);
+});
