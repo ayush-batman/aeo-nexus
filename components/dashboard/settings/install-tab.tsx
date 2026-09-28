@@ -180,12 +180,6 @@ export function InstallTab({ workspaceId, workspaceName }: Props) {
                             <div className="text-sm">
                                 <div className="font-medium text-[var(--text-primary)]">Site activity could not be checked.</div>
                                 <p className="mt-0.5 text-xs text-[var(--text-secondary)]">We cannot tell whether tracking is installed right now.</p>
-                                <Button variant="outline" size="sm" className="mt-3 min-h-10" onClick={() => {
-                                    setVerificationStatus("checking");
-                                    setVerificationAttempt(value => value + 1);
-                                }}>
-                                    Retry check
-                                </Button>
                             </div>
                         </div>
                     ) : verificationStatus === "inconclusive" ? (
@@ -226,6 +220,14 @@ export function InstallTab({ workspaceId, workspaceName }: Props) {
                             </div>
                         </div>
                     )}
+                    <Button variant="outline" size="sm" aria-disabled={verificationStatus === "checking"}
+                        onClick={() => {
+                            if (verificationStatus === "checking") return;
+                            setVerificationStatus("checking");
+                            setVerificationAttempt(value => value + 1);
+                        }}>
+                        {verificationStatus === "checking" ? "Checking…" : "Check again"}
+                    </Button>
                 </CardContent>
             </Card>
 

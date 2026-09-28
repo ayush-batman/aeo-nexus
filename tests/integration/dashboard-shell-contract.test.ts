@@ -59,7 +59,8 @@ test('install verification does not mistake an API failure for missing tracking'
   assert.match(installTab, /if \(!res\.ok\) throw new Error\(\)/);
   assert.match(installTab, /setVerificationStatus\("error"\)/);
   assert.match(installTab, /Site activity could not be checked\./);
-  assert.match(installTab, /Retry check/);
+  assert.match(installTab, /Check again/);
+  assert.match(installTab, /aria-disabled=\{verificationStatus === "checking"\}/);
   assert.match(installTab, /classifyActivitySummary\(data\)/);
   assert.match(installTab, /controller\.abort\(\)/);
   assert.doesNotMatch(installTab, /catch \{[\s\S]{0,100}setVerified\(false\)/);
