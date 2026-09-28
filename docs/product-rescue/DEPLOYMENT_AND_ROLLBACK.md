@@ -1,5 +1,11 @@
 # Aelo product-rescue deployment and rollback
 
+## September 28 evening — live-backend lineage check
+
+The owner created a new deployment-scoped Convex key for `laudable-orca-31` and saved it in the live `ayush-batmans-projects/aeo-nexus` Vercel project as a **Production-only secret** named `CONVEX_SERVER_KEY`. The Vercel settings page confirms the variable's presence and scope, not the key's value or a successful authenticated request. Vercel says a new deployment is needed before this setting takes effect; none was started. `AELO_EXPECTED_PRODUCTION_CONVEX_DEPLOYMENT` remains unset.
+
+The live Vercel project's Ready Production deployment, created September 26 via `vercel deploy`, serves `www.aelohq.com`. Its Production public Convex URLs name `laudable-orca-31`, so this deployment is the currently configured Convex destination for the live project. That does **not** establish that it contains the intended customer data or that the old Supabase source has been cut over. The Convex Production deployment has Aelo tables, but its `importRuns` table is empty; this only rules out a recorded import through that table, not every possible import path. Convex deployment history is unavailable on the current Free plan. No customer records were opened or used for testing. The owner is unsure whether this deployment was intended as the final customer-data home, so production promotion remains blocked pending an independent source-to-target ownership and parity audit.
+
 ## September 28 preview-isolation repair and production backup
 
 In the live `ayush-batmans-projects/aeo-nexus` Vercel project, the `laudable-orca-31` cloud and site URL variables are now scoped to **Production only**. New **Preview**-scoped copies name the known `woozy-starfish-810` test deployment. Vercel Authentication with Standard Protection is enabled for existing and future Preview/deployment URLs; an unauthenticated request to the rescue-branch Preview now redirects to Vercel sign-in (HTTP 302), while `www.aelohq.com` still returns HTTP 200. Existing Preview builds retain their old bundled environment until rebuilt, so team members must not use old Previews for synthetic signup or scans even though public access is blocked. No deployment was triggered by these setting changes.
