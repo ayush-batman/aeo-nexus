@@ -6,6 +6,8 @@ Read-only inspection of `ayush-batmans-projects/aeo-nexus` confirms that `www.ae
 
 The destination project's Vercel settings show exactly three project variables, all scoped to every environment: `NEXT_PUBLIC_APP_URL`, `NEXT_PUBLIC_CONVEX_URL`, and `NEXT_PUBLIC_CONVEX_SITE_URL`. No shared variables are linked. The public Convex cloud and site URLs both name `laudable-orca-31`, not the known test deployment. The required `AELO_EXPECTED_PRODUCTION_CONVEX_DEPLOYMENT` and `CONVEX_SERVER_KEY` are absent. Therefore the current branch's production build guard would reject a fresh Production build. This does **not** prove that the existing two-day-old deployment or its backend journeys work; it predates the guard. No secret values, production data, billing, domains, or settings were changed during this audit.
 
+Because those public Convex URLs are scoped to **all** Vercel environments, destination-project Previews also point at `laudable-orca-31`. The current rescue-branch Preview is publicly reachable (HTTP 200); do not use it for signup, scans, or synthetic test data until Preview is isolated from the intended production backend. The separately protected `aelo-rescue-preview.vercel.app` alias still redirects to Vercel sign-in, but it is not a substitute for isolating the destination project's automatic Previews.
+
 Before any production promotion, independently verify that `laudable-orca-31` is the intended data owner, arrange a recoverable backup, bind a matching server key, complete the integration and signed-in journey checks below, and only then configure the expected-production sentinel and request a new release. Do not copy test credentials or promote the Preview to bypass the guard.
 
 ## September 27 production release decision
