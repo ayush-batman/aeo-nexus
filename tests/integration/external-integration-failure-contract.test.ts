@@ -60,6 +60,8 @@ test('missing provider configuration is represented as an unavailable state, nev
   assert.match(contactRoute, /RateLimitExceededError/);
   assert.match(contactRoute, /Contact delivery is not configured/);
   assert.match(contactRoute, /status: 503/);
+  assert.match(contactRoute, /Aelo <hello@aelohq\.com>/);
+  assert.doesNotMatch(contactRoute, /aeonexus\.com/);
   assert.doesNotMatch(contactRoute, /console\.(?:log|warn|error)/);
   assert.match(contactPage, /setState\("error"\)/);
   assert.doesNotMatch(contactPage, /pretend it succeeded|would send/);

@@ -14,7 +14,7 @@ interface Body {
 }
 
 const TO_EMAIL   = process.env.CONTACT_TO_EMAIL   || "hello@aelohq.com";
-const FROM_EMAIL = process.env.CONTACT_FROM_EMAIL || "Aelo <hello@aeonexus.com>";
+const FROM_EMAIL = process.env.CONTACT_FROM_EMAIL || "Aelo <hello@aelohq.com>";
 
 // Basic RFC 5322-adjacent shape check. Not exhaustive, Resend rejects
 // obvious garbage server-side; we just avoid submitting nonsense.
@@ -83,14 +83,14 @@ export async function POST(req: NextRequest) {
         `New contact submission from ${payload.name}`,
         ``,
         `Email:     ${payload.email}`,
-        `Company:   ${payload.company ?? ", "}`,
-        `Role:      ${payload.role ?? ", "}`,
+        `Company:   ${payload.company ?? "(not provided)"}`,
+        `Role:      ${payload.role ?? "(not provided)"}`,
         `Interest:  ${interestLabel}`,
         ``,
         `Message:`,
         payload.message ?? "(no message)",
         ``,
-        `, submitted ${new Date().toISOString()}`,
+        `Submitted: ${new Date().toISOString()}`,
     ].join("\n");
 
     try {
