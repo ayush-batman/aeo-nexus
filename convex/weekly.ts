@@ -8,6 +8,9 @@ import { weekStart } from '../lib/analytics/sentiment-model';
 const kind=v.union(v.literal('weekly_digest'),v.literal('sentiment_drift'));
 const pool=new Workpool(components.measurementWorkpool,{maxParallelism:4,retryActionsByDefault:false});
 export const dispatch=internalMutation({args:{kind,cursor:v.optional(v.string()),asOf:v.optional(v.number())},returns:v.number(),handler:async(ctx,args):Promise<number>=>{
+  // The migration target has imported workspaces before it owns live traffic.
+  // Do not prepare customer reports there until cutover explicitly enables them.
+  if(process.env.AELO_WEEKLY_JOBS_ENABLED!=='true')return 0;
   const asOf=args.asOf??weekStart(new Date()).getTime();
   const page=await ctx.db.query('workspaces').paginate({numItems:20,cursor:args.cursor??null});
   let count=0;
