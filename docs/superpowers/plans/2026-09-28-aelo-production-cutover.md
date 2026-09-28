@@ -4,7 +4,7 @@
 
 **Goal:** Move Aelo's verified legacy application data into a clean Convex production deployment and release the matching app without losing evidence, tenant boundaries, or rollback options.
 
-**Architecture:** Keep the old Supabase project and currently live `aelo-test` Convex deployment untouched as rollback sources. Create a separate empty Convex project, verify a stable 337-row Supabase export, and import through the guarded runner. Then merge the current live Aelo workspace and its evidence into the imported owner's existing organization (the app currently selects one organization per session), prove the union of both sources, and only then bind and verify Vercel before assigning live traffic. The redundant old Aelo user, organization, membership, and finished component runtime state remain in the hash-verified backup rather than being replayed.
+**Architecture:** Keep the old Supabase project and currently live `aelo-test` Convex deployment untouched as rollback sources. Create a separate empty Convex project, verify a stable 337-row Supabase export, and import through the guarded runner. Then merge the current live Aelo workspace and its evidence into the imported owner's existing organization (the app currently selects one organization per session), prove the union of both sources, and only then bind and verify Vercel before assigning live traffic. The redundant old Aelo user, organization, membership, and nonportable component runtime state remain in the hash-verified backup rather than being replayed.
 
 **Tech Stack:** Supabase REST export, Convex CLI and internal import functions, Next.js, Vercel CLI/dashboard.
 
@@ -17,6 +17,7 @@
 - Preserve the Supabase source and existing `laudable-orca-31` live deployment until verified cutover and rollback checks finish.
 - Do not enable scheduled workers or billing webhooks until their ownership and replay state are reconciled.
 - Stop before changing live traffic if source/target parity, production configuration, auth, or smoke checks fail.
+- The owner will temporarily have two preserved brands in one free-plan organization. Treat this as a grandfathered migration exception, not a new free-plan promise or a reason to erase either populated brand.
 
 ---
 
@@ -62,7 +63,7 @@ npx convex deployment create ayush-grover:aelo-production:prod --type prod --def
 - [x] **Step 1:** Run `npm test` (274 node + 78 Convex tests), `npm run lint`, `npm run typecheck`, `npm run typecheck:mcp`, and `npm run build -- --webpack`; all passed on this package.
 - [ ] **Step 1A:** Deploy the checked Convex functions only to the newly verified destination with the scoped key; do not select the old `aelo-test` deployment by default.
 - [ ] **Step 2:** Verify the destination is still empty. Run `scripts/convex/import-convex.ts` with `CONVEX_IMPORT_URL`, `CONVEX_IMPORT_ADMIN_KEY`, `--input`, and `--confirm-target` bound to the exact new origin. Stop immediately on any missing parent, changed staged payload, or target mismatch.
-- [ ] **Step 3:** Run `scripts/convex/check-parity.ts` against the same export and exact origin. Require every table, membership, citation, quota, billing, and job-state comparison to pass. Recheck the source counts/hashes before traffic changes.
+- [ ] **Step 3:** Run `scripts/convex/check-parity.ts` against the same export and exact origin **before** the live-Aelo merge. Require every table, membership, citation, quota, billing, and job-state comparison to pass. Once the 19-row merge is applied, this legacy-only checker will correctly see extra rows; use the separate union snapshot comparison instead of misreporting a parity failure.
 
 ### Task 3A: Preserve the currently live Aelo workspace
 
@@ -94,7 +95,7 @@ The package builder's offline preflight ran against the actual downloaded old-li
 
 **Interfaces:** Consumes Tasks 1–4; produces a verified live release with an unchanged rollback source.
 
-- [ ] **Step 1:** Pause or reconcile old writers, schedules, and webhooks; repeat the source comparison. If the source changed, export/import the delta and repeat full parity before proceeding.
+- [ ] **Step 1:** Quiesce or account for writes on both old sources, then repeat each source's count/hash comparison against the exported snapshots. If either source changed, stop the cutover. Refresh the snapshot and restart in a fresh isolated destination, or build and verify an explicitly approved delta path; the current guarded importer does **not** support an automatic post-completion delta.
 - [ ] **Step 2:** Point the live Vercel project at the verified deployment. Confirm the custom domain serves the intended commit and backend, then run bounded sign-in, read-only dashboard/API, and error-log checks.
 - [ ] **Step 3:** Keep Supabase and the prior Vercel deployment intact. If a gate fails, restore only the matching prior app/backend pair; reconcile writes before any data-owner reversal. Record exact deployment IDs, results, and rollback location without secrets.
 
