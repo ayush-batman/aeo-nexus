@@ -1,5 +1,11 @@
 # Aelo product-rescue deployment and rollback
 
+## September 28 preview-isolation repair and production backup
+
+In the live `ayush-batmans-projects/aeo-nexus` Vercel project, the `laudable-orca-31` cloud and site URL variables are now scoped to **Production only**. New **Preview**-scoped copies name the known `woozy-starfish-810` test deployment. Vercel Authentication with Standard Protection is enabled for existing and future Preview/deployment URLs; an unauthenticated request to the rescue-branch Preview now redirects to Vercel sign-in (HTTP 302), while `www.aelohq.com` still returns HTTP 200. Existing Preview builds retain their old bundled environment until rebuilt, so team members must not use old Previews for synthetic signup or scans even though public access is blocked. No deployment was triggered by these setting changes.
+
+Convex identifies `laudable-orca-31` as the `aelo-test` project's **Production** deployment, with cloud and site addresses matching the Vercel Production values. An immediate backup including file storage completed on September 28 at 10:21 Asia/Kolkata; its dashboard entry says it expires in seven days. This is a recoverable point-in-time snapshot, not proof that this deployment owns all intended customer data or that the app journeys work. The current branch's Production build remains blocked because Vercel still lacks `CONVEX_SERVER_KEY` and `AELO_EXPECTED_PRODUCTION_CONVEX_DEPLOYMENT`. The existing `aelo-prod-server` deploy key is listed in Convex, but its value was not revealed or transferred. Do not add a key from the test deployment or set the production sentinel before verifying data ownership and the matching credential. No production data was opened for testing, no billing action or database migration was run, and the live release was not changed.
+
 ## September 28 destination-account release audit
 
 Read-only inspection of `ayush-batmans-projects/aeo-nexus` confirms that `www.aelohq.com` serves a Ready Production deployment created on September 26. It is **not** the current rescue branch: commit `88aaa29` is a separate Ready Preview on `codex/product-rescue`. This destination project is distinct from the `agrover12344-9741/aeo-nexus` project described in the September 27 notes below; those notes must not be used as the live domain's current configuration.
