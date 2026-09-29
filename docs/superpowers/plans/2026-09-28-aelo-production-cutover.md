@@ -129,7 +129,7 @@ The read-only Supabase REST export was repeated after the 337-row import and 19-
 
 The new Convex Production deployment has `SITE_URL`, `AUTH_TRUSTED_ORIGINS`, and the six approved inherited auth/AI settings set. Their presence is verified, but OAuth callbacks, provider liveness, and Resend sending configuration are not. A fresh target backup was saved before the historical merge and another after it; neither is a substitute for a last-minute source freshness check.
 
-After the Better Auth identity import, the downloaded target-after-merge backup plus the private hash-verified identity package are the recoverable inputs; a new post-identity Convex backup has not been taken. A read-only old-live dashboard check showed one workspace and four scans, matching the earlier backup counts, but the full source document hash comparison is still outstanding. Do not infer source parity from those two counts alone.
+After the Better Auth identity import, a new file-inclusive target backup completed on 2026-09-29 at 10:49:31 IST. Its verified ZIP is stored privately in the ignored migration directory as `destination-post-auth.zip` (SHA-256 prefix `de7a9996449674d0`); Convex retains the snapshot for seven days. With explicit owner approval, the older 2026-09-28 22:22:42 target snapshot was removed from Convex to free a Free-plan slot, after its local ZIP had passed archive verification; the newer 22:32:08 snapshot remains in Convex. A read-only old-live dashboard check showed one workspace and four scans, matching the earlier backup counts, but the full source document hash comparison is still outstanding. Do not infer source parity from those two counts alone.
 
 ## Self-review
 

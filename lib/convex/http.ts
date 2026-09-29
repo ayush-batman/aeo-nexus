@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 
 export function convexRouteError(error: unknown): NextResponse {
   const message = error instanceof Error ? error.message : '';
+  if (/payment_unconfigured/.test(message)) return NextResponse.json({ error: 'Checkout is temporarily unavailable. No charge was made.' }, { status: 503 });
   if (/rate_limit_exceeded|scan_quota_exceeded/.test(message)) return NextResponse.json({ error: 'Scan limit reached. Please try later or upgrade your plan.' }, { status: 429 });
   if (/request_id_conflict/.test(message)) return NextResponse.json({ error: 'This request identifier was already used for a different measurement.' }, { status: 409 });
   if (/Unauthenticated|verified_email_required|profile_not_provisioned|membership_not_found|invalid_ingest_token/.test(message)) {
