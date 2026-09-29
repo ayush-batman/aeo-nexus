@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { waitForPacket } from '@/lib/client/wait-for-packet';
+import { promptNamesBrand, suggestedBuyerPrompts } from '@/lib/measurement/buyer-prompts';
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -53,16 +54,6 @@ const steps = [
     { id: 4, title: "Decision Packet" },
     { id: 5, title: "Complete" },
 ];
-
-function suggestedPrompts(brand: string, industry: string, audience: string): string[] {
-    const category = industry ? industry.replaceAll('_', ' ') : 'software';
-    const buyer = audience.trim() || 'growing teams';
-    return [
-        `What are the best ${category} tools for ${buyer}?`,
-        `${brand} vs the leading alternatives for ${buyer}`,
-        `Which ${category} platform should ${buyer} choose and why?`,
-    ];
-}
 
 export default function OnboardingPage() {
     const router = useRouter();
@@ -182,7 +173,7 @@ export default function OnboardingPage() {
                 throw new Error(data?.error || 'Failed to save brand');
             }
 
-            if (prompts.length < 3) setPrompts(suggestedPrompts(brandName, industry, targetAudience));
+            if (prompts.length < 3) setPrompts(suggestedBuyerPrompts(industry, targetAudience));
             setCurrentStep(3);
         } catch (error) {
             console.error('Error saving brand:', error);
@@ -607,6 +598,10 @@ function DecisionPacketView({ packet, onContinue }: { packet: DecisionPacket; on
                                     <p className="mt-1 text-xs text-[var(--text-secondary)]">
                                         n={engine.successfulSamples} successful · {engine.failedSamples} failed · {engine.confidence.level} confidence
                                     </p>
+                                    <p className="mt-1 text-xs text-[var(--text-tertiary)]">Mention rate in successful answers; not a recommendation rate.</p>
+                                    {promptNamesBrand(measurement.prompt, packet.brandName) && (
+                                        <p className="mt-1 text-xs text-[var(--data-amber)]">This question names your brand, so mentions may be prompted rather than discovered.</p>
+                                    )}
                                     {engine.citations.filter(citation => citation.provenance === "provider_citation").slice(0, 2).map(citation => (
                                         <a
                                             key={citation.url}
