@@ -47,8 +47,12 @@ test('canonical run distinguishes partial, all-failed, and untracked states', as
     execute: async () => ({ results: [result('gemini', true, 's1')], errors: [{ platform: 'claude', error: 'offline' }] }),
   });
   assert.equal(partial.status, 'partial');
+  assert.equal(partial.visibilityScore, 100, 'the score reflects only the one observed answer, not the failed engine');
   assert.equal(partial.failures.length, 1);
-  assert.equal(partial.engines.find((engine) => engine.engine === 'claude')?.successfulSamples, 0);
+  const failedEngine = partial.engines.find((engine) => engine.engine === 'claude');
+  assert.equal(failedEngine?.successfulSamples, 0);
+  assert.equal(failedEngine?.mentionRate, null, 'failed evidence must not become a zero mention rate');
+  assert.equal(failedEngine?.confidence.sampleCount, 0);
 
   const allFailed = await runVisibilityMeasurement({
     prompt: 'best tools', brandName: 'Aelo', platforms: ['claude'], samples: 1,
