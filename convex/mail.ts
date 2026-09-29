@@ -57,6 +57,10 @@ export const firstResultsContext=internalQuery({
     if(!packet||!packet.createdBy||(packet.status!=='complete'&&packet.status!=='partial')||!packet.measurementRunIds?.length)return null;
     const runs=await Promise.all(packet.measurementRunIds.map(publicId=>ctx.db.query('measurementRuns').withIndex('by_public_id',q=>q.eq('publicId',publicId)).unique()));
     if(runs.some(run=>!run?.result||run.workspaceId!==packet.workspaceId||!['complete','partial','all_failed'].includes(run.status)||run.result.persistence.status==='failed'))return null;
+    // A partial packet can include only failed runs after recovery or
+    // import. Never announce results unless at least one real answer was saved.
+    if(!runs.some(run=>(run?.status==='complete'||run?.status==='partial')&&
+      run.result?.persistence.status==='stored'&&run.result.samples.some(sample=>sample.status==='succeeded')))return null;
     const workspace=await ctx.db.get(packet.workspaceId),user=await ctx.db.get(packet.createdBy);
     if(!workspace||!user?.emailVerified)return null;
     const member=await ctx.db.query('memberships').withIndex('by_organization_id_and_user_id',q=>q.eq('organizationId',workspace.organizationId).eq('userId',user._id)).unique();

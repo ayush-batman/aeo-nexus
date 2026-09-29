@@ -111,6 +111,25 @@ test('first-results mail labels partial evidence and is not muted by alert prefe
   await t.action(internal.mailActions.firstResults, { packetId: failedPacketId });
   expect(await t.run(ctx => ctx.db.query('emailDeliveries').take(10))).toHaveLength(1);
 });
+test('a partial packet with no successful answers does not promise first results', async () => {
+  vi.stubEnv('SITE_URL', 'https://preview.example.test');
+  const { t, context } = await fixture();
+  const input = { prompt: 'Which product?', brandName: 'Aelo', platforms: ['gemini' as const], samples: 4 };
+  const result = await runVisibilityMeasurement(input, { runId: 'synthetic-empty-results',
+    execute: async () => ({ results: [], errors: [{ platform: 'gemini', error: 'synthetic_failure' }] }) });
+  const packetId = await t.run(async ctx => {
+    const workspace = await ctx.db.query('workspaces').withIndex('by_public_id', q => q.eq('publicId', context.workspaceId)).unique();
+    const user = await ctx.db.query('users').first();
+    await ctx.db.insert('measurementRuns', { publicId: result.runId, workspaceId: workspace!._id,
+      organizationId: workspace!.organizationId, requestId: 'test-empty-results', input, status: 'all_failed', result,
+      workflowId: null, createdAt: Date.now(), updatedAt: Date.now() });
+    return ctx.db.insert('decisionPackets', { publicId: crypto.randomUUID(), workspaceId: workspace!._id,
+      contractVersion: 'test', status: 'partial', prompts: ['Buyer question'], packet: {},
+      measurementRunIds: [result.runId], createdBy: user!._id, createdAt: Date.now() });
+  });
+  await t.action(internal.mailActions.firstResults, { packetId });
+  expect(await t.run(ctx => ctx.db.query('emailDeliveries').take(10))).toHaveLength(0);
+});
 test('missing site origin fails safely before lifecycle mail is queued', async () => {
   vi.stubEnv('SITE_URL', '');
   const { t, context } = await fixture();
