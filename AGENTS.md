@@ -21,7 +21,7 @@ The measurement pipeline is the product’s trust boundary. Do not replace faile
 - Unit tests: `npm run test:unit`
 - Integration tests: `npm run test:integration`
 - All tests: `npm test`
-- End-to-end tests: not configured yet; use an authorized non-production account for manual browser verification until a `test:e2e` script exists
+- End-to-end tests: `npm run test:e2e` runs Playwright checks on the public marketing routes at desktop and mobile widths (page errors, failed requests, 4xx/5xx responses, overflow, skip link, reduced motion). It uses `AELO_E2E_BASE_URL` (default `http://localhost:3000`) and starts `next dev` if nothing is listening; `AELO_E2E_ROUTE` and `AELO_E2E_VIEWPORT` narrow the run. Same-origin `/api/auth/*` calls need a reachable non-production Convex deployment. Authenticated journeys are not covered; verify them manually with an authorized non-production account
 
 ## Required quality gates
 
