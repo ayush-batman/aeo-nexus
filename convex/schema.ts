@@ -19,6 +19,10 @@ import {
 } from './validators';
 
 export default defineSchema({
+  layaAnnotations: defineTable({ scanId: v.id('scans'), workspaceId: v.id('workspaces'), classifierVersion: v.string(),
+    sentiment: v.union(sentimentValidator, v.null()), confidence: v.number(), labels: v.record(v.string(), v.string()),
+    createdAt: v.number(), updatedAt: v.number() })
+    .index('by_scan_version', ['scanId', 'classifierVersion']),
   scanMetrics: defineTable({ scanId: v.id('scans'), workspaceId: v.id('workspaces'), prompt: v.string(), platform: engineValidator,
     measurementRunId: nullableString, createdAt: v.number(), observation: metricObservation })
     .index('by_scan', ['scanId'])
