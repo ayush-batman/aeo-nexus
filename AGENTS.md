@@ -4,11 +4,6 @@
 
 This repository contains Aelo (`aeo-nexus`), an AI-visibility measurement product for marketing, SEO, growth teams, and founders. It helps them understand how AI assistants answer about their brand, see the real sources those assistants cite, and choose work that can earn a defensible mention.
 
-
-## Project purpose
-
-This repository contains Aelo (`aeo-nexus`), an AI-visibility measurement product for marketing, SEO, growth teams, and founders. It helps them understand how AI assistants answer about their brand, see the real sources those assistants cite, and choose work that can earn a defensible mention.
-
 The most important customer journey is:
 
 Homepage or signup → brand onboarding with 3–5 editable buyer prompts → multi-sample scan across entitled AI engines → decision packet with visibility, confidence, citations, gaps, and one ranked action
