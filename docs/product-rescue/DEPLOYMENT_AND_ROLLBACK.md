@@ -1,5 +1,25 @@
 # Aelo product-rescue deployment and rollback
 
+## October 3 live-domain check — `www.aelohq.com` serves `jovial-scorpion-617`
+
+This supersedes the earlier entries below that describe `www.aelohq.com` as serving the September 26 deployment on `laudable-orca-31`. The check was made from outside Vercel: only public pages, public JavaScript bundles and the signed-out session endpoint were loaded. No Vercel or Convex dashboard was opened, and no production data, setting, account or billing was touched.
+
+- **Live backend.** The JavaScript bundles served by `www.aelohq.com` name only `jovial-scorpion-617.convex.cloud`, the `ayush-grover/aelo-production` Production deployment from `docs/superpowers/plans/2026-09-28-aelo-production-cutover.md`. They do not name `laudable-orca-31` or `woozy-starfish-810`. (`happy-otter-123` also appears in the bundles, but it is the example URL in a Convex client error message, not a real deployment.)
+- **Live code.** After PR #3 (`bfb2ccd`) was merged at 20:49 UTC, the site's CDN cache was invalidated at about 20:51 UTC. The new bundle reports Next `16.3.8`, the version that PR introduced. So `main` deploys to Production automatically.
+- **When the backend changed.** At 20:50 UTC the cached page, which had been cached at about 20:34 UTC, already named `jovial-scorpion-617`. So the switch happened on an earlier Production deployment, probably the one triggered by merging PR #2 at 20:31 UTC. This is inferred from timing; the Vercel deployment list was not checked. The Production-only variables staged in cutover-plan Task 4 Step 1A took effect on that deployment. Because it deployed, the build-time guard in `lib/release/convex-target.mjs` accepted the configuration.
+- **Signed-out health.** All 11 public routes returned 200 in 0.2–0.5 s: `/`, `/product`, `/pricing`, `/methodology`, `/about`, the four `/solutions/*` pages, `/login` and `/signup`. `/api/auth/get-session` returned 200 with `null`, the expected signed-out response from the new backend.
+- **Separate public host.** `https://aeo-nexus.vercel.app` still serves an older build (Next `16.3.4`) whose bundles name the `woozy-starfish-810` test deployment. It returns 200, and neither merge on October 3 updated it, so it is probably a different Vercel project or deployment; that is unverified. `lib/release/convex-target.mjs` treats this hostname as production. Check which project owns it, and remove or redirect it, before anyone uses it for signup or scans.
+
+**Cutover gates this switch went ahead of.** Live traffic now reaches `jovial-scorpion-617`. These cutover-plan gates were still open in the plan and have **not** been verified since:
+
+- Task 5 Step 1: quiesce the old source, then recheck freshness and parity.
+- Task 4 Step 1B: legacy accounts without a Google login cannot use their old password. They need working email-based password reset and a customer notice.
+- Task 4 Step 2: signed-in QA on a non-production account.
+- Task 4 Step 3: Vercel error-log review.
+- Billing and email configuration.
+
+Any writes since the switch went to `jovial-scorpion-617`, so rolling back to `laudable-orca-31` now needs those writes reconciled first (Task 5 Step 3). Weekly jobs should still be off, because `AELO_WEEKLY_JOBS_ENABLED` was absent at the last recorded check; that is unverified now. Signed-in journeys, email, billing and scans were not exercised in this check.
+
 ## September 28 migration-package preflight
 
 The restored Supabase source reports Healthy. Its Free-plan backup screen says scheduled project backups are unavailable; the dashboard lists no last backup. The current read-only source comparison below matches the saved 337-row application export, and `import-convex.ts --dry-run` verifies all 27 saved tables and records without contacting Convex. A read-only count found 16 Supabase Auth identities versus 15 application users; comparing normalized emails in memory found all 15 application users in Auth and one Auth identity without an application profile. The source Storage API lists zero buckets. No email addresses or record contents were printed. The importer does not transfer Supabase passwords or sessions, so account claiming still needs a signed-in staging check. This is an application-data package, **not** a full database or Auth backup.

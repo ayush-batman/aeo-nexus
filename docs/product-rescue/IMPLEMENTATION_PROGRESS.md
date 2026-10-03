@@ -1,5 +1,18 @@
 # Aelo Product Rescue — Implementation Progress
 
+## October 3 live production state — read-only check
+
+- `www.aelohq.com` now serves code from `main` on Next `16.3.8` (PR #3, `bfb2ccd`), and its bundles name only the `aelo-production` deployment `jovial-scorpion-617`. The production-target blocker in the September 26 and September 27 entries below no longer describes the live site. The switch to `jovial-scorpion-617` had already happened before PR #3, probably on the Production deployment triggered by merging PR #2 at 20:31 UTC; that is inferred from cache timing. Details and the open cutover gates are in `DEPLOYMENT_AND_ROLLBACK.md` under "October 3 live-domain check".
+- Signed-out checks passed: 11 public routes returned 200, and `/api/auth/get-session` returned `null`. Signed-in journeys, email, billing and scans were not exercised on production.
+- Still open on live traffic:
+  - source freshness and parity (cutover Task 5 Step 1);
+  - legacy password-reset access and customer notice (Task 4 Step 1B);
+  - signed-in non-production QA (Task 4 Step 2);
+  - Vercel error-log review (Task 4 Step 3);
+  - email and billing configuration.
+- `https://aeo-nexus.vercel.app` still serves an older Next `16.3.4` build that is bound to the `woozy-starfish-810` test deployment. Which project owns it is unverified.
+- PR #3 also applied the non-breaking `npm audit fix` updates: Next `16.3.4` → `16.3.8`, `axios`, `dompurify`, `brace-expansion`, and the MCP server's `fast-uri`, `hono`, `ip-address` and `qs`. Production dependencies now audit clean. Five dev-only advisories remain in `braces` (via `eslint-config-next`), which has no patched release. Gates passed: 281 Node tests, 80 Convex tests, lint, both type checks, the webpack build, and `npm run test:e2e` against a local production build. The only failures were `/api/auth/get-session` 404s, caused by the placeholder Convex URL used locally.
+
 ## September 27 older-workspace selection — code only
 
 - Dashboard bootstrap previously searched only the newest 100 workspaces, so an authorized older active workspace silently became the newest brand. It now verifies an out-of-window active workspace by indexed public ID and organization, then includes that workspace in the returned picker list. Foreign workspace IDs still fall back without leaking tenant data.
