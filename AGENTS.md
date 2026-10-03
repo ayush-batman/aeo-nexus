@@ -4,6 +4,11 @@
 
 This repository contains Aelo (`aeo-nexus`), an AI-visibility measurement product for marketing, SEO, growth teams, and founders. It helps them understand how AI assistants answer about their brand, see the real sources those assistants cite, and choose work that can earn a defensible mention.
 
+
+## Project purpose
+
+This repository contains Aelo (`aeo-nexus`), an AI-visibility measurement product for marketing, SEO, growth teams, and founders. It helps them understand how AI assistants answer about their brand, see the real sources those assistants cite, and choose work that can earn a defensible mention.
+
 The most important customer journey is:
 
 Homepage or signup → brand onboarding with 3–5 editable buyer prompts → multi-sample scan across entitled AI engines → decision packet with visibility, confidence, citations, gaps, and one ranked action
@@ -86,3 +91,12 @@ The product-rescue rollout order and open staging gates are documented in:
 - `docs/product-rescue/IMPLEMENTATION_PROGRESS.md`
 - `docs/product-rescue/DEPLOYMENT_AND_ROLLBACK.md`
 - `docs/product-rescue/IMPLEMENTATION_PLAN.md`
+## Keep the Why
+
+This project records the reasoning behind its code with the Keep the Why
+skill (https://keepthewhy.com) — the `.keep-the-why` file at the project
+root is its config. Before doing anything else in a session, whatever the
+first request is about, load the skill: in Claude Code, invoke the
+`keep-the-why` skill (Skill tool); in any other agent, read
+`.claude/skills/keep-the-why/SKILL.md` and follow it, including the
+`references/*.md` files it points to for the situation at hand.
