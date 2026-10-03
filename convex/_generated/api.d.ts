@@ -43,6 +43,7 @@ import type * as http from "../http.js";
 import type * as importControl from "../importControl.js";
 import type * as imports from "../imports.js";
 import type * as indiaIndex from "../indiaIndex.js";
+import type * as layaAnnotations from "../layaAnnotations.js";
 import type * as lib_actionRecords from "../lib/actionRecords.js";
 import type * as lib_authLimit from "../lib/authLimit.js";
 import type * as lib_importParity from "../lib/importParity.js";
@@ -125,6 +126,7 @@ declare const fullApi: ApiFromModules<{
   importControl: typeof importControl;
   imports: typeof imports;
   indiaIndex: typeof indiaIndex;
+  layaAnnotations: typeof layaAnnotations;
   "lib/actionRecords": typeof lib_actionRecords;
   "lib/authLimit": typeof lib_authLimit;
   "lib/importParity": typeof lib_importParity;
