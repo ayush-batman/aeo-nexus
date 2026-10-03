@@ -25,10 +25,10 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
                     variant === "destructive" &&
                     "bg-[var(--data-red)] text-white hover:bg-[var(--data-red)]",
                     // Sizes
-                    size === "default" && "h-9 px-4 py-2 text-sm",
-                    size === "sm" && "h-7 px-3 text-xs",
+                    size === "default" && "h-11 px-4 py-2 text-sm lg:h-10",
+                    size === "sm" && "h-11 px-3 text-xs lg:h-10",
                     size === "lg" && "h-11 px-6 text-sm",
-                    size === "icon" && "h-9 w-9",
+                    size === "icon" && "h-11 w-11 lg:h-10 lg:w-10",
                     className
                 )}
                 {...props}

@@ -16,9 +16,7 @@ import {
     Sparkles,
     Swords,
     Lightbulb,
-    FlaskConical,
     HelpCircle,
-    BookOpen,
     Users,
     ChevronDown,
     Plus,
@@ -29,10 +27,13 @@ import {
     Lock,
     Target,
     Bot,
+    X,
 } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
-import { createClient } from "@/lib/supabase/client";
+import type { RefObject } from "react";
+import { authClient } from "@/lib/auth-client";
 import { AeloMark, AeloWordmark } from "@/components/brand/logo";
+import { useDashboardBootstrap } from "@/components/onboarding-check";
 
 interface Workspace {
     id: string;
@@ -41,78 +42,68 @@ interface Workspace {
     created_at: string;
 }
 
-const navGroups = [
-    {
-        label: "Overview",
-        items: [
-            { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
-            { name: "Insights", href: "/dashboard/insights", icon: Target },
-        ],
-    },
-    {
-        label: "Analyze",
-        items: [
+const primaryNav = [
+    { name: "Overview", href: "/dashboard", icon: LayoutDashboard },
+    { name: "Prompts & Scans", href: "/dashboard/llm-tracker", icon: Search },
+    { name: "Sources", href: "/dashboard/sources", icon: BarChart3 },
+    { name: "Actions", href: "/dashboard/interventions", icon: Target },
+    { name: "Reports & Settings", href: "/dashboard/report", icon: FileText },
+];
+
+const legacyNav = [
             { name: "LLM Tracker", href: "/dashboard/llm-tracker", icon: Search },
             { name: "Agent Auditor", href: "/dashboard/audit", icon: Sparkles },
             { name: "Battle Arena", href: "/dashboard/battle", icon: Swords },
             { name: "Positioning", href: "/dashboard/positioning", icon: Grid3x3, premium: true },
             { name: "Question Mine", href: "/dashboard/question-mine", icon: HelpCircle },
             { name: "Prompt Research", href: "/dashboard/prompts", icon: Lightbulb },
-        ],
-    },
-    {
-        label: "Grow",
-        items: [
             { name: "Content Studio", href: "/dashboard/content-studio", icon: FileText },
             { name: "Forum Hub", href: "/dashboard/forum-hub", icon: MessageSquare },
-            { name: "Playbook", href: "/dashboard/playbook", icon: BookOpen },
-            { name: "Experiments", href: "/dashboard/experiments", icon: FlaskConical },
-        ],
-    },
-    {
-        label: "Measure",
-        items: [
             { name: "Analytics", href: "/dashboard/analytics", icon: BarChart3 },
             { name: "Sentiment Drift", href: "/dashboard/drift", icon: TrendingDown, premium: true },
             { name: "AI Crawlers", href: "/dashboard/crawlers", icon: Bot },
             { name: "Attribution", href: "/dashboard/attribution", icon: Users },
-        ],
-    },
-    {
-        // The closed-loop / PROOF layer. This is the class-apart page.
-        label: "Prove",
-        items: [
             { name: "Accuracy Verdict", href: "/dashboard/accuracy", icon: ShieldCheck, premium: true },
-            { name: "Interventions", href: "/dashboard/interventions", icon: Check },
+            { name: "Legacy Insights URL", href: "/dashboard/insights", icon: Check },
             { name: "Client Report", href: "/dashboard/report", icon: FileText },
-        ],
-    },
-    {
-        label: "Workspace",
-        items: [
             { name: "Products", href: "/dashboard/products", icon: Package },
             { name: "Settings", href: "/dashboard/settings", icon: Settings },
-        ],
-    },
 ];
 
-export function Sidebar() {
+export function Sidebar({
+    collapsed,
+    mobileOpen,
+    onCollapsedChange,
+    onMobileClose,
+    returnFocusRef,
+    drawerOnly = false,
+}: {
+    collapsed: boolean;
+    mobileOpen: boolean;
+    onCollapsedChange: (collapsed: boolean) => void;
+    onMobileClose: () => void;
+    returnFocusRef: RefObject<HTMLButtonElement | null>;
+    drawerOnly?: boolean;
+}) {
     const pathname = usePathname();
-    const [collapsed, setCollapsed] = useState(false);
+    const bootstrap = useDashboardBootstrap();
+    const [showMoreTools, setShowMoreTools] = useState(false);
     // null = unknown (avoid flashing a lock before we know the plan)
-    const [paid, setPaid] = useState<boolean | null>(null);
-
-    useEffect(() => {
-        fetch("/api/entitlements", { cache: "no-store" })
-            .then((r) => (r.ok ? r.json() : null))
-            .then((d) => { if (d) setPaid(!!d.paid); })
-            .catch(() => {});
-    }, []);
+    const paid = bootstrap?.paid ?? null;
 
     // Workspace switcher state
-    const [workspaces, setWorkspaces] = useState<Workspace[]>([]);
-    const [activeWorkspace, setActiveWorkspace] = useState<Workspace | null>(null);
+    const [workspaces, setWorkspaces] = useState<Workspace[]>(bootstrap?.workspaces ?? []);
+    const [activeWorkspace, setActiveWorkspace] = useState<Workspace | null>(() =>
+        bootstrap?.workspaces.find((workspace) => workspace.id === bootstrap.workspaceId) ?? bootstrap?.workspaces[0] ?? null);
     const [showWsSwitcher, setShowWsSwitcher] = useState(false);
+    // undefined means the first paged read has not completed yet.
+    const [workspaceCursor, setWorkspaceCursor] = useState<string | null | undefined>(undefined);
+    const [loadingWorkspaces, setLoadingWorkspaces] = useState(false);
+    const [workspaceLoadError, setWorkspaceLoadError] = useState<string | null>(null);
+    const loadingWorkspacesRef = useRef(false);
+    const focusAfterWorkspacePageRef = useRef<string | null>(null);
+    const [switchingWorkspaceId, setSwitchingWorkspaceId] = useState<string | null>(null);
+    const [switchError, setSwitchError] = useState<string | null>(null);
     const [showNewBrand, setShowNewBrand] = useState(false);
     const [newBrandName, setNewBrandName] = useState("");
     const [newBrandWebsite, setNewBrandWebsite] = useState("");
@@ -120,42 +111,50 @@ export function Sidebar() {
     const [creating, setCreating] = useState(false);
     const [createError, setCreateError] = useState<string | null>(null);
     const wsRef = useRef<HTMLDivElement>(null);
+    const sidebarRef = useRef<HTMLElement>(null);
+    const closeButtonRef = useRef<HTMLButtonElement>(null);
+    const previousPathnameRef = useRef(pathname);
 
-    // Load workspaces
     useEffect(() => {
-        async function load() {
-            try {
-                // Fetch workspaces and current active workspace in parallel with no caching
-                const [wsRes, activeRes] = await Promise.all([
-                    fetch("/api/workspaces", { cache: "no-store" }),
-                    fetch("/api/onboarding/context", { cache: "no-store" }),
-                ]);
+        if (!mobileOpen) return;
+        const previousOverflow = document.body.style.overflow;
+        document.body.style.overflow = "hidden";
+        closeButtonRef.current?.focus();
 
-                let currentWorkspaceId: string | null = null;
-                if (activeRes.ok) {
-                    const activeData = await activeRes.json();
-                    currentWorkspaceId = activeData.workspaceId || null;
-                }
-
-                if (wsRes.ok) {
-                    const data = await wsRes.json();
-                    const wsList = data.workspaces || [];
-                    setWorkspaces(wsList);
-
-                    if (wsList.length > 0) {
-                        // Find the workspace that matches the server's active one
-                        const activeWs = currentWorkspaceId
-                            ? wsList.find((ws: Workspace) => ws.id === currentWorkspaceId)
-                            : null;
-                        setActiveWorkspace(activeWs || wsList[0]);
-                    }
-                }
-            } catch (e) {
-                console.error("Failed to load workspaces:", e);
+        function handleKeyDown(event: KeyboardEvent) {
+            if (event.key === "Escape") {
+                event.preventDefault();
+                onMobileClose();
+                returnFocusRef.current?.focus();
+                return;
+            }
+            if (event.key !== "Tab" || !sidebarRef.current) return;
+            const focusable = [...sidebarRef.current.querySelectorAll<HTMLElement>(
+                'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])',
+            )];
+            if (!focusable.length) return;
+            const first = focusable[0];
+            const last = focusable[focusable.length - 1];
+            if (event.shiftKey && document.activeElement === first) {
+                event.preventDefault(); last.focus();
+            } else if (!event.shiftKey && document.activeElement === last) {
+                event.preventDefault(); first.focus();
             }
         }
-        load();
-    }, []);
+        document.addEventListener("keydown", handleKeyDown);
+        return () => {
+            document.body.style.overflow = previousOverflow;
+            document.removeEventListener("keydown", handleKeyDown);
+        };
+    }, [mobileOpen, onMobileClose, returnFocusRef]);
+
+    useEffect(() => {
+        if (previousPathnameRef.current === pathname) return;
+        previousPathnameRef.current = pathname;
+        if (!mobileOpen) return;
+        const timer = window.setTimeout(onMobileClose, 0);
+        return () => window.clearTimeout(timer);
+    }, [mobileOpen, onMobileClose, pathname]);
 
     // Click outside to close
     useEffect(() => {
@@ -169,23 +168,71 @@ export function Sidebar() {
         return () => document.removeEventListener("mousedown", handleClick);
     }, []);
 
+    useEffect(() => {
+        const workspaceId = focusAfterWorkspacePageRef.current;
+        if (!workspaceId) return;
+        const options = wsRef.current?.querySelectorAll<HTMLButtonElement>("[data-workspace-id]");
+        const target = [...(options ?? [])].find((option) => option.dataset.workspaceId === workspaceId)
+            ?? wsRef.current?.querySelector<HTMLButtonElement>("button[aria-expanded]");
+        target?.focus();
+        focusAfterWorkspacePageRef.current = null;
+    }, [workspaces]);
+
+    async function loadWorkspacePage(cursor: string | null) {
+        if (loadingWorkspacesRef.current) return;
+        loadingWorkspacesRef.current = true;
+        setLoadingWorkspaces(true);
+        setWorkspaceLoadError(null);
+        try {
+            const params = new URLSearchParams({ page: "1" });
+            if (cursor) params.set("cursor", cursor);
+            const response = await fetch(`/api/workspaces?${params}`, { cache: "no-store" });
+            if (!response.ok) throw new Error("Workspace list unavailable");
+            const data = await response.json();
+            if (!Array.isArray(data.workspaces) || (data.nextCursor !== null && typeof data.nextCursor !== "string")) {
+                throw new Error("Invalid workspace list");
+            }
+            const page = data.workspaces as Workspace[];
+            if (cursor) focusAfterWorkspacePageRef.current = page[0]?.id ?? activeWorkspace?.id ?? null;
+            setWorkspaces((previous) => {
+                const rows = cursor ? [...previous, ...page] : [...(activeWorkspace ? [activeWorkspace] : []), ...page];
+                return [...new Map(rows.map((workspace) => [workspace.id, workspace])).values()];
+            });
+            setWorkspaceCursor(data.nextCursor);
+        } catch {
+            setWorkspaceLoadError("Could not load older brands. Try again.");
+        } finally {
+            loadingWorkspacesRef.current = false;
+            setLoadingWorkspaces(false);
+        }
+    }
+
+    function toggleWorkspaceSwitcher() {
+        const opening = !showWsSwitcher;
+        setShowWsSwitcher(opening);
+        if (opening && workspaceCursor === undefined) void loadWorkspacePage(null);
+    }
+
     async function switchWorkspace(ws: Workspace) {
-        setActiveWorkspace(ws);
-        setShowWsSwitcher(false);
+        if (switchingWorkspaceId) return;
+        setSwitchingWorkspaceId(ws.id);
+        setSwitchError(null);
         try {
             const res = await fetch("/api/workspaces/switch", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ workspaceId: ws.id }),
             });
-            // Wait for the response to fully resolve (cookie is set)
-            await res.json();
-            // Small delay to ensure cookie is persisted
-            await new Promise(resolve => setTimeout(resolve, 100));
-            // Full page reload to refresh all server components with new workspace
-            window.location.href = "/dashboard";
-        } catch (e) {
-            console.error("Failed to switch workspace:", e);
+            if (!res.ok) throw new Error("Workspace switch was denied.");
+            setActiveWorkspace(ws);
+            setShowWsSwitcher(false);
+            // Reload so every server component reads the newly selected workspace.
+            window.location.assign(new URL("/dashboard", window.location.origin).href);
+        } catch {
+            setShowWsSwitcher(true);
+            setSwitchError("Could not switch workspaces. Check your access and try again.");
+        } finally {
+            setSwitchingWorkspaceId(null);
         }
     }
 
@@ -232,26 +279,33 @@ export function Sidebar() {
 
     const handleSignOut = async () => {
         try {
-            const supabase = createClient();
-            await supabase.auth.signOut();
+            const { error } = await authClient.signOut();
+            if (error) throw new Error(error.message || 'Unable to sign out.');
         } catch {
             // ignore; force the redirect regardless
         }
-        // Hard navigation so the server + middleware re-evaluate with cookies cleared.
-        window.location.href = "/login";
+        // Reload so middleware and server components see the cleared session cookie.
+        window.location.assign(new URL("/login", window.location.origin).href);
     };
 
-    return (
+    return (<>
+        {mobileOpen && <button type="button" aria-label="Close navigation" className={cn("fixed inset-0 z-40 bg-black/70 backdrop-blur-[2px]", !drawerOnly && "lg:hidden")} onClick={() => { onMobileClose(); returnFocusRef.current?.focus(); }} />}
         <aside
+            ref={sidebarRef}
+            role={mobileOpen ? "dialog" : undefined}
+            aria-modal={mobileOpen ? "true" : undefined}
+            aria-label="Product navigation"
             className={cn(
-                "fixed left-0 top-0 z-40 h-screen flex flex-col transition-all duration-200 bg-[var(--bg-base)] border-r border-[var(--border-subtle)]",
-                collapsed ? "w-16" : "w-60"
+                "fixed left-0 top-0 z-50 flex h-dvh w-[min(18rem,calc(100vw-2rem))] flex-col border-r border-[var(--border-subtle)] bg-[var(--bg-base)] transition-transform duration-200",
+                !drawerOnly && "lg:z-40 lg:h-screen lg:translate-x-0 lg:transition-[width]",
+                mobileOpen ? "translate-x-0" : "-translate-x-full",
+                !drawerOnly && (collapsed ? "lg:w-16" : "lg:w-60")
             )}
         >
             {/* Logo */}
             <div className="flex h-14 items-center justify-between px-4 flex-shrink-0 border-b border-[var(--border-subtle)]">
                 {!collapsed && (
-                    <Link href="/dashboard" className="group">
+                    <Link href="/dashboard" className="group" onClick={onMobileClose}>
                         <AeloWordmark size="md" />
                     </Link>
                 )}
@@ -262,10 +316,8 @@ export function Sidebar() {
                     </div>
                 )}
 
-                <button
-                    onClick={() => setCollapsed(!collapsed)}
-                    className="p-1.5 text-[var(--text-tertiary)] hover:text-[var(--text-primary)] transition-colors flex-shrink-0"
-                >
+                <button ref={closeButtonRef} onClick={() => { onMobileClose(); returnFocusRef.current?.focus(); }} aria-label="Close navigation" className={cn("flex min-h-11 min-w-11 items-center justify-center text-[var(--text-tertiary)] hover:text-[var(--text-primary)]", !drawerOnly && "lg:hidden")}><X className="h-5 w-5" /></button>
+                <button onClick={() => onCollapsedChange(!collapsed)} aria-label={collapsed ? "Expand navigation" : "Collapse navigation"} className={cn("hidden min-h-10 min-w-10 flex-shrink-0 items-center justify-center text-[var(--text-tertiary)] transition-colors hover:text-[var(--text-primary)]", !drawerOnly && "lg:flex")}>
                     <ChevronLeft className={cn("w-4 h-4 transition-transform duration-200", collapsed && "rotate-180")} />
                 </button>
             </div>
@@ -274,11 +326,12 @@ export function Sidebar() {
             {!collapsed && (
                 <div className="px-3 py-2 border-b border-[var(--border-subtle)] relative" ref={wsRef}>
                     <button
-                        onClick={() => setShowWsSwitcher(!showWsSwitcher)}
+                        onClick={toggleWorkspaceSwitcher}
+                        aria-expanded={showWsSwitcher}
                         className="w-full flex items-center justify-between px-3 py-2 rounded-md bg-[var(--bg-surface)] border border-[var(--border-default)] hover:border-[var(--border-active)] transition-colors text-left"
                     >
                         <div className="flex items-center gap-2 min-w-0">
-                            <div className="w-5 h-5 rounded bg-[var(--accent-muted)] flex items-center justify-center text-[var(--accent-base)] text-[10px] font-bold flex-shrink-0">
+                            <div aria-hidden="true" className="w-5 h-5 rounded bg-[var(--accent-muted)] flex items-center justify-center text-[var(--accent-base)] text-[10px] font-bold flex-shrink-0">
                                 {(activeWorkspace?.name || "B")[0].toUpperCase()}
                             </div>
                             <span className="text-sm font-medium text-[var(--text-primary)] truncate">
@@ -291,20 +344,23 @@ export function Sidebar() {
                     {/* Dropdown */}
                     {showWsSwitcher && (
                         <div className="absolute left-3 right-3 top-full mt-1 z-50 bg-[var(--bg-raised)] border border-[var(--border-default)] rounded-lg shadow-lg overflow-hidden">
+                            {switchError && <p role="alert" className="border-b border-[var(--border-default)] px-3 py-2 text-xs text-[var(--data-red)]">{switchError}</p>}
                             <div className="p-1 max-h-48 overflow-y-auto">
                                 {workspaces.map((ws) => (
                                     <button
                                         key={ws.id}
+                                        data-workspace-id={ws.id}
                                         onClick={() => switchWorkspace(ws)}
+                                        disabled={switchingWorkspaceId !== null}
                                         className={cn(
-                                            "w-full flex items-center justify-between px-3 py-2 rounded-md text-sm transition-colors",
+                                            "w-full min-h-10 flex items-center justify-between px-3 py-2 rounded-md text-sm transition-colors",
                                             activeWorkspace?.id === ws.id
                                                 ? "bg-[var(--accent-muted)] text-[var(--text-primary)]"
                                                 : "text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] hover:text-[var(--text-primary)]"
                                         )}
                                     >
                                         <div className="flex items-center gap-2">
-                                            <div className="w-5 h-5 rounded bg-[var(--bg-surface)] flex items-center justify-center text-[10px] font-bold text-[var(--text-secondary)]">
+                                            <div aria-hidden="true" className="w-5 h-5 rounded bg-[var(--bg-surface)] flex items-center justify-center text-[10px] font-bold text-[var(--text-secondary)]">
                                                 {ws.name[0].toUpperCase()}
                                             </div>
                                             <span className="truncate">{ws.name}</span>
@@ -315,6 +371,18 @@ export function Sidebar() {
                                     </button>
                                 ))}
                             </div>
+
+                            {loadingWorkspaces && <p role="status" className="border-t border-[var(--border-default)] px-3 py-2 text-xs text-[var(--text-secondary)]">Loading brands…</p>}
+                            {workspaceLoadError && <p role="alert" className="border-t border-[var(--border-default)] px-3 py-2 text-xs text-[var(--data-red)]">{workspaceLoadError}</p>}
+                            {!loadingWorkspaces && (workspaceCursor || workspaceLoadError) && (
+                                <button
+                                    type="button"
+                                    onClick={() => void loadWorkspacePage(workspaceCursor ?? null)}
+                                    className="w-full min-h-10 border-t border-[var(--border-default)] px-3 py-2 text-left text-xs font-medium text-[var(--accent-base)] hover:bg-[var(--accent-muted)] focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-[var(--accent-base)]"
+                                >
+                                    {workspaceLoadError ? "Retry loading brands" : "Load older brands"}
+                                </button>
+                            )}
 
                             <div className="border-t border-[var(--border-default)] p-1">
                                 {showNewBrand ? (
@@ -376,24 +444,32 @@ export function Sidebar() {
             )}
 
             {/* Navigation */}
-            <nav className="flex-1 px-3 py-3 overflow-y-auto space-y-4">
-                {navGroups.map((group) => (
-                    <div key={group.label}>
-                        {!collapsed && (
-                            <p className="px-3 mb-1.5 text-[10px] font-semibold uppercase tracking-widest text-[var(--text-ghost)]">
-                                {group.label}
-                            </p>
-                        )}
-                        {collapsed && (
-                            <div className="mx-auto my-2 h-px w-6 bg-[var(--border-subtle)]" />
-                        )}
-                        <div className="space-y-0.5">
-                            {group.items.map((item) => {
+            <nav className="flex-1 px-3 py-3 overflow-y-auto space-y-4" aria-label="Product">
+                <div>
+                    {!collapsed && <p className="px-3 mb-1.5 text-[10px] font-semibold uppercase tracking-widest text-[var(--text-ghost)]">Workspace</p>}
+                    <div className="space-y-0.5">
+                        {primaryNav.map((item) => {
+                            const pathHref = item.href.split('#')[0];
+                            const isActive = pathname === pathHref || (pathHref !== "/dashboard" && pathname.startsWith(pathHref + "/"));
+                            return <Link key={item.name} href={item.href} onClick={onMobileClose} title={collapsed ? item.name : undefined} className={cn("nav-item min-h-10", isActive && "active", collapsed && "justify-center px-0 w-10 h-10 mx-auto gap-0")}>
+                                <item.icon className="w-[18px] h-[18px] flex-shrink-0" strokeWidth={1.5} />{!collapsed && <span>{item.name}</span>}
+                            </Link>;
+                        })}
+                    </div>
+                </div>
+                <div>
+                    <button type="button" aria-expanded={showMoreTools} onClick={() => setShowMoreTools(value => !value)} className={cn("nav-item min-h-10 w-full", collapsed && "justify-center px-0 w-10 h-10 mx-auto gap-0")} title={collapsed ? "More tools" : undefined}>
+                        <Grid3x3 className="w-[18px] h-[18px] flex-shrink-0" strokeWidth={1.5} />
+                        {!collapsed && <><span>More tools</span><ChevronDown className={cn("ml-auto h-4 w-4 transition-transform", showMoreTools && "rotate-180")} /></>}
+                    </button>
+                    {showMoreTools && <div className="mt-1 space-y-0.5 border-l border-[var(--border-subtle)] pl-2">
+                        {legacyNav.map((item) => {
                                 const isActive = pathname === item.href || (item.href !== "/dashboard" && pathname.startsWith(item.href + "/"));
                                 return (
                                     <Link
                                         key={item.name}
                                         href={item.href}
+                                        onClick={onMobileClose}
                                         title={collapsed ? item.name : undefined}
                                         className={cn(
                                             "nav-item",
@@ -411,10 +487,9 @@ export function Sidebar() {
                                         )}
                                     </Link>
                                 );
-                            })}
-                        </div>
-                    </div>
-                ))}
+                        })}
+                    </div>}
+                </div>
             </nav>
 
             {/* Sign Out */}
@@ -431,5 +506,5 @@ export function Sidebar() {
                 </button>
             </div>
         </aside>
-    );
+    </>);
 }

@@ -3,9 +3,6 @@
 import { useState } from "react";
 import { Loader2, CheckCircle2 } from "lucide-react";
 
-// Contact form. Posts to /api/contact (to be wired later, for now stores in
-// browser state so the form is testable end-to-end and shows the receipt).
-
 export default function ContactPage() {
     const [state, setState] = useState<"idle" | "submitting" | "sent" | "error">("idle");
     const [payload, setPayload] = useState({
@@ -29,10 +26,7 @@ export default function ContactPage() {
             if (!res.ok) throw new Error();
             setState("sent");
         } catch {
-            // Endpoint not yet wired, for now, log locally and pretend it succeeded
-            // so the marketing flow is verifiable. A real /api/contact will follow.
-            console.info("[contact] would send:", payload);
-            setState("sent");
+            setState("error");
         }
     }
 
@@ -66,6 +60,11 @@ export default function ContactPage() {
                         </div>
                     ) : (
                         <form onSubmit={submit} className="rounded-lg border border-white/[0.06] bg-black p-6 md:p-8 space-y-5">
+                            {state === "error" && (
+                                <p role="alert" className="rounded-md border border-[var(--data-red)]/30 bg-[var(--data-red-muted)] p-3 text-sm text-[var(--data-red)]">
+                                    We couldn&apos;t deliver that message. Please retry, or email hello@aelohq.com directly.
+                                </p>
+                            )}
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <Field label="Name" required>
                                     <input

@@ -1,8 +1,10 @@
 // Central tier entitlements. Free = Gemini-only, capped, visibility-only.
 // Paid (starter+) = all engines, uncapped, premium features.
-import { createClient } from '@/lib/supabase/server';
+import { api } from '@/convex/_generated/api';
+import { fetchAuthQuery } from '@/lib/auth-server';
+import { planByStoredKey, type StoredPlanKey } from '@/lib/billing/plan-catalog';
 
-export type Plan = 'free' | 'starter' | 'pro' | 'agency' | 'enterprise';
+export type Plan = StoredPlanKey;
 
 const PAID_PLANS = new Set<Plan>(['starter', 'pro', 'agency', 'enterprise']);
 
@@ -10,7 +12,8 @@ export type Entitlements = {
     plan: Plan;
     paid: boolean;
     engines: string[];            // scan platforms allowed
-    scansPerWeek: number | null;  // null = unlimited
+    scanRuns: number;
+    scanPeriod: 'rolling 7 days' | 'rolling 30 days' | null;
     brands: number | null;        // null = unlimited
     accuracy: boolean;
     drift: boolean;
@@ -18,13 +21,15 @@ export type Entitlements = {
 };
 
 export function entitlementsForPlan(plan: Plan): Entitlements {
+    const definition = planByStoredKey(plan);
     const paid = PAID_PLANS.has(plan);
     if (paid) {
         return {
             plan,
             paid,
-            engines: ['chatgpt', 'gemini', 'claude', 'perplexity', 'google_ai'],
-            scansPerWeek: null,
+            engines: ['chatgpt', 'gemini', 'claude', 'perplexity'],
+            scanRuns: definition.scanRuns,
+            scanPeriod: definition.scanPeriod,
             brands: null,
             accuracy: true,
             drift: true,
@@ -35,7 +40,8 @@ export function entitlementsForPlan(plan: Plan): Entitlements {
         plan,
         paid,
         engines: ['gemini'],
-        scansPerWeek: 3,
+        scanRuns: definition.scanRuns,
+        scanPeriod: definition.scanPeriod,
         brands: 1,
         accuracy: false,
         drift: false,
@@ -43,27 +49,8 @@ export function entitlementsForPlan(plan: Plan): Entitlements {
     };
 }
 
+/** UI display only. Convex rechecks the stored plan on every protected operation. */
 export async function getEntitlements(orgId: string): Promise<Entitlements> {
-    const supabase = await createClient();
-    const { data } = await supabase
-        .from('organizations')
-        .select('plan')
-        .eq('id', orgId)
-        .single();
-    return entitlementsForPlan((data?.plan as Plan) ?? 'free');
-}
-
-/** Count scans run across an org's workspaces in the trailing 7 days. */
-export async function scansThisWeek(orgId: string): Promise<number> {
-    const supabase = await createClient();
-    const { data: ws } = await supabase.from('workspaces').select('id').eq('org_id', orgId);
-    const ids = (ws ?? []).map((w: { id: string }) => w.id);
-    if (ids.length === 0) return 0;
-    const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
-    const { count } = await supabase
-        .from('llm_scans')
-        .select('id', { count: 'exact', head: true })
-        .in('workspace_id', ids)
-        .gte('created_at', weekAgo);
-    return count ?? 0;
+  const organization = await fetchAuthQuery(api.settings.organization, { orgId });
+  return entitlementsForPlan(organization.plan);
 }

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
+import { convexRouteError } from '@/lib/convex/http';
 import { updateScheduledScan, deleteScheduledScan } from '@/lib/data-access';
 import { getCurrentWorkspaceId } from '@/lib/data-access';
 
@@ -10,7 +10,16 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
-        const body = await request.json();
+        const body = await request.json().catch(() => null);
+        const allowed = new Set(['prompt', 'platforms', 'competitors', 'frequency', 'status']);
+        if (!body || typeof body !== 'object' || Array.isArray(body) || Object.keys(body).some((key) => !allowed.has(key)) ||
+            (body.prompt !== undefined && typeof body.prompt !== 'string') ||
+            (body.platforms !== undefined && (!Array.isArray(body.platforms) || body.platforms.some((value: unknown) => typeof value !== 'string'))) ||
+            (body.competitors !== undefined && (!Array.isArray(body.competitors) || body.competitors.some((value: unknown) => typeof value !== 'string'))) ||
+            (body.frequency !== undefined && !['daily', 'weekly', 'monthly'].includes(body.frequency)) ||
+            (body.status !== undefined && !['active', 'paused'].includes(body.status))) {
+            return NextResponse.json({ error: 'Check the schedule changes.' }, { status: 400 });
+        }
         const { id } = await params;
 
         const updatedSchedule = await updateScheduledScan(id, body);
@@ -21,8 +30,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
 
         return NextResponse.json(updatedSchedule);
     } catch (error) {
-        console.error('Error updating schedule:', error);
-        return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+        return convexRouteError(error);
     }
 }
 
@@ -42,7 +50,6 @@ export async function DELETE(request: NextRequest, { params }: { params: Promise
 
         return NextResponse.json({ success: true });
     } catch (error) {
-        console.error('Error deleting schedule:', error);
-        return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+        return convexRouteError(error);
     }
 }

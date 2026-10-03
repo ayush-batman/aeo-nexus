@@ -1,33 +1,13 @@
-import { LRUCache } from 'lru-cache';
+import 'server-only';
+import { createHash } from 'node:crypto';
+import { internal } from '@/convex/_generated/api';
+import { callInternal } from '@/lib/convex/admin';
+import { sharedRateLimit, type RateLimiterOptions } from './rate-limit-core';
+export { RateLimitExceededError, RateLimitUnavailableError, isRateLimitUnavailableError } from './rate-limit-core';
 
-type RateLimiterOptions = {
-    uniqueTokenPerInterval?: number;
-    interval?: number;
-};
-
-export default function rateLimit(options?: RateLimiterOptions) {
-    const tokenCache = new LRUCache({
-        max: options?.uniqueTokenPerInterval || 500,
-        ttl: options?.interval || 60000,
-    });
-
-    return {
-        check: (limit: number, token: string) =>
-            new Promise<void>((resolve, reject) => {
-                const tokenCount = (tokenCache.get(token) as number[]) || [0];
-                if (tokenCount[0] === 0) {
-                    tokenCache.set(token, tokenCount);
-                }
-                tokenCount[0] += 1;
-
-                const currentUsage = tokenCount[0];
-                const isRateLimited = currentUsage >= limit;
-
-                if (isRateLimited) {
-                    reject(new Error('Rate limit exceeded.'));
-                } else {
-                    resolve();
-                }
-            }),
-    };
+export default function rateLimit(options: RateLimiterOptions) {
+  return sharedRateLimit((limit, identifier) => callInternal('mutation', internal.abuse.check, {
+    namespace: options.namespace, key: createHash('sha256').update(identifier).digest('hex'),
+    limit, interval: options.interval ?? 60000,
+  }));
 }

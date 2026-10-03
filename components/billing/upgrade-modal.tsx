@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect } from "react";
 import { Lock, X } from "lucide-react";
 import { CheckoutButton } from "@/components/billing/checkout-button";
+import { PLAN_CATALOG } from "@/lib/billing/plan-catalog";
 
 /**
  * Shown when a free-tier user hits a server-side 402 plan gate.
@@ -22,6 +23,9 @@ export function UpgradeModal({
     message?: string;
     unlocks?: string[];
 }) {
+    const radar = PLAN_CATALOG.starter;
+    const command = PLAN_CATALOG.pro;
+
     useEffect(() => {
         if (!open) return;
         const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
@@ -79,8 +83,8 @@ export function UpgradeModal({
                 </ul>
 
                 <div className="mt-6 space-y-2.5">
-                    <CheckoutButton plan="command" label="Upgrade to Command · ₹14,999/mo" primary />
-                    <CheckoutButton plan="radar" label="Or start with Radar · ₹4,999/mo" primary={false} />
+                    <CheckoutButton plan="command" label={`Upgrade to ${command.name} · ${command.priceLabel}/mo`} primary />
+                    <CheckoutButton plan="radar" label={`Or start with ${radar.name} · ${radar.priceLabel}/mo`} primary={false} />
                     <div className="flex items-center justify-between pt-1">
                         <Link href="/pricing" className="text-xs text-[var(--text-secondary)] hover:text-[var(--text-primary)]">
                             Compare plans

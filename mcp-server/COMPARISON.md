@@ -27,7 +27,7 @@ The difference is not tool count. It is what the numbers mean and what the tools
 | | CrowdReply MCP | Aelo MCP |
 | --- | --- | --- |
 | **How a "visibility" number is made** | Presented as a figure to act on | **Multi-sampled** (same question asked N times per engine), returned with **confidence + sample count** |
-| **Answer instability** | Not surfaced | **`get_answer_volatility`** — quantifies how much the answer changes on repeat; unique |
+| **Mention instability** | Not surfaced | **`get_answer_volatility`** — quantifies the mention/non-mention split across compatible repeats |
 | **Citations** | `list_llm_citations` | `list_citations` returns the **actual source URLs** (receipts), filterable by "cites me / doesn't" |
 | **Factual accuracy** | Not offered | **`get_accuracy_verdict`** — every claim AI made about you, checked true/false/outdated **against your own site, with the source**; unique |
 | **Crawler reality** | Listening-focused | **`get_crawler_access`** — can AI actually reach you (robots.txt) + AI referral traffic |

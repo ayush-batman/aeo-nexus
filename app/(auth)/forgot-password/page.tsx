@@ -4,8 +4,8 @@ import { useState } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Zap, AlertCircle, Loader2, ArrowLeft, CheckCircle } from "lucide-react";
-import { createClient } from "@/lib/supabase/client";
+import { AlertCircle, Loader2, ArrowLeft, CheckCircle } from "lucide-react";
+import { authClient } from "@/lib/auth-client";
 
 export default function ForgotPasswordPage() {
     const [email, setEmail] = useState("");
@@ -19,14 +19,13 @@ export default function ForgotPasswordPage() {
         setLoading(true);
 
         try {
-            const supabase = createClient();
-
-            const { error: resetError } = await supabase.auth.resetPasswordForEmail(email, {
+            const { error: resetError } = await authClient.requestPasswordReset({
+                email: email.trim(),
                 redirectTo: `${window.location.origin}/reset-password`,
             });
 
             if (resetError) {
-                throw resetError;
+                throw new Error(resetError.message || 'Unable to request a password reset.');
             }
 
             setSuccess(true);
@@ -90,10 +89,11 @@ export default function ForgotPasswordPage() {
 
                             <form onSubmit={handleSubmit} className="space-y-4">
                                 <div>
-                                    <label className="block text-sm font-medium text-[var(--text-secondary)] mb-2">
+                                    <label htmlFor="forgot-email" className="block text-sm font-medium text-[var(--text-secondary)] mb-2">
                                         Email
                                     </label>
                                     <Input
+                                        id="forgot-email"
                                         type="email"
                                         placeholder="you@example.com"
                                         value={email}

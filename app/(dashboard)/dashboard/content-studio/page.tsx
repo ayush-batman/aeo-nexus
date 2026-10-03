@@ -14,13 +14,11 @@ import {
     AlertCircle,
     Copy,
     Sparkles,
-    Globe,
     Search,
     Zap,
     Loader2,
     Check,
     AlertTriangle,
-    Info,
     ShieldCheck,
     Network,
     Lightbulb
@@ -68,6 +66,7 @@ export default function ContentStudioPage() {
     const [hasAnalyzed, setHasAnalyzed] = useState(false);
     const [selectedSchema, setSelectedSchema] = useState("faq");
     const [generatedSchema, setGeneratedSchema] = useState("");
+    const [schemaMissingFields, setSchemaMissingFields] = useState<string[]>([]);
     const [schemaCopied, setSchemaCopied] = useState(false);
 
     // Schema Builder State
@@ -149,6 +148,7 @@ export default function ContentStudioPage() {
         setIsGeneratingSchema(true);
         setSchemaError(null);
         setGeneratedSchema("");
+        setSchemaMissingFields([]);
 
         try {
             const res = await fetch("/api/content/schema", {
@@ -168,6 +168,7 @@ export default function ContentStudioPage() {
             }
 
             setGeneratedSchema(JSON.stringify(data.schema, null, 2));
+            setSchemaMissingFields(data.missingFields || []);
         } catch (err) {
             setSchemaError(err instanceof Error ? err.message : "Something went wrong");
         } finally {
@@ -278,7 +279,7 @@ export default function ContentStudioPage() {
                                         </div>
                                         <h3 className="text-xl font-semibold text-[var(--text-primary)] mb-2">Ready to optimize your content?</h3>
                                         <p className="text-[var(--text-secondary)] mb-8">
-                                            Enter a URL above to get a comprehensive audit of your page's "Answer Engine Optimization" readiness.
+                                            Enter a URL above to audit your page&apos;s Answer Engine Optimization readiness.
                                         </p>
                                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-left">
                                             {[
@@ -332,7 +333,8 @@ export default function ContentStudioPage() {
                                             <div className={cn("text-4xl font-bold mb-2", getScoreColor(auditResult.score))}>
                                                 {auditResult.score}
                                             </div>
-                                            <p className="text-sm text-[var(--text-secondary)]">Aelo Score</p>
+                                            <p className="text-sm text-[var(--text-secondary)]">HTML checklist score</p>
+                                            <p className="text-xs text-[var(--text-tertiary)]">Editorial checks—not measured AI visibility.</p>
                                             <Badge variant="outline" className={cn("mt-2 text-xs", getScoreColor(auditResult.score))}>
                                                 {getScoreLabel(auditResult.score)}
                                             </Badge>
@@ -532,7 +534,7 @@ export default function ContentStudioPage() {
 
                         <Card>
                             <CardHeader className="flex flex-row items-center justify-between">
-                                <CardTitle className="text-lg">Generated Schema</CardTitle>
+                                <CardTitle className="text-lg">Schema draft — review before publishing</CardTitle>
                                 <Button variant="ghost" size="sm" onClick={copySchema} disabled={!generatedSchema}>
                                     {schemaCopied ? (
                                         <><Check className="w-4 h-4 mr-1 text-[var(--data-green)]" /> Copied</>
@@ -546,9 +548,10 @@ export default function ContentStudioPage() {
                                     {isGeneratingSchema ? "Generating custom JSON-LD schema..." : (generatedSchema || "Select a schema type and fill out the form to generate dynamic JSON-LD data")}
                                 </pre>
                                 {generatedSchema && (
-                                    <p className="text-xs text-[var(--text-ghost)] mt-3">
-                                        Paste this inside a <span className="font-mono">{"<script type=\"application/ld+json\">"}</span> tag on your page.
-                                    </p>
+                                    <div role="status" className="text-sm text-[var(--text-secondary)] mt-3 space-y-2">
+                                        <p>Incomplete draft using only the facts you supplied. Add verified details and validate before publishing. Search enhancements and AI mentions are not guaranteed.</p>
+                                        <ul className="list-disc pl-5">{schemaMissingFields.map(field => <li key={field}>{field}</li>)}</ul>
+                                    </div>
                                 )}
                             </CardContent>
                         </Card>

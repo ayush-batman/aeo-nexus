@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Loader2 } from "lucide-react";
-import { createClient } from "@/lib/supabase/client";
+import { authClient } from "@/lib/auth-client";
 
 function GoogleIcon() {
     return (
@@ -15,18 +15,31 @@ function GoogleIcon() {
     );
 }
 
-export function GoogleSignInButton({ label = "Continue with Google" }: { label?: string }) {
+export function GoogleSignInButton({ label = "Continue with Google", selectedPlan, showDivider = true }: { label?: string; selectedPlan?: "radar" | "command" | null; showDivider?: boolean }) {
+    const [googleEnabled, setGoogleEnabled] = useState(false);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
+
+    useEffect(() => {
+        const controller = new AbortController();
+        fetch('/api/auth/providers', { cache: 'no-store', signal: controller.signal })
+            .then((response) => response.ok ? response.json() : Promise.reject(new Error('provider_status_unavailable')))
+            .then((providers: { google?: boolean }) => setGoogleEnabled(providers.google === true))
+            .catch((cause: unknown) => {
+                if (!(cause instanceof DOMException && cause.name === 'AbortError')) setGoogleEnabled(false);
+            });
+        return () => controller.abort();
+    }, []);
 
     async function signIn() {
         setLoading(true);
         setError(null);
         try {
-            const supabase = createClient();
-            const { error } = await supabase.auth.signInWithOAuth({
+            const callback = new URL('/auth/callback', window.location.origin);
+            if (selectedPlan) callback.searchParams.set('plan', selectedPlan);
+            const { error } = await authClient.signIn.social({
                 provider: "google",
-                options: { redirectTo: `${window.location.origin}/auth/callback` },
+                callbackURL: callback.toString(),
             });
             // On success the browser redirects to Google, nothing else runs here.
             if (error) {
@@ -39,18 +52,27 @@ export function GoogleSignInButton({ label = "Continue with Google" }: { label?:
         }
     }
 
+    if (!googleEnabled) return null;
+
     return (
+        <>
         <div className="w-full">
             <button
                 type="button"
                 onClick={signIn}
                 disabled={loading}
-                className="w-full inline-flex items-center justify-center gap-2.5 px-4 py-2.5 rounded-lg border border-[var(--border-default)] bg-[var(--bg-surface)] text-sm font-medium text-[var(--text-primary)] hover:bg-[var(--bg-hover)] transition-colors disabled:opacity-60"
+                className="inline-flex min-h-11 w-full items-center justify-center gap-2.5 rounded-lg border border-[var(--border-default)] bg-[var(--bg-surface)] px-4 py-2.5 text-sm font-medium text-[var(--text-primary)] transition-colors hover:bg-[var(--bg-hover)] disabled:opacity-60"
             >
                 {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <GoogleIcon />}
                 {label}
             </button>
-            {error && <p className="mt-2 text-xs text-[var(--data-red)]">{error}</p>}
+            {error && <p className="mt-2 text-xs text-[var(--data-red)]" role="alert">{error}</p>}
         </div>
+        {showDivider && <div className="flex items-center gap-3 my-6" aria-hidden="true">
+            <div className="flex-1 h-px bg-[var(--border-default)]" />
+            <span className="text-xs text-[var(--text-tertiary)]">or</span>
+            <div className="flex-1 h-px bg-[var(--border-default)]" />
+        </div>}
+        </>
     );
 }

@@ -1,93 +1,34 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { getCurrentWorkspaceContext } from '@/lib/data-access';
-import { createAdminClient } from '@/lib/supabase/admin';
-import { snapshotVisibility } from '@/lib/interventions';
-
-// ── Types ───────────────────────────────────────────────────────────────────
-// Kept intentionally minimal for v1. See migration 015 for the full schema.
-interface CreateBody {
-    action_type:
-        | 'forum_reply' | 'content_publish' | 'content_update'
-        | 'schema_add' | 'backlink_earned' | 'llms_txt_update' | 'other';
-    title: string;
-    description?: string;
-    action_url?: string;
-    forum_thread_id?: string;
-    target_prompts?: string[];
-    status?: 'planned' | 'in_progress' | 'completed';
-    action_taken_at?: string; // ISO. If set (or status='completed'), we snapshot baseline now.
-}
-
-// GET /api/interventions, list workspace's interventions, newest first
+import { NextResponse } from 'next/server';
+import { api } from '@/convex/_generated/api';
+import { fetchAuthMutation } from '@/lib/auth-server';
+import { getConvexWorkspaceContext } from '@/lib/convex/session';
+import { convexRouteError } from '@/lib/convex/http';
+import { readActions, readActionEvents, readMembers } from '@/lib/convex/actions';
+import { generateInsights } from '@/lib/insights';
+import { actionFromInsight } from '@/lib/actions';
 export async function GET() {
-    const context = await getCurrentWorkspaceContext();
+  try {
+    const context = await getConvexWorkspaceContext();
     if (!context) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-
-    const db = createAdminClient();
-    const { data, error } = await db
-        .from('interventions')
-        .select('*')
-        .eq('workspace_id', context.workspaceId)
-        .order('created_at', { ascending: false });
-
-    if (error) {
-        console.error('[interventions/list] db error:', error);
-        return NextResponse.json({ error: 'Database error' }, { status: 500 });
-    }
-    return NextResponse.json({ interventions: data ?? [] });
+    const [interventions, events, members, insights] = await Promise.all([readActions(context.workspaceId), readActionEvents(context.workspaceId), readMembers(), generateInsights(context.workspaceId)]);
+    const keys = new Set(interventions.map(item => item.insight_key));
+    return NextResponse.json({ interventions, events, members, suggestions: insights.filter(item => !keys.has(`insight:${item.id}`)),
+      currentUserId: context.userId, canEdit: context.role !== 'viewer' });
+  } catch (error) { return convexRouteError(error); }
 }
-
-// POST /api/interventions, create a new intervention.
-// If action_taken_at is set (or status='completed'), snapshot baseline visibility
-// for each target_prompt right now so we can compute a real delta later.
-export async function POST(request: NextRequest) {
-    const context = await getCurrentWorkspaceContext();
+export async function POST(request: Request) {
+  try {
+    const context = await getConvexWorkspaceContext();
     if (!context) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-
-    let body: CreateBody;
-    try {
-        body = await request.json();
-    } catch {
-        return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
+    let body = await request.json().catch(() => null);
+    if (!body || typeof body !== 'object' || Array.isArray(body)) return NextResponse.json({ error: 'Invalid action' }, { status: 400 });
+    if (typeof body.insight_id === 'string') {
+      const insight = (await generateInsights(context.workspaceId)).find(item => item.id === body.insight_id);
+      if (!insight) return NextResponse.json({ error: 'Suggestion is stale or unavailable.' }, { status: 409 });
+      body = { ...actionFromInsight(insight), action_type: insight.category === 'audit' ? 'schema_add' : 'content_update' };
     }
-
-    if (!body.action_type || !body.title) {
-        return NextResponse.json({ error: 'action_type and title are required' }, { status: 400 });
-    }
-
-    const db = createAdminClient();
-
-    // If the caller says the action is completed (or gave an action_taken_at),
-    // freeze a baseline snapshot from existing scans so "before" is stable.
-    const shouldSnapshot = body.status === 'completed' || !!body.action_taken_at;
-    let baselineSnapshot: Record<string, unknown> = {};
-    if (shouldSnapshot && body.target_prompts && body.target_prompts.length > 0) {
-        baselineSnapshot = await snapshotVisibility(db, context.workspaceId, body.target_prompts);
-    }
-
-    const insert = {
-        workspace_id: context.workspaceId,
-        action_type: body.action_type,
-        title: body.title,
-        description: body.description ?? null,
-        action_url: body.action_url ?? null,
-        forum_thread_id: body.forum_thread_id ?? null,
-        target_prompts: body.target_prompts ?? [],
-        status: body.status ?? 'planned',
-        action_taken_at: body.action_taken_at ?? (shouldSnapshot ? new Date().toISOString() : null),
-        baseline_snapshot: baselineSnapshot,
-    };
-
-    const { data, error } = await db
-        .from('interventions')
-        .insert(insert)
-        .select()
-        .single();
-
-    if (error) {
-        console.error('[interventions/create] db error:', error);
-        return NextResponse.json({ error: 'Database error' }, { status: 500 });
-    }
-    return NextResponse.json({ intervention: data }, { status: 201 });
+    const requestId = request.headers.get('idempotency-key') || crypto.randomUUID();
+    const intervention = await fetchAuthMutation(api.actions.save, { workspaceId: context.workspaceId, inputJson: JSON.stringify(body), requestId });
+    return NextResponse.json({ intervention }, { status: 201 });
+  } catch (error) { return convexRouteError(error); }
 }
-

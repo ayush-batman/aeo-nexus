@@ -12,7 +12,7 @@ import {
     Tailwind,
 } from "@react-email/components";
 import * as React from "react";
-import type { DriftAlert } from "@/lib/analytics/sentiment-drift";
+import type { DriftAlert } from "../../lib/analytics/sentiment-model";
 
 interface Props { alert: DriftAlert; }
 
@@ -20,7 +20,7 @@ const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "https://aelohq.com";
 
 export const SentimentDriftEmail = ({ alert }: Props) => {
     const dir = alert.direction === 'up' ? 'rose' : 'dropped';
-    const dirWord = alert.direction === 'up' ? 'improved' : 'worsened';
+    const dirWord = alert.direction === 'up' ? 'rose in these samples' : 'fell in these samples';
     const platformLabel = ({
         chatgpt: 'ChatGPT', gemini: 'Gemini', claude: 'Claude',
         perplexity: 'Perplexity', google_ai_overview: 'Google AI Overview',

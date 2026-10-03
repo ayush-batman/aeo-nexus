@@ -1,4 +1,5 @@
 'use client';
+import { waitForAnalysis } from '@/lib/client/wait-for-analysis';
 
 import { useState, useTransition } from 'react';
 import { UpgradeModal, isPlanGate } from '@/components/billing/upgrade-modal';
@@ -27,10 +28,10 @@ export function PositioningView({ data, missingTable }: Props) {
     const maxFreq = Math.max(1, ...data.cells.map(([, c]) => c.frequency));
 
     async function regenerate() {
-        setStatus('Running gpt-5-mini over your recent scans…');
+        setStatus('Extracting attributes from your recent scans…');
         try {
             const res = await fetch('/api/positioning/regenerate', { method: 'POST' });
-            const body = await res.json();
+            let body = await res.json();
             if (isPlanGate(res, body)) {
                 setStatus(null);
                 setGateMessage(body?.message ?? null);
@@ -38,6 +39,8 @@ export function PositioningView({ data, missingTable }: Props) {
                 return;
             }
             if (!res.ok) throw new Error(body?.error || 'Regenerate failed');
+            if (res.status === 202) body = await waitForAnalysis(body.statusUrl);
+            if (body.failed) { setStatus(`Partial result: ${body.processed} scans processed; ${body.failed} failed. Reload to see saved evidence.`); return; }
             setStatus(`Processed ${body.processed} scans → ${body.attributes} attributes. Reloading…`);
             startTransition(() => window.location.reload());
         } catch (err) {
@@ -48,8 +51,8 @@ export function PositioningView({ data, missingTable }: Props) {
     if (missingTable) {
         return (
             <NoticeCard
-                title="Migration 021 not applied"
-                body="Apply supabase/migrations/021_competitor_attributes.sql in the Supabase SQL Editor, then reload this page."
+                title="Evidence could not be loaded"
+                body="The evidence service could not be reached. Reload to retry; missing data is not a zero score."
             />
         );
     }

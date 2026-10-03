@@ -1,29 +1,20 @@
-import { withKey } from '@/lib/api-v1';
+import { ApiV1Error, withKey } from '@/lib/api-v1';
+import { internal } from '@/convex/_generated/api';
+import { callInternal } from '@/lib/convex/admin';
 
-// POST /api/v1/scans/schedule  — schedule a recurring multi-sample scan.
-// Measurement only: spends no credits on anyone's behalf. (schedule_scan)
 export async function POST(request: Request) {
-  const body = await request.json().catch(() => ({} as Record<string, unknown>));
-  return withKey(request, 'measure', async (ctx, admin) => {
-    const prompt = typeof body.prompt === 'string' ? body.prompt.trim() : '';
-    if (!prompt) throw new Error('prompt is required');
-    const freq = ['daily', 'weekly', 'monthly'].includes(String(body.frequency))
-      ? String(body.frequency)
-      : 'weekly';
-    const { data, error } = await admin
-      .from('scheduled_scans')
-      .insert({
-        workspace_id: ctx.workspaceId,
-        prompt,
-        platforms: [],
-        competitors: [],
-        frequency: freq,
-        next_run_at: new Date().toISOString(),
-        status: 'active',
-      })
-      .select()
-      .single();
-    if (error) throw new Error('Failed to schedule scan');
-    return { scheduled: data };
+  const body = await request.json().catch(() => null);
+  return withKey(request, 'measure', async (context) => {
+    const engines = ['gemini', 'chatgpt', 'claude', 'perplexity'] as const;
+    if (typeof body?.prompt !== 'string' ||
+        (body.platforms !== undefined && (!Array.isArray(body.platforms) || body.platforms.some((value: unknown) => !engines.some((engine) => engine === value)))) ||
+        (body.competitors !== undefined && (!Array.isArray(body.competitors) || body.competitors.some((value: unknown) => typeof value !== 'string')))) {
+      throw new ApiV1Error(400, 'invalid_schedule', 'Check the prompt, engines and competitors.');
+    }
+    const frequency = body.frequency === 'daily' ? 'daily' : body.frequency === 'monthly' ? 'monthly' : 'weekly';
+    const platforms = body.platforms === undefined ? undefined : engines.filter((engine) => body.platforms.includes(engine));
+    return { scheduled: await callInternal('mutation', internal.apiWrites.schedule, {
+      keyId: context.keyId, prompt: body.prompt, platforms, competitors: body.competitors ?? [], frequency,
+    }) };
   });
 }

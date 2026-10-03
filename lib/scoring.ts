@@ -3,8 +3,6 @@
  * 
  * Contains all scoring algorithms for:
  * - Forum thread opportunity scores
- * - LLM visibility scores
- * - AEO health scores
  * - Trend detection
  */
 
@@ -16,14 +14,6 @@ export interface OpportunityScoreFactors {
     keywordMatches: number;
     isEngaged: boolean;
     platform: string;
-}
-
-export interface VisibilityScoreFactors {
-    isMentioned: boolean;
-    position: number | null;
-    sentimentScore: number;  // -1 to 1
-    hasOwnCitation: boolean;
-    confidence: number;
 }
 
 export interface TrendData {
@@ -124,72 +114,6 @@ export function detectIntent(text: string): 'buying' | 'compare' | 'research' | 
     if (researchKeywords.some(k => lower.includes(k))) return 'research';
 
     return 'other';
-}
-
-/**
- * Calculate visibility score from LLM scan results
- */
-export function calculateVisibilityScore(factors: VisibilityScoreFactors): number {
-    if (!factors.isMentioned) return 0;
-
-    let score = 40; // Base score for being mentioned
-
-    // Position bonus (max 30 points)
-    if (factors.position !== null) {
-        if (factors.position === 1) score += 30;
-        else if (factors.position === 2) score += 25;
-        else if (factors.position === 3) score += 20;
-        else if (factors.position <= 5) score += 15;
-        else if (factors.position <= 10) score += 10;
-        else score += 5;
-    }
-
-    // Sentiment bonus (max 20 points)
-    if (factors.sentimentScore > 0.5) score += 20;
-    else if (factors.sentimentScore > 0.2) score += 15;
-    else if (factors.sentimentScore > 0) score += 10;
-    else if (factors.sentimentScore > -0.2) score += 5;
-    else if (factors.sentimentScore > -0.5) score -= 5;
-    else score -= 10;
-
-    // Citation bonus
-    if (factors.hasOwnCitation) score += 10;
-
-    // Apply confidence
-    score = Math.round(score * Math.max(0.5, factors.confidence));
-
-    return Math.max(0, Math.min(100, score));
-}
-
-/**
- * Calculate AEO health score from multiple metrics
- */
-export function calculateAEOHealthScore(metrics: {
-    avgVisibility: number;
-    threadEngagement: number;
-    trendDirection: 'up' | 'down' | 'stable';
-    platformCoverage: number; // 0-1
-    contentScore: number;
-}): number {
-    let score = 0;
-
-    // Visibility component (40%)
-    score += metrics.avgVisibility * 0.4;
-
-    // Engagement component (20%)
-    score += Math.min(100, metrics.threadEngagement) * 0.2;
-
-    // Trend bonus (10%)
-    if (metrics.trendDirection === 'up') score += 10;
-    else if (metrics.trendDirection === 'stable') score += 5;
-
-    // Platform coverage (15%)
-    score += metrics.platformCoverage * 100 * 0.15;
-
-    // Content score (15%)
-    score += metrics.contentScore * 0.15;
-
-    return Math.round(Math.max(0, Math.min(100, score)));
 }
 
 /**

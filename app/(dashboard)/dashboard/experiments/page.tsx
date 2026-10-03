@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Header } from "@/components/dashboard/header";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -11,9 +11,6 @@ import {
     Loader2,
     Plus,
     Trash2,
-    Play,
-    Pause,
-    BarChart3,
     ArrowUpRight,
     ArrowDownRight,
     Minus,
@@ -53,11 +50,7 @@ export default function ExperimentsPage() {
     const [testQuestionsText, setTestQuestionsText] = useState("");
     const [controlQuestionsText, setControlQuestionsText] = useState("");
 
-    useEffect(() => {
-        fetchExperiments();
-    }, []);
-
-    const fetchExperiments = async () => {
+    const fetchExperiments = useCallback(async () => {
         try {
             const res = await fetch("/api/experiments");
             const data = await res.json();
@@ -67,7 +60,12 @@ export default function ExperimentsPage() {
         } finally {
             setLoading(false);
         }
-    };
+    }, []);
+
+    useEffect(() => {
+        const timer = window.setTimeout(() => { void fetchExperiments(); }, 0);
+        return () => window.clearTimeout(timer);
+    }, [fetchExperiments]);
 
     const handleCreate = async () => {
         if (!name.trim() || !testQuestionsText.trim() || !controlQuestionsText.trim()) return;

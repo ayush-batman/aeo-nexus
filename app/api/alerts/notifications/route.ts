@@ -1,69 +1,34 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
-import { getCurrentWorkspaceId } from '@/lib/data-access';
-
-// GET: Fetch unread notifications
+import { NextResponse } from 'next/server';
+import { api } from '@/convex/_generated/api';
+import { fetchAuthQuery, fetchAuthMutation } from '@/lib/auth-server';
+import { getConvexWorkspaceContext } from '@/lib/convex/session';
+import { convexRouteError } from '@/lib/convex/http';
 export async function GET() {
-    try {
-        const workspaceId = await getCurrentWorkspaceId();
-        if (!workspaceId) {
-            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-        }
-
-        const supabase = await createClient();
-        const { data, error } = await supabase
-            .from('notifications')
-            .select('*')
-            .eq('workspace_id', workspaceId)
-            .order('created_at', { ascending: false })
-            .limit(20);
-
-        if (error) {
-            console.error('Error fetching notifications:', error);
-            return NextResponse.json({ notifications: [], unreadCount: 0 });
-        }
-
-        const unreadCount = (data || []).filter(n => !n.read).length;
-
-        return NextResponse.json({
-            notifications: data || [],
-            unreadCount,
-        });
-    } catch (err) {
-        console.error('Notifications error:', err);
-        return NextResponse.json({ error: 'Failed to load notifications' }, { status: 500 });
-    }
+  try {
+    const context = await getConvexWorkspaceContext();
+    if (!context) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    const [recent, unreadCount] = await Promise.all([
+      fetchAuthQuery(api.alerts.notifications, { workspaceId: context.workspaceId, paginationOpts: { cursor: null, numItems: 20 } }),
+      fetchAuthQuery(api.alerts.unreadBadgeCount, { workspaceId: context.workspaceId }),
+    ]);
+    return NextResponse.json({ notifications: recent.page, unreadCount,
+      unreadCountMayBeHigher: unreadCount === 10 }, { headers: { 'Cache-Control': 'no-store' } });
+  } catch (error) { return convexRouteError(error); }
 }
-
-// PATCH: Mark notifications as read
-export async function PATCH(req: NextRequest) {
-    try {
-        const workspaceId = await getCurrentWorkspaceId();
-        if (!workspaceId) {
-            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-        }
-
-        const { ids, markAllRead } = await req.json();
-
-        const supabase = await createClient();
-
-        if (markAllRead) {
-            await supabase
-                .from('notifications')
-                .update({ read: true })
-                .eq('workspace_id', workspaceId)
-                .eq('read', false);
-        } else if (Array.isArray(ids) && ids.length > 0) {
-            await supabase
-                .from('notifications')
-                .update({ read: true })
-                .eq('workspace_id', workspaceId)
-                .in('id', ids);
-        }
-
-        return NextResponse.json({ success: true });
-    } catch (err) {
-        console.error('Mark read error:', err);
-        return NextResponse.json({ error: 'Failed to update notifications' }, { status: 500 });
+export async function PATCH(request: Request) {
+  try {
+    const context = await getConvexWorkspaceContext();
+    if (!context) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    const body = await request.json().catch(() => null);
+    const ids = body?.ids ?? [];
+    if (!Array.isArray(ids) || ids.length > 100 || ids.some(id => typeof id !== 'string') || (!ids.length && body?.markAllRead !== true)) {
+      return NextResponse.json({ error: 'Provide notification IDs or markAllRead' }, { status: 400 });
     }
+    // One bounded mutation per request avoids a long-running serverless request
+    // when a workspace has accumulated many unread notifications.
+    const { more } = await fetchAuthMutation(api.alerts.markRead, {
+      workspaceId: context.workspaceId, ids, markAllRead: body.markAllRead === true,
+    });
+    return NextResponse.json({ success: true, more });
+  } catch (error) { return convexRouteError(error); }
 }

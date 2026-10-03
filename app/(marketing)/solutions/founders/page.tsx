@@ -1,54 +1,22 @@
-import { SolutionPage } from "@/components/marketing/solution-page";
 import type { Metadata } from "next";
+import { SolutionPage } from "@/components/marketing/solution-page";
 
-export const metadata: Metadata = {
-    title: "For SaaS Founders · Aelo",
-    description: "Own the shortlist buyers ask ChatGPT for. Measure it weekly.",
-};
+export const metadata: Metadata = { title: "For SaaS founders · Aelo", description: "Inspect how AI assistants answer buyer questions about your category and brand." };
 
 export default function FoundersSolution() {
-    return (
-        <SolutionPage
-            content={{
-                persona: "SaaS Founders",
-                headline: "The AI is already picking your competitors. You should know.",
-                subheadline:
-                    "Aelo tracks, and moves, how ChatGPT, Gemini, Claude and Perplexity answer the exact queries your ICP is typing. When you ship a landing page, we measure the delta.",
-                problem: {
-                    title: "AI answers are the new shortlist. Most founders have zero signal on theirs.",
-                    body: "By 2026 the majority of high-intent buying research happens inside an AI chat, 'best CRM for a 10-person team', 'YC-backed observability tools', 'Notion vs Confluence for scaling teams'. If you're not named, you're not shortlisted. Traditional SEO tools can't see this. Aelo can, and it can prescribe the exact action that closes the gap.",
-                },
-                capabilities: [
-                    {
-                        title: "Founder-scoped prompt library",
-                        body: "50–200 high-intent queries your buyers are actually typing, generated from your ICP and refined weekly.",
-                    },
-                    {
-                        title: "Competitor Battle mode",
-                        body: "Head-to-head simulations across every model, so you know why the AI keeps recommending Notion instead of you.",
-                    },
-                    {
-                        title: "Reddit + forum intervention",
-                        body: "Aelo drafts community-safe replies to the exact threads the AI is citing. You review; you ship; we measure.",
-                    },
-                    {
-                        title: "Before/after receipts",
-                        body: "Every action you take gets a receipt, visibility change on the target prompt, in points, with a verdict.",
-                    },
-                ],
-                proofPoints: [
-                    "Signal in your first scan, no waiting for data to accumulate.",
-                    "Priced in ₹ starting ₹4,999/mo. Razorpay + Stripe.",
-                    "You + one teammate on Radar; up to 5 on Command.",
-                    "The honest data policy: no fabricated metrics, ever.",
-                ],
-                tierRecommendation: {
-                    tierName: "Command",
-                    rationale:
-                        "Founders need the whole loop, Scan through Prove. Radar is fine if you only want the mirror; Command is where the levers are.",
-                },
-                ctaCopy: "Find out what ChatGPT is telling your buyers about you.",
-            }}
-        />
-    );
+    return <SolutionPage content={{
+        persona: "SaaS founders",
+        headline: "Know whether your brand makes the AI shortlist—and why.",
+        subheadline: "Aelo repeats the buyer questions that shape consideration, keeps every answer and shows the sources worth investigating.",
+        problem: { title: "A single AI answer is easy to overread.", body: "One answer may name you and the next may not. Without repeated samples, a visible denominator and the source trail, a founder cannot tell whether the mention is dependable or accidental." },
+        capabilities: [
+            { title: "Choose the shortlist questions", body: "Start with three to five editable prompts grounded in how buyers compare the category." },
+            { title: "Inspect repeated answers", body: "Open each successful or failed sample instead of relying on a detached score." },
+            { title: "See competing names and sources", body: "Identify which brands recur and which provider-backed domains appear in the evidence." },
+            { title: "Run a compatible follow-up", body: "After the team acts, compare only measurements whose important conditions still match." },
+        ],
+        proofPoints: ["The visibility estimate includes its mention count, successful-sample count and confidence range.", "Provider citations stay separate from URLs found only in generated prose.", "A provider outage produces a partial or failed result—not synthetic data.", "An action is an investigation; only a compatible follow-up can show observed change."],
+        tierRecommendation: { tierName: "Command", rationale: "Command is intended for teams that need shared Actions and follow-up receipts. Start with a free answer or Radar if recurring measurement is the immediate job." },
+        ctaCopy: "Read what an assistant tells your next buyer.",
+    }} />;
 }

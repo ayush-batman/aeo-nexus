@@ -1,208 +1,78 @@
-import Link from "next/link";
-import { ArrowRight, Search, Layers, ClipboardList, Zap, CheckCircle2 } from "lucide-react";
 import type { Metadata } from "next";
-import { SoftwareApplicationJsonLd, BreadcrumbJsonLd } from "@/components/seo/structured-data";
+
+import { EvidencePanel, MarketingCTA, MarketingHero, MarketingSectionHeading } from "@/components/marketing/page-primitives";
+import { BreadcrumbJsonLd, SoftwareApplicationJsonLd } from "@/components/seo/structured-data";
 
 export const metadata: Metadata = {
-    title: "Product · Aelo",
-    description: "The Aelo loop: Scan → Diagnose → Prescribe → Act → Prove. Every step, welded into one product.",
+    title: "How Aelo works · From AI answer to evidence",
+    description: "Aelo repeats real buyer prompts across AI assistants, keeps the evidence and turns visibility gaps into work your team can measure again.",
 };
 
-interface Step {
-    n: string;
-    key: string;
-    icon: typeof Search;
-    title: string;
-    lede: string;
-    body: string;
-    bullets: string[];
-    footer?: string;
-}
-
-const STEPS: Step[] = [
-    {
-        n: "01",
-        key: "scan",
-        icon: Search,
-        title: "Scan",
-        lede: "Every AI, every prompt that matters, on a schedule.",
-        body: "The scanner runs your target prompts across ChatGPT (GPT-4o), Gemini 2.5, Claude 3.5 Sonnet, Perplexity's Llama 3.1 Sonar, and Google's AI Overview. Every run is analyzed by an in-loop model that extracts the structured signals, mentioned, position, sentiment, competitors, citations. Nothing is fabricated. When a provider fails, we surface an honest empty state.",
-        bullets: [
-            "Multi-LLM parallel scans (5 providers today; more on request)",
-            "Analyzer-in-loop: sentiment score, reasons, brand aliases",
-            "Weekly (Radar) or daily (Command) cadence, Vercel Cron",
-            "Schedules survive limit hits; overage is prevented, not billed",
-        ],
-    },
-    {
-        n: "02",
-        key: "diagnose",
-        icon: Layers,
-        title: "Diagnose",
-        lede: "The exact URLs the AI leans on when it answers.",
-        body: "For every mention (and every miss), Aelo attributes the citation graph, the specific Reddit threads, Wikipedia articles, G2 pages, and technical documentation the LLM pulled from. We compare your citation footprint to competitors and highlight Citation Gaps, the pages that produce answers but never mention you.",
-        bullets: [
-            "Per-scan citation extraction with own-domain flagging",
-            "Citation Gap analysis vs. every tracked competitor",
-            "Source classification (Reddit, docs, Tier-1 media, own domain)",
-            "Own-domain-cited alerts when an LLM starts using your site",
-        ],
-    },
-    {
-        n: "03",
-        key: "prescribe",
-        icon: ClipboardList,
-        title: "Prescribe",
-        lede: "Actions ranked by expected visibility movement.",
-        body: "Aelo turns diagnosis into an ordered work queue: draft this forum reply, publish this comparison page, add this schema block, close this citation gap. Every item is scoped, actionable, and tied to the specific prompt it will affect. Content briefs and Reddit-safe replies are pre-drafted by an in-loop model.",
-        bullets: [
-            "Forum reply drafts (non-spammy, community-aware)",
-            "Content briefs targeting the exact intent queries",
-            "Schema.org JSON-LD snippets for machine readability",
-            "Prioritized by baseline gap × prompt intent volume",
-        ],
-    },
-    {
-        n: "04",
-        key: "act",
-        icon: Zap,
-        title: "Act",
-        lede: "You ship. Aelo snapshots the baseline the moment you do.",
-        body: "Mark a forum reply as posted, or hit publish from Content Studio, Aelo captures the frozen visibility snapshot at that moment. That baseline is denormalized into the intervention record, so even if raw scans are pruned later, the 'before' number survives. This is what makes the receipt trustworthy.",
-        bullets: [
-            "One-click 'mark as posted' from Forum Hub",
-            "Content Studio publish → auto-intervention",
-            "Baseline snapshot per (prompt × platform), frozen in JSONB",
-            "Every action is a row you can audit later",
-        ],
-    },
-    {
-        n: "05",
-        key: "prove",
-        icon: CheckCircle2,
-        title: "Prove",
-        lede: "Re-scan. Compare. Deliver the receipt.",
-        body: "Hit Measure and Aelo re-scans every target prompt on every configured provider, computes the delta vs. baseline, and writes the receipt, visibility change in points, position change, a Verdict (improved / no_change / regressed), and the timestamp. Nothing is smoothed. If the follow-up regressed, it says regressed.",
-        bullets: [
-            "Per-intervention before/after receipts (Verdict + delta)",
-            "Weekly digest email rolls receipts into one summary",
-            "Public monthly India AI Visibility Index built from anonymized deltas",
-            "Every number is a query away from the raw scan",
-        ],
-        footer: "The receipt is the class-apart part. Nobody else in this category proves outcome per intervention.",
-    },
-];
+const STEPS = [
+    ["01", "Choose buyer questions", "Start with three to five questions that could put your brand on a buyer’s shortlist. Edit every prompt before it runs.", "Prompt text and version stay attached."],
+    ["02", "Collect repeated answers", "Aelo asks each plan-approved assistant four times. Returned answers and provider failures remain part of the record.", "The denominator never disappears."],
+    ["03", "Open the evidence", "Inspect where your brand appeared, which names appeared beside it, and which URLs came through structured provider citations.", "Mentioned links remain separate from citations."],
+    ["04", "Choose one investigation", "Aelo ranks a prompt or source gap and keeps the reason beside the task. It does not promise that the work will earn a mention.", "Every action points back to evidence."],
+    ["05", "Measure again fairly", "A follow-up is compared only when prompt, engine, model, region, mode, search, scorer and sampling conditions still match.", "Changed evidence produces an inconclusive verdict."],
+] as const;
 
 export default function ProductPage() {
     return (
-        <>
+        <div className="bg-[#e9ece7] text-[#1d2523]">
             <SoftwareApplicationJsonLd />
-            <BreadcrumbJsonLd items={[{ label: 'Product', path: '/product' }]} />
-            {/* Hero */}
-            <section className="pt-20 pb-14 md:pt-28 md:pb-20 px-6">
-                <div className="mx-auto max-w-4xl text-center">
-                    <p className="text-[10px] font-mono uppercase tracking-[0.18em] text-zinc-500 mb-4">
-                        The Aelo Loop · Five welded steps
-                    </p>
-                    <h1 className="text-4xl md:text-6xl font-medium tracking-tighter leading-[1.05] text-white text-balance mb-5">
-                        Scan → Diagnose → Prescribe → Act → Prove.
-                    </h1>
-                    <p className="text-[16px] md:text-[18px] text-zinc-400 max-w-2xl mx-auto leading-relaxed">
-                        Every other AEO tool stops at Scan. Aelo carries the loop all the way to the
-                        receipt, the number that says whether what you shipped moved the answer.
-                    </p>
-                </div>
-            </section>
+            <BreadcrumbJsonLd items={[{ label: "Product", path: "/product" }]} />
 
-            {/* Steps */}
-            <section className="pb-24 px-6">
-                <div className="mx-auto max-w-4xl space-y-14">
-                    {STEPS.map((s, i) => (
-                        <div key={s.key} className="relative">
-                            <div className="grid grid-cols-1 md:grid-cols-[80px_1fr] gap-6 md:gap-10">
-                                <div className="flex md:flex-col items-center md:items-start gap-3 md:gap-4">
-                                    <div className="flex items-center justify-center w-10 h-10 rounded-md border border-white/10 bg-white/[0.03] text-white">
-                                        <s.icon className="w-4.5 h-4.5" strokeWidth={1.5} />
-                                    </div>
-                                    <div className="font-mono text-[11px] text-zinc-600 tracking-[0.16em]">
-                                        {s.n}
-                                    </div>
-                                </div>
-                                <div>
-                                    <h2 className="text-2xl md:text-3xl font-medium tracking-tight text-white mb-2">
-                                        {s.title}
-                                    </h2>
-                                    <p className="text-[15.5px] text-zinc-300 mb-4">{s.lede}</p>
-                                    <p className="text-[14px] text-zinc-400 leading-relaxed mb-5">
-                                        {s.body}
-                                    </p>
-                                    <ul className="space-y-2">
-                                        {s.bullets.map(b => (
-                                            <li key={b} className="flex items-start gap-2 text-[13.5px] text-zinc-400 leading-snug">
-                                                <span className="mt-1 h-1 w-1 rounded-full bg-zinc-600 flex-shrink-0" />
-                                                <span>{b}</span>
-                                            </li>
-                                        ))}
-                                    </ul>
-                                    {s.footer && (
-                                        <div className="mt-5 border-l-2 border-[var(--accent-base)] pl-4 py-1 text-[13px] text-zinc-300 italic">
-                                            {s.footer}
-                                        </div>
-                                    )}
-                                </div>
-                            </div>
-                            {i < STEPS.length - 1 && (
-                                <div className="ml-5 md:ml-5 mt-6 h-6 border-l border-dashed border-white/10" />
-                            )}
-                        </div>
-                    ))}
-                </div>
-            </section>
+            <MarketingHero eyebrow="How Aelo works" title="From one buyer question to one decision you can defend." copy={<p>Most trackers stop at a score. Aelo keeps the answers behind it, shows what the evidence can support, and gives your team one bounded next investigation.</p>} actions={<MarketingCTA href="/#scan" inverted>Run one real answer</MarketingCTA>} />
 
-            {/* Technical strip */}
-            <section className="py-20 border-t border-white/5 bg-[#050506]">
-                <div className="mx-auto max-w-6xl px-6">
-                    <div className="mb-10">
-                        <p className="text-[10px] font-mono uppercase tracking-[0.18em] text-zinc-500 mb-3">
-                            Under the hood
-                        </p>
-                        <h2 className="text-2xl md:text-3xl font-medium tracking-tight text-white max-w-2xl">
-                            Serverless, multi-tenant, real-time. Trust every row.
-                        </h2>
-                    </div>
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                        {[
-                            { t: "Next.js 16 · Vercel", b: "Edge-fast dashboard, Serverless API routes, Cron for schedules." },
-                            { t: "Supabase Postgres", b: "Row-Level Security scoped by Organization → Workspace. RLS you can audit." },
-                            { t: "Multi-tenant Workspaces", b: "One org, many brands. Agency-ready. Client-safe by default." },
-                            { t: "Honest data policy", b: "No mock rows in the database. Ever. See the manifesto." },
-                        ].map(c => (
-                            <div key={c.t} className="rounded-md border border-white/[0.06] bg-black p-5">
-                                <div className="text-[13.5px] font-medium text-white mb-1">{c.t}</div>
-                                <div className="text-[12.5px] text-zinc-500 leading-relaxed">{c.b}</div>
-                            </div>
+            <section className="px-4 py-20 md:px-6 md:py-28">
+                <div className="mx-auto max-w-6xl">
+                    <MarketingSectionHeading eyebrow="The measurement path" title="Five stages. One evidence trail." copy={<p>Each stage adds context without breaking the link to the answer that produced it.</p>} />
+                    <div className="mt-12 border-t border-[#bbc4bc]">
+                        {STEPS.map(([number, title, copy, proof]) => (
+                            <article key={number} className="grid gap-5 border-b border-[#bbc4bc] py-8 md:grid-cols-[56px_1fr_.62fr] md:items-start">
+                                <p className="font-mono text-xs text-[#416a88]">{number}</p>
+                                <div><h2 className="text-2xl font-semibold tracking-tight">{title}</h2><p className="mt-3 max-w-2xl text-base leading-relaxed text-[#53615d]">{copy}</p></div>
+                                <p className="border-l-2 border-[#a8cbe0] pl-4 text-sm font-semibold leading-relaxed text-[#315873]">{proof}</p>
+                            </article>
                         ))}
                     </div>
                 </div>
             </section>
 
-            {/* CTA */}
-            <section className="py-20 border-t border-white/5 text-center px-6">
-                <h2 className="text-3xl md:text-4xl font-medium tracking-tight text-white mb-4 text-balance">
-                    See the loop, running.
-                </h2>
-                <p className="text-zinc-400 mb-8">
-                    Your first scan finishes in under a minute. Interventions unlock on Command.
-                </p>
-                <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
-                    <Link href="/signup" className="text-[15px] bg-[var(--accent-base)] text-[var(--text-on-accent)] px-6 py-3 rounded-md hover:bg-[var(--accent-hover)] transition-colors font-medium inline-flex items-center gap-2">
-                        Start free <ArrowRight className="w-4 h-4" />
-                    </Link>
-                    <Link href="/pricing" className="text-[15px] text-zinc-300 border border-white/15 px-6 py-3 rounded-md hover:bg-white/[0.04] transition-colors font-medium">
-                        See pricing
-                    </Link>
+            <section className="bg-[#131717] px-4 py-24 text-[#eff2ec] md:px-6 md:py-32">
+                <div className="mx-auto grid max-w-6xl gap-12 lg:grid-cols-[.72fr_1.28fr]">
+                    <MarketingSectionHeading light eyebrow="One contract" title="The dashboard, API and MCP read the same evidence." copy={<p>Convex binds every protected read and write to a workspace, runs durable measurement work, and stores large raw receipts without asking the interface to invent a second version of the truth.</p>} />
+                    <div className="grid gap-px border border-[#343c3b] bg-[#343c3b] sm:grid-cols-2">
+                        {[["Durable work", "Retries do not quietly reserve the same quota twice."], ["Workspace boundaries", "Roles and membership are checked on the server."], ["Inspectable receipts", "Answers, failures and structured citations remain retrievable."], ["Compatible follow-ups", "Changed measurement conditions cannot become a lift claim."]].map(([title, copy]) => (
+                            <article key={title} className="bg-[#181d1d] p-6"><h3 className="text-lg font-semibold">{title}</h3><p className="mt-3 text-sm leading-relaxed text-[#a4aeaa]">{copy}</p></article>
+                        ))}
+                    </div>
                 </div>
             </section>
-        </>
+
+            <section className="px-4 py-24 md:px-6 md:py-32">
+                <div className="mx-auto grid max-w-6xl gap-12 lg:grid-cols-[.7fr_1.3fr] lg:items-center">
+                    <MarketingSectionHeading eyebrow="What reaches the screen" title="The receipt survives the summary." />
+                    <EvidencePanel eyebrow="Measurement receipt / sample 04" title="What are the best project wikis for an engineering team?">
+                        <p className="text-base leading-relaxed text-[#3f4947]">Answer text stays readable. Provider citations remain attached. A missing or failed sample stays missing or failed.</p>
+                        <div className="mt-7 grid gap-4 border-t border-[#d2d7cf] pt-5 sm:grid-cols-3">
+                            <Fact label="Observed" value="3 / 4 mentions" /><Fact label="Confidence" value="Low" /><Fact label="State" value="Partial" />
+                        </div>
+                        <p className="mt-5 text-xs text-[#586560]">Illustrative structure, not a customer result.</p>
+                    </EvidencePanel>
+                </div>
+            </section>
+
+            <section className="bg-[#a8cbe0] px-4 py-24 md:px-6 md:py-28">
+                <div className="mx-auto flex max-w-6xl flex-col justify-between gap-8 lg:flex-row lg:items-end">
+                    <div><p className="font-mono text-xs uppercase tracking-widest text-[#315873]">Start with the evidence</p><h2 className="mt-4 max-w-[680px] text-4xl font-semibold tracking-tight md:text-6xl">Ask one real question. Keep the answer.</h2></div>
+                    <MarketingCTA href="/#scan">Run one real answer</MarketingCTA>
+                </div>
+            </section>
+        </div>
     );
+}
+
+function Fact({ label, value }: { label: string; value: string }) {
+    return <div><p className="font-mono text-xs uppercase tracking-widest text-[#586560]">{label}</p><p className="mt-2 text-lg font-semibold">{value}</p></div>;
 }

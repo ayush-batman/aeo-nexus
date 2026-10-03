@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { Printer, Download, Lock, ArrowRight } from "lucide-react";
 import type { Report } from "@/lib/analytics/report";
+import { ReportsSettingsTabs } from "@/components/dashboard/reports-settings-tabs";
 
 function csvEscape(v: string | number | null): string {
     const s = v == null ? "" : String(v);
@@ -14,9 +15,10 @@ function downloadCsv(report: Report) {
     lines.push(`Aelo AI Visibility Report,${report.brand}`);
     lines.push(`Period,${report.from} to ${report.to}`);
     lines.push("");
-    lines.push("Engine,Mention rate %,Mentioned,Tested,Avg position");
+    lines.push("Engine,Mention rate %,Mentioned,Tested,Confidence,95% interval,Avg position");
     for (const e of report.engines) {
-        lines.push([e.label, e.mentionRate, e.mentioned, e.tested, e.avgPosition ?? ""].map(csvEscape).join(","));
+        const interval = e.confidenceInterval ? `${Math.round(e.confidenceInterval.lower * 100)}-${Math.round(e.confidenceInterval.upper * 100)}%` : "";
+        lines.push([e.label, e.mentionRate, e.mentioned, e.tested, e.confidence, interval, e.avgPosition ?? ""].map(csvEscape).join(","));
     }
     lines.push("");
     lines.push("Prompt,Mentioned,Tested,Best position,Engines");
@@ -40,7 +42,8 @@ function downloadCsv(report: Report) {
 export default function ReportView({ paid, brand, report }: { paid: boolean; brand: string; report: Report | null }) {
     if (!paid || !report) {
         return (
-            <div className="p-8 max-w-2xl mx-auto">
+            <div className="mx-auto max-w-[1180px] px-5 py-10 sm:px-8 lg:px-16 lg:py-12">
+                <ReportsSettingsTabs />
                 <div className="rounded-2xl border border-[var(--border-default)] bg-[var(--bg-surface)] p-10 text-center">
                     <div className="mx-auto mb-4 inline-flex h-11 w-11 items-center justify-center rounded-xl border border-[var(--accent-base)]/25 bg-[var(--accent-muted)]">
                         <Lock className="h-5 w-5 text-[var(--accent-base)]" />
@@ -61,14 +64,19 @@ export default function ReportView({ paid, brand, report }: { paid: boolean; bra
 
     const s = report;
     const empty = s.totalScans === 0;
+    const overallInterval = s.overallConfidenceInterval
+        ? `${Math.round(s.overallConfidenceInterval.lower * 100)}–${Math.round(s.overallConfidenceInterval.upper * 100)}%`
+        : null;
 
     return (
-        <div className="report-root p-6 md:p-8 max-w-4xl mx-auto">
+        <div className="report-root mx-auto max-w-[1180px] px-5 py-10 sm:px-8 lg:px-16 lg:py-12">
+            <div className="no-print mb-10"><ReportsSettingsTabs /></div>
             {/* Toolbar (hidden in print) */}
             <div className="no-print mb-6 flex items-center justify-between gap-3">
                 <div>
-                    <h1 className="text-2xl font-bold text-[var(--text-primary)] tracking-tight">Client report</h1>
-                    <p className="text-sm text-[var(--text-secondary)]">Branded, print-ready. Save as PDF or export CSV.</p>
+                    <div className="font-mono text-[10px] uppercase tracking-[0.16em] text-[var(--text-tertiary)]">04 / Share & manage</div>
+                    <h1 className="mt-2 text-3xl font-medium text-[var(--text-primary)] tracking-[-0.04em]">A brief you can stand behind.</h1>
+                    <p className="mt-2 text-sm text-[var(--text-secondary)]">The finding, the supporting evidence, and the limits—kept together.</p>
                 </div>
                 <div className="flex items-center gap-2">
                     <button onClick={() => downloadCsv(s)} className="inline-flex items-center gap-1.5 rounded-lg border border-[var(--border-default)] px-3 py-2 text-sm text-[var(--text-secondary)] hover:text-[var(--text-primary)]">
@@ -81,7 +89,7 @@ export default function ReportView({ paid, brand, report }: { paid: boolean; bra
             </div>
 
             {/* The report sheet */}
-            <div className="report-sheet rounded-2xl border border-[var(--border-default)] bg-[var(--bg-surface)] p-8">
+            <div className="report-sheet border border-[var(--border-evidence)] bg-[var(--bg-evidence)] p-6 text-[var(--text-evidence)] shadow-[8px_8px_0_var(--bg-base),8px_8px_0_1px_var(--border-default)] sm:p-10">
                 <div className="flex items-start justify-between border-b border-[var(--border-default)] pb-5 mb-6">
                     <div>
                         <div className="text-[11px] font-mono uppercase tracking-[0.18em] text-[var(--accent-base)] mb-1">AI Visibility Report</div>
@@ -96,13 +104,17 @@ export default function ReportView({ paid, brand, report }: { paid: boolean; bra
 
                 {empty ? (
                     <p className="text-sm text-[var(--text-secondary)] py-8 text-center">
-                        No scans in this period yet. Run scans from the LLM Tracker, then generate the report.
+                        No scans in this period yet. Run a measurement in Prompts &amp; Scans, then generate the report.
                     </p>
                 ) : (
                     <>
                         {/* Summary */}
                         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-                            <Tile label="Mention rate" value={`${s.overallMentionRate}%`} />
+                            <Tile
+                                label="Mention rate"
+                                value={s.overallMentionRate === null ? "—" : `${s.overallMentionRate}%`}
+                                detail={s.overallMentionRate === null ? "Unmeasured" : `${s.overallConfidence} confidence · 95% range ${overallInterval} · n=${s.totalScans}`}
+                            />
                             <Tile label="Avg position" value={s.avgPosition != null ? String(s.avgPosition) : "–"} />
                             <Tile label="Scans" value={String(s.totalScans)} />
                             <Tile label="Prompts" value={String(s.uniquePrompts)} />
@@ -116,6 +128,7 @@ export default function ReportView({ paid, brand, report }: { paid: boolean; bra
                                     <th className="text-left font-medium py-2">Engine</th>
                                     <th className="text-right font-medium py-2">Mention rate</th>
                                     <th className="text-right font-medium py-2">Mentioned</th>
+                                    <th className="text-right font-medium py-2">Confidence</th>
                                     <th className="text-right font-medium py-2">Avg position</th>
                                 </tr>
                             </thead>
@@ -125,6 +138,10 @@ export default function ReportView({ paid, brand, report }: { paid: boolean; bra
                                         <td className="py-2.5 text-[var(--text-primary)] font-medium">{e.label}</td>
                                         <td className="py-2.5 text-right"><span className="font-semibold text-[var(--accent-base)]">{e.mentionRate}%</span></td>
                                         <td className="py-2.5 text-right text-[var(--text-secondary)]">{e.mentioned} / {e.tested}</td>
+                                        <td className="py-2.5 text-right text-[var(--text-secondary)]">
+                                            {e.confidence}
+                                            {e.confidenceInterval && <span className="block text-[10px] text-[var(--text-tertiary)]">{Math.round(e.confidenceInterval.lower * 100)}–{Math.round(e.confidenceInterval.upper * 100)}%</span>}
+                                        </td>
                                         <td className="py-2.5 text-right text-[var(--text-secondary)]">{e.avgPosition ?? "–"}</td>
                                     </tr>
                                 ))}
@@ -188,11 +205,12 @@ export default function ReportView({ paid, brand, report }: { paid: boolean; bra
     );
 }
 
-function Tile({ label, value }: { label: string; value: string }) {
+function Tile({ label, value, detail }: { label: string; value: string; detail?: string }) {
     return (
         <div className="rounded-xl border border-[var(--border-default)] bg-[var(--bg-base)]/40 p-4">
             <div className="text-[var(--text-secondary)] text-xs font-medium">{label}</div>
             <div className="text-2xl font-bold text-[var(--text-primary)] mt-1">{value}</div>
+            {detail && <div className="mt-1 text-[10px] text-[var(--text-tertiary)]">{detail}</div>}
         </div>
     );
 }

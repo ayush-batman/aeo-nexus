@@ -1,67 +1,37 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import type { Metadata } from "next";
+import { cache } from "react";
 import { ArrowRight, ExternalLink } from "lucide-react";
-import { createAdminClient } from "@/lib/supabase/admin";
+import { readPublicScan } from "@/lib/convex/public-scan";
+import { PendingReceipt } from "@/components/marketing/pending-receipt";
 import { NewsletterSubscribe } from "@/components/marketing/newsletter-subscribe";
+import { RadarPreview } from "@/components/marketing/radar-preview";
+import { PLAN_CATALOG } from "@/lib/billing/plan-catalog";
+import { recommendationLabel } from "@/lib/measurement/recommendation-label";
+import { AnswerNameCandidates } from "@/components/marketing/answer-name-candidates";
+import { buildPublicScanMetadata } from "@/lib/measurement/public-scan-metadata";
 
-interface PublicScan {
-    id:                     string;
-    brand_name:             string;
-    prompt:                 string;
-    platform:               string;
-    response:               string | null;
-    brand_mentioned:        boolean | null;
-    mention_position:       number | null;
-    sentiment:              'positive' | 'neutral' | 'negative' | null;
-    competitors_mentioned:  string[] | null;
-    citations:              { url: string; title: string; isOwnDomain?: boolean }[] | null;
-    error_message:          string | null;
-    created_at:             string;
-}
-
-export const revalidate = 300; // 5 min
-
-// Fetch server-side so the receipt renders instantly (no client loading spinner).
-async function getScan(id: string): Promise<PublicScan | null> {
+export const dynamic = 'force-dynamic';
+const getScan = cache(async (id: string) => {
     if (!/^[a-f0-9-]{36}$/i.test(id)) return null;
-
-    const db = createAdminClient();
-    const { data } = await db
-        .from('public_scans')
-        .select('*')
-        .eq('id', id)
-        .maybeSingle();
-
-    return (data as PublicScan | null) ?? null;
-}
+    return readPublicScan(id);
+});
 
 export async function generateMetadata(
     { params }: { params: Promise<{ id: string }> },
 ): Promise<Metadata> {
     const { id } = await params;
     const scan = await getScan(id);
-    if (!scan) return { title: 'Scan not found · Aelo' };
-
-    const verdict = scan.brand_mentioned
-        ? `mentioned${scan.mention_position ? ` at #${scan.mention_position}` : ''}`
-        : 'not mentioned';
-
-    return {
-        title: `${scan.brand_name}, ${verdict} on Gemini · Aelo`,
-        description: `Live Gemini scan for "${scan.prompt}", ${scan.brand_name} was ${verdict}. Verify the raw response yourself.`,
-        openGraph: {
-            title: `${scan.brand_name}, ${verdict} on Gemini`,
-            description: `Live scan: "${scan.prompt}", verify the raw response.`,
-            type: 'article',
-        },
-    };
+    if (!scan) return { title: 'Scan not found' };
+    return buildPublicScanMetadata(scan);
 }
 
 export default async function PublicScanPage(
     { params }: { params: Promise<{ id: string }> },
 ) {
     const { id } = await params;
+    const radar = PLAN_CATALOG.starter;
     const scan = await getScan(id);
     if (!scan) notFound();
 
@@ -69,13 +39,19 @@ export default async function PublicScanPage(
         year: 'numeric', month: 'long', day: 'numeric',
     });
 
-    const verdictLabel = scan.error_message
+    const pending = scan.status === 'queued' || scan.status === 'running';
+    const failed = scan.status === 'failed' || Boolean(scan.error_message);
+    const uncheckedCitationCount = (scan.citations ?? []).filter(
+        (citation) => !citation.fetchValidation || citation.fetchValidation === 'not_checked',
+    ).length;
+    const verdictLabel = pending ? 'Running' : failed
         ? 'Failed'
+        : scan.brand_mentioned === null ? 'Mention unassessed'
         : scan.brand_mentioned
             ? scan.mention_position && scan.mention_position <= 3 ? 'Named early' : 'Named'
             : 'Not named';
 
-    const verdictStyle = scan.error_message
+    const verdictStyle = pending || failed || scan.brand_mentioned === null
         ? 'text-[var(--text-tertiary)] border-[var(--border-default)] bg-[var(--bg-raised)]'
         : scan.brand_mentioned
             ? 'text-[var(--data-green)] border-[var(--data-green)]/30 bg-[var(--data-green-muted)]'
@@ -92,19 +68,22 @@ export default async function PublicScanPage(
                         <time dateTime={scan.created_at}>{scanDate}</time>
                         <span>·</span>
                         <span>{scan.platform === 'gemini' ? 'Gemini' : scan.platform}</span>
+                        <span>·</span>
+                        <span>{pending ? 'Model pending' : scan.provider_model ?? 'Model not recorded'}</span>
                     </div>
                     <h1 className="text-3xl md:text-4xl font-medium tracking-tighter leading-[1.05] text-white mb-3 text-balance">
                         {scan.brand_name}
                         {", "}
-                        <span className={scan.brand_mentioned === false ? 'text-[var(--data-red)]' : 'text-[var(--data-green)]'}>
+                        <span className={pending || failed || scan.brand_mentioned === null ? 'text-[var(--text-secondary)]' : scan.brand_mentioned === false ? 'text-[var(--data-red)]' : 'text-[var(--data-green)]'}>
                             {verdictLabel.toLowerCase()}
                         </span>
                     </h1>
                     <p className="text-[15px] text-zinc-400 leading-relaxed max-w-2xl">
-                        We asked Gemini {scan.brand_mentioned === false ? "and it didn't name" : "and it named"}{' '}
-                        {scan.brand_name} for the prompt below. Verify yourself in 30 seconds by pasting the same prompt into Gemini.
+                        {pending ? "Your scan is running. This page will update when evidence is saved." : failed ? "The provider did not produce usable evidence. No visibility result is claimed." : "This receipt contains one sampled answer from the Gemini API. Consumer Gemini may answer differently; read the saved evidence below."}
                     </p>
                 </div>
+
+                {pending && <PendingReceipt />}
 
                 {/* The prompt card */}
                 <div className="mb-6 rounded-md border border-white/[0.08] bg-black overflow-hidden">
@@ -116,7 +95,7 @@ export default async function PublicScanPage(
                             rel="noreferrer"
                             className="inline-flex items-center gap-1 text-[11px] font-mono text-[var(--accent-base)] hover:text-[var(--accent-hover)]"
                         >
-                            Reproduce on Gemini <ExternalLink className="w-2.5 h-2.5" />
+                            Try in Gemini <ExternalLink className="w-2.5 h-2.5" />
                         </a>
                     </div>
                     <div className="px-4 py-3 text-[15px] text-white font-medium leading-snug">
@@ -150,6 +129,20 @@ export default async function PublicScanPage(
                     )}
                 </div>
 
+                {!pending && !failed && scan.competitor_tracking_status === 'not_configured' && (
+                    <AnswerNameCandidates candidates={scan.answer_name_candidates} />
+                )}
+
+                {!pending && !failed && scan.brand_mentioned && (
+                    <div className="mb-6 rounded-md border border-[var(--border-default)] bg-[var(--bg-raised)] px-4 py-3 text-sm text-[var(--text-secondary)]">
+                        <p className="font-medium text-[var(--text-primary)]">
+                            {recommendationLabel(scan.recommendation_status)}
+                        </p>
+                        {scan.recommendation_evidence && <p className="mt-2">“{scan.recommendation_evidence}”</p>}
+                        <p className="mt-2 text-xs">{scan.recommendation_evidence ? 'AI-classified from the quoted answer; check the full response below. ' : ''}Mention and recommendation are different. This single answer is not a visibility score.</p>
+                    </div>
+                )}
+
                 {/* Raw response */}
                 {scan.response && (
                     <div className="mb-6 rounded-md border border-white/[0.08] bg-black overflow-hidden">
@@ -164,9 +157,9 @@ export default async function PublicScanPage(
                     </div>
                 )}
 
-                {scan.error_message && (
+                {failed && (
                     <div className="mb-6 rounded-md border border-[var(--data-red)]/30 bg-[var(--data-red-muted)] px-4 py-4 text-[13.5px] text-[var(--data-red)]">
-                        Scan failed: {scan.error_message}. This is what Aelo shows when a
+                        Scan failed: {scan.error_message || 'No usable provider response was saved.'} This is what Aelo shows when a
                         provider fails, no fabricated positive result.
                     </div>
                 )}
@@ -176,22 +169,43 @@ export default async function PublicScanPage(
                     <div className="mb-8 rounded-md border border-white/[0.08] bg-black overflow-hidden">
                         <div className="px-4 py-2.5 border-b border-white/[0.06]">
                             <span className="text-[10px] font-mono uppercase tracking-[0.14em] text-zinc-500">
-                                Citations Gemini returned
+                                Evidence links in this answer
                             </span>
                         </div>
+                        <p className="px-4 pt-3 text-xs leading-relaxed text-zinc-500">
+                            Provider citation means the assistant supplied this link; it does not prove the page supports its answer.
+                            {uncheckedCitationCount > 0 && ` Page content and reachability have not been checked for ${uncheckedCitationCount} ${uncheckedCitationCount === 1 ? 'link' : 'links'}.`}
+                        </p>
                         <div className="px-4 py-3 space-y-1.5">
-                            {scan.citations!.slice(0, 10).map((c, i) => (
-                                <a
-                                    key={i}
-                                    href={c.url}
-                                    target="_blank"
-                                    rel="noreferrer"
-                                    className="flex items-center gap-1.5 text-[12.5px] font-mono text-zinc-400 hover:text-white truncate"
-                                >
+                            {scan.citations!.slice(0, 10).map((c, i) => {
+                                const unsafe = c.fetchValidation === 'invalid' || c.fetchValidation === 'blocked' || !/^https?:\/\//i.test(c.url);
+                                const content = <>
                                     <span className="truncate">{c.title || c.url}</span>
-                                    <ExternalLink className="w-2.5 h-2.5 flex-shrink-0" />
-                                </a>
-                            ))}
+                                    <span className="shrink-0 text-[9px] uppercase tracking-wide text-zinc-600">
+                                        {c.provenance === 'provider_citation'
+                                            ? 'Provider citation'
+                                            : c.provenance === 'link_mentioned'
+                                                ? 'Link mentioned'
+                                                : 'Unverified'}
+                                    </span>
+                                    {!unsafe && <ExternalLink className="w-2.5 h-2.5 flex-shrink-0" />}
+                                </>;
+                                return unsafe ? (
+                                    <div key={i} className="flex items-center gap-1.5 text-[12.5px] font-mono text-zinc-600 truncate">
+                                        {content}
+                                    </div>
+                                ) : (
+                                    <a
+                                        key={i}
+                                        href={c.url}
+                                        target="_blank"
+                                        rel="noreferrer"
+                                        className="flex items-center gap-1.5 text-[12.5px] font-mono text-zinc-400 hover:text-white truncate"
+                                    >
+                                        {content}
+                                    </a>
+                                );
+                            })}
                         </div>
                     </div>
                 )}
@@ -199,10 +213,17 @@ export default async function PublicScanPage(
                 {/* Sage disclaimer */}
                 <div className="mb-8 rounded-md border-l-2 border-[var(--accent-base)] bg-[var(--accent-muted)]/40 pl-4 pr-3 py-3 text-[13px] text-zinc-300 leading-relaxed italic">
                     LLM answers are non-deterministic, this scan is a sample, not a truth.
-                    Running the same prompt again could shift the position by ±2 and the
-                    sentiment by one bucket. That&apos;s why the receipt is here: verify any
-                    claim yourself in 30 seconds.
+                    One answer is not a reliable visibility score. Repeated measurements can show variation;
+                    this receipt does not establish a likely rank range or a trend.
                 </div>
+
+                <RadarPreview
+                    brandName={scan.brand_name}
+                    prompt={scan.prompt}
+                    status={scan.status}
+                    brandMentioned={scan.brand_mentioned}
+                    citations={scan.citations ?? []}
+                />
 
                 {/* CTA, track over time */}
                 <div className="rounded-lg border border-[var(--accent-base)]/40 bg-black p-6 mb-6">
@@ -210,13 +231,10 @@ export default async function PublicScanPage(
                         Track this over time
                     </p>
                     <h2 className="text-xl font-medium text-white mb-2 tracking-tight">
-                        This is one snapshot. Aelo tracks it forever.
+                        This is one snapshot. Radar measures it repeatedly.
                     </h2>
                     <p className="text-[14px] text-zinc-400 leading-relaxed mb-5">
-                        Sign up (no card) and Aelo re-runs this prompt daily across ChatGPT, Gemini,
-                        Claude, and Perplexity. You&apos;ll see when {scan.brand_name}&apos;s
-                        position moves, when a new competitor enters the answer, or when the
-                        sentiment shifts.
+                        Start free with Gemini. {radar.name} adds {radar.scanPromise.toLowerCase()} across {radar.engines.join(', ')} when those providers are available, with sample counts, confidence ranges and source evidence.
                     </p>
                     <div className="flex flex-col sm:flex-row gap-2">
                         <Link

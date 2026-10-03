@@ -1,6 +1,5 @@
 import { getCurrentUser } from "@/lib/admin";
 import {
-    Settings,
     User,
     Shield,
     Bell,

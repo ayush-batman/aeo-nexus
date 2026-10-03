@@ -12,7 +12,7 @@ interface RedditAuthToken {
     expiresAt: number;
 }
 
-interface RedditPost {
+export interface RedditPost {
     id: string;
     title: string;
     selftext: string;
@@ -57,7 +57,7 @@ async function getAccessToken(): Promise<string | null> {
 
     try {
         const response = await fetch('https://www.reddit.com/api/v1/access_token', {
-            method: 'POST',
+            method: 'POST', signal: AbortSignal.timeout(20000),
             headers: {
                 'Authorization': `Basic ${auth}`,
                 'Content-Type': 'application/x-www-form-urlencoded',
@@ -103,7 +103,7 @@ async function redditRequest(endpoint: string): Promise<unknown> {
     }
 
     const response = await fetch(`${baseUrl}${endpoint}`, {
-        headers,
+        headers, signal: AbortSignal.timeout(20000),
     });
 
     if (!response.ok) {
@@ -151,7 +151,7 @@ export async function searchReddit(
     const { subreddits = [], sort = 'relevance', time = 'year', limit = 25, after } = options;
 
     let endpoint = '/search.json';
-    let combinedSubreddits = subreddits.join('+');
+    const combinedSubreddits = subreddits.join('+');
 
     // If specific subreddits, use subreddit search
     if (combinedSubreddits.length > 0) {
@@ -176,7 +176,7 @@ export async function searchReddit(
             data: { children: { data: Record<string, unknown> }[]; after: string | null };
         };
 
-        let posts = data.data.children.map(transformPost);
+        const posts = data.data.children.map(transformPost);
 
         // dylect-bot strategy: If targeted subreddits return very few, also search globally
         if (combinedSubreddits.length > 0 && posts.length < limit / 2) {
@@ -202,7 +202,7 @@ export async function searchReddit(
                         seen.add(p.id);
                     }
                 }
-            } catch (e) { /* ignore global fallback error */ }
+            } catch { /* ignore global fallback error */ }
         }
 
         return {
@@ -210,8 +210,7 @@ export async function searchReddit(
             after: data.data.after,
         };
     } catch (e) {
-        console.error("Reddit Search Error:", e);
-        return { posts: [], after: null };
+        throw new Error('reddit_search_unavailable', { cause: e });
     }
 }
 

@@ -1,0 +1,141 @@
+import { afterEach, beforeEach, expect, test, vi } from 'vitest';
+import { api } from '../../convex/_generated/api';
+import { fixture } from './fixtures';
+import { nextScheduledTime } from '../../convex/scheduled';
+import { internal } from '../../convex/_generated/api';
+import { runVisibilityMeasurement } from '../../lib/measurement/service';
+beforeEach(() => { vi.useFakeTimers(); vi.stubEnv('GEMINI_API_KEY', 'synthetic-not-a-provider-key'); });
+afterEach(() => { vi.useRealTimers(); vi.unstubAllEnvs(); });
+test('three buyer prompts reserve one quota unit and replay without creating scans', async () => {
+  const { t, owner, context, foreignWorkspace } = await fixture();
+  const prompts = ['Who measures AI answers?', 'Which tools show citations?', 'How do I measure repeatability?'];
+  const input = { workspaceId: context.workspaceId, prompts, requestId: crypto.randomUUID() };
+  const id = await owner.mutation(api.activation.begin, input);
+  expect(await owner.mutation(api.activation.begin, input)).toBe(id);
+  expect(await t.run(async ctx => (await ctx.db.query('scanQuotaReservations').collect()).length)).toBe(1);
+  expect(await t.run(async ctx => (await ctx.db.query('measurementRuns').collect()).length)).toBe(3);
+  expect(await t.run(async ctx => (await ctx.db.query('measurementSamples').collect()).length)).toBe(12);
+  const queued = await owner.query(api.activation.get, { workspaceId: context.workspaceId, packetId: id });
+  expect(queued).toMatchObject({ pending: true, runIds: expect.any(Array) });
+  expect(queued?.readableRunIds).toEqual(queued?.runIds);
+  await expect(owner.mutation(api.activation.begin, { ...input, prompts: [...prompts.slice(0, 2), 'Changed prompt'] })).rejects.toThrow('request_id_conflict');
+  await expect(owner.mutation(api.activation.begin, { ...input, workspaceId: foreignWorkspace })).rejects.toThrow('workspace_not_found');
+});
+test('a missing scan record is not left pending forever or read as a valid receipt', async () => {
+  const { t, owner, context } = await fixture();
+  const packetId = crypto.randomUUID();
+  await owner.mutation(api.activation.begin, { workspaceId: context.workspaceId,
+    prompts: ['Buyer question one?', 'Buyer question two?', 'Buyer question three?'], requestId: packetId });
+  await t.run(async ctx => {
+    const packet = await ctx.db.query('decisionPackets').withIndex('by_public_id', q => q.eq('publicId', packetId)).unique();
+    await ctx.db.patch(packet!._id, { measurementRunIds: ['missing-run'] });
+  });
+  const record = await owner.query(api.activation.get, { workspaceId: context.workspaceId, packetId });
+  expect(record).toMatchObject({ pending: false, runIds: ['missing-run'], readableRunIds: [] });
+});
+test('terminal scan records without receipts are not left pending forever', async () => {
+  const { t, owner, context } = await fixture();
+  const packetId = crypto.randomUUID();
+  await owner.mutation(api.activation.begin, { workspaceId: context.workspaceId,
+    prompts: ['Buyer question one?', 'Buyer question two?', 'Buyer question three?'], requestId: packetId });
+  await t.run(async ctx => {
+    const packet = await ctx.db.query('decisionPackets').withIndex('by_public_id', q => q.eq('publicId', packetId)).unique();
+    for (const runId of packet!.measurementRunIds ?? []) {
+      const run = await ctx.db.query('measurementRuns').withIndex('by_public_id', q => q.eq('publicId', runId)).unique();
+      await ctx.db.patch(run!._id, { status: 'all_failed', result: null });
+    }
+  });
+  const record = await owner.query(api.activation.get, { workspaceId: context.workspaceId, packetId });
+  expect(record).toMatchObject({ pending: false });
+  expect(record?.readableRunIds).toHaveLength(3);
+  await t.mutation(internal.scheduled.reconcileInitialJobs, {});
+  const state = await t.run(async ctx => {
+    const workspace = await ctx.db.query('workspaces').withIndex('by_public_id', q => q.eq('publicId', context.workspaceId)).unique();
+    return {
+      packet: await ctx.db.query('decisionPackets').withIndex('by_public_id', q => q.eq('publicId', packetId)).unique(),
+      job: await ctx.db.query('measurementJobs').withIndex('by_workspace_id_and_purpose', q =>
+        q.eq('workspaceId', workspace!._id).eq('purpose', 'initial_visibility')).first(),
+    };
+  });
+  expect(state.packet?.status).toBe('untracked');
+  expect(state.job?.status).toBe('failed');
+});
+test('unfinished jobs rotate so the oldest twenty cannot monopolize reconciliation', async () => {
+  const { t, owner, context } = await fixture();
+  const packetId = crypto.randomUUID();
+  await owner.mutation(api.activation.begin, { workspaceId: context.workspaceId,
+    prompts: ['Buyer question one?', 'Buyer question two?', 'Buyer question three?'], requestId: packetId });
+  const now = Date.now();
+  const originalJobId = await t.run(async ctx => {
+    const workspace = await ctx.db.query('workspaces').withIndex('by_public_id', q => q.eq('publicId', context.workspaceId)).unique();
+    const original = await ctx.db.query('measurementJobs').withIndex('by_workspace_id_and_purpose', q =>
+      q.eq('workspaceId', workspace!._id).eq('purpose', 'initial_visibility')).first();
+    for (let index = 0; index < 20; index++) {
+      await ctx.db.insert('measurementJobs', { publicId: crypto.randomUUID(), workspaceId: workspace!._id,
+        organizationId: workspace!.organizationId, purpose: 'initial_visibility', status: 'running',
+        attempts: 0, maxAttempts: 3, availableAt: now - 1, claimToken: null, claimExpiresAt: null,
+        lastError: null, result: { decision_packet_id: packetId }, createdAt: now, updatedAt: now, completedAt: null });
+    }
+    return original!._id;
+  });
+  await t.mutation(internal.scheduled.reconcileInitialJobs, {});
+  expect((await t.run(ctx => ctx.db.get(originalJobId)))?.availableAt).toBe(now);
+  await t.mutation(internal.scheduled.reconcileInitialJobs, {});
+  expect((await t.run(ctx => ctx.db.get(originalJobId)))?.availableAt).toBe(now + 60_000);
+});
+test('monthly recurrence clamps to month end rather than silently skipping February', () => {
+  expect(new Date(nextScheduledTime('monthly', Date.parse('2026-01-31T10:00:00Z'))).toISOString()).toBe('2026-02-28T10:00:00.000Z');
+  expect(new Date(nextScheduledTime('monthly', Date.parse('2028-01-31T10:00:00Z'))).toISOString()).toBe('2028-02-29T10:00:00.000Z');
+});
+test('first-results mail waits for persisted runs and is scheduled only once', async () => {
+  const { t, owner, context } = await fixture();
+  const packetId = crypto.randomUUID();
+  await owner.mutation(api.activation.begin, { workspaceId: context.workspaceId,
+    prompts: ['Buyer question one?', 'Buyer question two?', 'Buyer question three?'], requestId: packetId });
+  await t.mutation(internal.scheduled.reconcileInitialJobs, {});
+  let scheduled = await t.run((ctx) => ctx.db.system.query('_scheduled_functions').collect());
+  expect(scheduled.filter((item) => item.name === 'mailActions:firstResults')).toHaveLength(0);
+  const runs = await t.run(async (ctx) => {
+    const packet = await ctx.db.query('decisionPackets').withIndex('by_public_id', (q) => q.eq('publicId', packetId)).unique();
+    return Promise.all((packet!.measurementRunIds ?? []).map(async (publicId) => ctx.db.query('measurementRuns')
+      .withIndex('by_public_id', (q) => q.eq('publicId', publicId)).unique()));
+  });
+  for (const run of runs) {
+    if (!run) throw new Error('missing_test_run');
+    let call = 0;
+    const result = await runVisibilityMeasurement(run.input, { runId: run.publicId,
+      execute: async () => ++call === 1 ? { results: [{ platform: 'gemini', prompt: run.input.prompt,
+        response: 'Synthetic Aelo answer.', brandMentioned: true, brandVariants: [], mentionPosition: 1,
+        sentiment: 'neutral', sentimentScore: 0, sentimentReason: 'Synthetic test', competitorsMentioned: [],
+        competitorPositions: [], citations: [], sampleId: `sample-${run.publicId}`, listItems: [], confidence: 1,
+        timestamp: new Date().toISOString() }], errors: [] } : { results: [], errors: [{ platform: 'gemini', error: 'synthetic_failure' }] },
+      persist: async () => {} });
+    await t.run((ctx) => ctx.db.patch(run._id, { status: 'partial', result, updatedAt: Date.now() }));
+  }
+  vi.advanceTimersByTime(60_000);
+  await t.mutation(internal.scheduled.reconcileInitialJobs, {});
+  await t.mutation(internal.scheduled.reconcileInitialJobs, {});
+  scheduled = await t.run((ctx) => ctx.db.system.query('_scheduled_functions').collect());
+  expect(scheduled.filter((item) => item.name === 'mailActions:firstResults')).toHaveLength(1);
+});
+test('an all-failed onboarding run never sends a results-ready email', async () => {
+  const { t, owner, context } = await fixture();
+  const packetId = crypto.randomUUID();
+  await owner.mutation(api.activation.begin, { workspaceId: context.workspaceId,
+    prompts: ['Question one?', 'Question two?', 'Question three?'], requestId: packetId });
+  const runs = await t.run(async ctx => {
+    const packet = await ctx.db.query('decisionPackets').withIndex('by_public_id', q => q.eq('publicId', packetId)).unique();
+    return Promise.all((packet!.measurementRunIds ?? []).map(async publicId => ctx.db.query('measurementRuns')
+      .withIndex('by_public_id', q => q.eq('publicId', publicId)).unique()));
+  });
+  for (const run of runs) {
+    if (!run) throw new Error('missing_test_run');
+    const result = await runVisibilityMeasurement(run.input, { runId: run.publicId,
+      execute: async () => ({ results: [], errors: [{ platform: 'gemini', error: 'synthetic_failure' }] }),
+      persist: async () => {} });
+    await t.run(ctx => ctx.db.patch(run._id, { status: 'all_failed', result, updatedAt: Date.now() }));
+  }
+  await t.mutation(internal.scheduled.reconcileInitialJobs, {});
+  const scheduled = await t.run(ctx => ctx.db.system.query('_scheduled_functions').collect());
+  expect(scheduled.filter(item => item.name === 'mailActions:firstResults')).toHaveLength(0);
+});

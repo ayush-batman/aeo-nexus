@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Header } from "@/components/dashboard/header";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -8,10 +8,9 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { createClient } from "@/lib/supabase/client";
 import {
     Loader2, Plus, Trash2, Search, Save, Lightbulb, Sparkles,
-    ArrowRight, Bookmark, Copy, Check, ExternalLink, ClipboardList,
+    Bookmark, Copy, Check, ExternalLink, ClipboardList,
     Info, Zap, Compass, Globe, TrendingUp,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -19,13 +18,18 @@ import type { Prompt } from "@/lib/data-access";
 import { useRouter } from "next/navigation";
 import {
     PROMPT_TEMPLATES, CATEGORY_META, fillTemplate,
-    getAllCategories, getTemplatesByCategory,
+    getAllCategories,
     type PromptCategory,
 } from "@/lib/prompts/manual-check-templates";
 
 interface GeneratedPrompt {
     category: string;
     prompt: string;
+}
+
+interface WorkspaceSummary {
+    name?: string;
+    settings?: { industry?: string; target_audience?: string };
 }
 
 const LLM_LINKS = [
@@ -53,6 +57,7 @@ export default function PromptResearchPage() {
     // Library State
     const [savedPrompts, setSavedPrompts] = useState<Prompt[]>([]);
     const [savingId, setSavingId] = useState<string | null>(null);
+    const [requestError, setRequestError] = useState<string | null>(null);
 
     // Copy state
     const [copiedId, setCopiedId] = useState<string | null>(null);
@@ -63,66 +68,48 @@ export default function PromptResearchPage() {
     // Discovery state
     const [discoverQuery, setDiscoverQuery] = useState("");
     const [discovering, setDiscovering] = useState(false);
+    const [discoveryError, setDiscoveryError] = useState<string | null>(null);
     const [discoveryResults, setDiscoveryResults] = useState<{
         autocomplete: string[];
         peopleAlsoAsk: string[];
         relatedQueries: string[];
+        sourceStatus?: Record<string, string>;
     } | null>(null);
 
-    useEffect(() => {
-        fetchData();
+    const fetchLibrary = useCallback(async () => {
+        try {
+            const res = await fetch('/api/prompts/library');
+            if (!res.ok) throw new Error('Could not load your saved prompts. Please retry.');
+            setSavedPrompts(await res.json());
+        } catch (error) {
+            setRequestError(error instanceof Error ? error.message : 'Could not load your saved prompts.');
+        }
     }, []);
 
-    async function fetchData() {
+    const fetchData = useCallback(async () => {
+        setRequestError(null);
         try {
-            const supabase = createClient();
-            const { data: { user } } = await supabase.auth.getUser();
-            if (user) {
-                const { data: profile } = await supabase
-                    .from('users')
-                    .select('org_id')
-                    .eq('id', user.id)
-                    .single();
-
-                if (profile) {
-                    const [wsRes, activeRes] = await Promise.all([
-                        fetch("/api/workspaces", { cache: "no-store" }),
-                        fetch("/api/onboarding/context", { cache: "no-store" })
-                    ]);
-                    let activeId = null;
-                    if (activeRes.ok) activeId = (await activeRes.json()).workspaceId;
-                    if (wsRes.ok && activeId) {
-                        const wsData = await wsRes.json();
-                        const workspace = wsData.workspaces?.find((ws: any) => ws.id === activeId);
-
-                        if (workspace) {
-                            setBrandName(workspace.name || '');
-                            setIndustry(workspace.settings?.industry || '');
-                            setAudience(workspace.settings?.target_audience || '');
-                            if (!topic) setTopic(workspace.settings?.industry || '');
-                            fetchLibrary();
-                        }
-                    }
-                }
-            }
+            const response = await fetch('/api/workspaces?current=1', { cache: 'no-store' });
+            if (!response.ok) throw new Error('Could not load your workspace. Please retry.');
+            const data = await response.json();
+            const workspace = data.workspace as WorkspaceSummary | undefined;
+            if (!workspace) throw new Error('Your workspace could not be found.');
+            setBrandName(workspace.name || '');
+            setIndustry(workspace.settings?.industry || '');
+            setAudience(workspace.settings?.target_audience || '');
+            setTopic((current) => current || workspace.settings?.industry || '');
+            await fetchLibrary();
         } catch (error) {
-            console.error('Error fetching data:', error);
+            setRequestError(error instanceof Error ? error.message : 'Could not load your workspace.');
         } finally {
             setLoading(false);
         }
-    }
+    }, [fetchLibrary]);
 
-    async function fetchLibrary() {
-        try {
-            const res = await fetch('/api/prompts/library');
-            if (res.ok) {
-                const data = await res.json();
-                setSavedPrompts(data);
-            }
-        } catch (error) {
-            console.error('Error fetching library:', error);
-        }
-    }
+    useEffect(() => {
+        const timer = window.setTimeout(() => { void fetchData(); }, 0);
+        return () => window.clearTimeout(timer);
+    }, [fetchData]);
 
     async function handleGenerate() {
         if (!topic.trim()) return;
@@ -161,12 +148,12 @@ export default function PromptResearchPage() {
                 }),
             });
 
-            if (res.ok) {
-                const newPrompt = await res.json();
-                setSavedPrompts([newPrompt, ...savedPrompts]);
-            }
+            if (!res.ok) throw new Error('Could not save this prompt. Check your access and retry.');
+            const newPrompt = await res.json();
+            setSavedPrompts((current) => [newPrompt, ...current]);
+            setRequestError(null);
         } catch (error) {
-            console.error('Error saving prompt:', error);
+            setRequestError(error instanceof Error ? error.message : 'Could not save this prompt.');
         } finally {
             setSavingId(null);
         }
@@ -177,11 +164,11 @@ export default function PromptResearchPage() {
 
         try {
             const res = await fetch(`/api/prompts/library/${id}`, { method: 'DELETE' });
-            if (res.ok) {
-                setSavedPrompts(savedPrompts.filter(p => p.id !== id));
-            }
+            if (!res.ok) throw new Error('Could not delete this prompt. Check your access and retry.');
+            setSavedPrompts((current) => current.filter(p => p.id !== id));
+            setRequestError(null);
         } catch (error) {
-            console.error('Error deleting prompt:', error);
+            setRequestError(error instanceof Error ? error.message : 'Could not delete this prompt.');
         }
     }
 
@@ -201,6 +188,7 @@ export default function PromptResearchPage() {
     const handleDiscover = async () => {
         if (!discoverQuery.trim()) return;
         setDiscovering(true);
+        setDiscoveryError(null);
         setDiscoveryResults(null);
         try {
             const res = await fetch('/api/prompts/discover', {
@@ -217,6 +205,7 @@ export default function PromptResearchPage() {
             setDiscoveryResults(data);
         } catch (err) {
             console.error('Discovery error:', err);
+            setDiscoveryError('Question discovery could not finish. Please retry; no search-demand claim has been made.');
         } finally {
             setDiscovering(false);
         }
@@ -245,6 +234,10 @@ export default function PromptResearchPage() {
             />
 
             <div className="p-6">
+                {requestError && <div role="alert" className="mb-4 rounded-lg border border-[var(--border-default)] p-4">
+                    <p>{requestError}</p>
+                    <Button variant="outline" onClick={() => void fetchData()} className="mt-2">Retry loading</Button>
+                </div>}
                 <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
                     <TabsList className="bg-[var(--bg-raised)] border-[var(--border-default)]">
                         <TabsTrigger value="quick-check" className="data-[state=active]:bg-[var(--accent-base)] data-[state=active]:text-white">
@@ -451,7 +444,7 @@ export default function PromptResearchPage() {
                                     Generate Research Prompts
                                 </CardTitle>
                                 <CardDescription>
-                                    Use AI to simulate your customer's journey and find the questions they ask at each stage.
+                                    Use AI to simulate your customer&apos;s journey and find the questions they ask at each stage.
                                 </CardDescription>
                             </CardHeader>
                             <CardContent>
@@ -675,6 +668,9 @@ export default function PromptResearchPage() {
                                     </Button>
                                 </div>
 
+                                {discoveryError && <p role="alert" className="text-sm text-[var(--data-red)]">{discoveryError}</p>}
+                                {discoveryResults && Object.values(discoveryResults.sourceStatus ?? {}).some(status => ['failed', 'not_configured'].includes(status)) &&
+                                    <p role="status" className="text-sm text-[var(--text-secondary)]">Partial results: one or more sources were unavailable. Missing suggestions do not mean there is no demand.</p>}
                                 {discoveryResults && (
                                     <div className="space-y-6 mt-4">
                                         {/* Autocomplete Suggestions */}
@@ -726,7 +722,7 @@ export default function PromptResearchPage() {
                                             <div>
                                                 <h3 className="text-sm font-semibold text-[var(--text-secondary)] mb-3 flex items-center gap-2">
                                                     <Lightbulb className="w-4 h-4 text-amber-400" />
-                                                    People Also Ask ({discoveryResults.peopleAlsoAsk.length})
+                                                    AI question ideas — not observed searches ({discoveryResults.peopleAlsoAsk.length})
                                                 </h3>
                                                 <div className="space-y-2">
                                                     {discoveryResults.peopleAlsoAsk.map((question, i) => (

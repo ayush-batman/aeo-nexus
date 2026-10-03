@@ -12,9 +12,13 @@ const KEY = process.env.AELO_API_KEY || "";
 
 export class AeloApiError extends Error {
   status: number;
-  constructor(status: number, message: string) {
+  code?: string;
+  retryAfter?: string;
+  constructor(status: number, message: string, code?: string, retryAfter?: string) {
     super(message);
     this.status = status;
+    this.code = code;
+    this.retryAfter = retryAfter;
     this.name = "AeloApiError";
   }
 }
@@ -60,16 +64,20 @@ async function request(method: "GET" | "POST", path: string, opts: { query?: Rec
   }
 
   if (!res.ok) {
-    const msg =
-      (data && typeof data === "object" && "error" in data && (data as { error?: string }).error) ||
+    const errorData = data && typeof data === "object" ? data as { error?: string; message?: string; code?: string } : undefined;
+    const msg = errorData?.message || errorData?.error ||
       `Aelo API ${res.status} on ${method} ${path}`;
+    const retryAfter = res.headers.get("retry-after") || undefined;
     if (res.status === 401) {
-      throw new AeloApiError(401, `${msg}. Check that AELO_API_KEY is valid and not revoked.`);
+      throw new AeloApiError(401, `${msg}. Check that AELO_API_KEY is valid and not revoked.`, errorData?.code);
     }
     if (res.status === 402 || res.status === 403) {
-      throw new AeloApiError(res.status, `${msg}. This may be gated by your plan; check aelohq.com/pricing.`);
+      throw new AeloApiError(res.status, `${msg}. This may be gated by your plan or key scope; check Aelo settings.`, errorData?.code);
     }
-    throw new AeloApiError(res.status, String(msg));
+    if (res.status === 429) {
+      throw new AeloApiError(429, `${msg}${retryAfter ? ` Retry after ${retryAfter} seconds.` : ''}`, errorData?.code, retryAfter);
+    }
+    throw new AeloApiError(res.status, String(msg), errorData?.code, retryAfter);
   }
   return data;
 }

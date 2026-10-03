@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { getPlatformStats, getAllOrganizations } from "@/lib/admin";
+import type { getPlatformStats } from "@/lib/admin";
+import type { Organization } from "@/lib/types";
 import {
     Building2,
     Users,
@@ -12,7 +12,7 @@ import {
     Activity
 } from "lucide-react";
 import Link from "next/link";
-import { motion } from "framer-motion";
+import { motion, type Variants } from "framer-motion";
 
 // Animation Variants
 const containerVariants = {
@@ -23,7 +23,7 @@ const containerVariants = {
     }
 };
 
-const itemVariants: any = {
+const itemVariants: Variants = {
     hidden: { opacity: 0, y: 20 },
     show: { opacity: 1, y: 0, transition: { type: "spring" as const, stiffness: 300, damping: 24 } }
 };
@@ -32,8 +32,8 @@ export default function AdminDashboardClient({
     initialStats,
     initialOrgs
 }: {
-    initialStats: any,
-    initialOrgs: any[]
+    initialStats: Awaited<ReturnType<typeof getPlatformStats>>,
+    initialOrgs: Organization[]
 }) {
     return (
         <div className="p-8 max-w-7xl mx-auto">
@@ -56,7 +56,7 @@ export default function AdminDashboardClient({
                         <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
                         <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
                     </span>
-                    System Online • All API Engines Functional
+                    Admin overview · engine health is not verified on this screen
                 </p>
             </motion.div>
 

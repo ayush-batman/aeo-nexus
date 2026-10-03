@@ -3,7 +3,7 @@ import Link from 'next/link';
 import { TrendingDown, TrendingUp, ArrowRight, Minus } from 'lucide-react';
 import { getCurrentWorkspaceContext } from '@/lib/data-access';
 import { getEntitlements } from '@/lib/entitlements';
-import { loadDriftHistory, DRIFT_THRESHOLD } from '@/lib/analytics/sentiment-drift';
+import { loadDriftHistory, DRIFT_THRESHOLD, driftCohort, compareDrift, type DriftSnapshot } from '@/lib/analytics/sentiment-drift';
 import { Header } from '@/components/dashboard/header';
 import { LockedPreview } from '@/components/billing/locked-preview';
 
@@ -17,13 +17,7 @@ const PLATFORM_LABEL: Record<string, string> = {
     google_ai_overview: 'Google AI Overview',
 };
 
-type Row = {
-    prompt: string;
-    platform: string;
-    week_start: string;
-    avg_sentiment: number;
-    sample_size: number;
-};
+type Row = DriftSnapshot;
 
 export default async function DriftPage() {
     const ctx = await getCurrentWorkspaceContext();
@@ -52,11 +46,10 @@ export default async function DriftPage() {
     }
 
     let history: Row[] = [];
+    let loadError = false;
     try {
-        history = (await loadDriftHistory(ctx.workspaceId)) as Row[];
-    } catch (err) {
-        console.warn('[drift] history load failed (migration 020 not applied?):', err);
-    }
+        history = await loadDriftHistory(ctx.workspaceId);
+    } catch { loadError = true; }
     const grouped = groupByPromptPlatform(history);
     const alerts  = grouped
         .map(g => ({ ...g, drift: computeLatestDrift(g.rows) }))
@@ -67,11 +60,11 @@ export default async function DriftPage() {
         <div className="flex flex-col min-h-screen">
             <Header
                 title="Sentiment Drift"
-                description={`Every scan carries a −1 to +1 sentiment score. We snapshot the weekly average per prompt + platform and surface swings of ${DRIFT_THRESHOLD.toFixed(2)} or more.`}
+                description={`Every scan carries a −1 to +1 sentiment score. We compare matched, completed weeks; shifts must exceed ${DRIFT_THRESHOLD.toFixed(2)} and the repeat-sample uncertainty range.`}
             />
             <main className="flex-1 px-6 py-8 max-w-7xl mx-auto w-full">
 
-                {alerts.length === 0 ? (
+                {loadError ? <div role="alert" className="text-sm text-[var(--data-red)]">Sentiment history could not be loaded. <Link href="/dashboard/drift" className="underline">Retry</Link></div> : alerts.length === 0 ? (
                     <EmptyState hasHistory={history.length > 0} />
                 ) : (
                     <section className="mb-10">
@@ -135,7 +128,8 @@ function SampleDriftTeaser() {
 function groupByPromptPlatform(rows: Row[]) {
     const map = new Map<string, { key: string; prompt: string; platform: string; rows: Row[] }>();
     for (const r of rows) {
-        const key = `${r.prompt}|${r.platform}`;
+        const key = driftCohort(r);
+        if (!key) continue;
         const existing = map.get(key);
         if (existing) existing.rows.push(r);
         else map.set(key, { key, prompt: r.prompt, platform: r.platform, rows: [r] });
@@ -148,11 +142,8 @@ function computeLatestDrift(rows: Row[]): { current: number; prior: number; delt
     if (rows.length < 2) return null;
     const current = rows[rows.length - 1];
     const prior   = rows[rows.length - 2];
-    return {
-        current: Number(current.avg_sentiment),
-        prior:   Number(prior.avg_sentiment),
-        delta:   Number(current.avg_sentiment) - Number(prior.avg_sentiment),
-    };
+    const comparison = compareDrift(current, prior);
+    return comparison?.qualified ? comparison : null;
 }
 
 function DriftCard({ group }: { group: { prompt: string; platform: string; rows: Row[]; drift: { current: number; prior: number; delta: number } | null } }) {
@@ -257,12 +248,12 @@ function EmptyState({ hasHistory }: { hasHistory: boolean }) {
     return (
         <div className="rounded-xl border border-dashed border-[var(--border)] bg-[var(--surface)] p-10 text-center">
             <div className="text-lg font-medium text-[var(--text-primary)] mb-2">
-                {hasHistory ? 'No drift this week' : 'Waiting for two weeks of scans'}
+                {hasHistory ? 'No qualified drift detected' : 'Waiting for two weeks of scans'}
             </div>
             <p className="text-sm text-[var(--text-secondary)] max-w-md mx-auto leading-relaxed">
                 {hasHistory
-                    ? 'Every tracked prompt is holding sentiment within ' + DRIFT_THRESHOLD.toFixed(2) + '. We\'ll alert you the moment one breaks.'
-                    : 'Drift compares this week\'s average sentiment against last week\'s. Once two weekly snapshots exist per prompt, this page comes alive.'}
+                    ? 'No change cleared the matched-settings, consecutive-week, sample-count and uncertainty checks. This does not prove sentiment stayed unchanged.'
+                    : 'Drift needs two consecutive completed weeks with matching measurement settings and at least four samples in each.'}
             </p>
         </div>
     );

@@ -78,12 +78,11 @@ export async function searchStackExchange(
     try {
         const response = await fetch(
             `https://api.stackexchange.com/2.3/search/advanced?${params}`,
-            { headers: { 'Accept-Encoding': 'gzip' } } // SE API requires this
+            { headers: { 'Accept-Encoding': 'gzip' }, signal: AbortSignal.timeout(20000) } // SE API requires this
         );
 
         if (!response.ok) {
-            console.error(`Stack Exchange API error: ${response.status} ${response.statusText}`);
-            return { questions: [], hasMore: false, quotaRemaining: 0 };
+            throw new Error('stackexchange_unavailable');
         }
 
         const data: SESearchResponse = await response.json();
@@ -100,8 +99,7 @@ export async function searchStackExchange(
             quotaRemaining: data.quota_remaining,
         };
     } catch (error) {
-        console.error('Stack Exchange search error:', error);
-        return { questions: [], hasMore: false, quotaRemaining: 0 };
+        throw new Error('stackexchange_unavailable', { cause: error });
     }
 }
 

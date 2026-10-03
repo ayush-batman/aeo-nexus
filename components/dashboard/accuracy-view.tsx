@@ -1,8 +1,9 @@
 'use client';
+import { waitForAnalysis } from '@/lib/client/wait-for-analysis';
 
 import { useState, useTransition } from 'react';
 import Link from 'next/link';
-import { RefreshCw, CheckCircle2, XCircle, Clock, HelpCircle, Lock, ExternalLink, Info } from 'lucide-react';
+import { RefreshCw, CheckCircle2, XCircle, Clock, HelpCircle, ExternalLink, Info } from 'lucide-react';
 import type { AccuracySummary, AccuracyRow } from '@/lib/analytics/accuracy';
 import { UpgradeModal, isPlanGate } from '@/components/billing/upgrade-modal';
 import { LockedPreview } from '@/components/billing/locked-preview';
@@ -82,8 +83,8 @@ export function AccuracyView({ summary, paidTier, plan, missingTable }: Props) {
     if (missingTable) {
         return (
             <NoticeCard
-                title="Migration 022 not applied"
-                body="Apply supabase/migrations/022_accuracy_claims.sql in the Supabase SQL Editor, then reload."
+                title="Evidence could not be loaded"
+                body="The evidence service could not be reached. Reload to retry; missing data is not a zero score."
             />
         );
     }
@@ -101,10 +102,10 @@ export function AccuracyView({ summary, paidTier, plan, missingTable }: Props) {
     }
 
     async function verify() {
-        setStatus('Extracting claims + verifying against your site with gpt-5…');
+        setStatus('Checking claims against fetched source evidence…');
         try {
             const res = await fetch('/api/accuracy/verify', { method: 'POST' });
-            const body = await res.json();
+            let body = await res.json();
             if (isPlanGate(res, body)) {
                 setStatus(null);
                 setGateMessage(body?.message ?? null);
@@ -112,7 +113,9 @@ export function AccuracyView({ summary, paidTier, plan, missingTable }: Props) {
                 return;
             }
             if (!res.ok) throw new Error(body?.error || 'Verify failed');
-            setStatus(`Processed ${body.processed} scans → ${body.claims} claims verified. Reloading…`);
+            if (res.status === 202) body = await waitForAnalysis(body.statusUrl);
+            if (body.failed) { setStatus(`Partial result: ${body.processed} scans processed; ${body.failed} failed. Reload to see saved evidence.`); return; }
+            setStatus(`Processed ${body.processed} scans → ${body.claims} claims checked (including unverified). Reloading…`);
             startTransition(() => window.location.reload());
         } catch (err) {
             setStatus(`Failed: ${String(err)}`);

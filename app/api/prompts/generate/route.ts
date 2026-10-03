@@ -1,26 +1,23 @@
-
-import { NextRequest, NextResponse } from "next/server";
-import { getCurrentWorkspaceId } from "@/lib/data-access";
-import { generatePrompts } from "@/lib/ai/llm-scanner";
-
-export async function POST(request: NextRequest) {
-    try {
-        const workspaceId = await getCurrentWorkspaceId();
-        if (!workspaceId) {
-            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-        }
-
-        const body = await request.json();
-        const { topic, brand } = body;
-
-        if (!topic || !brand) {
-            return NextResponse.json({ error: 'Topic and Brand are required' }, { status: 400 });
-        }
-
-        const prompts = await generatePrompts(topic, brand);
-        return NextResponse.json(prompts);
-    } catch (error) {
-        console.error('Error generating prompts:', error);
-        return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
-    }
+import { NextResponse } from 'next/server';
+import { api } from '@/convex/_generated/api';
+import { fetchAuthAction } from '@/lib/auth-server';
+import { getConvexWorkspaceContext } from '@/lib/convex/session';
+import { convexRouteError } from '@/lib/convex/http';
+export const maxDuration = 90;
+export async function POST(request: Request) {
+  try {
+    const context = await getConvexWorkspaceContext();
+    if (!context) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    const text = await request.text();
+    if (text.length > 30000) return NextResponse.json({ error: 'Content is too long.' }, { status: 413 });
+    const body = JSON.parse(text);
+    if (!body || typeof body !== 'object' || Array.isArray(body) ||
+      typeof body.topic !== 'string' || typeof body.brand !== 'string') return NextResponse.json({ error: 'Invalid content' }, { status: 400 });
+    const result = await fetchAuthAction(api.contentActions.prompts, { workspaceId: context.workspaceId,
+      topic: body.topic, brand: body.brand });
+    return NextResponse.json(result);
+  } catch (error) {
+    if (error instanceof SyntaxError) return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 });
+    return convexRouteError(error);
+  }
 }

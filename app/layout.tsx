@@ -1,6 +1,10 @@
 import type { Metadata } from "next";
+import "@fontsource-variable/manrope/wght.css";
+import "@fontsource/ibm-plex-mono/400.css";
+import "@fontsource/ibm-plex-mono/500.css";
 import "./globals.css";
 import { OrganizationJsonLd, WebSiteJsonLd } from "@/components/seo/structured-data";
+import { ConvexClientProvider } from "@/app/ConvexClientProvider";
 
 // NOTE: We intentionally do NOT use next/font/google here.
 // Fetching fonts from Google at compile time blocks the dev server in
@@ -11,18 +15,18 @@ const SITE_URL = (process.env.NEXT_PUBLIC_APP_URL ?? "https://aelohq.com").repla
 
 export const metadata: Metadata = {
   title: {
-    default:  "Aelo: See how ChatGPT, Gemini, Claude and Perplexity actually answer",
+    default:  "Aelo: Know what AI says about your brand",
     template: "%s · Aelo",
   },
   description:
-    "Track your brand's visibility across every major AI engine, with the raw receipts to prove every number. No black-box scores. Sage-honest data.",
+    "Measure how ChatGPT, Gemini, Claude and Perplexity answer about your brand, with repeated samples, confidence ranges and the evidence behind every number.",
   metadataBase: new URL(SITE_URL),
   alternates: {
     canonical: SITE_URL,
   },
   openGraph: {
-    title:       "Aelo: See how AI actually answers questions in your category",
-    description: "Track your brand's visibility across ChatGPT, Gemini, Claude, and Perplexity, with the raw scans behind every number. The receipt is the product.",
+    title:       "Aelo: Know what AI says about your brand",
+    description: "Measure real AI answers across ChatGPT, Gemini, Claude and Perplexity. Keep every sample, confidence range and source receipt.",
     type:        "website",
     url:         SITE_URL,
     siteName:    "Aelo",
@@ -30,8 +34,8 @@ export const metadata: Metadata = {
   },
   twitter: {
     card:        "summary_large_image",
-    title:       "Aelo: See how AI actually answers questions in your category",
-    description: "Track your brand's visibility across ChatGPT, Gemini, Claude, and Perplexity. Every number links to the raw scan.",
+    title:       "Aelo: Know what AI says about your brand",
+    description: "Measure real AI answers across ChatGPT, Gemini, Claude and Perplexity. Every number links back to its evidence.",
     images:      ["/opengraph-image"],
   },
   robots: {
@@ -46,7 +50,7 @@ export const metadata: Metadata = {
   },
   icons: {
     icon: [
-      { url: "/brand/favicon.svg", type: "image/svg+xml" },
+      { url: "/brand/favicon.svg?v=20260926-arrow", type: "image/svg+xml" },
     ],
     apple: [
       { url: "/brand/social-square.svg", sizes: "1024x1024", type: "image/svg+xml" },
@@ -60,13 +64,18 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
-      <body
-        className={`antialiased dark`}
-      >
+    <html lang="en" data-scroll-behavior="smooth" data-theme="dark" suppressHydrationWarning>
+      <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(function(){try{var dashboard=location.pathname.indexOf('/dashboard')===0||location.pathname.indexOf('/onboarding')===0;document.documentElement.dataset.theme=dashboard?(localStorage.getItem('aelo-dashboard-theme-v1')||'dark'):'dark'}catch(e){document.documentElement.dataset.theme='dark'}})();`,
+          }}
+        />
+      </head>
+      <body className="antialiased">
         <OrganizationJsonLd />
         <WebSiteJsonLd />
-        {children}
+        <ConvexClientProvider>{children}</ConvexClientProvider>
       </body>
     </html>
   );

@@ -1,72 +1,54 @@
-import { createClient } from '@/lib/supabase/server';
-import { createAdminClient } from '@/lib/supabase/admin';
-import { randomUUID } from 'crypto';
-import { cookies } from 'next/headers';
-import type { LLMScan, ForumThread, VisibilityMetric } from './types';
-
-// ── Dev Auth Bypass ─────────────────────────────────────────────────────────
-// Guarded by NEXT_PUBLIC_ENABLE_DEV_AUTH_BYPASS=true AND a `dev-auth-bypass=true`
-// cookie. Both required, so it can NEVER activate in prod without the env flag
-// AND a cookie a browser has to actively set.
-//
-// Bootstraps a real Supabase auth user (dev@aelo.local) via the admin API so all
-// downstream FKs (public.users → auth.users) hold and the normal profile/org/
-// workspace autoprovision code runs unchanged.
-const DEV_BYPASS_EMAIL = 'dev@aelo.local';
-let cachedDevUser: { id: string; email: string } | null = null;
-
-async function getOrCreateDevUser(): Promise<{ id: string; email: string } | null> {
-    if (cachedDevUser) return cachedDevUser;
-    try {
-        const admin = createAdminClient();
-        // Look up first (auth.admin.listUsers is paged; email filter is exact)
-        const { data: list, error: listErr } = await admin.auth.admin.listUsers();
-        if (listErr) {
-            console.warn('[dev-bypass] listUsers failed:', listErr);
-        }
-        const existing = list?.users?.find(u => u.email === DEV_BYPASS_EMAIL);
-        if (existing?.email) {
-            cachedDevUser = { id: existing.id, email: existing.email };
-            return cachedDevUser;
-        }
-        // Create, random password, never used (we don't sign in via password)
-        const { data, error } = await admin.auth.admin.createUser({
-            email: DEV_BYPASS_EMAIL,
-            password: randomUUID(),
-            email_confirm: true,
-            user_metadata: { full_name: 'Aelo Dev', dev_bypass: true },
-        });
-        if (error || !data.user?.email) {
-            console.error('[dev-bypass] createUser failed:', error);
-            return null;
-        }
-        cachedDevUser = { id: data.user.id, email: data.user.email };
-        return cachedDevUser;
-    } catch (e) {
-        console.warn('[dev-bypass] getOrCreateDevUser failed:', e);
-        return null;
-    }
-}
+import { api } from '@/convex/_generated/api';
+import type { FunctionReturnType } from 'convex/server';
+import { fetchAuthMutation, fetchAuthQuery } from '@/lib/auth-server';
+import { legacyScan, legacyThread } from './convex/records';
+import { getConvexWorkspaceContext } from './convex/session';
+import type { LLMScan, ForumThread } from './types';
+import { estimateMentionConfidence } from './measurement/confidence';
+import { hasUsableAnswer } from './measurement/usable-answer';
+import type { MeasurementConfidenceLevel } from './measurement/types';
+import {
+    aggregateMentionMetric,
+    compareCompatibleMentionMetrics,
+    healthScoreMetric,
+    mentionMetricFromCounts,
+    shareOfVoiceMetric,
+    type ComparableMentionSample,
+} from './measurement/metrics';
 
 // Types for dashboard data
 export interface DashboardStats {
-    aeoHealthScore: number;
-    aeoScoreChange: number;
-    llmVisibility: number;
-    llmVisibilityChange: number;
+    aeoHealthScore: number | null;
+    aeoScoreChange: number | null;
+    llmVisibility: number | null;
+    llmVisibilityChange: number | null;
+    llmVisibilitySamples: number;
+    llmVisibilityMentions: number;
+    llmVisibilityConfidence: MeasurementConfidenceLevel;
     forumThreadCount: number;
     highPriorityThreads: number;
-    shareOfVoice: number;
-    shareOfVoiceChange: number;
-    contentScore: number;
+    shareOfVoice: number | null;
+    shareOfVoiceChange: number | null;
+    contentScore: number | null;
     pagesNeedingOptimization: number;
 }
 
 export interface PlatformVisibility {
     platform: string;
-    score: number;
-    change: number;
+    score: number | null;
+    change: number | null;
+    changeStatus: 'comparable' | 'incompatible' | 'insufficient_samples';
     scanCount: number;
+    mentionCount: number;
+    mentionRate: number | null;
+    confidence: ReturnType<typeof estimateMentionConfidence>;
+    averageMentionPosition: number | null;
+    mentionPositionCount: number;
+    mentionPositionTotal: number;
+    comparisonCurrentSamples: number;
+    comparisonCurrentMentions: number;
+    comparisonPreviousSamples: number;
+    comparisonPreviousMentions: number;
 }
 
 export interface RecentMention {
@@ -77,354 +59,99 @@ export interface RecentMention {
     createdAt: string;
 }
 
-// Get the current user's workspace ID (auto-creates profile if missing)
-export async function getCurrentWorkspaceContext(): Promise<{
-    userId: string;
-    orgId: string;
-    workspaceId: string;
-    onboardingCompleted: boolean;
-} | null> {
-    const supabase = await createClient();
-
-    // Dev Auth Bypass (localhost / QA only, see helper at top of file)
-    let user: { id: string; email?: string | null; user_metadata?: { full_name?: string; avatar_url?: string } } | null = null;
-    if (process.env.NEXT_PUBLIC_ENABLE_DEV_AUTH_BYPASS === 'true') {
-        try {
-            const cookieStore = await cookies();
-            if (cookieStore.get('dev-auth-bypass')?.value === 'true') {
-                const dev = await getOrCreateDevUser();
-                if (dev) {
-                    user = { id: dev.id, email: dev.email, user_metadata: { full_name: 'Aelo Dev' } };
-                }
-            }
-        } catch {
-            // cookies() unavailable in this context, fall through to normal auth
-        }
-    }
-
-    if (!user) {
-        const { data } = await supabase.auth.getUser();
-        user = data.user;
-    }
-
-    if (!user) {
-        console.log('[getCurrentWorkspaceContext] No authenticated user');
-        return null;
-    }
-
-    let adminClient: ReturnType<typeof createAdminClient> | null = null;
-    try {
-        adminClient = createAdminClient();
-    } catch (error) {
-        console.warn('[getCurrentWorkspaceContext] Admin client unavailable, falling back to RLS client:', error);
-    }
-
-    const db = adminClient ?? supabase;
-    const useManualIds = !adminClient;
-
-    // Get user's profile (create if missing)
-    const { data: profile } = await db
-        .from('users')
-        .select('org_id, onboarding_completed, role')
-        .eq('id', user.id)
-        .maybeSingle();
-
-    if (!profile?.org_id) {
-        console.log('[getCurrentWorkspaceContext] Creating profile for:', user.id);
-
-        const orgName = (user.user_metadata?.full_name || user.email?.split('@')[0] || 'User') + "'s Organization";
-        const orgId = useManualIds ? randomUUID() : undefined;
-
-        const orgInsert = useManualIds
-            ? { id: orgId, name: orgName }
-            : { name: orgName };
-
-        let createdOrgId = orgId;
-        if (useManualIds) {
-            const { error: orgError } = await db
-                .from('organizations')
-                .insert(orgInsert);
-            if (orgError || !createdOrgId) {
-                console.error('[getCurrentWorkspaceContext] Failed to create org:', orgError);
-                return null;
-            }
-        } else {
-            const { data: newOrg, error: orgError } = await db
-                .from('organizations')
-                .insert(orgInsert)
-                .select('id')
-                .single();
-            createdOrgId = newOrg?.id;
-            if (orgError || !createdOrgId) {
-                console.error('[getCurrentWorkspaceContext] Failed to create org:', orgError);
-                return null;
-            }
-        }
-
-        const { error: userError } = await db
-            .from('users')
-            .insert({
-                id: user.id,
-                email: user.email!,
-                full_name: user.user_metadata?.full_name || null,
-                avatar_url: user.user_metadata?.avatar_url || null,
-                org_id: createdOrgId,
-                role: 'owner',
-                onboarding_completed: false,
-            });
-
-        if (userError) {
-            console.error('[getCurrentWorkspaceContext] Failed to create user:', userError);
-            return null;
-        }
-
-        const workspaceId = useManualIds ? randomUUID() : undefined;
-        const wsInsert = useManualIds
-            ? { id: workspaceId, org_id: createdOrgId, name: 'My Brand' }
-            : { org_id: createdOrgId, name: 'My Brand' };
-
-        let createdWorkspaceId = workspaceId;
-        if (useManualIds) {
-            const { error: wsError } = await db
-                .from('workspaces')
-                .insert(wsInsert);
-            if (wsError || !createdWorkspaceId) {
-                console.error('[getCurrentWorkspaceContext] Failed to create workspace:', wsError);
-                return null;
-            }
-        } else {
-            const { data: newWorkspace, error: wsError } = await db
-                .from('workspaces')
-                .insert(wsInsert)
-                .select('id')
-                .single();
-            createdWorkspaceId = newWorkspace?.id;
-            if (wsError || !createdWorkspaceId) {
-                console.error('[getCurrentWorkspaceContext] Failed to create workspace:', wsError);
-                return null;
-            }
-        }
-
-        return {
-            userId: user.id,
-            orgId: createdOrgId,
-            workspaceId: createdWorkspaceId,
-            onboardingCompleted: false,
-        };
-    }
-
-    // Ensure workspace exists, check for active workspace cookie first
-    let workspaceSelectQuery;
-    let activeWsId: string | undefined;
-    
-    try {
-        const cookieStore = await cookies();
-        activeWsId = cookieStore.get('active-workspace-id')?.value;
-    } catch {
-        // cookies() may fail in some contexts
-    }
-
-    if (activeWsId) {
-        // Verify this workspace belongs to the user's org
-        const { data: workspace } = await db
-            .from('workspaces')
-            .select('id')
-            .eq('id', activeWsId)
-            .eq('org_id', profile.org_id)
-            .single();
-
-        if (workspace?.id) {
-            return {
-                userId: user.id,
-                orgId: profile.org_id,
-                workspaceId: workspace.id,
-                onboardingCompleted: profile.onboarding_completed ?? false,
-            };
-        }
-    }
-
-    // Fallback: pick first workspace
-    const { data: workspace } = await db
-        .from('workspaces')
-        .select('id')
-        .eq('org_id', profile.org_id)
-        .limit(1)
-        .single();
-
-    if (!workspace?.id) {
-        const workspaceId = useManualIds ? randomUUID() : undefined;
-        const wsInsert = useManualIds
-            ? { id: workspaceId, org_id: profile.org_id, name: 'My Brand' }
-            : { org_id: profile.org_id, name: 'My Brand' };
-
-        let createdWorkspaceId = workspaceId;
-        if (useManualIds) {
-            const { error: createError } = await db
-                .from('workspaces')
-                .insert(wsInsert);
-            if (createError || !createdWorkspaceId) {
-                console.error('[getCurrentWorkspaceContext] Failed to create workspace:', createError);
-                return null;
-            }
-        } else {
-            const { data: newWs, error: createError } = await db
-                .from('workspaces')
-                .insert(wsInsert)
-                .select('id')
-                .single();
-            createdWorkspaceId = newWs?.id;
-            if (createError || !createdWorkspaceId) {
-                console.error('[getCurrentWorkspaceContext] Failed to create workspace:', createError);
-                return null;
-            }
-        }
-
-        return {
-            userId: user.id,
-            orgId: profile.org_id,
-            workspaceId: createdWorkspaceId!,
-            onboardingCompleted: profile.onboarding_completed ?? false,
-        };
-    }
-
-    return {
-        userId: user.id,
-        orgId: profile.org_id,
-        workspaceId: workspace.id,
-        onboardingCompleted: profile.onboarding_completed ?? false,
-    };
-}
+export { getConvexWorkspaceContext as getCurrentWorkspaceContext };
 
 export async function getCurrentWorkspaceId(): Promise<string | null> {
-    const context = await getCurrentWorkspaceContext();
+    const context = await getConvexWorkspaceContext();
     return context?.workspaceId ?? null;
 }
 
 
 // Fetch recent LLM scans
-export async function getLLMScans(
-    workspaceId: string,
-    limit: number = 10,
-    opts?: { platform?: string }
-): Promise<LLMScan[]> {
-    {
-        const { DEMO_SEED_ACTIVE, demoScanRows } = await import('./analytics/demo-seed');
-        if (DEMO_SEED_ACTIVE()) {
-            let rows = demoScanRows() as unknown as LLMScan[];
-            if (opts?.platform) rows = rows.filter(r => r.platform === opts.platform);
-            return rows.slice(0, limit);
-        }
-    }
-    const supabase = await createAdminClient();
+export async function getLLMScans(workspaceId: string, limit = 10, opts?: { platform?: string }): Promise<LLMScan[]> {
+    if (!Number.isInteger(limit) || limit < 1 || limit > 1000) throw new Error('invalid_scan_limit');
+    const supported = ['chatgpt', 'gemini', 'claude', 'perplexity', 'google_ai', 'google_ai_overview', 'bing_copilot', 'mock'] as const;
+    const platform = supported.find((value) => value === opts?.platform);
+    if (opts?.platform && !platform) throw new Error('invalid_platform');
+    return readScanPages(workspaceId, { platform }, limit);
+}
 
-    let query = supabase
-        .from('llm_scans')
-        .select('*')
-        .eq('workspace_id', workspaceId)
-        .order('created_at', { ascending: false })
-        .limit(limit);
-
-    if (opts?.platform) query = query.eq('platform', opts.platform);
-
-    const { data, error } = await query;
-
-    if (error) {
-        console.error('Error fetching LLM scans:', error);
-        return [];
-    }
-
-    return (data || []).map(scan => ({
-        id: scan.id,
-        workspace_id: scan.workspace_id,
-        platform: scan.platform,
-        prompt: scan.prompt,
-        response: scan.response,
-        brand_mentioned: scan.brand_mentioned,
-        mention_position: scan.mention_position,
-        sentiment: scan.sentiment,
-        competitors_mentioned: scan.competitors_mentioned || [],
-        citations: scan.citations || [],
-        created_at: scan.created_at,
-    }));
+export async function readScanPages(workspaceId: string, opts: { platform?: LLMScan['platform']; since?: number; before?: number } = {}, limit = Number.MAX_SAFE_INTEGER): Promise<LLMScan[]> {
+    const rows: LLMScan[] = [];
+    let cursor: string | null = null;
+    do {
+        const result: FunctionReturnType<typeof api.records.scans> = await fetchAuthQuery(api.records.scans, { workspaceId, ...opts,
+            paginationOpts: { numItems: Math.min(100, limit - rows.length), cursor } });
+        rows.push(...result.page.map((row) => legacyScan(row, workspaceId)));
+        cursor = result.isDone ? null : result.continueCursor;
+    } while (cursor && rows.length < limit);
+    return rows;
 }
 
 // Calculate visibility metrics by platform
 export async function getVisibilityMetrics(
-    workspaceId: string
+    workspaceId: string,
+    read: typeof readScanPages = readScanPages,
 ): Promise<PlatformVisibility[]> {
-    {
-        const { DEMO_SEED_ACTIVE, demoVisibilityMetrics } = await import('./analytics/demo-seed');
-        if (DEMO_SEED_ACTIVE()) return demoVisibilityMetrics();
-    }
-    const supabase = await createAdminClient();
-
-    // Get scans from last 7 days
-    const sevenDaysAgo = new Date();
-    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-
-    const { data: recentScans } = await supabase
-        .from('llm_scans')
-        .select('platform, brand_mentioned, mention_position, sentiment')
-        .eq('workspace_id', workspaceId)
-        .gte('created_at', sevenDaysAgo.toISOString());
-
-    // Get scans from previous 7 days for comparison
-    const fourteenDaysAgo = new Date();
-    fourteenDaysAgo.setDate(fourteenDaysAgo.getDate() - 14);
-
-    const { data: previousScans } = await supabase
-        .from('llm_scans')
-        .select('platform, brand_mentioned, mention_position, sentiment')
-        .eq('workspace_id', workspaceId)
-        .gte('created_at', fourteenDaysAgo.toISOString())
-        .lt('created_at', sevenDaysAgo.toISOString());
+    const now = Date.now();
+    const [recentScans, previousScans] = await Promise.all([
+        read(workspaceId, { since: now - 7 * 86400000, before: now }),
+        read(workspaceId, { since: now - 14 * 86400000, before: now - 7 * 86400000 }),
+    ]);
 
     const platforms = ['chatgpt', 'gemini', 'perplexity', 'claude'];
     const metrics: PlatformVisibility[] = [];
 
     for (const platform of platforms) {
-        const currentPlatformScans = (recentScans || []).filter(s => s.platform === platform);
-        const previousPlatformScans = (previousScans || []).filter(s => s.platform === platform);
+        const currentPlatformScans = recentScans.filter(s => s.platform === platform && hasUsableAnswer(s));
+        const previousPlatformScans = previousScans.filter(s => s.platform === platform && hasUsableAnswer(s));
 
-        const currentScore = calculatePlatformScore(currentPlatformScans);
-        const previousScore = calculatePlatformScore(previousPlatformScans);
+        const currentMetric = aggregateMentionMetric(currentPlatformScans.map((scan) => ({ mentioned: scan.brand_mentioned })));
+        const comparable = (scan: typeof currentPlatformScans[number]): ComparableMentionSample => ({
+            prompt: scan.prompt,
+            platform: scan.platform,
+            mentioned: scan.brand_mentioned,
+            providerModel: scan.provider_model,
+            region: scan.measurement_region,
+            mode: scan.measurement_mode,
+            scorerVersion: scan.scorer_version,
+            contractVersion: scan.measurement_contract_version,
+            searchMode: scan.search_mode,
+            analyzerMethod: scan.analyzer_method,
+            analyzerModel: scan.analyzer_model,
+            analyzerPromptVersion: scan.analyzer_prompt_version,
+        });
+        const comparison = compareCompatibleMentionMetrics(
+            currentPlatformScans.map(comparable),
+            previousPlatformScans.map(comparable),
+        );
+        const mentionPositions = currentPlatformScans
+            .filter((scan) => scan.brand_mentioned && scan.mention_position !== null)
+            .map((scan) => scan.mention_position as number);
+        const mentionPositionTotal = mentionPositions.reduce((sum, position) => sum + position, 0);
 
         metrics.push({
             platform: platform.charAt(0).toUpperCase() + platform.slice(1),
-            score: currentScore,
-            change: currentScore - previousScore,
-            scanCount: currentPlatformScans.length,
+            score: currentMetric.visibilityPercent,
+            change: comparison.changePoints,
+            changeStatus: comparison.status,
+            scanCount: currentMetric.samples,
+            mentionCount: currentMetric.mentions,
+            mentionRate: currentMetric.mentionRate,
+            confidence: currentMetric.confidence,
+            averageMentionPosition: mentionPositions.length
+                ? Math.round((mentionPositionTotal / mentionPositions.length) * 10) / 10
+                : null,
+            mentionPositionCount: mentionPositions.length,
+            mentionPositionTotal,
+            comparisonCurrentSamples: comparison.current.samples,
+            comparisonCurrentMentions: comparison.current.mentions,
+            comparisonPreviousSamples: comparison.previous.samples,
+            comparisonPreviousMentions: comparison.previous.mentions,
         });
     }
 
     return metrics;
-}
-
-// Helper to calculate platform visibility score
-function calculatePlatformScore(scans: Array<{ brand_mentioned: boolean; mention_position: number | null; sentiment: string | null }>): number {
-    if (scans.length === 0) return 0;
-
-    let totalScore = 0;
-
-    for (const scan of scans) {
-        if (scan.brand_mentioned) {
-            // Base score for being mentioned
-            let score = 40;
-
-            // Position bonus
-            if (scan.mention_position === 1) score += 30;
-            else if (scan.mention_position === 2) score += 20;
-            else if (scan.mention_position && scan.mention_position <= 5) score += 10;
-
-            // Sentiment bonus
-            if (scan.sentiment === 'positive') score += 20;
-            else if (scan.sentiment === 'neutral') score += 10;
-
-            totalScore += score;
-        }
-    }
-
-    return Math.min(100, Math.round(totalScore / scans.length));
 }
 
 // Fetch forum threads
@@ -437,144 +164,95 @@ export async function getForumThreads(
         limit?: number;
     } = {}
 ): Promise<ForumThread[]> {
-    const supabase = createAdminClient();
     const { status, platform, minScore = 0, limit = 20 } = options;
-
-    let query = supabase
-        .from('forum_threads')
-        .select('*')
-        .eq('workspace_id', workspaceId)
-        .gte('opportunity_score', minScore)
-        .order('opportunity_score', { ascending: false })
-        .limit(limit);
-
-    if (status) {
-        query = query.eq('status', status);
-    }
-    if (platform) {
-        query = query.eq('platform', platform);
-    }
-
-    const { data, error } = await query;
-
-    if (error) {
-        console.error('Error fetching forum threads:', error);
-        return [];
-    }
-
-    return data || [];
+    if (!Number.isInteger(limit) || limit < 1) throw new Error('invalid_thread_limit');
+    const rows: ForumThread[] = [];
+    let cursor: string | null = null;
+    do {
+        const result: FunctionReturnType<typeof api.records.threads> = await fetchAuthQuery(api.records.threads, { workspaceId, status, platform, minScore,
+            paginationOpts: { numItems: Math.min(100, limit - rows.length), cursor } });
+        rows.push(...result.page.map((row) => legacyThread(row, workspaceId)));
+        cursor = result.isDone ? null : result.continueCursor;
+    } while (cursor && rows.length < limit);
+    return rows;
 }
 
 // Calculate AEO Health Score
-export async function getAEOHealthScore(
-    workspaceId: string
-): Promise<{ score: number; change: number }> {
-    const supabase = await createAdminClient();
-
-    // Get all visibility metrics
-    const visibilityMetrics = await getVisibilityMetrics(workspaceId);
-
-    // Get forum engagement metrics
-    const { data: threads } = await supabase
-        .from('forum_threads')
-        .select('status, opportunity_score')
-        .eq('workspace_id', workspaceId);
-
-    // Calculate composite score
-    let score = 0;
-    let change = 0;
-
-    // LLM Visibility component (50% weight)
-    if (visibilityMetrics.length > 0) {
-        const avgVisibility = visibilityMetrics.reduce((sum, m) => sum + m.score, 0) / visibilityMetrics.length;
-        const avgChange = visibilityMetrics.reduce((sum, m) => sum + m.change, 0) / visibilityMetrics.length;
-        score += avgVisibility * 0.5;
-        change += avgChange * 0.5;
-    }
-
-    // Forum engagement component (30% weight)
-    if (threads && threads.length > 0) {
-        const postedThreads = threads.filter(t => t.status === 'posted').length;
-        const engagementRate = (postedThreads / threads.length) * 100;
-        score += Math.min(100, engagementRate) * 0.3;
-    }
-
-    // Content score component (20% weight)
-    const { data: contentAnalyses } = await supabase
-        .from('content_analyses')
-        .select('aeo_score')
-        .eq('workspace_id', workspaceId);
-
-    if (contentAnalyses && contentAnalyses.length > 0) {
-        const avgContentScore = contentAnalyses.reduce((sum, a) => sum + (a.aeo_score || 0), 0) / contentAnalyses.length;
-        score += avgContentScore * 0.2;
-    }
+function healthScoreFromVisibilityMetrics(
+    visibilityMetrics: PlatformVisibility[],
+): { score: number | null; change: number | null } {
+    const visibilitySamples = visibilityMetrics.reduce((sum, metric) => sum + metric.scanCount, 0);
+    const visibilityMentions = visibilityMetrics.reduce((sum, metric) => sum + metric.mentionCount, 0);
+    const visibility = mentionMetricFromCounts(visibilityMentions, visibilitySamples).visibilityPercent;
+    const positionCount = visibilityMetrics.reduce((sum, metric) => sum + metric.mentionPositionCount, 0);
+    const positionTotal = visibilityMetrics.reduce((sum, metric) => sum + metric.mentionPositionTotal, 0);
+    const averagePosition = positionCount > 0 ? positionTotal / positionCount : null;
 
     return {
-        score: Math.round(score),
-        change: Math.round(change),
+        score: healthScoreMetric(visibility, averagePosition),
+        change: null,
     };
+}
+
+export async function getAEOHealthScore(
+    workspaceId: string
+): Promise<{ score: number | null; change: number | null }> {
+    return healthScoreFromVisibilityMetrics(await getVisibilityMetrics(workspaceId));
 }
 
 // Get dashboard stats
 export async function getDashboardStats(
-    workspaceId: string
+    workspaceId: string,
+    suppliedVisibilityMetrics?: PlatformVisibility[],
 ): Promise<DashboardStats> {
-    {
-        const { DEMO_SEED_ACTIVE, demoDashboardStats } = await import('./analytics/demo-seed');
-        if (DEMO_SEED_ACTIVE()) return demoDashboardStats();
-    }
-    const supabase = await createAdminClient();
-
-    const [healthScore, visibilityMetrics, threads] = await Promise.all([
-        getAEOHealthScore(workspaceId),
-        getVisibilityMetrics(workspaceId),
-        getForumThreads(workspaceId, { limit: 100 }),
+    const [visibilityMetrics, threads] = await Promise.all([
+        suppliedVisibilityMetrics ?? getVisibilityMetrics(workspaceId),
+        getForumThreads(workspaceId, { limit: Number.MAX_SAFE_INTEGER }),
     ]);
+    const healthScore = healthScoreFromVisibilityMetrics(visibilityMetrics);
 
-    // Calculate average LLM visibility
-    const avgVisibility = visibilityMetrics.length > 0
-        ? Math.round(visibilityMetrics.reduce((sum, m) => sum + m.score, 0) / visibilityMetrics.length)
-        : 0;
-
-    const avgVisibilityChange = visibilityMetrics.length > 0
-        ? Math.round(visibilityMetrics.reduce((sum, m) => sum + m.change, 0) / visibilityMetrics.length)
-        : 0;
+    const llmVisibilitySamples = visibilityMetrics.reduce((sum, metric) => sum + metric.scanCount, 0);
+    const llmVisibilityMentions = visibilityMetrics.reduce((sum, metric) => sum + metric.mentionCount, 0);
+    const llmMetric = mentionMetricFromCounts(llmVisibilityMentions, llmVisibilitySamples);
+    const comparableCurrentSamples = visibilityMetrics.reduce((sum, metric) => sum + metric.comparisonCurrentSamples, 0);
+    const comparableCurrentMentions = visibilityMetrics.reduce((sum, metric) => sum + metric.comparisonCurrentMentions, 0);
+    const comparablePreviousSamples = visibilityMetrics.reduce((sum, metric) => sum + metric.comparisonPreviousSamples, 0);
+    const comparablePreviousMentions = visibilityMetrics.reduce((sum, metric) => sum + metric.comparisonPreviousMentions, 0);
+    const comparableCurrent = mentionMetricFromCounts(comparableCurrentMentions, comparableCurrentSamples);
+    const comparablePrevious = mentionMetricFromCounts(comparablePreviousMentions, comparablePreviousSamples);
+    const llmVisibilityChange = comparableCurrent.visibilityPercent !== null && comparablePrevious.visibilityPercent !== null
+        ? comparableCurrent.visibilityPercent - comparablePrevious.visibilityPercent
+        : null;
 
     // Count high priority threads (score >= 70)
     const highPriorityThreads = threads.filter(t => t.opportunity_score >= 70).length;
 
     // ── Share of Voice: brand mentions vs competitor mentions ──
-    let shareOfVoice = 0;
-    let shareOfVoiceChange = 0;
+    let shareOfVoice: number | null = null;
+    const shareOfVoiceChange: number | null = null;
 
-    const sevenDaysAgo = new Date();
-    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-
-    const { data: recentScans } = await supabase
-        .from('llm_scans')
-        .select('brand_mentioned, competitors_mentioned')
-        .eq('workspace_id', workspaceId)
-        .gte('created_at', sevenDaysAgo.toISOString());
+    const recentScans = (await readScanPages(workspaceId, { since: Date.now() - 7 * 86400000 }))
+        .filter(hasUsableAnswer);
 
     if (recentScans && recentScans.length > 0) {
-        const myMentions = recentScans.filter(s => s.brand_mentioned).length;
-        const totalCompMentions = recentScans.reduce((sum, s) => {
-            const comps = s.competitors_mentioned || [];
-            return sum + comps.length;
-        }, 0);
-        const totalMentions = myMentions + totalCompMentions;
-        shareOfVoice = totalMentions > 0 ? Math.round((myMentions / totalMentions) * 100) : 0;
+        shareOfVoice = shareOfVoiceMetric(recentScans.map((scan) => ({
+            brandMentioned: scan.brand_mentioned,
+            competitorsMentioned: scan.competitors_mentioned,
+        }))).sharePercent;
     }
 
     // ── Content Score: average from content_analyses ──
-    let contentScore = 0;
+    let contentScore: number | null = null;
     let pagesNeedingOptimization = 0;
 
-    const { data: contentAnalyses } = await supabase
-        .from('content_analyses')
-        .select('aeo_score')
-        .eq('workspace_id', workspaceId);
+    const contentAnalyses: { aeo_score: number }[] = [];
+    let contentCursor: string | null = null;
+    do {
+        const result: FunctionReturnType<typeof api.records.content> = await fetchAuthQuery(api.records.content, { workspaceId,
+            paginationOpts: { numItems: 100, cursor: contentCursor } });
+        contentAnalyses.push(...result.page.map((row) => ({ aeo_score: row.aeloScore })));
+        contentCursor = result.isDone ? null : result.continueCursor;
+    } while (contentCursor);
 
     if (contentAnalyses && contentAnalyses.length > 0) {
         contentScore = Math.round(
@@ -586,8 +264,11 @@ export async function getDashboardStats(
     return {
         aeoHealthScore: healthScore.score,
         aeoScoreChange: healthScore.change,
-        llmVisibility: avgVisibility,
-        llmVisibilityChange: avgVisibilityChange,
+        llmVisibility: llmMetric.visibilityPercent,
+        llmVisibilityChange,
+        llmVisibilitySamples,
+        llmVisibilityMentions,
+        llmVisibilityConfidence: llmMetric.confidence.level,
         forumThreadCount: threads.length,
         highPriorityThreads,
         shareOfVoice,
@@ -631,86 +312,45 @@ export interface ScheduledScan {
 }
 
 export async function getScheduledScans(workspaceId: string): Promise<ScheduledScan[]> {
-    const supabase = await createClient();
-    const { data, error } = await supabase
-        .from('scheduled_scans')
-        .select('*')
-        .eq('workspace_id', workspaceId)
-        .order('created_at', { ascending: false });
+    const rows: ScheduledScan[] = [];
+    let cursor: string | null = null;
+    do {
+        const page: FunctionReturnType<typeof api.schedules.list> = await fetchAuthQuery(api.schedules.list, { workspaceId, paginationOpts: { numItems: 100, cursor } });
+        rows.push(...page.page);
+        cursor = page.isDone ? null : page.continueCursor;
+    } while (cursor);
+    return rows;
+}
 
-    if (error) {
-        console.error('Error fetching scheduled scans:', error);
-        return [];
-    }
-    return data || [];
+function schedulePlatforms(platforms: string[]) {
+    const allowed = ['chatgpt', 'gemini', 'claude', 'perplexity'] as const;
+    return platforms.map((value) => {
+        const platform = allowed.find((candidate) => candidate === value);
+        if (!platform) throw new Error('invalid_platform');
+        return platform;
+    });
 }
 
 export async function createScheduledScan(scan: {
-    workspace_id: string;
-    prompt: string;
-    platforms: string[];
-    competitors?: string[];
+    workspace_id: string; prompt: string; platforms: string[]; competitors?: string[];
     frequency: 'daily' | 'weekly' | 'monthly';
 }): Promise<ScheduledScan | null> {
-    const supabase = await createClient();
-
-    // Calculate next run immediately
-    const nextRun = new Date();
-    // For demo purposes, set it to run in 1 minute so user can see it work? 
-    // No, strictly follow frequency. But daily means "tomorrow same time".
-    // Let's default to "tomorrow" for daily, or just "now" if we want to run immediately?
-    // Usually schedules start immediately or at next interval. Let's say next interval.
-    // Actually, user probably wants first run immediately. 
-    // I'll set next_run_at to NOW() so the cron picks it up quickly.
-
-    const { data, error } = await supabase
-        .from('scheduled_scans')
-        .insert({
-            workspace_id: scan.workspace_id,
-            prompt: scan.prompt,
-            platforms: scan.platforms,
-            competitors: scan.competitors || [],
-            frequency: scan.frequency,
-            next_run_at: new Date().toISOString(), // Run immediately on next cron tick
-            status: 'active'
-        })
-        .select()
-        .single();
-
-    if (error) {
-        console.error('Error creating scheduled scan:', error);
-        return null;
-    }
-    return data;
+    return fetchAuthMutation(api.schedules.save, { workspaceId: scan.workspace_id, prompt: scan.prompt,
+        platforms: schedulePlatforms(scan.platforms), competitors: scan.competitors, frequency: scan.frequency });
 }
 
 export async function updateScheduledScan(id: string, updates: Partial<ScheduledScan>): Promise<ScheduledScan | null> {
-    const supabase = await createClient();
-    const { data, error } = await supabase
-        .from('scheduled_scans')
-        .update(updates)
-        .eq('id', id)
-        .select()
-        .single();
-
-    if (error) {
-        console.error('Error updating scheduled scan:', error);
-        return null;
-    }
-    return data;
+    const workspaceId = await getCurrentWorkspaceId();
+    if (!workspaceId) throw new Error('Unauthenticated');
+    return fetchAuthMutation(api.schedules.save, { workspaceId, id, prompt: updates.prompt,
+        platforms: updates.platforms ? schedulePlatforms(updates.platforms) : undefined,
+        competitors: updates.competitors ?? undefined, frequency: updates.frequency, status: updates.status });
 }
 
 export async function deleteScheduledScan(id: string): Promise<boolean> {
-    const supabase = await createClient();
-    const { error } = await supabase
-        .from('scheduled_scans')
-        .delete()
-        .eq('id', id);
-
-    if (error) {
-        console.error('Error deleting scheduled scan:', error);
-        return false;
-    }
+    const workspaceId = await getCurrentWorkspaceId();
+    if (!workspaceId) throw new Error('Unauthenticated');
+    await fetchAuthMutation(api.schedules.remove, { workspaceId, id });
     return true;
 }
 
@@ -727,18 +367,16 @@ export interface Prompt {
 }
 
 export async function getPrompts(workspaceId: string): Promise<Prompt[]> {
-    const supabase = await createClient();
-    const { data, error } = await supabase
-        .from('prompt_library')
-        .select('*')
-        .eq('workspace_id', workspaceId)
-        .order('created_at', { ascending: false });
-
-    if (error) {
-        console.error('Error fetching prompts:', error);
-        return [];
-    }
-    return data || [];
+    const prompts: Prompt[] = [];
+    let cursor: string | null = null;
+    do {
+        const result: FunctionReturnType<typeof api.prompts.list> = await fetchAuthQuery(api.prompts.list, {
+            workspaceId, paginationOpts: { numItems: 100, cursor },
+        });
+        prompts.push(...result.page);
+        cursor = result.isDone ? null : result.continueCursor;
+    } while (cursor);
+    return prompts;
 }
 
 export async function savePrompt(promptData: {
@@ -748,36 +386,18 @@ export async function savePrompt(promptData: {
     is_favorite?: boolean;
     ai_generated?: boolean;
 }): Promise<Prompt | null> {
-    const supabase = await createClient();
-    const { data, error } = await supabase
-        .from('prompt_library')
-        .insert({
-            workspace_id: promptData.workspace_id,
-            prompt: promptData.prompt,
-            category: promptData.category || 'General',
-            is_favorite: promptData.is_favorite ?? false,
-            ai_generated: promptData.ai_generated ?? false,
-        })
-        .select()
-        .single();
-
-    if (error) {
-        console.error('Error saving prompt:', error);
-        return null;
-    }
-    return data;
+    return fetchAuthMutation(api.prompts.save, {
+        workspaceId: promptData.workspace_id,
+        prompt: promptData.prompt,
+        category: promptData.category,
+        isFavorite: promptData.is_favorite,
+        aiGenerated: promptData.ai_generated,
+    });
 }
 
 export async function deletePrompt(id: string): Promise<boolean> {
-    const supabase = await createClient();
-    const { error } = await supabase
-        .from('prompt_library')
-        .delete()
-        .eq('id', id);
-
-    if (error) {
-        console.error('Error deleting prompt:', error);
-        return false;
-    }
+    const workspaceId = await getCurrentWorkspaceId();
+    if (!workspaceId) throw new Error('Unauthenticated');
+    await fetchAuthMutation(api.prompts.remove, { workspaceId, id });
     return true;
 }

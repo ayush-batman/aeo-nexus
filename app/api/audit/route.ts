@@ -1,35 +1,15 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { auditContent } from '@/lib/ai/content-analyzer';
-
-export async function POST(request: NextRequest) {
-    try {
-        const { url } = await request.json();
-
-        if (!url) {
-            return NextResponse.json(
-                { error: 'URL is required' },
-                { status: 400 }
-            );
-        }
-
-        // Basic URL validation
-        try {
-            new URL(url);
-        } catch {
-            return NextResponse.json(
-                { error: 'Invalid URL format' },
-                { status: 400 }
-            );
-        }
-
-        const result = await auditContent(url);
-
-        return NextResponse.json(result);
-    } catch (error) {
-        console.error('Audit API Error:', error);
-        return NextResponse.json(
-            { error: 'Failed to analyze URL' },
-            { status: 500 }
-        );
-    }
+import { NextResponse } from 'next/server';
+import { api } from '@/convex/_generated/api';
+import { fetchAuthAction } from '@/lib/auth-server';
+import { getConvexWorkspaceContext } from '@/lib/convex/session';
+import { convexRouteError } from '@/lib/convex/http';
+export const maxDuration = 90;
+export async function POST(request: Request) {
+  try {
+    const context = await getConvexWorkspaceContext();
+    if (!context) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    const body = await request.json().catch(() => null);
+    if (!body || typeof body.url !== 'string' || body.url.length > 2048) return NextResponse.json({ error: 'Invalid URL' }, { status: 400 });
+    return NextResponse.json(JSON.parse(await fetchAuthAction(api.auditActions.content, { workspaceId: context.workspaceId, url: body.url })));
+  } catch (error) { return convexRouteError(error); }
 }

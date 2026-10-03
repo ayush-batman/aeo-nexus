@@ -1,6 +1,5 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
-import { getCurrentWorkspaceId } from '@/lib/data-access';
+import { NextResponse } from 'next/server';
+import { getCurrentWorkspaceId, readScanPages } from '@/lib/data-access';
 
 interface CitationSource {
     type: string;
@@ -12,6 +11,13 @@ interface CitationSource {
 
 interface CitationAnalysis {
     sources: CitationSource[];
+    domains: Array<{
+        domain: string;
+        urlCount: number;
+        totalMentions: number;
+        isOwnDomain: boolean;
+        urls: string[];
+    }>;
     totalCitations: number;
     ownDomainCitations: number;
     gaps: string[];
@@ -20,7 +26,9 @@ interface CitationAnalysis {
 
 // Classify a URL into a citation source type
 function classifyUrl(url: string): { type: string; label: string } {
-    const lower = url.toLowerCase();
+    let host: string;
+    try { host = new URL(url).hostname.toLowerCase(); } catch { return { type: 'other', label: 'Other' }; }
+    const lower = { includes: (domain: string) => domain.includes('.') ? (host === domain || host.endsWith(`.${domain}`)) : host.includes(domain) };
 
     // Video platforms
     if (lower.includes('youtube.com') || lower.includes('youtu.be')) return { type: 'youtube', label: 'YouTube' };
@@ -60,53 +68,47 @@ function classifyUrl(url: string): { type: string; label: string } {
     return { type: 'other', label: 'Other' };
 }
 
-const ALL_SOURCE_TYPES = [
-    'youtube', 'reddit', 'quora', 'tier1_affiliate', 'review_site',
-    'tech_media', 'blog', 'news', 'github', 'docs', 'wikipedia', 'other',
-];
-
-export async function GET(request: NextRequest) {
+export async function GET() {
     try {
         const workspaceId = await getCurrentWorkspaceId();
         if (!workspaceId) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
-        const supabase = await createClient();
-
-        // Get all scans with citations
-        const { data: scans, error } = await supabase
-            .from('llm_scans')
-            .select('citations, platform')
-            .eq('workspace_id', workspaceId)
-            .not('citations', 'is', null)
-            .order('created_at', { ascending: false })
-            .limit(500);
-
-        if (error) {
-            console.error('Citations query error:', error);
-            return NextResponse.json({ error: 'Failed to fetch citations' }, { status: 500 });
-        }
+        const scans = (await readScanPages(workspaceId, {})).filter(scan => !scan.failure_code);
 
         // Aggregate citations
         const sourceMap: Record<string, { count: number; urls: Set<string>; label: string }> = {};
         const urlCounts: Record<string, { count: number; type: string }> = {};
+        const domainMap = new Map<string, {
+            count: number;
+            urls: Set<string>;
+            isOwnDomain: boolean;
+        }>();
         let totalCitations = 0;
         let ownDomainCitations = 0;
 
-        for (const scan of (scans || [])) {
-            const citations = scan.citations as Array<{ url: string; title?: string; is_own_domain?: boolean }> | null;
+        for (const scan of scans) {
+            const citations = scan.citations as Array<{
+                url: string;
+                title?: string;
+                is_own_domain?: boolean;
+                provenance?: string;
+            }> | null;
             if (!citations || !Array.isArray(citations)) continue;
 
             for (const cit of citations) {
                 if (!cit.url) continue;
-                totalCitations++;
-
-                if (cit.is_own_domain) {
-                    ownDomainCitations++;
-                }
-
+                if (cit.provenance !== 'provider_citation') continue;
                 const classified = classifyUrl(cit.url);
+                let domain: string;
+                try {
+                    domain = new URL(cit.url).hostname.replace(/^www\./, '').toLowerCase();
+                } catch {
+                    continue;
+                }
+                totalCitations++;
+                if (cit.is_own_domain) ownDomainCitations++;
 
                 if (!sourceMap[classified.type]) {
                     sourceMap[classified.type] = { count: 0, urls: new Set(), label: classified.label };
@@ -119,6 +121,16 @@ export async function GET(request: NextRequest) {
                     urlCounts[cit.url] = { count: 0, type: classified.type };
                 }
                 urlCounts[cit.url].count++;
+
+                const domainEntry = domainMap.get(domain) ?? {
+                    count: 0,
+                    urls: new Set<string>(),
+                    isOwnDomain: false,
+                };
+                domainEntry.count++;
+                domainEntry.urls.add(cit.url);
+                domainEntry.isOwnDomain ||= Boolean(cit.is_own_domain);
+                domainMap.set(domain, domainEntry);
             }
         }
 
@@ -140,14 +152,14 @@ export async function GET(request: NextRequest) {
             youtube: 'YouTube, Create video content for niche topics',
             reddit: 'Reddit, Participate authentically in relevant communities',
             quora: 'Quora, Answer questions with genuine expertise',
-            tier1_affiliate: 'Tier-1 Affiliates (Forbes, etc.), Consider paid affiliate mentions',
+            tier1_affiliate: 'Tier-1 Affiliates (Forbes, etc.), Review relevant editorial sources; paid placement is not evidence of AI visibility',
             review_site: 'Review Sites (G2, Capterra), Get listed on review platforms',
             blog: 'Blogs, Aim for mentions on relevant industry blogs',
             tech_media: 'Tech Media, Pursue press coverage',
         };
 
         for (const [type, label] of Object.entries(gapLabels)) {
-            if (!presentTypes.has(type)) {
+            if (totalCitations > 0 && !presentTypes.has(type)) {
                 gaps.push(label);
             }
         }
@@ -160,6 +172,13 @@ export async function GET(request: NextRequest) {
 
         const analysis: CitationAnalysis = {
             sources,
+            domains: Array.from(domainMap, ([domain, data]) => ({
+                domain,
+                urlCount: data.urls.size,
+                totalMentions: data.count,
+                isOwnDomain: data.isOwnDomain,
+                urls: Array.from(data.urls).slice(0, 8),
+            })).sort((a, b) => b.totalMentions - a.totalMentions || a.domain.localeCompare(b.domain)),
             totalCitations,
             ownDomainCitations,
             gaps,

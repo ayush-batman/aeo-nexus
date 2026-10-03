@@ -1,65 +1,57 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { Suspense, useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { AlertCircle, Loader2 } from "lucide-react";
-import { createClient } from "@/lib/supabase/client";
+import { authClient } from "@/lib/auth-client";
 import { AeloWordmark } from "@/components/brand/logo";
 import { GoogleSignInButton } from "@/components/auth/google-button";
+import { planByCheckoutKey } from "@/lib/billing/plan-catalog";
 
-export default function SignupPage() {
-    const router = useRouter();
+function SignupForm() {
+    const searchParams = useSearchParams();
+    const planParam = searchParams.get('plan');
+    const selectedPlanDefinition = planByCheckoutKey(planParam);
+    const selectedPlan = selectedPlanDefinition?.checkoutKey === 'radar' || selectedPlanDefinition?.checkoutKey === 'command'
+        ? selectedPlanDefinition.checkoutKey
+        : null;
     const [name, setName] = useState("");
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [error, setError] = useState<string | null>(null);
     const [success, setSuccess] = useState<string | null>(null);
     const [loading, setLoading] = useState(false);
+    const [emailAvailable, setEmailAvailable] = useState<boolean | null>(null);
+
+    useEffect(() => {
+        let active = true;
+        fetch('/api/auth/providers')
+            .then(async (response) => response.ok ? response.json() as Promise<{ email?: boolean }> : null)
+            .then((status) => { if (active) setEmailAvailable(status?.email === true); })
+            .catch(() => { if (active) setEmailAvailable(false); });
+        return () => { active = false; };
+    }, []);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+        if (!emailAvailable) {
+            setError('Email signup is unavailable right now. Please use Google sign-up.');
+            return;
+        }
         setError(null);
         setSuccess(null);
         setLoading(true);
 
         try {
-            // Step 1: Create user via server-side API (auto-confirms email)
-            const signupRes = await fetch("/api/auth/signup", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    email: email.trim(),
-                    password,
-                    fullName: name.trim(),
-                }),
+            const callbackURL = selectedPlan ? `/onboarding?plan=${selectedPlan}` : '/onboarding';
+            const { error: signupError } = await authClient.signUp.email({
+                email: email.trim(), password, name: name.trim(), callbackURL,
             });
-
-            const signupData = await signupRes.json();
-
-            if (!signupRes.ok) {
-                throw new Error(signupData.error || "Failed to create account");
-            }
-
-            // Step 2: Auto sign-in with the newly created account
-            const supabase = createClient();
-            const { error: signInError } = await supabase.auth.signInWithPassword({
-                email: email.trim(),
-                password,
-            });
-
-            if (signInError) {
-                // Account created but auto-login failed, redirect to login
-                setSuccess("Account created! Please sign in.");
-                setTimeout(() => router.push("/login"), 1500);
-                return;
-            }
-
-            // Step 3: Redirect to onboarding
-            router.push("/onboarding");
-            router.refresh();
+            if (signupError) throw new Error(signupError.message || 'Unable to create your account.');
+            setSuccess('Check your email to verify your account and continue to your first scan.');
         } catch (err) {
             console.error("Signup error:", err);
             setError(err instanceof Error ? err.message : "Failed to create account");
@@ -82,35 +74,53 @@ export default function SignupPage() {
                         Create your account
                     </h1>
                     <p className="text-sm text-[var(--text-secondary)] text-center mb-8">
-                        No card. First scan in under a minute.
+                        No card. Start with real AI answers.
                     </p>
 
+                    {selectedPlan && (
+                        <div className="mb-6 rounded-md border border-[var(--accent-base)]/25 bg-[var(--accent-muted)] p-3 text-center">
+                            <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-[var(--text-tertiary)]">Selected after your free trial</p>
+                            <p className="mt-1 text-sm font-medium text-[var(--text-primary)]">
+                                {selectedPlanDefinition!.name} · {selectedPlanDefinition!.priceLabel}/mo
+                            </p>
+                            <p className="mt-1 text-xs text-[var(--text-secondary)]">{selectedPlanDefinition!.scanPromise}</p>
+                            <p className="mt-1 text-xs text-[var(--text-secondary)]">No checkout or charge happens during signup.</p>
+                        </div>
+                    )}
+
                     {error && (
-                        <div className="mb-4 p-3 rounded-md bg-[var(--data-red-muted)] border border-[var(--data-red)]/25 flex items-center gap-2 text-[var(--data-red)] text-sm">
+                        <div className="mb-4 p-3 rounded-md bg-[var(--data-red-muted)] border border-[var(--data-red)]/25 flex items-center gap-2 text-[var(--data-red)] text-sm" role="alert" aria-live="assertive">
                             <AlertCircle className="w-4 h-4" />
                             {error}
                         </div>
                     )}
                     {success && (
-                        <div className="mb-4 p-3 rounded-lg bg-[var(--data-green-muted)] border border-[var(--data-green)]/25 text-[var(--data-green)] text-sm">
+                        <div className="mb-4 p-3 rounded-lg bg-[var(--data-green-muted)] border border-[var(--data-green)]/25 text-[var(--data-green)] text-sm" role="status" aria-live="polite">
                             {success}
                         </div>
                     )}
 
-                    <GoogleSignInButton label="Sign up with Google" />
+                    <GoogleSignInButton label="Sign up with Google" selectedPlan={selectedPlan} showDivider={emailAvailable === true} />
 
-                    <div className="flex items-center gap-3 my-6">
-                        <div className="flex-1 h-px bg-[var(--border-default)]" />
-                        <span className="text-xs text-[var(--text-tertiary)]">or</span>
-                        <div className="flex-1 h-px bg-[var(--border-default)]" />
-                    </div>
+                    {emailAvailable === false && (
+                        <p className="mt-5 text-sm text-[var(--text-secondary)]" role="status">
+                            Email signup is unavailable right now. Use Google sign-up if shown above.
+                        </p>
+                    )}
 
-                    <form onSubmit={handleSubmit} className="space-y-4">
+                    {emailAvailable === null && (
+                        <p className="mb-4 text-sm text-[var(--text-secondary)]" role="status">
+                            Checking sign-up options…
+                        </p>
+                    )}
+
+                    {emailAvailable === true && <form onSubmit={handleSubmit} className="space-y-4">
                         <div>
-                            <label className="block text-sm font-medium text-[var(--text-secondary)] mb-2">
+                            <label htmlFor="signup-name" className="block text-sm font-medium text-[var(--text-secondary)] mb-2">
                                 Full Name
                             </label>
                             <Input
+                                id="signup-name"
                                 type="text"
                                 placeholder="John Doe"
                                 value={name}
@@ -120,10 +130,11 @@ export default function SignupPage() {
                         </div>
 
                         <div>
-                            <label className="block text-sm font-medium text-[var(--text-secondary)] mb-2">
+                            <label htmlFor="signup-email" className="block text-sm font-medium text-[var(--text-secondary)] mb-2">
                                 Email
                             </label>
                             <Input
+                                id="signup-email"
                                 type="email"
                                 placeholder="you@example.com"
                                 value={email}
@@ -133,17 +144,20 @@ export default function SignupPage() {
                         </div>
 
                         <div>
-                            <label className="block text-sm font-medium text-[var(--text-secondary)] mb-2">
+                            <label htmlFor="signup-password" className="block text-sm font-medium text-[var(--text-secondary)] mb-2">
                                 Password
                             </label>
                             <Input
+                                id="signup-password"
                                 type="password"
                                 placeholder="••••••••"
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
                                 required
-                                minLength={6}
+                                minLength={8}
+                                aria-describedby="signup-password-help"
                             />
+                            <p id="signup-password-help" className="mt-1 text-xs text-[var(--text-tertiary)]">At least 8 characters.</p>
                         </div>
 
                         <div className="text-sm text-[var(--text-secondary)]">
@@ -167,7 +181,7 @@ export default function SignupPage() {
                                 "Create Account"
                             )}
                         </Button>
-                    </form>
+                    </form>}
 
                     <div className="mt-6 text-center text-sm text-[var(--text-secondary)]">
                         Already have an account?{" "}
@@ -178,5 +192,13 @@ export default function SignupPage() {
                 </div>
             </div>
         </div>
+    );
+}
+
+export default function SignupPage() {
+    return (
+        <Suspense fallback={<div className="min-h-screen bg-black" role="status" aria-label="Loading signup" />}>
+            <SignupForm />
+        </Suspense>
     );
 }

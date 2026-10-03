@@ -1,6 +1,7 @@
 "use client";
+import { waitForMeasurementJob } from '@/lib/client/wait-for-measurement';
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect } from "react";
 import { UpgradeModal, isPlanGate } from '@/components/billing/upgrade-modal';
 import { Header } from "@/components/dashboard/header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -10,7 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn, getScoreColor, getScoreBgColor } from "@/lib/utils";
-import { createClient } from "@/lib/supabase/client";
+import { useWorkspaceLive } from "@/hooks/use-workspace-live";
 import { ScheduledScans } from "@/components/dashboard/llm-tracker/scheduled-scans";
 import { QuestionVariants } from "@/components/dashboard/llm-tracker/question-variants";
 import { ScanReceiptDrawer } from "@/components/dashboard/scan-receipt-drawer";
@@ -18,12 +19,8 @@ import {
     Search,
     Sparkles,
     Bot,
-    TrendingUp,
-    TrendingDown,
-    Minus,
     RefreshCw,
     Eye,
-    MessageSquare,
     AlertCircle,
     Radio,
     Link2,
@@ -34,46 +31,45 @@ import {
     Globe,
     X,
     Plus,
-    Lightbulb,
-    ArrowRight,
 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
-import Link from "next/link";
-import { generateRecommendations, CATEGORY_CONFIG, PRIORITY_CONFIG } from "@/lib/ai/recommendations";
+import { groupRecentScans } from "@/lib/measurement/scan-groups";
+import type { LLMScan } from "@/lib/types";
+import { useDashboardBootstrap } from "@/components/onboarding-check";
 
-// Platform icons/colors
+// Engine names stay neutral; status and evidence carry the visual meaning.
 const platforms = [
-    { id: "chatgpt", name: "ChatGPT", color: "bg-[var(--data-green)]" },
-    { id: "gemini", name: "Gemini", color: "bg-blue-500" },
-    { id: "perplexity", name: "Perplexity", color: "bg-[var(--accent-base)]" },
-    { id: "claude", name: "Claude", color: "bg-orange-500" },
-    { id: "google_ai_overview", name: "AI Overview", color: "bg-cyan-500" },
+    { id: "chatgpt", name: "ChatGPT" },
+    { id: "gemini", name: "Gemini" },
+    { id: "perplexity", name: "Perplexity" },
+    { id: "claude", name: "Claude" },
+    { id: "google_ai_overview", name: "AI Overview" },
 ];
-
-interface LLMScan {
-    id: string;
-    platform: string;
-    prompt: string;
-    response: string;
-    brand_mentioned: boolean;
-    mention_position: number | null;
-    sentiment: 'positive' | 'neutral' | 'negative' | null;
-    competitors_mentioned: string[];
-    citations: { url: string; title: string; is_own_domain: boolean }[] | null;
-    created_at: string;
-}
 
 interface PlatformVisibility {
     platform: string;
-    score: number;
-    change: number;
+    score: number | null;
+    change: number | null;
+    changeStatus: "comparable" | "incompatible" | "insufficient_samples";
     scanCount: number;
+    mentionCount: number;
+    mentionRate: number | null;
+    confidence: {
+        level: "none" | "low" | "medium" | "high";
+    };
+}
+
+interface PlatformError {
+    platform: string;
+    error: string;
 }
 
 export default function LLMTrackerPage() {
+    const bootstrap = useDashboardBootstrap();
     const [newPrompt, setNewPrompt] = useState("");
     const [brandName, setBrandName] = useState("");
     const [isScanning, setIsScanning] = useState(false);
+    const [scanProgress, setScanProgress] = useState<{ completed: number; requested: number } | null>(null);
     const [selectedPlatforms, setSelectedPlatforms] = useState<string[]>(["gemini"]);
     const [scans, setScans] = useState<LLMScan[]>([]);
     const [visibilityMetrics, setVisibilityMetrics] = useState<PlatformVisibility[]>([]);
@@ -82,13 +78,13 @@ export default function LLMTrackerPage() {
     const [gateOpen, setGateOpen] = useState(false);
     const [gateMessage, setGateMessage] = useState<string | null>(null);
     const [scanError, setScanError] = useState<string | null>(null);
-    const [isLive, setIsLive] = useState(false);
+    const isLive = useWorkspaceLive(() => void fetchData());
     const [competitors, setCompetitors] = useState<string[]>([]);
     const [newCompetitor, setNewCompetitor] = useState("");
     const [expandedScan, setExpandedScan] = useState<number | null>(null);
     const [scanRegion, setScanRegion] = useState<string>("global");
     const [receiptOpen, setReceiptOpen] = useState(false);
-    const [receiptPlatform, setReceiptPlatform] = useState<{ id: string; name: string; score: number } | null>(null);
+    const [receiptPlatform, setReceiptPlatform] = useState<{ id: string; name: string; score: number | null } | null>(null);
 
     const REGIONS = [
         { id: "global", label: "Global",  context: "" },
@@ -109,40 +105,17 @@ export default function LLMTrackerPage() {
                 fetch('/api/dashboard/stats', { cache: 'no-store' }),
             ]);
 
-            if (scansRes.ok) {
-                const scansData = await scansRes.json();
-                setScans(scansData.scans || []);
+            if (!scansRes.ok || !statsRes.ok) {
+                throw new Error('Scan history or visibility summary could not be loaded.');
             }
 
-            if (statsRes.ok) {
-                const statsData = await statsRes.json();
-                setVisibilityMetrics(statsData.visibilityMetrics || []);
-            }
-        } catch (err) {
-            console.error('Error fetching data:', err);
-            setError('Failed to load data');
-        }
-    }
+            const scansData = await scansRes.json();
+            setScans(scansData.scans || []);
 
-    // Load competitors from workspace settings
-    async function loadCompetitors() {
-        try {
-            const [wsRes, activeRes] = await Promise.all([
-                fetch("/api/workspaces", { cache: "no-store" }),
-                fetch("/api/onboarding/context", { cache: "no-store" }),
-            ]);
-            let activeId = null;
-            if (activeRes.ok) activeId = (await activeRes.json()).workspaceId;
-            if (wsRes.ok && activeId) {
-                const data = await wsRes.json();
-                const activeWs = data.workspaces?.find((ws: any) => ws.id === activeId);
-                if (activeWs) {
-                    if (activeWs.name) setBrandName(activeWs.name);
-                    if (activeWs.settings?.competitors) setCompetitors(activeWs.settings.competitors);
-                }
-            }
-        } catch (err) {
-            console.error('Error loading workspace settings:', err);
+            const statsData = await statsRes.json();
+            setVisibilityMetrics(statsData.visibilityMetrics || []);
+        } catch {
+            setError('Measurement history could not be loaded. Retry before trusting this view.');
         }
     }
 
@@ -150,48 +123,32 @@ export default function LLMTrackerPage() {
     useEffect(() => {
         async function init() {
             setLoading(true);
-            await Promise.all([fetchData(), loadCompetitors()]);
+            const activeWorkspace = bootstrap?.workspaces.find(workspace => workspace.id === bootstrap.workspaceId);
+            if (activeWorkspace) {
+                setBrandName(activeWorkspace.name);
+                setCompetitors(activeWorkspace.settings?.competitors ?? []);
+            }
+            await fetchData();
             setLoading(false);
-            setIsLive(true);
         }
         init();
 
-        // Setup Supabase Realtime subscription
-        const supabase = createClient();
-
-        const channel = supabase
-            .channel('llm-tracker-scans')
-            .on(
-                'postgres_changes',
-                { event: 'INSERT', schema: 'public', table: 'llm_scans' },
-                (payload) => {
-                    // Add new scan to top of list
-                    const newScan = payload.new as LLMScan;
-                    setScans(prev => [newScan, ...prev].slice(0, 20));
-                    // Also refresh visibility metrics
-                    fetch('/api/dashboard/stats')
-                        .then(res => res.json())
-                        .then(data => setVisibilityMetrics(data.visibilityMetrics || []))
-                        .catch(console.error);
-                }
-            )
-            .subscribe();
-
-        return () => {
-            supabase.removeChannel(channel);
-        };
-    }, []);
+    }, [bootstrap]);
 
     const handleScan = async () => {
         if (!newPrompt.trim() || !brandName.trim()) return;
 
         setIsScanning(true);
+        setScanProgress(null);
         setScanError(null);
 
         try {
             const response = await fetch('/api/llm/scans', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: {
+                    'Content-Type': 'application/json',
+                    Prefer: 'respond-async',
+                },
                 body: JSON.stringify({
                     prompt: (REGIONS.find(r => r.id === scanRegion)?.context || '') + newPrompt,
                     brandName,
@@ -200,7 +157,12 @@ export default function LLMTrackerPage() {
                 }),
             });
 
-            const data = await response.json();
+            const data = await response.json() as {
+                statusUrl?: string;
+                message?: string;
+                error?: string;
+                platformErrors?: PlatformError[];
+            };
 
             if (!response.ok) {
                 // Plan gate: show the human message with an upgrade nudge, not the raw code.
@@ -210,23 +172,32 @@ export default function LLMTrackerPage() {
                     return;
                 }
                 const errMsg = data.platformErrors
-                    ? `Some platforms failed: ${data.platformErrors.map((e: any) => `${e.platform} (${e.error})`).join(', ')}`
+                    ? `Some platforms failed: ${data.platformErrors.map((e) => `${e.platform} (${e.error})`).join(', ')}`
                     : data.message || data.error || 'Scan failed';
                 throw new Error(errMsg);
             }
 
+            if (response.status === 202) {
+                if (!data.statusUrl) throw new Error('Scan queued, but its progress link is missing. Reload to check saved results.');
+                const result = await waitForMeasurementJob(data.statusUrl, (progress) => {
+                    setScanProgress({ completed: progress.succeeded + progress.failed, requested: progress.requested });
+                });
+                if (result.status === 'partial') setScanError('Some engine samples failed. Review sample counts and saved evidence.');
+            }
+
             // Show partial failures as warnings
             if (data.platformErrors && data.platformErrors.length > 0) {
-                setScanError(`Partial success, ${data.platformErrors.map((e: any) => `${e.platform} failed`).join(', ')}`);
+                setScanError(`Partial success, ${data.platformErrors.map((e) => `${e.platform} failed`).join(', ')}`);
             }
 
             setNewPrompt("");
-            // Data will auto-refresh via realtime subscription
+            await fetchData();
         } catch (err) {
             console.error('Scan error:', err);
             setScanError(err instanceof Error ? err.message : 'Failed to run scan. Please check your API keys.');
         } finally {
             setIsScanning(false);
+            setScanProgress(null);
         }
     };
 
@@ -245,47 +216,10 @@ export default function LLMTrackerPage() {
         setNewCompetitor("");
     }
 
-    // Group scans by prompt for display
-    const groupedScans = scans.reduce((acc, scan) => {
-        const key = scan.prompt;
-        if (!acc[key]) {
-            acc[key] = {
-                prompt: scan.prompt,
-                platforms: [],
-                brandMentioned: false,
-                mentionPosition: null as number | null,
-                sentiment: null as string | null,
-                competitors: [] as string[],
-                citations: [] as { url: string; title: string; is_own_domain: boolean }[],
-                scannedAt: scan.created_at,
-            };
-        }
-        acc[key].platforms.push(scan.platform);
-        if (scan.brand_mentioned) {
-            acc[key].brandMentioned = true;
-            if (!acc[key].mentionPosition || (scan.mention_position && scan.mention_position < acc[key].mentionPosition!)) {
-                acc[key].mentionPosition = scan.mention_position;
-            }
-        }
-        if (scan.sentiment && !acc[key].sentiment) {
-            acc[key].sentiment = scan.sentiment;
-        }
-        if (scan.competitors_mentioned) {
-            acc[key].competitors = [...new Set([...acc[key].competitors, ...scan.competitors_mentioned])];
-        }
-        if (scan.citations && scan.citations.length > 0) {
-            const existingUrls = new Set(acc[key].citations.map(c => c.url));
-            for (const c of scan.citations) {
-                if (!existingUrls.has(c.url)) {
-                    acc[key].citations.push(c);
-                    existingUrls.add(c.url);
-                }
-            }
-        }
-        return acc;
-    }, {} as Record<string, { prompt: string; platforms: string[]; brandMentioned: boolean; mentionPosition: number | null; sentiment: string | null; competitors: string[]; citations: { url: string; title: string; is_own_domain: boolean }[]; scannedAt: string }>);
-
-    const scanGroups = Object.values(groupedScans).slice(0, 10);
+    const scanGroups = groupRecentScans(scans).slice(0, 10);
+    const latestPromptGroups = scanGroups.filter((group, index, groups) =>
+        groups.findIndex((candidate) => candidate.prompt === group.prompt) === index,
+    );
 
     return (
         <>
@@ -297,25 +231,33 @@ export default function LLMTrackerPage() {
             />
 
             <Header
-                title="LLM Tracker"
-                description="Monitor your brand visibility across AI platforms"
+                title="Prompts & Scans"
+                description="Run repeatable measurements and inspect every answer"
             />
 
-            <div className="p-6">
+            <main className="mx-auto max-w-[1440px] px-5 py-10 sm:px-8 lg:px-16 lg:py-12">
+                {error && (
+                    <div role="alert" className="mb-4 flex items-center gap-3 rounded-md border border-[var(--data-red)]/30 bg-[var(--data-red-muted)] px-4 py-3 text-sm text-[var(--data-red)]">
+                        <span className="flex-1">{error}</span>
+                        <Button variant="outline" size="sm" onClick={() => { setLoading(true); void fetchData().finally(() => setLoading(false)); }}>
+                            <RefreshCw className="mr-2 h-4 w-4" />Retry
+                        </Button>
+                    </div>
+                )}
                 <Tabs defaultValue="manual" className="space-y-6">
-                    <div className="flex items-center justify-between">
-                        <TabsList className="bg-[var(--bg-raised)] border-[var(--border-default)]">
-                            <TabsTrigger value="manual" className="data-[state=active]:bg-[var(--accent-base)] data-[state=active]:text-[var(--text-on-accent)]">
-                                <Search className="w-4 h-4 mr-2" />
-                                Manual Scan
+                    <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-center">
+                        <TabsList className="grid h-auto min-w-0 w-full grid-cols-3 border-[var(--border-default)] bg-[var(--bg-raised)] sm:inline-flex sm:h-9 sm:w-auto">
+                            <TabsTrigger value="manual" className="min-w-0 px-2 data-[state=active]:bg-[var(--accent-base)] data-[state=active]:text-[var(--text-on-accent)] sm:px-3">
+                                <Search className="mr-1 h-3.5 w-3.5 shrink-0 sm:mr-2 sm:h-4 sm:w-4" />
+                                <span className="sm:hidden">Scan</span><span className="hidden sm:inline">Manual Scan</span>
                             </TabsTrigger>
-                            <TabsTrigger value="schedules" className="data-[state=active]:bg-[var(--accent-base)] data-[state=active]:text-[var(--text-on-accent)]">
-                                <Bot className="w-4 h-4 mr-2" />
-                                Scheduled Scans
+                            <TabsTrigger value="schedules" className="min-w-0 px-2 data-[state=active]:bg-[var(--accent-base)] data-[state=active]:text-[var(--text-on-accent)] sm:px-3">
+                                <Bot className="mr-1 h-3.5 w-3.5 shrink-0 sm:mr-2 sm:h-4 sm:w-4" />
+                                <span className="sm:hidden">Schedule</span><span className="hidden sm:inline">Scheduled Scans</span>
                             </TabsTrigger>
-                            <TabsTrigger value="variants" className="data-[state=active]:bg-[var(--accent-base)] data-[state=active]:text-[var(--text-on-accent)]">
-                                <Layers className="w-4 h-4 mr-2" />
-                                Question Variants
+                            <TabsTrigger value="variants" className="min-w-0 px-2 data-[state=active]:bg-[var(--accent-base)] data-[state=active]:text-[var(--text-on-accent)] sm:px-3">
+                                <Layers className="mr-1 h-3.5 w-3.5 shrink-0 sm:mr-2 sm:h-4 sm:w-4" />
+                                <span className="sm:hidden">Variants</span><span className="hidden sm:inline">Question Variants</span>
                             </TabsTrigger>
                         </TabsList>
 
@@ -323,7 +265,7 @@ export default function LLMTrackerPage() {
                         {isLive && (
                             <div className="flex items-center gap-2 text-xs text-[var(--data-green)] mt-2 sm:mt-0">
                                 <Radio className="w-3 h-3 animate-pulse" />
-                                <span>Live updates enabled</span>
+                                <span>Auto-refresh connected</span>
                             </div>
                         )}
                     </div>
@@ -331,85 +273,69 @@ export default function LLMTrackerPage() {
                     <TabsContent value="manual" className="space-y-6 mt-0">
 
                         {/* Visibility Overview */}
-                        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                        <section aria-labelledby="engine-measurements-title" className="overflow-hidden rounded-xl border border-[var(--border-default)] bg-[var(--bg-surface)]">
+                            <div className="flex flex-col justify-between gap-2 border-b border-[var(--border-default)] px-5 py-4 sm:flex-row sm:items-end">
+                                <div>
+                                    <p className="text-[10px] uppercase tracking-[0.14em] text-[var(--text-tertiary)]">Comparable engine evidence</p>
+                                    <h2 id="engine-measurements-title" className="mt-1 text-base font-medium text-[var(--text-primary)]">Visibility by engine</h2>
+                                </div>
+                                <p className="text-xs text-[var(--text-tertiary)]">Open any row to inspect its provider receipts</p>
+                            </div>
                             {loading ? (
-                                Array.from({ length: 4 }).map((_, i) => (
-                                    <Card key={i}>
-                                        <CardContent className="p-4">
-                                            <Skeleton className="h-4 w-20 mb-2" />
-                                            <Skeleton className="h-8 w-16 mb-2" />
-                                            <Skeleton className="h-1.5 w-full rounded-full" />
-                                        </CardContent>
-                                    </Card>
+                                <div className="divide-y divide-[var(--border-default)]">
+                                {Array.from({ length: 5 }).map((_, i) => (
+                                    <div key={i} className="grid min-h-16 grid-cols-[1fr_5rem] items-center gap-4 px-5 py-3 sm:grid-cols-[1fr_7rem_8rem_5rem]">
+                                        <Skeleton className="h-4 w-24" />
+                                        <Skeleton className="hidden h-3 w-16 sm:block" />
+                                        <Skeleton className="hidden h-3 w-24 sm:block" />
+                                        <Skeleton className="h-7 w-14" />
+                                    </div>
                                 ))
+                                }</div>
                             ) : (
-                                platforms.map((platform) => {
+                                <div className="divide-y divide-[var(--border-default)]">
+                                {platforms.map((platform) => {
                                     const metrics = visibilityMetrics.find(
                                         m => m.platform.toLowerCase() === platform.id
                                     );
-                                    const score = metrics?.score || 0;
-                                    const change = metrics?.change || 0;
+                                    const score = metrics?.score ?? null;
+                                    const change = metrics?.change ?? null;
 
                                     return (
-                                        <Card
+                                        <button
+                                            type="button"
                                             key={platform.id}
-                                            className="cursor-pointer hover:border-[var(--border-active)] transition-colors group"
+                                            className="grid min-h-16 w-full grid-cols-[1fr_5rem] items-center gap-4 px-5 py-3 text-left transition-colors hover:bg-[var(--bg-raised)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[var(--accent-base)] sm:grid-cols-[1fr_7rem_8rem_5rem]"
                                             onClick={() => {
                                                 setReceiptPlatform({ id: platform.id, name: platform.name, score });
                                                 setReceiptOpen(true);
                                             }}
                                         >
-                                            <CardContent className="p-4">
-                                                <div className="flex items-center justify-between mb-2">
-                                                    <span className="text-sm text-[var(--text-secondary)]">{platform.name}</span>
-                                                    <div className={cn(
-                                                        "flex items-center gap-1 text-xs",
-                                                        change > 0 && "text-[var(--data-green)]",
-                                                        change < 0 && "text-[var(--data-red)]",
-                                                        change === 0 && "text-[var(--text-ghost)]"
-                                                    )}>
-                                                        {change > 0 ? <TrendingUp className="w-3 h-3" /> :
-                                                            change < 0 ? <TrendingDown className="w-3 h-3" /> :
-                                                                <Minus className="w-3 h-3" />}
-                                                        {change > 0 ? "+" : ""}{change}%
-                                                    </div>
-                                                </div>
-                                                <div className="flex items-end gap-2">
-                                                    <span className={cn("text-3xl font-bold", getScoreColor(score))}>
-                                                        {score}
-                                                    </span>
-                                                    <span className="text-[var(--text-ghost)] text-sm mb-1">/100</span>
-                                                </div>
-                                                <div className="mt-2 h-1.5 bg-[var(--bg-raised)] rounded-full overflow-hidden">
-                                                    <div
-                                                        className={cn("h-full rounded-full transition-all",
-                                                            score >= 70 ? "bg-[var(--data-green)]" :
-                                                                score >= 50 ? "bg-[var(--data-amber)]" :
-                                                                    "bg-[var(--data-red)]"
-                                                        )}
-                                                        style={{ width: `${score}%` }}
-                                                    />
-                                                </div>
-                                                <div className="mt-2 text-[10px] font-mono uppercase tracking-[0.12em] text-[var(--text-ghost)] opacity-0 group-hover:opacity-100 transition-opacity">
-                                                    See the receipt →
-                                                </div>
-                                            </CardContent>
-                                        </Card>
+                                            <span className="flex items-center gap-3 text-sm font-medium text-[var(--text-primary)]"><span className={metrics?.scanCount ? "h-1.5 w-1.5 rounded-full bg-[var(--data-green)]" : "h-1.5 w-1.5 rounded-full bg-[var(--text-ghost)]"} />{platform.name}</span>
+                                            <span className="hidden text-xs text-[var(--text-tertiary)] sm:block">n={metrics?.scanCount ?? 0}</span>
+                                            <span className="hidden text-xs text-[var(--text-secondary)] sm:block">{metrics?.confidence.level ?? "none"} confidence</span>
+                                            <span className="text-right text-2xl font-medium text-[var(--text-primary)]">{score === null ? "—" : `${score}%`}</span>
+                                            <span className="col-span-2 text-xs text-[var(--text-tertiary)] sm:col-span-4">
+                                                {change === null ? "Matched baseline needed" : `${change > 0 ? "+" : ""}${change} points vs matched baseline`}
+                                                <span className="sm:hidden"> · n={metrics?.scanCount ?? 0}</span>
+                                                {metrics?.mentionRate !== null && metrics?.mentionRate !== undefined ? ` · ${Math.round(metrics.mentionRate * 100)}% mention rate` : ""}
+                                            </span>
+                                        </button>
                                     );
-                                })
+                                })}</div>
                             )}
-                        </div>
+                        </section>
 
                         {/* New Scan */}
-                        <Card>
+                        <Card className="border-[var(--border-active)]">
                             <CardHeader>
                                 <CardTitle className="text-lg flex items-center gap-2">
                                     <Sparkles className="w-5 h-5 text-[var(--accent-base)]" />
-                                    Run a New Scan
+                                    Run a measurement
                                 </CardTitle>
                             </CardHeader>
                             <CardContent className="space-y-4">
-                                <div className="flex gap-2">
+                                <div className="grid gap-2 sm:grid-cols-[minmax(0,1fr)_10rem_auto]">
                                     <Input
                                         placeholder="Enter a prompt to test (e.g., 'best tyre inflator in India')"
                                         value={newPrompt}
@@ -420,7 +346,7 @@ export default function LLMTrackerPage() {
                                         placeholder="Brand name"
                                         value={brandName}
                                         onChange={(e) => setBrandName(e.target.value)}
-                                        className="w-40"
+                                        className="w-full"
                                     />
                                     <Button
                                         onClick={handleScan}
@@ -429,7 +355,9 @@ export default function LLMTrackerPage() {
                                         {isScanning ? (
                                             <>
                                                 <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
-                                                Scanning...
+                                                {scanProgress
+                                                    ? `${scanProgress.completed} of ${scanProgress.requested} saved…`
+                                                    : 'Starting measurement…'}
                                             </>
                                         ) : (
                                             <>
@@ -447,21 +375,22 @@ export default function LLMTrackerPage() {
                                     </div>
                                 )}
 
-                                <div className="flex items-center gap-2">
-                                    <span className="text-sm text-[var(--text-secondary)]">Platforms:</span>
-                                    <div className="flex gap-2">
+                                <div className="flex items-start gap-2">
+                                    <span className="pt-2 text-sm text-[var(--text-secondary)]">Platforms:</span>
+                                    <div className="flex flex-wrap gap-2">
                                         {platforms.map((platform) => (
                                             <button
                                                 key={platform.id}
                                                 onClick={() => togglePlatform(platform.id)}
+                                                aria-pressed={selectedPlatforms.includes(platform.id)}
                                                 className={cn(
-                                                    "flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm transition-all",
+                                                    "flex min-h-10 items-center gap-2 rounded-lg px-3 py-1.5 text-sm transition-colors",
                                                     selectedPlatforms.includes(platform.id)
                                                         ? "bg-[var(--bg-raised)] text-[var(--text-primary)] border border-[var(--border-hover)]"
-                                                        : "bg-[var(--bg-raised)] text-[var(--text-ghost)] border border-transparent hover:border-[var(--border-default)]"
+                                                        : "bg-[var(--bg-raised)] text-[var(--text-secondary)] border border-transparent hover:border-[var(--border-default)]"
                                                 )}
                                             >
-                                                <div className={cn("w-2 h-2 rounded-full", platform.color)} />
+                                                <div className="h-2 w-2 rounded-full bg-[var(--accent-base)]" />
                                                 {platform.name}
                                             </button>
                                         ))}
@@ -476,11 +405,12 @@ export default function LLMTrackerPage() {
                                             <button
                                                 key={region.id}
                                                 onClick={() => setScanRegion(region.id)}
+                                                aria-pressed={scanRegion === region.id}
                                                 className={cn(
-                                                    "px-2.5 py-1 rounded-lg text-xs transition-all",
+                                                    "min-h-10 rounded-lg px-2.5 py-1 text-xs transition-colors",
                                                     scanRegion === region.id
                                                         ? "bg-[var(--bg-raised)] text-[var(--text-primary)] border border-[var(--border-hover)]"
-                                                        : "bg-[var(--bg-raised)] text-[var(--text-ghost)] border border-transparent hover:border-[var(--border-default)]"
+                                                        : "bg-[var(--bg-raised)] text-[var(--text-secondary)] border border-transparent hover:border-[var(--border-default)]"
                                                 )}
                                             >
                                                 {region.label}
@@ -496,13 +426,13 @@ export default function LLMTrackerPage() {
                                         competitors.map(c => (
                                             <div key={c} className="flex items-center gap-1 px-2 py-1 rounded bg-[var(--bg-raised)] border border-[var(--border-default)] text-xs text-[var(--text-secondary)]">
                                                 {c}
-                                                <button onClick={() => setCompetitors(prev => prev.filter(x => x !== c))} className="text-[var(--text-ghost)] hover:text-[var(--data-red)]">
+                                                <button aria-label={`Remove ${c}`} onClick={() => setCompetitors(prev => prev.filter(x => x !== c))} className="text-[var(--text-secondary)] hover:text-[var(--data-red)]">
                                                     <X className="w-3 h-3" />
                                                 </button>
                                             </div>
                                         ))
                                     ) : (
-                                        <span className="text-xs text-[var(--text-ghost)]">None, add in Settings or inline</span>
+                                        <span className="text-xs text-[var(--text-secondary)]">None, add in Settings or inline</span>
                                     )}
                                     <div className="flex gap-1">
                                         <Input
@@ -512,7 +442,7 @@ export default function LLMTrackerPage() {
                                             onKeyDown={(e) => e.key === 'Enter' && addCompetitorTag()}
                                             className="h-7 w-28 text-xs"
                                         />
-                                        <Button variant="ghost" size="icon" className="h-7 w-7" onClick={addCompetitorTag} disabled={!newCompetitor.trim()}>
+                                        <Button aria-label="Add competitor" variant="ghost" size="icon" className="h-7 w-7" onClick={addCompetitorTag} disabled={!newCompetitor.trim()}>
                                             <Plus className="w-3 h-3" />
                                         </Button>
                                     </div>
@@ -543,62 +473,68 @@ export default function LLMTrackerPage() {
                                     <div className="space-y-3">
                                         {scanGroups.map((scan, index) => (
                                             <div
-                                                key={index}
-                                                className="p-4 rounded-lg bg-[var(--bg-raised)] hover:bg-[var(--bg-raised)] transition-colors cursor-pointer"
+                                                key={scan.key}
+                                                className="rounded-lg bg-[var(--bg-raised)] p-4"
                                             >
                                                 <div className="flex items-start justify-between gap-4">
                                                     <div className="flex-1 min-w-0">
                                                         <div className="flex items-center gap-2 mb-2">
                                                             <Bot className="w-4 h-4 text-[var(--text-ghost)]" />
                                                             <p className="font-medium text-[var(--text-primary)] truncate">
-                                                                "{scan.prompt}"
+                                                                &ldquo;{scan.prompt}&rdquo;
                                                             </p>
                                                         </div>
 
-                                                        <div className="flex items-center gap-4 text-sm">
+                                                        <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm">
                                                             <div className="flex items-center gap-1">
                                                                 {scan.platforms.map((pid) => {
                                                                     const p = platforms.find(x => x.id === pid);
                                                                     return (
                                                                         <div
                                                                             key={pid}
-                                                                            className={cn("w-2 h-2 rounded-full", p?.color)}
+                                                                            className="h-2 w-2 rounded-full bg-[var(--accent-base)]"
                                                                             title={p?.name}
                                                                         />
                                                                     );
                                                                 })}
-                                                                <span className="text-[var(--text-ghost)] ml-1">
-                                                                    {scan.platforms.length} platform{scan.platforms.length > 1 ? 's' : ''}
+                                                                <span className="ml-1 text-[var(--text-tertiary)]">
+                                                                    {scan.platforms.length} engine{scan.platforms.length > 1 ? 's' : ''}
                                                                 </span>
                                                             </div>
 
-                                                            {scan.brandMentioned ? (
+                                                            {scan.mentionCount > 0 ? (
                                                                 <div className="flex items-center gap-1 text-[var(--data-green)]">
                                                                     <Eye className="w-3 h-3" />
-                                                                    Position #{scan.mentionPosition || '?'}
+                                                                    {scan.mentionCount}/{scan.sampleCount} mentioned
                                                                 </div>
                                                             ) : (
                                                                 <div className="flex items-center gap-1 text-[var(--data-red)]">
                                                                     <Eye className="w-3 h-3" />
-                                                                    Not mentioned
+                                                                    0/{scan.sampleCount} mentioned
                                                                 </div>
                                                             )}
 
+                                                            <span className="text-[var(--text-tertiary)]">
+                                                                {scan.visibilityPercent === null ? 'Unmeasured' : `${scan.visibilityPercent}% visibility`} · {scan.confidence.level} confidence
+                                                            </span>
+
                                                             {scan.competitors.length > 0 && (
-                                                                <div className="flex items-center gap-1 text-[var(--text-ghost)]">
+                                                                <div className="flex items-center gap-1 text-[var(--text-tertiary)]">
                                                                     <Users className="w-3 h-3" />
                                                                     {scan.competitors.join(", ")}
                                                                 </div>
                                                             )}
 
                                                             {scan.citations.length > 0 && (
-                                                                <div className="flex items-center gap-1 text-[var(--text-ghost)]">
+                                                                <div className="flex items-center gap-1 text-[var(--text-tertiary)]">
                                                                     <Link2 className="w-3 h-3" />
                                                                     {scan.citations.length} source{scan.citations.length > 1 ? 's' : ''}
                                                                 </div>
                                                             )}
 
-                                                            <span className="text-[var(--text-ghost)]">
+                                                            {scan.failedSamples > 0 && <span className="text-[var(--data-red)]">{scan.failedSamples} unusable sample{scan.failedSamples > 1 ? 's' : ''}</span>}
+
+                                                            <span className="text-[var(--text-tertiary)]">
                                                                 {formatDistanceToNow(new Date(scan.scannedAt), { addSuffix: true })}
                                                             </span>
                                                         </div>
@@ -620,6 +556,8 @@ export default function LLMTrackerPage() {
                                                             variant="ghost"
                                                             size="icon"
                                                             className="h-7 w-7"
+                                                            aria-label={expandedScan === index ? `Collapse evidence for ${scan.prompt}` : `Expand evidence for ${scan.prompt}`}
+                                                            aria-expanded={expandedScan === index}
                                                             onClick={() => setExpandedScan(expandedScan === index ? null : index)}
                                                         >
                                                             {expandedScan === index ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
@@ -634,23 +572,36 @@ export default function LLMTrackerPage() {
                                                         {scan.citations.length > 0 && (
                                                             <div>
                                                                 <p className="text-xs font-medium text-[var(--text-secondary)] mb-2 flex items-center gap-1">
-                                                                    <Link2 className="w-3 h-3" /> Cited Sources
+                                                                    <Link2 className="w-3 h-3" /> Evidence links
                                                                 </p>
                                                                 <div className="space-y-1">
                                                                     {scan.citations.map((citation, ci) => (
                                                                         <div key={ci} className="flex items-center gap-2 text-xs">
                                                                             <Globe className="w-3 h-3 text-[var(--text-ghost)] flex-shrink-0" />
-                                                                            <a
-                                                                                href={citation.url}
-                                                                                target="_blank"
-                                                                                rel="noopener noreferrer"
-                                                                                className="text-[var(--accent-base)] hover:text-[var(--accent-base)] truncate"
-                                                                            >
-                                                                                {citation.title || citation.url}
-                                                                            </a>
+                                                                            {citation.fetch_validation === 'invalid' || citation.fetch_validation === 'blocked' ? (
+                                                                                <span className="text-[var(--text-tertiary)] truncate">
+                                                                                    {citation.title || citation.url}
+                                                                                </span>
+                                                                            ) : (
+                                                                                <a
+                                                                                    href={citation.url}
+                                                                                    target="_blank"
+                                                                                    rel="noopener noreferrer"
+                                                                                    className="text-[var(--accent-base)] hover:text-[var(--accent-base)] truncate"
+                                                                                >
+                                                                                    {citation.title || citation.url}
+                                                                                </a>
+                                                                            )}
                                                                             {citation.is_own_domain && (
                                                                                 <Badge variant="default" className="text-[10px] px-1.5 py-0">Your Site</Badge>
                                                                             )}
+                                                                            <Badge variant="outline" className="text-[10px] px-1.5 py-0">
+                                                                                {citation.provenance === 'provider_citation'
+                                                                                    ? 'Provider citation'
+                                                                                    : citation.provenance === 'link_mentioned'
+                                                                                        ? 'Link mentioned'
+                                                                                        : 'Unverified'}
+                                                                            </Badge>
                                                                         </div>
                                                                     ))}
                                                                 </div>
@@ -678,90 +629,13 @@ export default function LLMTrackerPage() {
                                         ))}
                                     </div>
                                 ) : (
-                                    <div className="text-center py-12 text-[var(--text-ghost)]">
-                                        <Search className="w-12 h-12 mx-auto mb-3 opacity-50" />
+                                    <div className="py-12 text-center text-[var(--text-secondary)]">
+                                        <Search aria-hidden="true" className="mx-auto mb-3 h-12 w-12 text-[var(--text-ghost)]" />
                                         <p>No scans yet. Run your first scan above!</p>
                                     </div>
                                 )}
                             </CardContent>
                         </Card>
-
-                        {/* ===== RECOMMENDATIONS PANEL ===== */}
-                        {scans.length > 0 && (() => {
-                            const recsData = scans.map(s => ({
-                                prompt: s.prompt,
-                                brandName: brandName,
-                                brandMentioned: s.brand_mentioned,
-                                mentionPosition: s.mention_position,
-                                sentiment: s.sentiment,
-                                competitorsMentioned: s.competitors_mentioned || [],
-                                competitorPositions: [],
-                                citations: (s.citations || []).map(c => ({ ...c, isOwnDomain: c.is_own_domain })),
-                                platform: s.platform,
-                                response: '',
-                            }));
-                            const recs = generateRecommendations(recsData, brandName);
-                            if (recs.length === 0) return null;
-
-                            return (
-                                <Card className="border-[var(--accent-base)]/25 bg-gradient-to-br from-zinc-900 to-zinc-900/50">
-                                    <CardHeader className="flex flex-row items-center justify-between">
-                                        <CardTitle className="text-lg flex items-center gap-2">
-                                            <Lightbulb className="w-5 h-5 text-[var(--data-amber)]" />
-                                            Recommendations
-                                            <Badge variant="outline" className="text-xs ml-2">
-                                                {recs.length} action{recs.length > 1 ? 's' : ''}
-                                            </Badge>
-                                        </CardTitle>
-                                    </CardHeader>
-                                    <CardContent className="space-y-3">
-                                        {recs.map(rec => (
-                                            <div
-                                                key={rec.id}
-                                                className={cn(
-                                                    "p-4 rounded-xl border transition-all",
-                                                    PRIORITY_CONFIG[rec.priority].bgColor
-                                                )}
-                                            >
-                                                <div className="flex items-start justify-between gap-3">
-                                                    <div className="flex-1 min-w-0">
-                                                        <div className="flex items-center gap-2 mb-1">
-                                                            <span className="text-sm">{CATEGORY_CONFIG[rec.category].icon}</span>
-                                                            <span className={cn("text-xs font-medium uppercase tracking-wider", PRIORITY_CONFIG[rec.priority].color)}>
-                                                                {PRIORITY_CONFIG[rec.priority].label}
-                                                            </span>
-                                                            {rec.metric && (
-                                                                <Badge variant="outline" className="text-[10px] px-1.5 py-0 border-[var(--border-default)]">
-                                                                    {rec.metric}
-                                                                </Badge>
-                                                            )}
-                                                        </div>
-                                                        <h4 className="font-semibold text-[var(--text-primary)] mb-1">{rec.title}</h4>
-                                                        <p className="text-sm text-[var(--text-secondary)] mb-2">{rec.description}</p>
-                                                        <div className="flex items-start gap-2 text-sm">
-                                                            <span className="text-[var(--accent-base)] font-medium flex-shrink-0">Action:</span>
-                                                            <span className="text-[var(--text-secondary)]">{rec.action}</span>
-                                                        </div>
-                                                    </div>
-                                                    {rec.link && (
-                                                        <Link href={rec.link}>
-                                                            <Button
-                                                                size="sm"
-                                                                variant="outline"
-                                                                className="flex-shrink-0 border-[var(--border-default)] text-[var(--text-secondary)] hover:bg-[var(--bg-raised)]"
-                                                            >
-                                                                {rec.linkLabel || 'Go'}
-                                                                <ArrowRight className="w-3 h-3 ml-1" />
-                                                            </Button>
-                                                        </Link>
-                                                    )}
-                                                </div>
-                                            </div>
-                                        ))}
-                                    </CardContent>
-                                </Card>
-                            );
-                        })()}
 
                         {/* Tracked Prompts */}
                         {scans.length > 0 && (
@@ -771,35 +645,34 @@ export default function LLMTrackerPage() {
                                 </CardHeader>
                                 <CardContent>
                                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                                        {Object.values(groupedScans).slice(0, 6).map((item, i) => {
-                                            const visibility = item.brandMentioned
-                                                ? (item.mentionPosition === 1 ? 90 : item.mentionPosition && item.mentionPosition <= 3 ? 70 : 50)
-                                                : 0;
+                                        {latestPromptGroups.slice(0, 6).map((item) => {
+                                            const visibility = item.visibilityPercent;
 
                                             return (
                                                 <div
-                                                    key={i}
+                                                    key={item.key}
                                                     className={cn(
-                                                        "p-4 rounded-lg border transition-colors cursor-pointer",
-                                                        getScoreBgColor(visibility)
+                                                        "rounded-lg border p-4 transition-colors",
+                                                        getScoreBgColor(visibility ?? 0)
                                                     )}
                                                 >
                                                     <div className="flex items-center justify-between mb-2">
-                                                        <span className={cn("text-2xl font-bold", getScoreColor(visibility))}>
-                                                            {visibility}%
+                                                        <span className={cn("text-2xl font-bold", getScoreColor(visibility ?? 0))}>
+                                                            {visibility === null ? '—' : `${visibility}%`}
                                                         </span>
                                                         <Button
                                                             variant="ghost"
                                                             size="icon"
                                                             className="h-8 w-8"
+                                                            aria-label={`Run ${item.prompt} again`}
                                                             onClick={() => setNewPrompt(item.prompt)}
                                                         >
                                                             <RefreshCw className="w-4 h-4" />
                                                         </Button>
                                                     </div>
-                                                    <p className="text-sm text-[var(--text-secondary)] mb-1 line-clamp-2">"{item.prompt}"</p>
-                                                    <p className="text-xs text-[var(--text-ghost)]">
-                                                        Last scan: {formatDistanceToNow(new Date(item.scannedAt), { addSuffix: true })}
+                                                    <p className="text-sm text-[var(--text-secondary)] mb-1 line-clamp-2">&ldquo;{item.prompt}&rdquo;</p>
+                                                    <p className="text-xs text-[var(--text-tertiary)]">
+                                                        Latest run: {item.mentionCount}/{item.sampleCount} mentions · {item.confidence.level} confidence · {formatDistanceToNow(new Date(item.scannedAt), { addSuffix: true })}
                                                     </p>
                                                 </div>
                                             );
@@ -818,12 +691,12 @@ export default function LLMTrackerPage() {
                         <QuestionVariants />
                     </TabsContent>
                 </Tabs>
-            </div>
+            </main>
 
             <ScanReceiptDrawer
                 open={receiptOpen}
                 onOpenChange={setReceiptOpen}
-                title={receiptPlatform ? `${receiptPlatform.name} visibility · ${receiptPlatform.score}/100` : "Scans"}
+                title={receiptPlatform ? `${receiptPlatform.name} visibility · ${receiptPlatform.score === null ? "unmeasured" : `${receiptPlatform.score}/100`}` : "Scans"}
                 subtitle={receiptPlatform ? `Every scan that produced this ${receiptPlatform.name} score, most recent first. Verify any of them yourself.` : undefined}
                 platform={receiptPlatform?.id}
             />

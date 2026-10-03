@@ -6,6 +6,7 @@ interface MetricCardProps {
     value: string | number;
     change?: string;
     changeType?: "positive" | "negative" | "neutral";
+    evidence?: string;
     icon: LucideIcon;
     accentColor?: "violet" | "teal" | "emerald" | "danger" | "amber" | "cyan";
     // Sage trust affordance: when set, the whole card becomes clickable and
@@ -52,6 +53,7 @@ export function MetricCard({
     value,
     change,
     changeType = "neutral",
+    evidence,
     icon: Icon,
     accentColor = "violet",
     onClick,
@@ -60,14 +62,8 @@ export function MetricCard({
     const accent = accentMap[accentColor];
     const clickable = Boolean(onClick);
 
-    return (
-        <div
-            onClick={onClick}
-            className={cn(
-                "card-base relative overflow-hidden flex flex-col justify-between min-h-[140px]",
-                clickable && "cursor-pointer hover:border-[var(--border-active)] transition-colors group",
-            )}
-        >
+    const content = (
+        <>
             {/* Top border glow line per spec */}
             <div
                 className="absolute top-0 left-0 right-0 h-[2px] opacity-80"
@@ -105,12 +101,33 @@ export function MetricCard({
                         </span>
                     </div>
                 )}
+                {evidence && <p className="mt-2 text-[11px] text-[var(--text-secondary)]">{evidence}</p>}
                 {clickable && (
-                    <div className="mt-2 text-[10px] font-mono uppercase tracking-[0.12em] text-[var(--text-ghost)] opacity-0 group-hover:opacity-100 transition-opacity">
+                    <div className="mt-2 text-[10px] font-mono uppercase tracking-[0.12em] text-[var(--text-tertiary)] group-hover:text-[var(--text-secondary)] transition-colors">
                         {receiptHint}
                     </div>
                 )}
             </div>
+        </>
+    );
+
+    const classes = cn(
+        "card-base relative overflow-hidden flex flex-col justify-between min-h-[140px] text-left w-full",
+        clickable && "cursor-pointer hover:border-[var(--border-active)] transition-colors group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent-base)]",
+    );
+
+    if (clickable) return (
+        <button type="button" onClick={onClick} className={classes}>
+            {content}
+        </button>
+    );
+
+    return (
+        <div
+            onClick={onClick}
+            className={classes}
+        >
+            {content}
         </div>
     );
 }

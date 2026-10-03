@@ -19,6 +19,18 @@ interface SearchResponse {
     totalResults: number;
 }
 
+type GoogleCustomSearchItem = {
+    title: string;
+    link: string;
+    snippet?: string;
+    displayLink: string;
+    formattedUrl: string;
+};
+type GoogleCustomSearchResponse = {
+    items?: GoogleCustomSearchItem[];
+    searchInformation?: { totalResults?: string };
+};
+
 // Expanded source list, includes tier-1 B2B review sites, long-form
 // content platforms, and product-discovery hubs that LLMs actually cite.
 // See docs/citation-sources.md for the ranking rationale.
@@ -113,18 +125,16 @@ export async function searchForums(
 
     try {
         const response = await fetch(
-            `https://www.googleapis.com/customsearch/v1?${params}`
+            `https://www.googleapis.com/customsearch/v1?${params}`, { signal: AbortSignal.timeout(20000) }
         );
 
         if (!response.ok) {
-            const error = await response.json();
-            console.error('Google Search API error:', error.error?.message || response.statusText);
-            return { results: [], totalResults: 0 };
+            throw new Error('google_search_unavailable');
         }
 
-        const data = await response.json();
+        const data = await response.json() as GoogleCustomSearchResponse;
 
-        const results: GoogleSearchResult[] = (data.items || []).map((item: any) => ({
+        const results: GoogleSearchResult[] = (data.items || []).map((item) => ({
             title: item.title,
             link: item.link,
             snippet: item.snippet || '',
@@ -138,8 +148,7 @@ export async function searchForums(
             totalResults: parseInt(data.searchInformation?.totalResults || '0'),
         };
     } catch (error) {
-        console.error('Google Search fetch error:', error);
-        return { results: [], totalResults: 0 };
+        throw new Error('google_search_unavailable', { cause: error });
     }
 }
 

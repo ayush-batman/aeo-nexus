@@ -1,11 +1,6 @@
-// India AI Visibility Index, data + aggregation
-//
-// Editions are the atomic unit. Each edition = a monthly snapshot of Indian
-// brands' AI-answer visibility, aggregated from real llm_scans rows in Aelo.
-// Nothing here is fabricated: numbers only appear if there's a scan behind them.
-
-import { createAdminClient } from '@/lib/supabase/admin';
-
+import { fetchQuery } from 'convex/nextjs';
+import type { FunctionReturnType } from 'convex/server';
+import { api } from '../convex/_generated/api';
 export type IndiaCategory = 'SaaS' | 'D2C' | 'Fintech' | 'EdTech' | 'Consumer';
 
 export interface IndiaBrandEntry {
@@ -18,6 +13,8 @@ export interface IndiaBrandEntry {
     scanCount: number;
     verdict: 'dominant' | 'strong' | 'contested' | 'invisible';
     sentiment: 'positive' | 'neutral' | 'negative' | null;
+    intervalLower: number;
+    intervalUpper: number;
 }
 
 export interface IndiaEdition {
@@ -30,123 +27,20 @@ export interface IndiaEdition {
     entries: IndiaBrandEntry[];
 }
 
-// ─── Category assignment. Extend as new workspaces get onboarded. Every
-//    brand named here must have a workspace with the exact same name
-//    (see /api/india-index compiler in this file). Names that don't
-//    resolve to a workspace are silently skipped.
-const CATEGORY: Record<string, IndiaCategory> = {
-    // ─── SaaS ──────────────────────────────────────────────────────
-    'Zoho':            'SaaS',
-    'Freshworks':      'SaaS',
-    'Postman':         'SaaS',
-    'Chargebee':       'SaaS',
-    'Zomato':          'Consumer',
-    'Whatfix':         'SaaS',
-    // ─── Fintech ───────────────────────────────────────────────────
-    'Razorpay':        'Fintech',
-    'Zerodha':         'Fintech',
-    'PhonePe':         'Fintech',
-    'Cred':            'Fintech',
-    'Paytm':           'Fintech',
-    'Groww':           'Fintech',
-    'Upstox':          'Fintech',
-    // ─── D2C ───────────────────────────────────────────────────────
-    'BoAt':            'D2C',
-    'Mamaearth':       'D2C',
-    'Wakefit':         'D2C',
-    'Nykaa':           'D2C',
-    'Sugar Cosmetics': 'D2C',
-    'Lenskart':        'D2C',
-    'Meesho':          'Consumer',
-    // ─── EdTech ────────────────────────────────────────────────────
-    "Byju's":          'EdTech',
-    'Unacademy':       'EdTech',
-    'PhysicsWallah':   'EdTech',
-    'upGrad':          'EdTech',
-    'Great Learning':  'EdTech',
-    'Vedantu':         'EdTech',
-};
 
-const INDIA_BRAND_NAMES = Object.keys(CATEGORY);
-
-// Verdict rules (Sage: strict thresholds, no smoothing).
-function verdictFor(mentionRatePct: number, avgPosition: number | null): IndiaBrandEntry['verdict'] {
-    if (mentionRatePct === 0) return 'invisible';
-    if (mentionRatePct >= 90 && (avgPosition ?? 99) <= 2) return 'dominant';
-    if (mentionRatePct >= 60) return 'strong';
-    return 'contested';
-}
-
-/**
- * Compose the current July-2026 edition by aggregating llm_scans rows for
- * the India-flagged workspaces. Runs against the admin client (no auth
- * needed, this is public data by design; the Index is a PR asset).
- */
+export function currentIndexEdition() { return new Date().toISOString().slice(0,7); }
 export async function loadCurrentEdition(): Promise<IndiaEdition> {
-    const db = createAdminClient();
-
-    const { data: workspaces } = await db
-        .from('workspaces')
-        .select('id, name, settings')
-        .in('name', INDIA_BRAND_NAMES);
-
-    const rows: IndiaBrandEntry[] = [];
-    if (workspaces && workspaces.length > 0) {
-        for (const w of workspaces) {
-            const { data: scans } = await db
-                .from('llm_scans')
-                .select('brand_mentioned, mention_position, sentiment')
-                .eq('workspace_id', w.id);
-
-            const scanCount = scans?.length ?? 0;
-            if (scanCount === 0) continue;
-
-            const mentioned = scans!.filter(s => s.brand_mentioned).length;
-            const mentionRatePct = Math.round((mentioned / scanCount) * 100);
-            const positions = scans!
-                .map(s => s.mention_position)
-                .filter((p): p is number => typeof p === 'number');
-            const avgPosition = positions.length
-                ? Math.round((positions.reduce((a, b) => a + b, 0) / positions.length) * 10) / 10
-                : null;
-
-            // Modal sentiment (Sage: just the most common label)
-            const counts = new Map<string, number>();
-            for (const s of scans!) if (s.sentiment) counts.set(s.sentiment, (counts.get(s.sentiment) ?? 0) + 1);
-            let dominantSentiment: IndiaBrandEntry['sentiment'] = null;
-            let best = 0;
-            for (const [k, v] of counts) if (v > best) { best = v; dominantSentiment = k as IndiaBrandEntry['sentiment']; }
-
-            rows.push({
-                rank: 0, // filled after sort
-                brand: w.name,
-                category: CATEGORY[w.name] ?? 'Consumer',
-                website: (w.settings as { website?: string } | null)?.website ?? null,
-                mentionRatePct,
-                avgPosition,
-                scanCount,
-                verdict: verdictFor(mentionRatePct, avgPosition),
-                sentiment: dominantSentiment,
-            });
-        }
-    }
-
-    // Rank: mention rate desc, then position asc (lower better)
-    rows.sort((a, b) => {
-        if (b.mentionRatePct !== a.mentionRatePct) return b.mentionRatePct - a.mentionRatePct;
-        return (a.avgPosition ?? 99) - (b.avgPosition ?? 99);
-    });
-    rows.forEach((r, i) => { r.rank = i + 1; });
-
-    const cats = Array.from(new Set(rows.map(r => r.category))) as IndiaCategory[];
-
-    return {
-        slug: '2026-07',
-        label: 'July 2026',
-        publishedAt: new Date().toISOString(),
-        isPreview: true,
-        brandCount: rows.length,
-        categoriesTracked: cats,
-        entries: rows,
-    };
+  const slug = currentIndexEdition();
+  const published: FunctionReturnType<typeof api.indiaIndex.entries>['page'] = [];
+  let cursor: string | null = null;
+  do {
+    const page: FunctionReturnType<typeof api.indiaIndex.entries> = await fetchQuery(api.indiaIndex.entries, { edition:slug, paginationOpts:{numItems:100,cursor} });
+    published.push(...page.page); cursor=page.isDone?null:page.continueCursor;
+  } while(cursor);
+  const entries: IndiaBrandEntry[] = published.sort((a,b)=>b.mentionRatePct-a.mentionRatePct).map((row,index)=>({
+    ...row, rank:index+1, verdict:row.mentionRatePct===0?'invisible':row.mentionRatePct>=90 && (row.avgPosition??99)<=2?'dominant':row.mentionRatePct>=60?'strong':'contested',
+  }));
+  return { slug,label:new Date(slug+'-01T00:00:00Z').toLocaleDateString('en-US',{month:'long',year:'numeric',timeZone:'UTC'}),
+    publishedAt:new Date(published.length?Math.max(...published.map(row=>row.publishedAt)):Date.parse(slug+'-01T00:00:00Z')).toISOString(),
+    isPreview:true,brandCount:entries.length,categoriesTracked:[...new Set(entries.map(row=>row.category))],entries };
 }

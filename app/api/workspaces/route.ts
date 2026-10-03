@@ -1,118 +1,49 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createAdminClient } from '@/lib/supabase/admin';
-import { getCurrentWorkspaceContext } from '@/lib/data-access';
+import { api } from '@/convex/_generated/api';
+import { fetchAuthMutation, fetchAuthQuery } from '@/lib/auth-server';
+import { convexRouteError } from '@/lib/convex/http';
+import { getConvexWorkspaceContext } from '@/lib/convex/session';
 
-export const maxDuration = 60; // Extend Vercel timeout for initial LLMs scale
-
-// GET: List all workspaces for the current user's org
-export async function GET() {
-    try {
-        // Route through the shared context helper so the dev-auth-bypass
-        // works here too (workspaces was previously calling auth.getUser()
-        // directly and returning 401 for bypass users).
-        const context = await getCurrentWorkspaceContext();
-        if (!context) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-
-        const db = createAdminClient();
-
-        const { data: workspaces } = await db
-            .from('workspaces')
-            .select('id, name, settings, created_at')
-            .eq('org_id', context.orgId)
-            .order('created_at', { ascending: true });
-
-        return NextResponse.json({ workspaces: workspaces || [] });
-    } catch (error) {
-        console.error('Error fetching workspaces:', error);
-        return NextResponse.json({ error: 'Failed to fetch workspaces' }, { status: 500 });
-    }
+function legacyWorkspace(row: { publicId: string; name: string; settings: unknown; createdAt: number }) {
+    return { id: row.publicId, name: row.name, settings: row.settings, created_at: new Date(row.createdAt).toISOString() };
 }
 
-// POST: Create a new workspace (brand)
+export async function GET(request: NextRequest) {
+    try {
+        const context = await getConvexWorkspaceContext();
+        if (!context) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        if (request.nextUrl.searchParams.get('current') === '1') {
+            const workspace = await fetchAuthQuery(api.workspaces.get, { workspaceId: context.workspaceId });
+            return NextResponse.json({ workspace: legacyWorkspace(workspace) }, { headers: { 'Cache-Control': 'no-store' } });
+        }
+        if (request.nextUrl.searchParams.get('page') === '1') {
+            const cursor = request.nextUrl.searchParams.get('cursor');
+            if (cursor !== null && (cursor.length < 1 || cursor.length > 4096)) {
+                return NextResponse.json({ error: 'Invalid workspace cursor' }, { status: 400 });
+            }
+            const result = await fetchAuthQuery(api.workspaces.listPage, { paginationOpts: { cursor, numItems: 100 } });
+            return NextResponse.json({ workspaces: result.page.map(legacyWorkspace),
+                nextCursor: result.isDone ? null : result.continueCursor }, { headers: { 'Cache-Control': 'no-store' } });
+        }
+        const workspaces = await fetchAuthQuery(api.workspaces.list, {});
+        return NextResponse.json({ workspaces: workspaces.map(legacyWorkspace) }, { headers: { 'Cache-Control': 'no-store' } });
+    } catch (error) { return convexRouteError(error); }
+}
+
 export async function POST(request: NextRequest) {
     try {
-        const context = await getCurrentWorkspaceContext();
-        if (!context) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-
-        const db = createAdminClient();
-        const profile = { org_id: context.orgId };
-
-        const body = await request.json();
-        const { name, website, competitors } = body;
-
-        if (!name?.trim()) {
-            return NextResponse.json({ error: 'Brand name is required' }, { status: 400 });
+        if (!await getConvexWorkspaceContext()) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        const body = await request.json().catch(() => null);
+        if (typeof body?.name !== 'string' ||
+            (body.website != null && typeof body.website !== 'string') ||
+            (body.competitors != null && (!Array.isArray(body.competitors) || body.competitors.some((value: unknown) => typeof value !== 'string')))) {
+            return NextResponse.json({ error: 'Check the brand name, website and competitors.' }, { status: 400 });
         }
-
-        // Check max workspaces (limit to 50 for now)
-        const { count } = await db
-            .from('workspaces')
-            .select('*', { count: 'exact', head: true })
-            .eq('org_id', profile.org_id);
-
-        if ((count || 0) >= 50) {
-            return NextResponse.json({ error: 'Maximum 50 brands per account' }, { status: 403 });
-        }
-
-        const { data: workspace, error } = await db
-            .from('workspaces')
-            .insert({
-                org_id: profile.org_id,
-                name: name.trim(),
-                settings: {
-                    website: website?.trim() || null,
-                    competitors: competitors || [],
-                },
-            })
-            .select('id, name, settings, created_at')
-            .single();
-
-        if (error) {
-            console.error('Error creating workspace:', error);
-            return NextResponse.json({ error: 'Failed to create workspace' }, { status: 500 });
-        }
-
-        // Run an automatic initial background scan to populate the dashboard!
-        try {
-            const { scanLLM } = await import('@/lib/ai/llm-scanner');
-            
-            const { results } = await scanLLM({
-                prompt: `What is ${name.trim()}?`,
-                brandName: name.trim(),
-                brandDomain: website?.trim() || undefined,
-                competitors: competitors || [],
-                platforms: ['gemini', 'perplexity'], // Defaults back to mock if no keys found
-            });
-
-            if (results && results.length > 0) {
-                const scanInserts = results.map(r => ({
-                    workspace_id: workspace.id,
-                    platform: r.platform,
-                    prompt: r.prompt,
-                    response: r.response,
-                    brand_mentioned: r.brandMentioned,
-                    brand_variants: r.brandVariants,
-                    mention_position: r.mentionPosition,
-                    sentiment: r.sentiment,
-                    sentiment_score: r.sentimentScore,
-                    sentiment_reason: r.sentimentReason,
-                    competitors_mentioned: r.competitorsMentioned,
-                    citations: r.citations,
-                    list_items: r.listItems,
-                    confidence: r.confidence,
-                }));
-                if (scanInserts.length > 0) {
-                    await db.from('llm_scans').insert(scanInserts);
-                }
-            }
-        } catch (scanError) {
-            console.error('Initial background scan failed:', scanError);
-            // We do not fail the workspace creation if the scan fails
-        }
-
-        return NextResponse.json({ workspace });
-    } catch (error) {
-        console.error('Error creating workspace:', error);
-        return NextResponse.json({ error: 'Failed to create workspace' }, { status: 500 });
-    }
+        const result = await fetchAuthMutation(api.workspaces.create, {
+            name: body.name, settings: { website: body.website?.trim() || null, competitors: body.competitors ?? [] },
+        });
+        if (result.status === 'denied') return NextResponse.json({ error: `This plan allows ${result.limit} brand workspace(s)` }, { status: 403 });
+        return NextResponse.json({ workspace: legacyWorkspace(result.workspace),
+            measurementStatus: 'queued', measurementJobId: result.measurementJobPublicId });
+    } catch (error) { return convexRouteError(error); }
 }

@@ -1,51 +1,19 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
-import { getCurrentWorkspaceId } from '@/lib/data-access';
-
-export async function GET(request: NextRequest) {
-    const workspaceId = await getCurrentWorkspaceId();
-    if (!workspaceId) {
-        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    const supabase = await createClient();
-
-    // Fetch analytics for last 30 days
-    const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
-
-    const { data, error } = await supabase
-        .from('analytics_events')
-        .select('*')
-        .eq('workspace_id', workspaceId)
-        .gte('created_at', thirtyDaysAgo);
-
-    if (error) {
-        console.error('Analytics Query Error:', error);
-        // If table doesn't exist yet (migration not run), return empty data gracefully
-        if (error.code === '42P01') {
-            return NextResponse.json({ totalVisits: 0, aiVisits: 0, sources: {} });
-        }
-        return NextResponse.json({ error: error.message }, { status: 500 });
-    }
-
-    // Process data
-    const events = data || [];
-    const totalVisits = events.length;
-
-    // Filter for AI sources
-    const aiSources = ['chatgpt', 'gemini', 'perplexity', 'claude', 'bing', 'copilot'];
-    const aiVisits = events.filter(e => aiSources.includes(e.ai_source)).length;
-
-    const sources = events.reduce((acc, curr) => {
-        const src = curr.ai_source || 'direct';
-        acc[src] = (acc[src] || 0) + 1;
-        return acc;
-    }, {} as Record<string, number>);
-
-    return NextResponse.json({
-        totalVisits,
-        aiVisits,
-        sources,
-        events: events.slice(0, 50) // Return recent events for list view
-    });
+import { NextResponse } from 'next/server';
+import { api } from '@/convex/_generated/api';
+import { fetchAuthQuery } from '@/lib/auth-server';
+import { getConvexWorkspaceContext } from '@/lib/convex/session';
+import { convexRouteError } from '@/lib/convex/http';
+import { summarizeTrafficEvents } from '@/lib/analytics/traffic-summary';
+export async function GET() {
+  try {
+    const context = await getConvexWorkspaceContext();
+    if (!context) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    const since = Date.now() - 30 * 86400_000;
+    const summary = await summarizeTrafficEvents((cursor) => fetchAuthQuery(api.traffic.events, {
+      workspaceId: context.workspaceId, since, paginationOpts: { cursor, numItems: 500 },
+    }));
+    return NextResponse.json({ ...summary,
+      measurementBasis: 'Observed pageview events from the last 30 days; not verified unique people or crawler requests.',
+    }, { headers: { 'Cache-Control': 'no-store' } });
+  } catch (error) { return convexRouteError(error); }
 }

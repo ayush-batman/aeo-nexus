@@ -7,14 +7,7 @@ export async function GET(request: Request) {
   const window = new URL(request.url).searchParams.get('window') === '7d' ? '7d' : '30d';
   const days = window === '7d' ? 7 : 30;
   return withKey(request, 'read', async (ctx, admin) => {
-    const since = new Date(Date.now() - days * 86400000).toISOString();
-    const { data } = await admin
-      .from('accuracy_claims')
-      .select('claim_text, verdict, confidence, evidence_url, evidence_snippet, reasoning, created_at')
-      .eq('workspace_id', ctx.workspaceId)
-      .gte('created_at', since)
-      .order('created_at', { ascending: false })
-      .limit(100);
+    const data = await admin.accuracy(Date.now() - days * 86400000);
 
     const claims = data || [];
     const breakdown: Record<string, number> = { true: 0, false: 0, outdated: 0, unverified: 0 };
@@ -23,14 +16,16 @@ export async function GET(request: Request) {
       breakdown[v] = (breakdown[v] || 0) + 1;
     }
     const total = claims.length;
-    const accuracyPct = total ? Math.round((breakdown.true / total) * 100) : null;
+    const checked = total - breakdown.unverified;
+    const accuracyPct = checked ? Math.round((breakdown.true / checked) * 100) : null;
 
     return {
       window,
       total,
+      checked,
       accuracyPct,
       breakdown,
-      note: 'accuracyPct is the share of checked claims that are true. Anything false or outdated is a claim an AI is repeating about you that a buyer will see.',
+      note: 'accuracyPct is the share of verified claims marked true; unverified claims are excluded. This response contains the latest 100 claims in the window, not necessarily every claim.',
       claims,
     };
   });

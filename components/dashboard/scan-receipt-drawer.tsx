@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Copy, CheckCircle, ExternalLink, ChevronDown, ChevronUp, Loader2, FileText } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { formatDistanceToNow } from "date-fns";
+import { recommendationLabel } from "@/lib/measurement/recommendation-label";
 
 interface Scan {
     id:                    string;
@@ -13,10 +14,26 @@ interface Scan {
     prompt:                string;
     response:              string;
     brand_mentioned:       boolean;
+    recommendation_status?: 'recommended' | 'not_recommended' | 'unassessed' | 'not_mentioned' | null;
+    recommendation_evidence?: string | null;
     mention_position:      number | null;
     sentiment:             'positive' | 'neutral' | 'negative' | null;
     competitors_mentioned: string[] | null;
-    citations:             { url: string; title: string; is_own_domain: boolean }[] | null;
+    citations:             Array<{
+        url: string;
+        title: string;
+        is_own_domain: boolean;
+        provenance?: 'provider_citation' | 'link_mentioned' | 'unverified';
+        fetch_validation?: 'not_checked' | 'valid' | 'invalid' | 'blocked';
+    }> | null;
+    sample_id?:                       string | null;
+    measurement_run_id?:              string | null;
+    sample_index?:                    number | null;
+    provider_model?:                  string | null;
+    measurement_region?:              string | null;
+    measurement_mode?:                string | null;
+    scorer_version?:                  string | null;
+    measurement_contract_version?:    string | null;
     created_at:            string;
 }
 
@@ -197,6 +214,11 @@ function ScanRow({ scan, expanded, onToggle }: { scan: Scan; expanded: boolean; 
                         )}>
                             {scan.brand_mentioned ? "Mentioned" : "Not named"}
                         </span>
+                        {scan.brand_mentioned && (
+                            <span className="text-[var(--text-secondary)]">
+                                {recommendationLabel(scan.recommendation_status)}
+                            </span>
+                        )}
                         {scan.mention_position !== null && (
                             <span className="text-[var(--text-secondary)]">Pos #{scan.mention_position}</span>
                         )}
@@ -226,6 +248,29 @@ function ScanRow({ scan, expanded, onToggle }: { scan: Scan; expanded: boolean; 
 
             {expanded && (
                 <div className="border-t border-[var(--border-default)] bg-[var(--bg-raised)]/30 px-4 py-4 space-y-3">
+                    {scan.recommendation_evidence && (
+                        <p className="text-xs text-[var(--text-secondary)]">AI-classified recommendation context. Check the full response: “{scan.recommendation_evidence}”</p>
+                    )}
+                    <dl className="grid grid-cols-2 gap-x-4 gap-y-2 rounded-md border border-[var(--border-subtle)] bg-[var(--bg-surface)] p-3 text-[10px] font-mono sm:grid-cols-4">
+                        <div>
+                            <dt className="uppercase tracking-[0.12em] text-[var(--text-tertiary)]">Model</dt>
+                            <dd className="mt-0.5 break-all text-[var(--text-secondary)]">{scan.provider_model ?? "Legacy · unknown"}</dd>
+                        </div>
+                        <div>
+                            <dt className="uppercase tracking-[0.12em] text-[var(--text-tertiary)]">Region</dt>
+                            <dd className="mt-0.5 text-[var(--text-secondary)]">{scan.measurement_region ?? "Unknown"}</dd>
+                        </div>
+                        <div>
+                            <dt className="uppercase tracking-[0.12em] text-[var(--text-tertiary)]">Sample</dt>
+                            <dd className="mt-0.5 text-[var(--text-secondary)]">{scan.sample_index ?? "Legacy"}</dd>
+                        </div>
+                        <div>
+                            <dt className="uppercase tracking-[0.12em] text-[var(--text-tertiary)]">Run</dt>
+                            <dd className="mt-0.5 break-all text-[var(--text-secondary)]" title={scan.measurement_run_id ?? undefined}>
+                                {scan.measurement_run_id?.slice(0, 8) ?? "Legacy"}
+                            </dd>
+                        </div>
+                    </dl>
                     <div>
                         <div className="flex items-center justify-between mb-1">
                             <span className="text-[10px] font-mono uppercase tracking-[0.14em] text-[var(--text-tertiary)]">
@@ -240,26 +285,42 @@ function ScanRow({ scan, expanded, onToggle }: { scan: Scan; expanded: boolean; 
                     {(scan.citations?.length ?? 0) > 0 && (
                         <div>
                             <div className="text-[10px] font-mono uppercase tracking-[0.14em] text-[var(--text-tertiary)] mb-1">
-                                Citations ({scan.citations!.length})
+                                Evidence links ({scan.citations!.length})
                             </div>
                             <div className="space-y-1">
-                                {scan.citations!.slice(0, 8).map((c, i) => (
-                                    <a
-                                        key={i}
-                                        href={c.url}
-                                        target="_blank"
-                                        rel="noreferrer"
+                                {scan.citations!.slice(0, 8).map((c, i) => {
+                                    const unsafe = c.fetch_validation === 'invalid' || c.fetch_validation === 'blocked';
+                                    const label = c.provenance === 'provider_citation'
+                                        ? 'Provider citation'
+                                        : c.provenance === 'link_mentioned'
+                                            ? 'Link mentioned'
+                                            : 'Unverified legacy link';
+                                    const content = <>
+                                        <span className="truncate">{c.title || c.url}</span>
+                                        <span className="shrink-0 text-[9px] uppercase tracking-wide text-[var(--text-tertiary)]">{label}</span>
+                                        {!unsafe && <ExternalLink className="w-2.5 h-2.5 flex-shrink-0" />}
+                                    </>;
+                                    return unsafe ? (
+                                        <div key={i} className="flex items-center gap-2 text-[12px] font-mono text-[var(--text-tertiary)]">
+                                            {content}
+                                        </div>
+                                    ) : (
+                                        <a
+                                            key={i}
+                                            href={c.url}
+                                            target="_blank"
+                                            rel="noreferrer"
                                         className={cn(
                                             "flex items-center gap-2 text-[12px] font-mono",
                                             c.is_own_domain
                                                 ? "text-[var(--data-green)]"
                                                 : "text-[var(--text-secondary)] hover:text-[var(--text-primary)]",
                                         )}
-                                    >
-                                        <span className="truncate">{c.title || c.url}</span>
-                                        <ExternalLink className="w-2.5 h-2.5 flex-shrink-0" />
-                                    </a>
-                                ))}
+                                        >
+                                            {content}
+                                        </a>
+                                    );
+                                })}
                             </div>
                         </div>
                     )}

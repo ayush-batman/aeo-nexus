@@ -1,125 +1,53 @@
-import Link from "next/link";
 import type { Metadata } from "next";
+
+import { EvidencePanel, MarketingCTA, MarketingHero, MarketingSectionHeading } from "@/components/marketing/page-primitives";
 
 export const metadata: Metadata = {
     title: "About · Aelo",
-    description: "Aelo is the instrument for measuring, and moving, how AI answers about your brand.",
+    description: "Why Aelo treats the answer, denominator, confidence and source evidence as one product.",
 };
 
-const VALUES = [
-    {
-        t: "Honest data or nothing",
-        b: "The moment we invent a number, we stop being useful. Every metric in Aelo is auditable to the raw scan. When a scan fails, we show it. See the manifesto.",
-    },
-    {
-        t: "The receipt is the product",
-        b: "Anyone can build a mirror. We're building the lever, action + baseline + follow-up + verdict. This is what makes AEO defensible as a discipline.",
-    },
-    {
-        t: "India-first as a wedge",
-        b: "The global tools are built for US queries in US dollars. India is the #1 country for ChatGPT users. We build in ₹ and understand Indian intent, then expand outward.",
-    },
-    {
-        t: "Ship what you can defend",
-        b: "Every feature has to survive the audit: is this true, is this useful, is it the loop? If not, it doesn't ship. We'd rather ship one feature well than ten badly.",
-    },
-];
+const PRINCIPLES = [
+    ["Honest data or no number", "A provider failure stays failed. Missing evidence does not become a zero, a synthetic answer, or a confident claim."],
+    ["The receipt survives the score", "Every useful summary should lead back to the prompt, returned answer, sample, model and source evidence behind it."],
+    ["An action is an investigation", "Aelo can rank a gap and help a team organize work. Only a compatible follow-up measurement can show what happened next."],
+    ["Build for the room where it is questioned", "Marketing numbers need to survive finance, leadership and client review. Denominators and limits stay visible."],
+] as const;
 
 export default function AboutPage() {
     return (
-        <>
-            <section className="pt-24 pb-14 md:pt-32 md:pb-20 px-6">
-                <div className="mx-auto max-w-3xl text-center">
-                    <p className="text-[10px] font-mono uppercase tracking-[0.18em] text-zinc-500 mb-4">
-                        About
-                    </p>
-                    <h1 className="text-4xl md:text-6xl font-medium tracking-tighter leading-[1.02] text-white text-balance mb-6">
-                        We&apos;re building the instrument for a category that didn&apos;t exist two years ago.
-                    </h1>
-                    <p className="text-[16px] md:text-[18px] text-zinc-400 leading-relaxed max-w-2xl mx-auto">
-                        AI answers are becoming the shortlist. Aelo is the tool your team uses to
-                        measure, and move, where you land on it.
-                    </p>
+        <div className="bg-[#e9ece7] text-[#1d2523]">
+            <MarketingHero eyebrow="About Aelo" title="AI visibility should survive a skeptical room." copy={<p>We are building Aelo for marketers, founders and agencies who need to explain what an AI assistant actually said—not present another score nobody can audit.</p>} actions={<MarketingCTA href="/#scan" inverted>Read one real answer</MarketingCTA>} />
+
+            <section className="px-4 py-24 md:px-6 md:py-32">
+                <div className="mx-auto grid max-w-6xl gap-12 lg:grid-cols-[.68fr_1.32fr] lg:items-start">
+                    <MarketingSectionHeading eyebrow="Why it exists" title="The summary was never enough." copy={<p>A visibility percentage can point to a problem. It cannot explain the answer, prove a citation, or tell a team what to inspect next.</p>} />
+                    <EvidencePanel eyebrow="Aelo's operating belief" title="The answer, denominator and source trail belong together.">
+                        <p className="text-lg leading-relaxed text-[#3f4947]">Aelo repeats buyer questions, keeps every successful and failed sample, attaches confidence to the estimate, and turns gaps into bounded investigations. The evidence remains available when the headline is challenged.</p>
+                        <div className="mt-8 border-l-2 border-[#a8cbe0] pl-4"><p className="font-semibold text-[#315873]">We would rather withhold a claim than decorate uncertain evidence.</p></div>
+                    </EvidencePanel>
                 </div>
             </section>
 
-            {/* Mission */}
-            <section className="pb-20 px-6">
-                <div className="mx-auto max-w-3xl border border-white/[0.06] bg-black rounded-lg p-8 md:p-10">
-                    <p className="text-[10px] font-mono uppercase tracking-[0.18em] text-zinc-500 mb-4">
-                        Mission
-                    </p>
-                    <p className="text-[18px] md:text-[20px] text-white leading-[1.5] font-medium tracking-tight">
-                        Make AI-answer visibility a measurable, movable, provable discipline, the
-                        way SEO once was, but faster and more honest.
-                    </p>
-                </div>
-            </section>
-
-            {/* Values */}
-            <section className="py-20 border-t border-white/5 bg-[#050506]">
-                <div className="mx-auto max-w-4xl px-6">
-                    <div className="mb-10">
-                        <p className="text-[10px] font-mono uppercase tracking-[0.18em] text-zinc-500 mb-3">
-                            Values
-                        </p>
-                        <h2 className="text-2xl md:text-3xl font-medium tracking-tight text-white">
-                            Four rules the product is built to obey.
-                        </h2>
-                    </div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                        {VALUES.map(v => (
-                            <div key={v.t} className="rounded-md border border-white/[0.06] bg-black p-6">
-                                <div className="text-[15px] font-medium text-white mb-2">{v.t}</div>
-                                <div className="text-[13.5px] text-zinc-400 leading-relaxed">{v.b}</div>
-                            </div>
-                        ))}
+            <section className="bg-[#131717] px-4 py-24 text-[#eff2ec] md:px-6 md:py-32">
+                <div className="mx-auto max-w-6xl">
+                    <MarketingSectionHeading light eyebrow="Four product rules" title="What Aelo is built to obey." />
+                    <div className="mt-12 grid gap-px border border-[#343c3b] bg-[#343c3b] md:grid-cols-2">
+                        {PRINCIPLES.map(([title, copy], index) => <article key={title} className="bg-[#181d1d] p-6 md:p-8"><p className="font-mono text-xs text-[#a8cbe0]">0{index + 1}</p><h2 className="mt-8 text-2xl font-semibold tracking-tight">{title}</h2><p className="mt-4 text-sm leading-relaxed text-[#a4aeaa]">{copy}</p></article>)}
                     </div>
                 </div>
             </section>
 
-            {/* Origin */}
-            <section className="py-20 border-t border-white/5">
-                <div className="mx-auto max-w-2xl px-6">
-                    <div className="mb-6">
-                        <p className="text-[10px] font-mono uppercase tracking-[0.18em] text-zinc-500 mb-3">
-                            Origin
-                        </p>
-                        <h2 className="text-2xl md:text-3xl font-medium tracking-tight text-white">
-                            Why we started this.
-                        </h2>
-                    </div>
-                    <div className="text-[15px] text-zinc-400 leading-[1.75] space-y-4">
-                        <p>
-                            Aelo started because every existing AEO tool showed us a mirror and
-                            called it a strategy. &ldquo;Here&apos;s your visibility score.&rdquo; Now what?
-                            No one had a clear answer.
-                        </p>
-                        <p>
-                            The insight was simple: the value of the mirror ends where the value of
-                            the receipt begins. If we could log every action a team takes, capture a
-                            baseline, and re-measure after, we&apos;d have the first tool that could
-                            actually prove AEO works, per intervention, in defensible numbers.
-                        </p>
-                        <p>
-                            We&apos;re building the tool we wished existed when we were the marketer,
-                            the founder, and the agency operator trying to justify AEO spend to the
-                            room.
-                        </p>
-                    </div>
+            <section className="px-4 py-24 md:px-6 md:py-32">
+                <div className="mx-auto grid max-w-6xl gap-12 lg:grid-cols-[.68fr_1.32fr]">
+                    <MarketingSectionHeading eyebrow="Built from India" title="A local starting point. A global measurement problem." />
+                    <div className="min-w-0 space-y-5 text-base leading-relaxed text-[#53615d]"><p>Indian teams often evaluate global and local competitors in the same buying question, work in rupees, and need evidence their clients or leadership can inspect. That is a useful place to start building.</p><p>The method is not limited to one market. Aelo records model, region and measurement mode because context changes what an answer means. We expand by keeping those differences visible.</p><p>The goal is modest and difficult: report exactly what was observed, make the uncertainty legible, and help a team choose the next question worth answering.</p></div>
                 </div>
             </section>
 
-            {/* CTA */}
-            <section className="py-20 border-t border-white/5 text-center px-6">
-                <p className="text-zinc-400 mb-6">Want to talk? We&apos;re easy to reach.</p>
-                <Link
-                    href="/contact"
-                    className="text-[15px] bg-[var(--accent-base)] text-[var(--text-on-accent)] px-6 py-3 rounded-md hover:bg-[var(--accent-hover)] transition-colors font-medium inline-flex items-center gap-2"
-                >
-                    Contact us →
-                </Link>
+            <section className="bg-[#a8cbe0] px-4 py-24 md:px-6 md:py-28">
+                <div className="mx-auto flex max-w-6xl flex-col justify-between gap-8 lg:flex-row lg:items-end"><div><p className="font-mono text-xs uppercase tracking-widest text-[#315873]">Talk to the builders</p><h2 className="mt-4 max-w-[680px] text-4xl font-semibold tracking-tight md:text-6xl">Have a hard question about the method?</h2></div><MarketingCTA href="/contact">Contact Aelo</MarketingCTA></div>
             </section>
-        </>
+        </div>
     );
 }

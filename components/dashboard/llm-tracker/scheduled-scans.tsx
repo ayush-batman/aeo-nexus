@@ -45,7 +45,8 @@ export function ScheduledScans({ platformsMap }: ScheduledScansProps) {
     };
 
     useEffect(() => {
-        fetchSchedules();
+        const timer = window.setTimeout(() => { void fetchSchedules(); }, 0);
+        return () => window.clearTimeout(timer);
     }, []);
 
     const toggleStatus = async (id: string, currentStatus: string) => {
@@ -118,7 +119,7 @@ export function ScheduledScans({ platformsMap }: ScheduledScansProps) {
                                             {schedule.frequency}
                                         </Badge>
                                     </div>
-                                    <h4 className="text-lg font-medium text-[var(--text-primary)] truncate mb-1">"{schedule.prompt}"</h4>
+                                    <h4 className="text-lg font-medium text-[var(--text-primary)] truncate mb-1">&ldquo;{schedule.prompt}&rdquo;</h4>
                                     <div className="flex flex-wrap items-center gap-4 text-xs text-[var(--text-ghost)]">
                                         <div className="flex items-center gap-1.5">
                                             <Bot className="w-3.5 h-3.5" />

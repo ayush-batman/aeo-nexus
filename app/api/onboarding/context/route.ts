@@ -1,44 +1,40 @@
-import { NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
-import { getCurrentWorkspaceContext } from '@/lib/data-access';
+import { type NextRequest, NextResponse } from 'next/server';
+import { getSessionCookie } from 'better-auth/cookies';
+import { getConvexDashboardBootstrap } from '@/lib/convex/session';
+import { convexRouteError } from '@/lib/convex/http';
+import { workspaceBootstrapTelemetry, type WorkspaceBootstrapTimings } from '@/lib/observability/workspace-bootstrap';
 
-export async function GET() {
+export async function GET(request: NextRequest) {
+    const started = performance.now();
+    const timings: WorkspaceBootstrapTimings = { tokenMs: null, backendMs: null, provisioned: false };
+    let response: NextResponse;
     try {
-        const context = await getCurrentWorkspaceContext();
-
-        if (!context) {
-            return NextResponse.json(
+        // A missing cookie can be rejected locally; a present cookie is only
+        // a hint and still goes through the verified token and tenant query.
+        if (!getSessionCookie(request)) {
+            response = NextResponse.json(
                 { error: 'Unauthorized or no workspace found' },
                 { status: 401 }
             );
+        } else {
+            const context = await getConvexDashboardBootstrap(timings);
+            response = context
+                ? NextResponse.json(context)
+                : NextResponse.json({ error: 'Unauthorized or no workspace found' }, { status: 401 });
         }
-
-        const supabase = await createClient();
-        const { count, error } = await supabase
-            .from('products')
-            .select('*', { count: 'exact', head: true })
-            .eq('workspace_id', context.workspaceId);
-
-        if (error) {
-            console.error('Onboarding context error:', error);
-            return NextResponse.json(
-                { error: 'Failed to load onboarding context' },
-                { status: 500 }
-            );
-        }
-
-        return NextResponse.json({
-            userId: context.userId,
-            orgId: context.orgId,
-            workspaceId: context.workspaceId,
-            onboardingCompleted: context.onboardingCompleted,
-            hasBrand: (count || 0) > 0,
-        });
     } catch (error) {
-        console.error('Onboarding context error:', error);
-        return NextResponse.json(
-            { error: 'Failed to load onboarding context' },
-            { status: 500 }
-        );
+        response = convexRouteError(error);
     }
+    const telemetry = workspaceBootstrapTelemetry(response.status, performance.now() - started, timings);
+    response.headers.set('Server-Timing', telemetry.serverTiming);
+    response.headers.set('Cache-Control', 'no-store');
+    console.info(JSON.stringify({
+        event: telemetry.event,
+        status: telemetry.status,
+        duration_ms: telemetry.duration_ms,
+        token_ms: telemetry.token_ms,
+        backend_ms: telemetry.backend_ms,
+        provisioned: telemetry.provisioned,
+    }));
+    return response;
 }

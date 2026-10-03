@@ -1,15 +1,8 @@
-import { withKey, getWorkspaceBrand } from '@/lib/api-v1';
-import { checkCrawlerAccess, getAiReferralTraffic } from '@/lib/crawlers';
+import { withKey } from '@/lib/api-v1';
+import { internal } from '@/convex/_generated/api';
+import { callInternal } from '@/lib/convex/admin';
 
-// GET /api/v1/crawlers  — can AI crawlers reach the site (robots.txt) plus
-// AI referral traffic by engine. (get_crawler_access)
 export async function GET(request: Request) {
-  return withKey(request, 'read', async (ctx, admin) => {
-    const brand = await getWorkspaceBrand(admin, ctx.workspaceId);
-    const [access, traffic] = await Promise.all([
-      checkCrawlerAccess(brand.website),
-      getAiReferralTraffic(ctx.workspaceId, 30),
-    ]);
-    return { website: brand.website, access, traffic };
-  });
+  return withKey(request, 'read', async (context) => callInternal('action', internal.crawlerActions.forKey,
+    { workspaceId: context.workspaceId, keyId: context.keyId }));
 }

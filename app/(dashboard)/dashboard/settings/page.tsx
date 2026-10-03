@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import Script from "next/script";
 import { Header } from "@/components/dashboard/header";
 import { SchedulesTab } from "@/components/dashboard/settings/schedules-tab";
@@ -13,7 +13,6 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
-import { createClient } from "@/lib/supabase/client";
 import {
     Settings,
     User,
@@ -34,10 +33,10 @@ import {
     Calendar,
     AlertCircle,
     Zap,
-    Copy,
-    ExternalLink,
 } from "lucide-react";
-import { PLAN_LIMITS, PLAN_PRICES } from "@/lib/config";
+import { PLAN_LIMITS } from "@/lib/config";
+import { PUBLIC_PLANS, planByStoredKey } from "@/lib/billing/plan-catalog";
+import { ReportsSettingsTabs } from "@/components/dashboard/reports-settings-tabs";
 
 
 declare global {
@@ -108,13 +107,15 @@ interface TeamMember {
 
 
 export default function SettingsPage() {
-    const router = useRouter();
     const searchParams = useSearchParams();
-    const [activeTab, setActiveTab] = useState("general");
+    const [activeTab, setActiveTab] = useState(() => {
+        const tab = searchParams.get("tab");
+        return tab && tabs.some(item => item.id === tab) ? tab : "general";
+    });
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
     const [upgrading, setUpgrading] = useState<string | null>(null);
-    const [paymentSuccess, setPaymentSuccess] = useState(false);
+    const [paymentSuccess, setPaymentSuccess] = useState(() => Boolean(searchParams.get("success")));
 
     // Data states
     const [user, setUser] = useState<UserProfile | null>(null);
@@ -131,84 +132,30 @@ export default function SettingsPage() {
     const [newCompetitor, setNewCompetitor] = useState("");
     const [savingCompetitors, setSavingCompetitors] = useState(false);
     const [upgradeError, setUpgradeError] = useState<string | null>(null);
+    const [settingsError, setSettingsError] = useState<string | null>(null);
 
     // Alert preferences state
     const [alertPrefs, setAlertPrefs] = useState<Record<string, boolean>>({});
     const [savingAlerts, setSavingAlerts] = useState(false);
     const [alertsSaved, setAlertsSaved] = useState(false);
-
-    // Check for payment redirect status + deep-link tab.
-    useEffect(() => {
-        const success = searchParams.get("success");
-        if (success) {
-            setPaymentSuccess(true);
-            fetchData();
-            setTimeout(() => setPaymentSuccess(false), 5000);
-        }
-        const tab = searchParams.get("tab");
-        if (tab && tabs.some(t => t.id === tab)) {
-            setActiveTab(tab);
-        }
-    }, [searchParams]);
+    const [alertError, setAlertError] = useState<string | null>(null);
 
     async function fetchData() {
         try {
-            const supabase = createClient();
-
-            // Workspace fetch first, uses server-side context helpers that
-            // honor the dev-auth-bypass, so the Install tab always renders
-            // even when the client-side Supabase SDK can't see a session.
-            const [wsRes, activeRes] = await Promise.all([
-                fetch("/api/workspaces", { cache: "no-store" }),
-                fetch("/api/onboarding/context", { cache: "no-store" }),
-            ]);
-            let activeId: string | null = null;
-            if (activeRes.ok) activeId = (await activeRes.json()).workspaceId;
-            if (wsRes.ok && activeId) {
-                const wsData = await wsRes.json();
-                const activeWs = wsData.workspaces?.find((ws: Workspace) => ws.id === activeId);
-                if (activeWs) {
-                    setWorkspace(activeWs);
-                    setWorkspaceName(activeWs.name);
-                    setCompetitors(activeWs.settings?.competitors || []);
-                }
-            }
-
-            const { data: { user: authUser } } = await supabase.auth.getUser();
-            if (!authUser) return;
-
-            const { data: userData } = await supabase
-                .from('users')
-                .select('*')
-                .eq('id', authUser.id)
-                .single();
-
-            if (userData) {
-                setUser(userData);
-                setFullName(userData.full_name || '');
-                setEmail(userData.email);
-
-                const { data: orgData } = await supabase
-                    .from('organizations')
-                    .select('*')
-                    .eq('id', userData.org_id)
-                    .single();
-
-                if (orgData) {
-                    setOrganization(orgData);
-                }
-
-                const { data: teamData } = await supabase
-                    .from('users')
-                    .select('id, full_name, email, role')
-                    .eq('org_id', userData.org_id);
-
-                if (teamData) {
-                    setTeamMembers(teamData);
-                }
-            }
+            setSettingsError(null);
+            const response = await fetch('/api/settings', { cache: 'no-store' });
+            if (!response.ok) throw new Error('Could not load settings. Please retry.');
+            const data = await response.json();
+            setUser(data.user);
+            setFullName(data.user.full_name || '');
+            setEmail(data.user.email);
+            setOrganization(data.organization);
+            setTeamMembers(data.team);
+            setWorkspace({ id: data.workspace.publicId, name: data.workspace.name, settings: data.workspace.settings });
+            setWorkspaceName(data.workspace.name);
+            setCompetitors(data.workspace.settings?.competitors || []);
         } catch (error) {
-            console.error('Error fetching settings data:', error);
+            setSettingsError(error instanceof Error ? error.message : 'Could not load settings.');
         } finally {
             setLoading(false);
         }
@@ -223,33 +170,48 @@ export default function SettingsPage() {
                     prefsMap[p.alert_type] = p.enabled;
                 });
                 setAlertPrefs(prefsMap);
+            } else {
+                const payload = await alertRes.json().catch(() => null) as { error?: string } | null;
+                setAlertError(payload?.error || 'Could not load alert preferences');
             }
         } catch (err) {
             console.error('Error loading alert preferences:', err);
+            setAlertError('Could not load alert preferences');
         }
     }
 
     useEffect(() => {
-        fetchData();
+        const loadTimer = window.setTimeout(() => { void fetchData(); }, 0);
+        return () => window.clearTimeout(loadTimer);
     }, []);
+
+    useEffect(() => {
+        if (!paymentSuccess) return;
+        const successTimer = window.setTimeout(() => setPaymentSuccess(false), 5000);
+        return () => window.clearTimeout(successTimer);
+    }, [paymentSuccess]);
 
     async function saveAlertPrefs() {
         setSavingAlerts(true);
         setAlertsSaved(false);
+        setAlertError(null);
         try {
             const preferences = Object.entries(alertPrefs).map(([alert_type, enabled]) => ({
                 alert_type,
                 enabled,
             }));
-            await fetch('/api/alerts/preferences', {
+            const response = await fetch('/api/alerts/preferences', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ preferences }),
             });
+            const payload = await response.json().catch(() => null) as { error?: string } | null;
+            if (!response.ok) throw new Error(payload?.error || 'Could not save alert preferences');
             setAlertsSaved(true);
             setTimeout(() => setAlertsSaved(false), 3000);
         } catch (err) {
             console.error('Error saving alert preferences:', err);
+            setAlertError(err instanceof Error ? err.message : 'Could not save alert preferences');
         } finally {
             setSavingAlerts(false);
         }
@@ -261,16 +223,12 @@ export default function SettingsPage() {
         setSaveSuccess(false);
 
         try {
-            const supabase = createClient();
-            await supabase
-                .from('workspaces')
-                .update({ name: workspaceName })
-                .eq('id', workspace.id);
+            await saveSettings({ kind: 'workspace', name: workspaceName });
 
             setSaveSuccess(true);
             setTimeout(() => setSaveSuccess(false), 3000);
         } catch (error) {
-            console.error('Error saving workspace:', error);
+            setSettingsError(error instanceof Error ? error.message : 'Could not save workspace.');
         } finally {
             setSaving(false);
         }
@@ -282,16 +240,12 @@ export default function SettingsPage() {
         setSaveSuccess(false);
 
         try {
-            const supabase = createClient();
-            await supabase
-                .from('users')
-                .update({ full_name: fullName })
-                .eq('id', user.id);
+            await saveSettings({ kind: 'profile', fullName });
 
             setSaveSuccess(true);
             setTimeout(() => setSaveSuccess(false), 3000);
         } catch (error) {
-            console.error('Error saving profile:', error);
+            setSettingsError(error instanceof Error ? error.message : 'Could not save profile.');
         } finally {
             setSaving(false);
         }
@@ -381,24 +335,28 @@ export default function SettingsPage() {
         if (!workspace) return;
         setSavingCompetitors(true);
         try {
-            const supabase = createClient();
             const updatedSettings = { ...(workspace.settings || {}), competitors };
-            await supabase
-                .from('workspaces')
-                .update({ settings: updatedSettings })
-                .eq('id', workspace.id);
+            await saveSettings({ kind: 'workspace', competitors });
             setWorkspace({ ...workspace, settings: updatedSettings });
             setSaveSuccess(true);
             setTimeout(() => setSaveSuccess(false), 3000);
         } catch (error) {
-            console.error('Error saving competitors:', error);
+            setSettingsError(error instanceof Error ? error.message : 'Could not save competitors.');
         } finally {
             setSavingCompetitors(false);
         }
     }
 
+    async function saveSettings(body: Record<string, unknown>) {
+        setSettingsError(null);
+        const response = await fetch('/api/settings', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+        const result = await response.json();
+        if (!response.ok) throw new Error(result.error || 'The change was not saved.');
+    }
+
     const currentPlan = organization?.plan || 'free';
-    const limits = PLAN_LIMITS[currentPlan] || PLAN_LIMITS.free;
+    const currentPlanDefinition = planByStoredKey(currentPlan);
+    const limits = PLAN_LIMITS[currentPlanDefinition.storedKey];
 
     return (
         <>
@@ -409,23 +367,25 @@ export default function SettingsPage() {
                 description="Manage your workspace settings"
             />
 
-            <div className="p-6">
+            <main className="mx-auto max-w-[1440px] px-5 py-10 sm:px-8 lg:px-16 lg:py-12">
+                <ReportsSettingsTabs />
+                {settingsError && <div role="alert" className="mb-4"><p>{settingsError}</p><Button variant="outline" onClick={() => void fetchData()}>Reload settings</Button></div>}
                 {paymentSuccess && (
                     <div className="mb-6 p-4 rounded-lg bg-[var(--data-green-muted)] border border-[var(--data-green)]/30 flex items-center gap-3">
                         <CheckCircle className="w-5 h-5 text-[var(--data-green)]" />
-                        <p className="text-[var(--data-green)]">Payment successful! Your plan has been upgraded.</p>
+                        <p className="text-[var(--data-green)]">Payment submitted. Your current plan below updates after provider confirmation.</p>
                     </div>
                 )}
 
-                <div className="flex gap-6">
+                <div className="mt-10 flex flex-col gap-8 lg:flex-row">
                     {/* Sidebar */}
-                    <div className="w-48 flex-shrink-0 space-y-1">
+                    <div className="flex w-full flex-shrink-0 gap-1 overflow-x-auto border-b border-[var(--border-default)] pb-3 lg:w-52 lg:flex-col lg:border-b-0 lg:border-r lg:pb-0 lg:pr-6">
                         {tabs.map((tab) => (
                             <button
                                 key={tab.id}
                                 onClick={() => setActiveTab(tab.id)}
                                 className={cn(
-                                    "w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-all text-left",
+                                    "flex min-h-11 shrink-0 items-center gap-2 px-3 py-2 text-left text-sm font-medium transition-all lg:w-full",
                                     activeTab === tab.id
                                         ? "bg-[var(--bg-raised)] text-[var(--text-primary)]"
                                         : "text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-raised)]"
@@ -460,10 +420,11 @@ export default function SettingsPage() {
                                             </CardHeader>
                                             <CardContent className="space-y-4">
                                                 <div>
-                                                    <label className="block text-sm font-medium text-[var(--text-secondary)] mb-2">
+                                                    <label htmlFor="workspace-name" className="block text-sm font-medium text-[var(--text-secondary)] mb-2">
                                                         Workspace Name
                                                     </label>
                                                     <Input
+                                                        id="workspace-name"
                                                         value={workspaceName}
                                                         onChange={(e) => setWorkspaceName(e.target.value)}
                                                     />
@@ -491,19 +452,21 @@ export default function SettingsPage() {
                                             <CardContent className="space-y-4">
                                                 <div className="grid grid-cols-2 gap-4">
                                                     <div>
-                                                        <label className="block text-sm font-medium text-[var(--text-secondary)] mb-2">
+                                                        <label htmlFor="profile-full-name" className="block text-sm font-medium text-[var(--text-secondary)] mb-2">
                                                             Full Name
                                                         </label>
                                                         <Input
+                                                            id="profile-full-name"
                                                             value={fullName}
                                                             onChange={(e) => setFullName(e.target.value)}
                                                         />
                                                     </div>
                                                     <div>
-                                                        <label className="block text-sm font-medium text-[var(--text-secondary)] mb-2">
+                                                        <label htmlFor="profile-email" className="block text-sm font-medium text-[var(--text-secondary)] mb-2">
                                                             Email
                                                         </label>
                                                         <Input
+                                                            id="profile-email"
                                                             value={email}
                                                             type="email"
                                                             disabled
@@ -554,8 +517,9 @@ export default function SettingsPage() {
                                                             >
                                                                 {comp}
                                                                 <button
+                                                                    aria-label={`Remove ${comp}`}
                                                                     onClick={() => removeCompetitor(comp)}
-                                                                    className="text-[var(--text-ghost)] hover:text-[var(--data-red)] transition-colors"
+                                                                    className="text-[var(--text-secondary)] hover:text-[var(--data-red)] transition-colors"
                                                                 >
                                                                     <X className="w-3.5 h-3.5" />
                                                                 </button>
@@ -563,7 +527,7 @@ export default function SettingsPage() {
                                                         ))}
                                                     </div>
                                                 ) : (
-                                                    <p className="text-xs text-[var(--text-ghost)]">No competitors added yet.</p>
+                                                    <p className="text-xs text-[var(--text-secondary)]">No competitors added yet.</p>
                                                 )}
                                                 <Button onClick={handleSaveCompetitors} disabled={savingCompetitors}>
                                                     {savingCompetitors ? (
@@ -579,7 +543,7 @@ export default function SettingsPage() {
                                 )}
 
                                 {activeTab === "install" && workspace && (
-                                    <InstallTab workspaceId={workspace.id} workspaceName={workspace.name || ""} />
+                                    <InstallTab key={workspace.id} workspaceId={workspace.id} workspaceName={workspace.name || ""} />
                                 )}
 
                                 {activeTab === "team" && (
@@ -635,18 +599,16 @@ export default function SettingsPage() {
                                                 <div className="p-4 rounded-lg bg-[var(--accent-muted)] border border-[var(--accent-base)]/25">
                                                     <div className="flex items-center justify-between mb-4">
                                                         <div>
-                                                            <Badge variant="default" className="mb-2 capitalize">{currentPlan} Plan</Badge>
+                                                            <Badge variant="default" className="mb-2">{currentPlanDefinition.name} plan</Badge>
                                                             <p className="text-2xl font-bold text-[var(--text-primary)] flex items-center gap-1">
-                                                                {PLAN_PRICES[currentPlan].display}<span className="text-sm font-normal text-[var(--text-secondary)]">/month</span>
+                                                                {currentPlanDefinition.priceLabel}<span className="text-sm font-normal text-[var(--text-secondary)]">/{currentPlanDefinition.billingNote === 'per month' ? 'month' : currentPlanDefinition.billingNote}</span>
                                                             </p>
                                                         </div>
                                                     </div>
                                                     <div className="grid grid-cols-3 gap-4 text-sm">
                                                         <div>
                                                             <p className="text-[var(--text-secondary)]">LLM Scans</p>
-                                                            <p className="font-medium text-[var(--text-primary)]">
-                                                                {limits.scans === -1 ? 'Unlimited' : `${limits.scans}/mo`}
-                                                            </p>
+                                                            <p className="font-medium text-[var(--text-primary)]">{currentPlanDefinition.scanPromise}</p>
                                                         </div>
                                                         <div>
                                                             <p className="text-[var(--text-secondary)]">Forum Threads</p>
@@ -678,29 +640,30 @@ export default function SettingsPage() {
                                                         </div>
                                                     )}
                                                     <div className="grid grid-cols-3 gap-4">
-                                                        {['starter', 'pro', 'agency'].map((plan) => (
+                                                        {PUBLIC_PLANS.filter((plan) => plan.checkoutKey).map((plan) => (
                                                             <div
-                                                                key={plan}
+                                                                key={plan.storedKey}
                                                                 className={cn(
                                                                     "p-4 rounded-lg border transition-all",
-                                                                    plan === 'pro'
+                                                                    plan.storedKey === 'pro'
                                                                         ? "border-[var(--accent-base)]/25 bg-[var(--accent-muted)]"
                                                                         : "border-[var(--border-default)] bg-[var(--bg-raised)]"
                                                                 )}
                                                             >
-                                                                <h3 className="font-semibold text-[var(--text-primary)] capitalize mb-1">{plan}</h3>
+                                                                <h3 className="font-semibold text-[var(--text-primary)] mb-1">{plan.name}</h3>
                                                                 <p className="text-2xl font-bold text-[var(--text-primary)] mb-3 flex items-center">
                                                                     <IndianRupee className="w-5 h-5" />
-                                                                    {PLAN_PRICES[plan].display.replace('₹', '')}
+                                                                    {plan.priceLabel.replace('₹', '')}
                                                                     <span className="text-sm text-[var(--text-secondary)] ml-1">/mo</span>
                                                                 </p>
+                                                                <p className="mb-3 text-xs text-[var(--text-secondary)]">{plan.scanPromise}</p>
                                                                 <Button
-                                                                    onClick={() => handleUpgrade(plan)}
+                                                                    onClick={() => handleUpgrade(plan.storedKey)}
                                                                     disabled={upgrading !== null}
                                                                     className="w-full"
-                                                                    variant={plan === 'pro' ? 'default' : 'outline'}
+                                                                    variant={plan.storedKey === 'pro' ? 'default' : 'outline'}
                                                                 >
-                                                                    {upgrading === plan ? (
+                                                                    {upgrading === plan.storedKey ? (
                                                                         <Loader2 className="w-4 h-4 animate-spin" />
                                                                     ) : (
                                                                         'Upgrade'
@@ -736,9 +699,9 @@ export default function SettingsPage() {
                                                 </h3>
                                                 <div className="space-y-2">
                                                     {[
-                                                        { key: "visibility_drop", label: "Visibility drop detected", description: "Alert when your brand mention rate drops >10% week-over-week" },
+                                                        { key: "visibility_drop", label: "Visibility drop detected", description: "Alert after a 10+ point drop with non-overlapping 95% confidence ranges" },
                                                         { key: "competitor_overtake", label: "Competitor overtake", description: "Alert when a competitor surpasses your brand in AI responses" },
-                                                        { key: "zero_visibility", label: "Zero visibility warning", description: "Alert if your brand gets 0 mentions across all scans in a day" },
+                                                        { key: "zero_visibility", label: "Zero visibility warning", description: "Alert if your brand gets 0 mentions in a completed measurement run" },
                                                     ].map((item) => (
                                                         <div key={item.key} className="flex items-center justify-between p-3 rounded-lg bg-[var(--bg-raised)]">
                                                             <div>
@@ -747,6 +710,7 @@ export default function SettingsPage() {
                                                             </div>
                                                             <input
                                                                 type="checkbox"
+                                                                disabled={Boolean(user && !['owner', 'admin'].includes(user.role))}
                                                                 checked={alertPrefs[item.key] ?? true}
                                                                 onChange={(e) => setAlertPrefs(prev => ({ ...prev, [item.key]: e.target.checked }))}
                                                                 className="rounded accent-[var(--accent-base)]"
@@ -759,14 +723,14 @@ export default function SettingsPage() {
                                             {/* Content Alerts */}
                                             <div>
                                                 <h3 className="text-sm font-semibold text-[var(--text-secondary)] mb-3 flex items-center gap-2">
-                                                    <div className="w-2 h-2 rounded-full bg-amber-400" />
+                                                        <div className="h-2 w-2 rounded-full bg-[var(--data-amber)]" />
                                                     Content & Citation Alerts
                                                 </h3>
                                                 <div className="space-y-2">
                                                     {[
-                                                        { key: "new_citation", label: "New citation earned", description: "Alert when an LLM cites your domain for the first time" },
-                                                        { key: "citation_lost", label: "Citation lost", description: "Alert when a previously-cited page stops being cited" },
-                                                        { key: "negative_sentiment", label: "Negative sentiment spike", description: "Alert when negative sentiment increases significantly" },
+                                                        { key: "new_citation", label: "New citation observed", description: "Alert when a provider cites one of your pages not seen in the prior 30 days" },
+                                                        { key: "negative_sentiment", label: "Negative sentiment detected", description: "Alert when a completed measurement contains negative brand sentiment" },
+                                                        { key: "sentiment_drift", label: "Weekly sentiment drift", description: "Alert when matched weekly sentiment moves by at least 0.3" },
                                                     ].map((item) => (
                                                         <div key={item.key} className="flex items-center justify-between p-3 rounded-lg bg-[var(--bg-raised)]">
                                                             <div>
@@ -775,33 +739,7 @@ export default function SettingsPage() {
                                                             </div>
                                                             <input
                                                                 type="checkbox"
-                                                                checked={alertPrefs[item.key] ?? false}
-                                                                onChange={(e) => setAlertPrefs(prev => ({ ...prev, [item.key]: e.target.checked }))}
-                                                                className="rounded accent-[var(--accent-base)]"
-                                                            />
-                                                        </div>
-                                                    ))}
-                                                </div>
-                                            </div>
-
-                                            {/* Community Alerts */}
-                                            <div>
-                                                <h3 className="text-sm font-semibold text-[var(--text-secondary)] mb-3 flex items-center gap-2">
-                                                    <div className="w-2 h-2 rounded-full bg-green-400" />
-                                                    Community Alerts
-                                                </h3>
-                                                <div className="space-y-2">
-                                                    {[
-                                                        { key: "hot_thread", label: "Hot forum opportunity", description: "Alert when a high-score thread is discovered in your niche" },
-                                                        { key: "brand_forum_mention", label: "Brand mentioned in forums", description: "Alert when someone mentions your brand on Reddit/Quora" },
-                                                    ].map((item) => (
-                                                        <div key={item.key} className="flex items-center justify-between p-3 rounded-lg bg-[var(--bg-raised)]">
-                                                            <div>
-                                                                <p className="font-medium text-[var(--text-primary)] text-sm">{item.label}</p>
-                                                                <p className="text-xs text-[var(--text-ghost)]">{item.description}</p>
-                                                            </div>
-                                                            <input
-                                                                type="checkbox"
+                                                                disabled={Boolean(user && !['owner', 'admin'].includes(user.role))}
                                                                 checked={alertPrefs[item.key] ?? false}
                                                                 onChange={(e) => setAlertPrefs(prev => ({ ...prev, [item.key]: e.target.checked }))}
                                                                 className="rounded accent-[var(--accent-base)]"
@@ -814,12 +752,11 @@ export default function SettingsPage() {
                                             {/* Digests */}
                                             <div>
                                                 <h3 className="text-sm font-semibold text-[var(--text-secondary)] mb-3 flex items-center gap-2">
-                                                    <div className="w-2 h-2 rounded-full bg-blue-400" />
+                                                        <div className="h-2 w-2 rounded-full bg-[var(--accent-base)]" />
                                                     Reports & Digests
                                                 </h3>
                                                 <div className="space-y-2">
                                                     {[
-                                                        { key: "daily_report", label: "Daily visibility report", description: "Morning summary of LLM visibility metrics" },
                                                         { key: "weekly_digest", label: "Weekly Aelo digest", description: "Comprehensive weekly summary of all Aelo activity" },
                                                     ].map((item) => (
                                                         <div key={item.key} className="flex items-center justify-between p-3 rounded-lg bg-[var(--bg-raised)]">
@@ -829,6 +766,7 @@ export default function SettingsPage() {
                                                             </div>
                                                             <input
                                                                 type="checkbox"
+                                                                disabled={Boolean(user && !['owner', 'admin'].includes(user.role))}
                                                                 checked={alertPrefs[item.key] ?? false}
                                                                 onChange={(e) => setAlertPrefs(prev => ({ ...prev, [item.key]: e.target.checked }))}
                                                                 className="rounded accent-[var(--accent-base)]"
@@ -839,7 +777,7 @@ export default function SettingsPage() {
                                             </div>
 
                                             <div className="flex items-center gap-3">
-                                                <Button onClick={saveAlertPrefs} disabled={savingAlerts}>
+                                                <Button onClick={saveAlertPrefs} disabled={savingAlerts || Boolean(user && !['owner', 'admin'].includes(user.role))}>
                                                     {savingAlerts ? (
                                                         <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Saving...</>
                                                     ) : alertsSaved ? (
@@ -849,6 +787,12 @@ export default function SettingsPage() {
                                                     )}
                                                 </Button>
                                             </div>
+                                            {user && !['owner', 'admin'].includes(user.role) && (
+                                                <p className="text-xs text-[var(--text-secondary)]">Only workspace owners and admins can change organization-wide alerts.</p>
+                                            )}
+                                            {alertError && (
+                                                <p role="alert" className="text-xs text-[var(--data-red)]">{alertError}</p>
+                                            )}
                                             <p className="text-xs text-[var(--text-ghost)]">
                                                 Email notifications require Pro plan or above. In-app alerts are always free.
                                             </p>
@@ -857,17 +801,17 @@ export default function SettingsPage() {
                                 )}
 
                                 {activeTab === "api" && workspace && (
-                                    <ApiKeysTab workspaceId={workspace.id} />
+                                    <ApiKeysTab />
                                 )}
 
                                 {activeTab === "schedules" && workspace && (
-                                    <SchedulesTab workspaceId={workspace.id} />
+                                    <SchedulesTab />
                                 )}
                             </>
                         )}
                     </div>
                 </div>
-            </div >
+            </main>
         </>
     );
 }

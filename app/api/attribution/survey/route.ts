@@ -1,105 +1,43 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { getCurrentWorkspaceId } from '@/lib/data-access';
-
-// POST: Collect attribution survey response (public endpoint for embed widget)
-export async function POST(request: NextRequest) {
-    try {
-        // This endpoint can be called from embedded widgets, so workspace comes from body
-        const { workspaceId: wid, source, customSource, metadata } = await request.json();
-
-        const workspaceId = wid || await getCurrentWorkspaceId();
-        if (!workspaceId) {
-            return NextResponse.json({ error: 'workspaceId is required' }, { status: 400 });
-        }
-
-        // For now, we store attribution responses in workspace settings as JSON
-        // In production, you'd want a dedicated table
-        const { createClient } = await import('@/lib/supabase/server');
-        const supabase = await createClient();
-
-        // Get current settings
-        const { data: workspace } = await supabase
-            .from('workspaces')
-            .select('settings')
-            .eq('id', workspaceId)
-            .single();
-
-        const settings = (workspace?.settings as Record<string, unknown>) || {};
-        const responses = (settings.attribution_responses as Array<unknown>) || [];
-
-        responses.push({
-            source,
-            customSource: customSource || null,
-            metadata: metadata || {},
-            timestamp: new Date().toISOString(),
-        });
-
-        // Save back (keep last 1000 responses)
-        const trimmedResponses = responses.slice(-1000);
-
-        await supabase
-            .from('workspaces')
-            .update({
-                settings: { ...settings, attribution_responses: trimmedResponses },
-            })
-            .eq('id', workspaceId);
-
-        return NextResponse.json({ success: true });
-    } catch (error) {
-        console.error('Error saving attribution:', error);
-        return NextResponse.json({ error: 'Failed to save attribution' }, { status: 500 });
+import { NextResponse } from 'next/server';
+import { api, internal } from '@/convex/_generated/api';
+import type { FunctionReturnType } from 'convex/server';
+import { fetchAuthAction, fetchAuthQuery } from '@/lib/auth-server';
+import { getConvexWorkspaceContext } from '@/lib/convex/session';
+import { callInternal } from '@/lib/convex/admin';
+import { readBoundedJson } from '@/lib/analytics-ingest';
+import { convexRouteError } from '@/lib/convex/http';
+import { attributionSummary } from '@/lib/attribution';
+const cors = { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Methods': 'POST, OPTIONS', 'Access-Control-Allow-Headers': 'Content-Type' };
+export async function POST(request: Request) {
+  try {
+    const body = await readBoundedJson(request, 16384);
+    if (!body || typeof body !== 'object' || Array.isArray(body)) return NextResponse.json({ error: 'Invalid response' }, { status: 400, headers: cors });
+    if ('ingestToken' in body) await callInternal('action', internal.attributionActions.submitPublic, { body: JSON.stringify(body),
+      ip: request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || request.headers.get('x-real-ip') || 'unknown' });
+    else {
+      const context = await getConvexWorkspaceContext();
+      if (!context) return NextResponse.json({ error: 'A survey install token is required.' }, { status: 401, headers: cors });
+      if ('workspaceId' in body && body.workspaceId !== context.workspaceId) return NextResponse.json({ error: 'Workspace mismatch' }, { status: 403, headers: cors });
+      await fetchAuthAction(api.attributionActions.submit, { body: JSON.stringify({ ...body, workspaceId: context.workspaceId }) });
     }
+    return NextResponse.json({ success: true }, { headers: cors });
+  } catch (error) {
+    const response = convexRouteError(error);
+    for (const [key, value] of Object.entries(cors)) response.headers.set(key,value);
+    return response;
+  }
 }
-
-// GET: Get attribution summary
+export async function OPTIONS() { return new NextResponse(null, { status: 204, headers: cors }); }
 export async function GET() {
-    try {
-        const workspaceId = await getCurrentWorkspaceId();
-        if (!workspaceId) {
-            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-        }
-
-        const { createClient } = await import('@/lib/supabase/server');
-        const supabase = await createClient();
-
-        const { data: workspace } = await supabase
-            .from('workspaces')
-            .select('settings')
-            .eq('id', workspaceId)
-            .single();
-
-        const settings = (workspace?.settings as Record<string, unknown>) || {};
-        const responses = (settings.attribution_responses as Array<{ source: string; timestamp: string }>) || [];
-
-        // Aggregate by source
-        const sourceCounts: Record<string, number> = {};
-        let aiInfluenced = 0;
-
-        for (const r of responses) {
-            sourceCounts[r.source] = (sourceCounts[r.source] || 0) + 1;
-            if (['chatgpt', 'gemini', 'perplexity', 'claude', 'ai_assistant', 'ai_search'].includes(r.source)) {
-                aiInfluenced++;
-            }
-        }
-
-        const total = responses.length;
-        const sources = Object.entries(sourceCounts)
-            .map(([source, count]) => ({
-                source,
-                count,
-                percentage: total > 0 ? Math.round((count / total) * 100) : 0,
-            }))
-            .sort((a, b) => b.count - a.count);
-
-        return NextResponse.json({
-            total,
-            aiInfluenced,
-            aiInfluencedPercentage: total > 0 ? Math.round((aiInfluenced / total) * 100) : 0,
-            sources,
-            recentResponses: responses.slice(-20).reverse(),
-        });
-    } catch (error) {
-        console.error('Error fetching attribution:', error);
-        return NextResponse.json({ error: 'Failed to fetch attribution' }, { status: 500 });
-    }
+  try {
+    const context = await getConvexWorkspaceContext();
+    if (!context) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    const responses = await fetchAuthQuery(api.attribution.legacy, { workspaceId: context.workspaceId });
+    let cursor: string | null = null;
+    do {
+      const page: FunctionReturnType<typeof api.attribution.responses> = await fetchAuthQuery(api.attribution.responses, { workspaceId: context.workspaceId, paginationOpts: { cursor, numItems: 100 } });
+      responses.push(...page.page); cursor = page.isDone ? null : page.continueCursor;
+    } while (cursor);
+    return NextResponse.json({ ...attributionSummary(responses), workspaceId: context.workspaceId, canInstall: context.role !== 'viewer' });
+  } catch (error) { return convexRouteError(error); }
 }

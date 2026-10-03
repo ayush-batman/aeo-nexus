@@ -1,254 +1,137 @@
-"use client";
-
+import type { Metadata } from "next";
 import Link from "next/link";
-import {
-    ArrowRight,
-    Search,
-    Layers,
-    ClipboardList,
-    Zap,
-    CheckCircle2,
-} from "lucide-react";
-import { NewsletterSubscribe } from "@/components/marketing/newsletter-subscribe";
-import { FreeScanWidget } from "@/components/marketing/free-scan-widget";
+import { ArrowRight } from "lucide-react";
 
-// ============================================================================
-// Landing, Aelo
-// Archetype: Sage (primary) + Magician (shading).
-// Rules: data speaks first, no aspirational adjectives, no gradient hype.
-// ============================================================================
+import { EvidenceSequence } from "@/components/marketing/evidence-sequence";
+import { FreeScanWidget } from "@/components/marketing/free-scan-widget";
+import { WordReveal } from "@/components/marketing/word-reveal";
+
+export const metadata: Metadata = {
+    title: "Aelo · Know what AI says about your brand",
+    description: "Measure how ChatGPT, Gemini, Claude and Perplexity answer about your brand. Inspect repeated samples, confidence ranges and real provider citations.",
+};
+
+const ENGINES = ["ChatGPT", "Gemini", "Claude", "Perplexity"];
+
+const FAQ = [
+    ["Is this another SEO score?", "No. Aelo asks AI assistants real buyer questions, keeps each answer and reports how often your brand appeared. The score only summarizes those observed samples."],
+    ["Why ask the same question more than once?", "AI answers vary. Repeating a prompt shows whether a mention is dependable or a lucky answer. Every result includes its sample count and confidence range."],
+    ["Does every URL count as a citation?", "No. Aelo separates citations supplied by the provider from links that appear only inside generated text. You can inspect that distinction in the receipt."],
+    ["What happens when a provider fails?", "The sample stays failed and the result becomes partial or unavailable. Aelo does not turn missing evidence into a zero or an invented response."],
+    ["Which assistants can Aelo measure?", "Aelo is built for ChatGPT, Gemini, Claude and Perplexity. Each receipt shows which engines responded because access can differ by plan and provider status."],
+    ["Can my team act on the findings?", "Yes. Aelo groups missed prompts, source gaps and competitor mentions into a ranked action queue, then compares the follow up against compatible samples."],
+];
 
 export default function LandingPage() {
     return (
-        <>
-            {/* ── HERO ─────────────────────────────────────────────────────── */}
-            <section className="pt-24 pb-16 md:pt-36 md:pb-24 px-6">
-                <div className="mx-auto max-w-4xl text-center flex flex-col items-center">
-                    <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-white/10 bg-white/[0.03] mb-8">
-                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                        <span className="text-[11px] text-zinc-300 tracking-[0.14em] uppercase font-mono">
-                            Live on ChatGPT · Gemini · Claude · Perplexity
+        <div className="overflow-hidden bg-[#e9ece7] text-[#1d2523]">
+            <section className="bg-[#131717] px-4 pb-20 pt-20 text-[#eff2ec] md:px-6 md:pb-24 md:pt-24">
+                <div className="mx-auto max-w-6xl">
+                    <div className="mb-12 flex flex-wrap items-center justify-between gap-4 border-b border-[#343c3b] pb-4 font-mono text-xs uppercase tracking-widest text-[#7c8985]">
+                        <span>AI visibility, with receipts</span>
+                        <span className="flex flex-wrap gap-x-5 gap-y-2">
+                            {ENGINES.map((engine, index) => <span key={engine}><span className="mr-2 text-[#a8cbe0]">0{index + 1}</span>{engine}</span>)}
                         </span>
                     </div>
 
-                    <h1 className="text-5xl md:text-7xl font-medium tracking-tighter leading-[1.02] mb-6 text-white text-balance">
-                        The standard for<br />
-                        artificial intelligence visibility.
-                    </h1>
-
-                    <p className="text-[17px] md:text-[19px] text-zinc-400 max-w-2xl text-balance leading-relaxed mb-10">
-                        Aelo is the instrument for measuring, and moving, how ChatGPT, Gemini,
-                        Claude and Perplexity answer questions about your brand. Every metric is
-                        computed from a real scan. Nothing is fabricated.
-                    </p>
-
-                    {/* Live free scan, the demo IS the pitch */}
-                    <div className="w-full mb-6">
-                        <FreeScanWidget />
-                    </div>
-
-                    <div className="flex flex-col sm:flex-row items-center gap-3">
-                        <Link
-                            href="/signup"
-                            className="text-[13px] text-zinc-400 hover:text-white transition-colors"
-                        >
-                            Skip demo · sign up →
-                        </Link>
-                        <span className="text-zinc-700 hidden sm:inline">·</span>
-                        <Link
-                            href="/product"
-                            className="text-[13px] text-zinc-400 hover:text-white transition-colors"
-                        >
-                            See how the loop works
-                        </Link>
-                    </div>
-
-                    <p className="text-[12px] text-zinc-600 mt-6 font-mono">
-                        Free tier is real. 3 scans per week, no card required.
-                    </p>
-                </div>
-            </section>
-
-            {/* ── PRODUCT MOCKUP ─────────────────────────────────────────── */}
-            <section className="pb-24 px-6">
-                <div className="mx-auto max-w-5xl">
-                    <div className="rounded-lg border border-white/10 bg-[#0A0A0B] p-2 shadow-[0_20px_80px_rgba(0,0,0,0.6)]">
-                        <div className="rounded-md border border-white/[0.05] bg-[#121213] p-8 md:p-10">
-                            <div className="flex flex-col md:flex-row gap-10 items-start">
-                                <div className="flex-1 min-w-0">
-                                    <p className="text-[10px] font-mono text-zinc-500 uppercase tracking-[0.16em] mb-2">
-                                        Aelo Health Score · Notion
-                                    </p>
-                                    <div className="flex items-baseline gap-3 mb-3">
-                                        <span className="text-6xl md:text-7xl font-medium tracking-tighter text-white tabular-nums">67</span>
-                                        <span className="text-zinc-500 tabular-nums">/100</span>
-                                        <span className="text-[13px] text-emerald-400 font-mono">+18 pts</span>
-                                    </div>
-                                    <div className="spectrum-rule mb-3" />
-                                    <p className="text-[10px] font-mono uppercase tracking-[0.16em] text-zinc-500 mb-1">
-                                        Receipt · Verdict improved
-                                    </p>
-                                    <p className="text-[13px] text-zinc-400 leading-relaxed">
-                                        Published /best-team-wikis-2026 → visibility rose from 49 → 67
-                                        on the target query in 3 weeks. Measured on real Gemini calls.
-                                    </p>
-                                </div>
-
-                                <div className="w-full md:w-[280px] grid grid-cols-2 gap-3">
-                                    {[
-                                        { engine: "ChatGPT",    score: 78, share: 78 },
-                                        { engine: "Perplexity", score: 61, share: 61 },
-                                        { engine: "Claude",     score: 72, share: 72 },
-                                        { engine: "Gemini",     score: 57, share: 57 },
-                                    ].map(s => (
-                                        <div key={s.engine} className="rounded-md border border-white/[0.06] bg-black p-3">
-                                            <div className="text-[11px] font-mono text-zinc-500 mb-1">{s.engine}</div>
-                                            <div className="text-xl font-medium text-white tabular-nums">{s.score}</div>
-                                            <div className="h-[2px] w-full bg-white/5 mt-3 overflow-hidden">
-                                                <div className="h-full bg-white/70" style={{ width: `${s.share}%` }} />
-                                            </div>
-                                        </div>
-                                    ))}
-                                </div>
+                    <div className="grid items-center gap-16 lg:grid-cols-[minmax(0,1.02fr)_minmax(420px,.98fr)]">
+                        <div>
+                            <h1 className="max-w-[680px] bg-gradient-to-r from-white to-[#9b9b9b] bg-clip-text text-5xl font-semibold tracking-tight text-transparent md:text-7xl">
+                                Don’t guess how AI describes your brand.
+                            </h1>
+                            <p className="mt-6 max-w-[680px] text-lg leading-relaxed text-[#a4aeaa]">
+                                Ask the buyer questions that decide your shortlist. Aelo repeats them across AI assistants, then keeps every answer, source and confidence range.
+                            </p>
+                            <div className="mt-8 flex flex-wrap items-center gap-5">
+                                <Link href="#scan" className="inline-flex min-h-11 items-center gap-2 rounded-sm bg-[#a8cbe0] px-4 py-2 text-base font-semibold text-[#17201f] transition-all duration-700 ease-[cubic-bezier(0.32,0.72,0,1)] hover:-translate-y-1 hover:bg-[#bdd9e8] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#eff2ec] focus-visible:ring-offset-4 focus-visible:ring-offset-[#131717]">
+                                    Run one real answer <ArrowRight className="size-4" />
+                                </Link>
+                                <p className="font-mono text-xs uppercase tracking-widest text-[#7c8985]">Gemini · 3 free scans each week · no card</p>
                             </div>
                         </div>
+
+                        <div id="scan" className="relative scroll-mt-24 lg:pl-6">
+                            <div aria-hidden="true" className="absolute inset-x-10 bottom-[-16px] top-6 border border-[#343c3b] bg-[#202626]" />
+                            <div className="relative"><FreeScanWidget /></div>
+                        </div>
                     </div>
-                    <p className="text-center text-[11px] font-mono text-zinc-600 mt-3">
-                        Real UI. Real numbers on request. No mock data anywhere.
-                    </p>
                 </div>
             </section>
 
-            {/* ── THE LOOP ──────────────────────────────────────────────── */}
-            <section id="platform" className="py-24 border-t border-white/5 bg-[#050506]">
-                <div className="mx-auto max-w-6xl px-6">
-                    <div className="mb-14 max-w-3xl">
-                        <p className="text-[10px] font-mono uppercase tracking-[0.18em] text-zinc-500 mb-3">
-                            The Aelo Loop
-                        </p>
-                        <h2 className="text-3xl md:text-5xl font-medium tracking-tight mb-5 text-white">
-                            Tracking is a mirror.<br />Aelo is a lever.
-                        </h2>
-                        <p className="text-zinc-400 text-[16px] leading-relaxed">
-                            Every other tool in this category shows you where you stand. Aelo shows
-                            you what to do, and proves whether it worked. Five steps, welded into
-                            one product.
-                        </p>
+            <section className="px-4 py-20 md:px-6 md:py-24">
+                <div className="mx-auto grid max-w-6xl gap-12 lg:grid-cols-[.72fr_1.28fr] lg:items-start">
+                    <div className="lg:sticky lg:top-28">
+                        <p className="font-mono text-xs uppercase tracking-widest text-[#586560]">The proof, not the pitch</p>
+                        <h2 className="mt-4 max-w-md text-4xl font-semibold tracking-tight md:text-5xl">One buyer question. Sixteen answers you can open.</h2>
+                        <p className="mt-5 max-w-md text-base leading-relaxed text-[#53615d]">A summary is only useful when your team can challenge it. Every percentage leads back to the prompt, answer, model, sample and returned source evidence.</p>
+                        <Link href="/methodology" className="mt-8 inline-flex min-h-11 items-center gap-2 text-base font-semibold text-[#315873] underline decoration-[#8fb0c3] underline-offset-4 transition-all duration-700 ease-[cubic-bezier(0.32,0.72,0,1)] hover:decoration-[#315873]">Read the method <ArrowRight className="size-4" /></Link>
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-5 gap-px overflow-hidden rounded-lg border border-white/10 bg-white/10">
-                        {[
-                            { icon: Search,       title: "Scan",       body: "Automated multi-LLM scans across ChatGPT, Gemini, Claude, Perplexity, Google AI Overview." },
-                            { icon: Layers,       title: "Diagnose",   body: "Citation attribution, the exact URLs LLMs pull from when they mention (or ignore) your brand." },
-                            { icon: ClipboardList,title: "Prescribe",  body: "AI-drafted forum replies, content briefs, and schema markup targeting your weakest queries." },
-                            { icon: Zap,          title: "Act",        body: "Publish the reply. Ship the page. Add the JSON-LD. Aelo captures a baseline the moment you act." },
-                            { icon: CheckCircle2, title: "Prove",      body: "Re-scan. Compare. Deliver the receipt, visibility change, verdict, and per-prompt delta." },
-                        ].map((step, i) => (
-                            <div key={step.title} className="bg-black p-6 space-y-3">
-                                <div className="flex items-center gap-2">
-                                    <span className="font-mono text-[10px] text-zinc-600 tracking-[0.16em]">0{i + 1}</span>
-                                    <step.icon className="w-4 h-4 text-white" strokeWidth={1.5} />
-                                </div>
-                                <div className="text-[15px] font-medium text-white">{step.title}</div>
-                                <div className="text-[12.5px] text-zinc-500 leading-relaxed">{step.body}</div>
-                            </div>
+                    <EvidenceSequence />
+                </div>
+            </section>
+
+            <section className="bg-[#dbe8ee] px-4 py-24 md:px-6 md:py-32">
+                <div className="mx-auto max-w-6xl">
+                    <p className="mb-8 font-mono text-xs uppercase tracking-widest text-[#416a88]">Why repeated answers matter</p>
+                    <WordReveal className="max-w-[680px] text-4xl font-semibold leading-tight tracking-tight text-[#1d2523] md:text-6xl">
+                        One answer can flatter you. Twelve answers can tell you something.
+                    </WordReveal>
+                </div>
+            </section>
+
+            <section className="bg-[#131717] px-4 py-24 text-[#eff2ec] md:px-6 md:py-32">
+                <div className="mx-auto max-w-6xl">
+                    <div className="grid gap-12 lg:grid-cols-[.7fr_1.3fr]">
+                        <div>
+                            <p className="font-mono text-xs uppercase tracking-widest text-[#a8cbe0]">From question to decision</p>
+                            <h2 className="mt-4 max-w-md text-4xl font-semibold tracking-tight md:text-5xl">Measure. Inspect. Choose one move.</h2>
+                        </div>
+                        <div className="grid border-t border-[#343c3b] sm:grid-cols-3">
+                            <Step number="01" title="Ask" body="Choose the buyer questions that shape your shortlist. Edit every prompt before it runs." />
+                            <Step number="02" title="Sample" body="Repeat each question across available assistants. Keep failures visible and out of the score." />
+                            <Step number="03" title="Act" body="Find the prompt and source gap worth attention. Give your team one ranked next move." />
+                        </div>
+                    </div>
+
+                    <div className="mt-24 grid gap-10 border-t border-[#343c3b] pt-12 lg:grid-cols-2">
+                        <div><p className="font-mono text-xs uppercase tracking-widest text-[#7c8985]">What you can defend</p><h3 className="mt-4 text-3xl font-semibold tracking-tight">A visibility number with its uncertainty attached.</h3><p className="mt-4 max-w-xl text-base leading-relaxed text-[#a4aeaa]">Sample count and confidence stay beside every score. Comparisons only appear when prompt, engine, model, region and method still match.</p></div>
+                        <div><p className="font-mono text-xs uppercase tracking-widest text-[#7c8985]">What you can inspect</p><h3 className="mt-4 text-3xl font-semibold tracking-tight">The sources assistants actually returned.</h3><p className="mt-4 max-w-xl text-base leading-relaxed text-[#a4aeaa]">Provider citations remain separate from links found only in generated prose. Aelo shows the difference instead of inflating the evidence.</p></div>
+                    </div>
+                </div>
+            </section>
+
+            <section className="px-4 py-24 md:px-6 md:py-32">
+                <div className="mx-auto grid max-w-6xl gap-12 lg:grid-cols-[.65fr_1.35fr]">
+                    <div>
+                        <p className="font-mono text-xs uppercase tracking-widest text-[#416a88]">Questions worth asking</p>
+                        <h2 className="mt-4 max-w-sm text-4xl font-semibold tracking-tight md:text-5xl">What an honest tracker should explain.</h2>
+                    </div>
+                    <div className="border-t border-[#bbc4bc]">
+                        {FAQ.map(([question, answer]) => (
+                            <details key={question} className="group border-b border-[#bbc4bc] py-5">
+                                <summary className="flex min-h-11 cursor-pointer list-none items-center justify-between gap-4 text-lg font-semibold"><span>{question}</span><span className="flex size-8 shrink-0 items-center justify-center text-[#416a88] transition-all duration-700 ease-[cubic-bezier(0.32,0.72,0,1)] group-open:rotate-45">+</span></summary>
+                                <p className="max-w-3xl pb-2 pt-4 text-base leading-relaxed text-[#53615d]">{answer}</p>
+                            </details>
                         ))}
                     </div>
                 </div>
             </section>
 
-            {/* ── DIFFERENTIATOR / HONESTY STRIP ─────────────────────── */}
-            <section className="py-24 border-t border-white/5">
-                <div className="mx-auto max-w-4xl px-6 text-center">
-                    <p className="text-[10px] font-mono uppercase tracking-[0.18em] text-zinc-500 mb-4">
-                        The Honest Data Policy
-                    </p>
-                    <h2 className="text-3xl md:text-4xl font-medium tracking-tight text-white mb-5 text-balance">
-                        We refuse to invent a number.
-                    </h2>
-                    <p className="text-zinc-400 text-[16px] leading-relaxed max-w-2xl mx-auto">
-                        When a scan fails, Aelo shows an honest &quot;provider unavailable&quot; state instead
-                        of a fabricated one. When a follow-up scan shows regression, the receipt says
-                        regressed. Analytics products sell trust, the moment we invent numbers, we
-                        stop being useful.
-                    </p>
-                    <div className="mt-6 inline-flex items-center gap-2 text-[12px] font-mono text-zinc-500">
-                        Read the{" "}
-                        <Link href="/manifesto" className="text-[var(--accent-base)] hover:underline">
-                            Manifesto
-                        </Link>
-                    </div>
+            <section className="bg-[#a8cbe0] px-4 py-24 text-[#17201f] md:px-6 md:py-32">
+                <div className="mx-auto flex max-w-6xl flex-col justify-between gap-10 lg:flex-row lg:items-end">
+                    <div><p className="font-mono text-xs uppercase tracking-widest text-[#294f69]">One question. Real evidence.</p><h2 className="mt-4 max-w-[680px] text-4xl font-semibold tracking-tight md:text-6xl">Your buyers are already asking. Read the answer.</h2></div>
+                    <Link href="#scan" className="inline-flex min-h-11 shrink-0 items-center justify-center gap-2 rounded-sm bg-[#131717] px-4 py-2 text-base font-semibold text-[#eff2ec] transition-all duration-700 ease-[cubic-bezier(0.32,0.72,0,1)] hover:-translate-y-1 hover:bg-[#202626] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#131717] focus-visible:ring-offset-4 focus-visible:ring-offset-[#a8cbe0]">Run one real answer <ArrowRight className="size-4" /></Link>
                 </div>
             </section>
-
-            {/* ── WHO IT'S FOR (segments) ───────────────────────────── */}
-            <section className="py-24 border-t border-white/5 bg-[#050506]">
-                <div className="mx-auto max-w-6xl px-6">
-                    <div className="mb-12 max-w-2xl">
-                        <p className="text-[10px] font-mono uppercase tracking-[0.18em] text-zinc-500 mb-3">
-                            Solutions
-                        </p>
-                        <h2 className="text-3xl md:text-4xl font-medium tracking-tight text-white">
-                            Precision for teams that live and die by the answer.
-                        </h2>
-                    </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                        {[
-                            { href: "/solutions/founders",  title: "SaaS Founders",  body: "Own the shortlist buyers ask ChatGPT for. Measure it weekly." },
-                            { href: "/solutions/marketing", title: "Marketing Teams", body: "Replace SEO reports with a receipt: what you shipped, what it moved." },
-                            { href: "/solutions/agencies",  title: "Agencies",       body: "Client-ready workspaces. One dashboard per brand. Concierge tier available." },
-                            { href: "/solutions/india",     title: "India-first Brands", body: "₹ pricing, Razorpay, Indian-query nuance, a public India AI Visibility Index." },
-                        ].map(s => (
-                            <Link
-                                key={s.href}
-                                href={s.href}
-                                className="group rounded-lg border border-white/[0.06] bg-black p-6 hover:border-white/15 transition-colors"
-                            >
-                                <div className="flex items-start justify-between gap-4">
-                                    <div className="space-y-1.5">
-                                        <div className="text-[14px] font-medium text-white">{s.title}</div>
-                                        <div className="text-[13px] text-zinc-500 leading-relaxed">{s.body}</div>
-                                    </div>
-                                    <ArrowRight className="w-4 h-4 text-zinc-600 group-hover:text-white transition-colors mt-0.5" />
-                                </div>
-                            </Link>
-                        ))}
-                    </div>
-                </div>
-            </section>
-
-            {/* ── CLOSING CTA ─────────────────────────────────────── */}
-            <section className="py-24 border-t border-white/5">
-                <div className="mx-auto max-w-3xl px-6 text-center">
-                    <h2 className="text-3xl md:text-5xl font-medium tracking-tight text-white mb-6 text-balance">
-                        Stop guessing what the AI is saying about you.
-                    </h2>
-                    <p className="text-zinc-400 text-[16px] leading-relaxed mb-8 max-w-xl mx-auto">
-                        Start free. Your first scan runs in under a minute. Add the follow-up
-                        when you&apos;re ready to prove impact.
-                    </p>
-                    <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
-                        <Link
-                            href="/signup"
-                            className="text-[15px] bg-[var(--accent-base)] text-[var(--text-on-accent)] px-6 py-3 rounded-md hover:bg-[var(--accent-hover)] transition-colors font-medium inline-flex items-center gap-2"
-                        >
-                            Start free <ArrowRight className="w-4 h-4" />
-                        </Link>
-                        <Link
-                            href="/pricing"
-                            className="text-[15px] text-zinc-300 border border-white/15 px-6 py-3 rounded-md hover:bg-white/[0.04] transition-colors font-medium"
-                        >
-                            See pricing
-                        </Link>
-                    </div>
-
-                    {/* Not ready to sign up? Newsletter is the softer entry point. */}
-                    <div className="mt-14 max-w-lg mx-auto text-left">
-                        <NewsletterSubscribe source="landing-closing" variant="hero" />
-                    </div>
-                </div>
-            </section>
-        </>
+        </div>
     );
+}
+
+function Step({ number, title, body }: { number: string; title: string; body: string }) {
+    return <article className="border-b border-[#343c3b] py-8 sm:border-b-0 sm:border-r sm:px-6 sm:first:pl-0 sm:last:border-r-0 sm:last:pr-0">
+        <p className="font-mono text-xs text-[#7c8985]">{number}</p>
+        <h3 className="mt-8 text-2xl font-semibold">{title}</h3>
+        <p className="mt-4 text-sm leading-relaxed text-[#a4aeaa]">{body}</p>
+    </article>;
 }
