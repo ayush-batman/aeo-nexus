@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-    title: "Changelog · Aelo",
+    title: "Changelog",
     description: "Every material change to Aelo, in reverse-chronological order.",
 };
 

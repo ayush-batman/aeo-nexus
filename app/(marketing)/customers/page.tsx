@@ -3,7 +3,7 @@ import { ArrowRight } from "lucide-react";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-    title: "Customers · Aelo",
+    title: "Customers",
     description: "Join the design partner cohort. First customers get a strategist, a discount, and a case study.",
 };
 

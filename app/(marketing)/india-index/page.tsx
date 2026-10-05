@@ -6,7 +6,7 @@ import { RankingTable } from "./ranking-table";
 import { IndiaIndexDatasetJsonLd, BreadcrumbJsonLd } from "@/components/seo/structured-data";
 
 export const metadata: Metadata = {
-    title: "India AI Visibility Index · Aelo",
+    title: "India AI Visibility Index",
     description: "Reviewed, published samples of AI answers about Indian brands, with sample counts, uncertainty intervals and source evidence.",
 };
 

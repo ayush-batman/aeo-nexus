@@ -3,7 +3,7 @@ import { ArrowRight, Zap, Search, ClipboardList, CheckCircle2, Code, Radio, Book
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-    title: "Docs · Aelo",
+    title: "Docs",
     description: "Install the pixel. Run your first scan. Read your first receipt. Everything you need to start winning AI answers.",
 };
 

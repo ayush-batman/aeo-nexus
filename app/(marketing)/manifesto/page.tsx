@@ -2,7 +2,7 @@ import Link from "next/link";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-    title: "Manifesto · Aelo",
+    title: "Manifesto",
     description: "Our honest-data policy, why Aelo refuses to invent a number.",
 };
 

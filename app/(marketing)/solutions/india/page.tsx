@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { SolutionPage } from "@/components/marketing/solution-page";
 
-export const metadata: Metadata = { title: "For India-first brands · Aelo", description: "Measure AI answers for Indian buyer questions with rupee pricing and inspectable evidence." };
+export const metadata: Metadata = { title: "For India-first brands", description: "Measure AI answers for Indian buyer questions with rupee pricing and inspectable evidence." };
 
 export default function IndiaSolution() {
     return <SolutionPage content={{

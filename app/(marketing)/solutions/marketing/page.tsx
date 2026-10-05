@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { SolutionPage } from "@/components/marketing/solution-page";
 
-export const metadata: Metadata = { title: "For marketing teams · Aelo", description: "Measure AI-answer visibility with inspectable samples, confidence and source evidence." };
+export const metadata: Metadata = { title: "For marketing teams", description: "Measure AI-answer visibility with inspectable samples, confidence and source evidence." };
 
 export default function MarketingSolution() {
     return <SolutionPage content={{

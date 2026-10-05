@@ -7,7 +7,7 @@ import { FreeScanWidget } from "@/components/marketing/free-scan-widget";
 import { WordReveal } from "@/components/marketing/word-reveal";
 
 export const metadata: Metadata = {
-    title: "Aelo · Know what AI says about your brand",
+    title: { absolute: "Aelo · Know what AI says about your brand" },
     description: "Measure how ChatGPT, Gemini, Claude and Perplexity answer about your brand. Inspect repeated samples, confidence ranges and real provider citations.",
 };
 

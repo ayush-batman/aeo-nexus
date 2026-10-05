@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 import { EvidencePanel, MarketingCTA, MarketingHero, MarketingSectionHeading } from "@/components/marketing/page-primitives";
 
 export const metadata: Metadata = {
-    title: "About · Aelo",
+    title: "About",
     description: "Why Aelo treats the answer, denominator, confidence and source evidence as one product.",
 };
 

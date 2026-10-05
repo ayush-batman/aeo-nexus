@@ -7,7 +7,7 @@ import {
 } from "lucide-react";
 
 export const metadata: Metadata = {
-    title: "MCP · Aelo",
+    title: "MCP",
     description:
         "Connect Claude, Cursor or Codex to Aelo and ask how visible your brand is across ChatGPT, Gemini, Claude and Perplexity, with multi-sampled numbers and the receipts. Read-first and honest: no bought upvotes, no ordered citations.",
     keywords: ["AI visibility MCP", "Model Context Protocol", "AEO MCP", "Claude MCP AI visibility", "honest AI visibility"],

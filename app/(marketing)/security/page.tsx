@@ -2,7 +2,7 @@ import { LegalPage } from "@/components/marketing/legal-page";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-    title: "Security · Aelo",
+    title: "Security",
 };
 
 export default function SecurityPage() {

@@ -6,7 +6,7 @@ import { api } from "@/convex/_generated/api";
 import { fetchAuthQuery } from "@/lib/auth-server";
 import ReportView from "./report-view";
 
-export const metadata = { title: "Client report · Aelo" };
+export const metadata = { title: "Client report" };
 
 export default async function ReportPage() {
     const ctx = await getCurrentWorkspaceContext();

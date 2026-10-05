@@ -4,7 +4,7 @@ import type { Metadata } from "next";
 import { Download } from "lucide-react";
 
 export const metadata: Metadata = {
-    title: "Brand · Aelo",
+    title: "Brand",
     description: "Aelo brand assets, mark, wordmark, social banners. Direct downloads. No logo abuse.",
 };
 
