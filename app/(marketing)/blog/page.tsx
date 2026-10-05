@@ -5,7 +5,7 @@ import { POSTS } from "@/lib/blog";
 import { NewsletterSubscribe } from "@/components/marketing/newsletter-subscribe";
 
 export const metadata: Metadata = {
-    title: "Blog · Aelo",
+    title: "Blog",
     description: "Analysis, methodology, and field notes from Aelo, building the honest measurement layer for AI answer visibility.",
     alternates: {
         types: {
@@ -37,7 +37,7 @@ export default function BlogIndexPage() {
                             RSS
                         </a>
                     </div>
-                    <h1 className="text-4xl md:text-5xl font-medium tracking-tighter leading-[1.05] text-white mb-4 text-balance">
+                    <h1 className="text-3xl md:text-5xl font-medium tracking-tighter leading-[1.05] text-white mb-4 text-balance">
                         Analysis, methodology, and field notes from the AI-answer front.
                     </h1>
                     <p className="text-[15px] md:text-[17px] text-zinc-400 max-w-2xl leading-relaxed mb-6">

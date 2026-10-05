@@ -97,6 +97,7 @@ function LoginForm() {
                                 id="login-email"
                                 type="email"
                                 placeholder="you@example.com"
+                                className="h-11 sm:h-10"
                                 value={email}
                                 onChange={(e) => setEmail(e.target.value)}
                                 required
@@ -111,6 +112,7 @@ function LoginForm() {
                                 id="login-password"
                                 type="password"
                                 placeholder="••••••••"
+                                className="h-11 sm:h-10"
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
                                 required
@@ -118,10 +120,10 @@ function LoginForm() {
                         </div>
 
                         <div className="flex items-center justify-between text-sm">
-                            <label className="flex items-center gap-2 text-[var(--text-secondary)]">
+                            <label className="flex min-h-11 items-center gap-2 text-[var(--text-secondary)] sm:min-h-10">
                                 <input
                                     type="checkbox"
-                                    className="rounded border-[var(--border-default)] bg-[var(--bg-surface)]"
+                                    className="size-5 rounded border-[var(--border-default)] bg-[var(--bg-surface)]"
                                 />
                                 Remember me
                             </label>

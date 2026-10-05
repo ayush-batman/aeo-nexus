@@ -199,6 +199,8 @@ html[data-theme="light"] .aelo-dashboard {
 .marketing-site :focus-visible {
   outline: 3px solid #a8cbe0;
   outline-offset: 3px;
+  /* Links use transition-all; without this the ring takes 700ms to appear. */
+  transition-duration: 0s;
 }
 
 .marketing-site h1,

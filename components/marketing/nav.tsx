@@ -33,13 +33,13 @@ export function MarketingNav() {
         <header className="pointer-events-none sticky top-0 z-50 px-3 pt-3 [--accent-base:#a8cbe0] [--text-primary:#eff2ec]">
             <a
                 href="#main-content"
-                className="pointer-events-auto absolute left-4 top-3 z-[60] -translate-y-24 rounded-sm bg-[#eff2ec] px-4 py-2 text-sm font-semibold text-[#17201f] focus:translate-y-0"
+                className="pointer-events-auto absolute left-4 top-3 z-[60] -translate-y-24 rounded-sm bg-[#eff2ec] px-4 py-3 text-sm font-semibold text-[#17201f] focus:translate-y-0"
             >
                 Skip to content
             </a>
 
             <div className="pointer-events-auto relative mx-auto flex h-14 max-w-6xl items-center justify-between rounded-full border border-white/10 bg-[#131717]/95 px-4 shadow-[0_12px_40px_rgba(0,0,0,.2)] backdrop-blur-2xl md:px-5">
-                <Link href="/" className="rounded-full p-1 transition-all duration-700 ease-[cubic-bezier(0.32,0.72,0,1)] hover:opacity-80">
+                <Link href="/" className="inline-flex min-h-11 items-center rounded-full p-1 transition-all duration-700 ease-[cubic-bezier(0.32,0.72,0,1)] hover:opacity-80">
                     <AeloWordmark size="md" />
                 </Link>
 
@@ -109,7 +109,7 @@ export function MarketingNav() {
                         type="button"
                         aria-label={openMobile ? "Close menu" : "Open menu"}
                         aria-expanded={openMobile}
-                        className="relative flex size-10 items-center justify-center rounded-full bg-white/10 text-white lg:hidden"
+                        className="relative flex size-11 items-center justify-center rounded-full bg-white/10 text-white lg:hidden"
                         onClick={() => setOpenMobile((value) => !value)}
                     >
                         <span className={cn("absolute h-px w-4 bg-current transition-all duration-700 ease-[cubic-bezier(0.32,0.72,0,1)]", openMobile ? "translate-y-0 rotate-45" : "-translate-y-1.5")} />

@@ -103,17 +103,18 @@ export function NewsletterSubscribe({ source, variant = "hero" }: Props) {
                     type="email"
                     inputMode="email"
                     autoComplete="email"
+                    aria-label="Email address"
                     required
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="you@work.com"
                     disabled={state === "submitting"}
-                    className="flex-1 px-3 py-2 text-[13px] bg-[#050506] border border-white/[0.08] rounded-md text-white placeholder-zinc-600 focus:outline-none focus:border-[var(--accent-base)]/40 transition-colors font-mono"
+                    className="min-h-11 flex-1 px-3 py-2 text-[13px] sm:min-h-10 bg-[#050506] border border-white/[0.08] rounded-md text-white placeholder-zinc-600 focus:outline-none focus:border-[var(--accent-base)]/40 transition-colors font-mono"
                 />
                 <button
                     type="submit"
                     disabled={state === "submitting" || !email.trim()}
-                    className="inline-flex items-center justify-center gap-1.5 px-4 py-2 text-[13px] bg-[var(--accent-base)] text-[var(--text-on-accent)] rounded-md hover:bg-[var(--accent-hover)] transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="inline-flex min-h-11 items-center justify-center gap-1.5 px-4 py-2 text-[13px] sm:min-h-10 bg-[var(--accent-base)] text-[var(--text-on-accent)] rounded-md hover:bg-[var(--accent-hover)] transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                     {state === "submitting" ? (
                         <>
