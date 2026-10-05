@@ -70,6 +70,8 @@ export default defineSchema({
     razorpaySubscriptionId: nullableString,
     billingProvider: v.optional(v.union(v.literal('stripe'), v.literal('razorpay'))),
     billingOccurredAt: v.optional(v.number()),
+    // When a cancelled subscription (or a legacy one-time payment) stops granting the plan.
+    billingCancelsAt: v.optional(v.union(v.number(), v.null())),
     createdAt: v.number(),
     updatedAt: v.number(),
   })

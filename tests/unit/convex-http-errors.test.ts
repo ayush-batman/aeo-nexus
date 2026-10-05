@@ -18,3 +18,8 @@ test('missing engine configuration says retrying will not help', async () => {
   assert.equal(response.status, 503);
   assert.match((await response.json()).error, /Retrying will not help/);
 });
+
+test('cancelling without a renewing subscription is a conflict, not an outage', async () => {
+  const response = convexRouteError(new Error('[CONVEX A(billingActions:cancelSubscription)] nothing_to_cancel'));
+  assert.equal(response.status, 409);
+});

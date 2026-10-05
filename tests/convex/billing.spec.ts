@@ -46,6 +46,55 @@ describe('atomic billing ledger', () => {
     expect(await t.mutation(internal.billing.applyVerifiedEvent, { ...event, eventId: 'halted', plan: 'free', subscriptionId: 'sub_command', occurredAt: 5000 })).toBe(true);
     expect(await plan()).toBe('free');
   });
+  test('legacy one-time Razorpay payers keep 30 days from payment, then move to Free', async () => {
+    const { t, context } = await fixture();
+    const day = 86_400_000;
+    const now = Date.now();
+    const ids = await t.run(async ctx => {
+      const own = await ctx.db.query('organizations').withIndex('by_public_id', q => q.eq('publicId', context.orgId)).unique();
+      await ctx.db.patch(own!._id, { plan: 'starter', billingProvider: 'razorpay', razorpaySubscriptionId: 'pay_expired', billingOccurredAt: now - 31 * day });
+      const base = { name: 'Org', stripeCustomerId: null, stripeSubscriptionId: null, createdAt: now, updatedAt: now };
+      const recent = await ctx.db.insert('organizations', { ...base, publicId: 'recent', plan: 'pro', billingProvider: 'razorpay',
+        razorpaySubscriptionId: 'pay_recent', billingOccurredAt: now - 10 * day });
+      const movedToStripe = await ctx.db.insert('organizations', { ...base, publicId: 'stripe', plan: 'pro', billingProvider: 'stripe',
+        stripeSubscriptionId: 'sub_stripe', razorpaySubscriptionId: 'pay_stale', billingOccurredAt: now - 90 * day });
+      const subscriber = await ctx.db.insert('organizations', { ...base, publicId: 'sub', plan: 'pro', billingProvider: 'razorpay',
+        razorpaySubscriptionId: 'sub_live', billingOccurredAt: now - 90 * day });
+      return { own: own!._id, recent, movedToStripe, subscriber };
+    });
+    await t.mutation(internal.billing.expireLegacyRazorpayOrders, { cursor: null });
+    const [own, recent, movedToStripe, subscriber] = await t.run(ctx => Promise.all(
+      [ids.own, ids.recent, ids.movedToStripe, ids.subscriber].map(id => ctx.db.get(id))));
+    expect(own).toMatchObject({ plan: 'free', razorpaySubscriptionId: null, billingCancelsAt: null });
+    expect(recent).toMatchObject({ plan: 'pro', razorpaySubscriptionId: 'pay_recent', billingCancelsAt: now - 10 * day + 30 * day });
+    expect(movedToStripe).toMatchObject({ plan: 'pro', stripeSubscriptionId: 'sub_stripe', razorpaySubscriptionId: null });
+    expect(subscriber).toMatchObject({ plan: 'pro', razorpaySubscriptionId: 'sub_live' });
+    const ledger = await t.run(ctx => ctx.db.query('billingWebhookEvents').collect());
+    expect(ledger.map(row => row.eventId)).toEqual(['legacy-expiry:pay_expired']);
+  });
+  test('a scheduled cancellation is recorded for the current subscription and cleared by a new one', async () => {
+    const { t, owner, context } = await fixture();
+    const event = { provider: 'razorpay' as const, eventType: 'subscription.activated', orgId: context.orgId,
+      plan: 'starter' as const, subscriptionId: 'sub_a', occurredAt: 1000 };
+    await t.mutation(internal.billing.applyVerifiedEvent, { ...event, eventId: 'a' });
+    const org = async () => t.run(ctx => ctx.db.query('organizations').withIndex('by_public_id', q => q.eq('publicId', context.orgId)).unique());
+    await owner.mutation(internal.billing.recordCancellation, { orgId: context.orgId, subscriptionId: 'sub_other', cancelsAt: 5000 });
+    expect((await org())?.billingCancelsAt ?? null).toBeNull();
+    await owner.mutation(internal.billing.recordCancellation, { orgId: context.orgId, subscriptionId: 'sub_a', cancelsAt: 5000 });
+    expect((await org())?.billingCancelsAt).toBe(5000);
+    expect((await owner.query(api.settings.organization, { orgId: context.orgId })).billing).toEqual(
+      { kind: 'subscription', provider: 'razorpay', cancelsAt: 5000, paidUntil: null });
+    // A charge on the same subscription keeps the scheduled end; a new subscription clears it.
+    await t.mutation(internal.billing.applyVerifiedEvent, { ...event, eventId: 'charged', occurredAt: 2000 });
+    expect((await org())?.billingCancelsAt).toBe(5000);
+    await t.mutation(internal.billing.applyVerifiedEvent, { ...event, eventId: 'b', subscriptionId: 'sub_b', plan: 'pro', occurredAt: 3000 });
+    expect((await org())?.billingCancelsAt).toBeNull();
+    await expect(t.mutation(internal.billing.recordCancellation, { orgId: context.orgId, subscriptionId: 'sub_b', cancelsAt: 1 })).rejects.toThrow();
+  });
+  test('cancel action refuses before contacting a provider when nothing renews', async () => {
+    const { owner } = await fixture();
+    await expect(owner.action(api.billingActions.cancelSubscription, {})).rejects.toThrow('nothing_to_cancel');
+  });
   test('checkout context and customer attachment require an authenticated admin', async () => {
     const { t, owner, context } = await fixture();
     await expect(t.query(internal.billing.context, {})).rejects.toThrow();

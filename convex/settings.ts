@@ -2,6 +2,7 @@ import { paginationOptsValidator } from 'convex/server';
 import { v } from 'convex/values';
 import { tenantMutation, tenantQuery, requireRole, requireWorkspace } from './lib/tenant';
 import { planValidator, roleValidator } from './validators';
+import { billingSummary } from '../lib/billing/billing-state';
 
 export const profile = tenantQuery({
   args: {}, returns: v.object({ id: v.string(), email: v.string(), full_name: v.union(v.string(), v.null()),
@@ -11,10 +12,14 @@ export const profile = tenantQuery({
     is_super_admin: ctx.tenant.user.isSuperAdmin }),
 });
 export const organization = tenantQuery({
-  args: { orgId: v.string() }, returns: v.object({ id: v.string(), name: v.string(), plan: planValidator }),
+  args: { orgId: v.string() }, returns: v.object({ id: v.string(), name: v.string(), plan: planValidator,
+    billing: v.object({ kind: v.union(v.literal('none'), v.literal('subscription'), v.literal('one_time')),
+      provider: v.union(v.literal('stripe'), v.literal('razorpay'), v.null()),
+      cancelsAt: v.union(v.number(), v.null()), paidUntil: v.union(v.number(), v.null()) }) }),
   handler: async (ctx, { orgId }) => {
     if (ctx.tenant.organization.publicId !== orgId) throw new Error('forbidden_role');
-    return { id: orgId, name: ctx.tenant.organization.name, plan: ctx.tenant.organization.plan };
+    return { id: orgId, name: ctx.tenant.organization.name, plan: ctx.tenant.organization.plan,
+      billing: billingSummary(ctx.tenant.organization, Date.now()) };
   },
 });
 export const members = tenantQuery({

@@ -126,6 +126,34 @@ export const razorpayWebhook = internalAction({
   },
 });
 
+function stripeCancelsAt(subscription: Stripe.Subscription): number | null {
+  if (!subscription.cancel_at_period_end && !subscription.cancel_at) return null;
+  const end = subscription.cancel_at ?? subscription.items.data[0]?.current_period_end;
+  return typeof end === 'number' ? end * 1000 : null;
+}
+
+/** Stops renewal at the end of the paid period; the provider's cancellation event then ends the plan. */
+export const cancelSubscription = action({
+  args: {}, returns: v.object({ cancelsAt: v.number() }),
+  handler: async (ctx): Promise<{ cancelsAt: number }> => {
+    const tenant = await ctx.runQuery(internal.billing.context, {});
+    const { summary, subscriptionId } = await ctx.runQuery(internal.billing.subscriptionFor, { orgId: tenant.orgId });
+    if (summary.kind !== 'subscription' || !subscriptionId) throw new Error('nothing_to_cancel');
+    if (summary.cancelsAt !== null) return { cancelsAt: summary.cancelsAt };
+    let cancelsAt: number | null;
+    if (summary.provider === 'stripe') {
+      cancelsAt = stripeCancelsAt(await stripeClient().subscriptions.update(subscriptionId, { cancel_at_period_end: true }));
+    } else {
+      const subscription = await razorpayClient().subscriptions.cancel(subscriptionId, true);
+      const end = subscription.current_end ?? subscription.charge_at;
+      cancelsAt = typeof end === 'number' ? end * 1000 : null;
+    }
+    if (cancelsAt === null) throw new Error('payment_cancel_failed');
+    await ctx.runMutation(internal.billing.recordCancellation, { orgId: tenant.orgId, subscriptionId, cancelsAt });
+    return { cancelsAt };
+  },
+});
+
 export const stripeWebhook = internalAction({
   args: { body: v.string(), signature: v.string() }, returns: v.object({ received: v.boolean(), ignored: v.optional(v.boolean()) }),
   handler: async (ctx, args): Promise<{ received: boolean; ignored?: boolean }> => {
@@ -152,7 +180,7 @@ export const stripeWebhook = internalAction({
     const plan = active ? getStripePlanFromPrice(subscription.items.data[0]?.price.id ?? null, process.env) : 'free';
     if (!plan) throw new Error('invalid_subscription_price');
     await ctx.runMutation(internal.billing.applyVerifiedEvent, { provider: 'stripe', eventId: event.id, eventType: event.type,
-      orgId, plan, subscriptionId: subscription.id, occurredAt: event.created * 1000 });
+      orgId, plan, subscriptionId: subscription.id, occurredAt: event.created * 1000, cancelsAt: stripeCancelsAt(subscription) });
     return { received: true };
   },
 });
