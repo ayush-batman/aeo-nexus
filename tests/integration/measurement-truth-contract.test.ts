@@ -194,3 +194,10 @@ const [backend, packet, page] = await Promise.all([source('convex/activation.ts'
  assert.doesNotMatch(page,/console\.error\('Decision packet failed/);
  assert.doesNotMatch(page,/finally \{[\s\S]{0,200}router\.push\('\/dashboard'\)/);
 });
+
+test('free brand scan never turns one branded answer into a visibility score', async () => {
+  const freeScan = await source('convex/discoveryActions.ts');
+  assert.doesNotMatch(freeScan, /brandMentioned \? 100 : 0/);
+  assert.match(freeScan, /visibilityScore: null/);
+  assert.match(freeScan, /brandNamedInQuestion: true/);
+});

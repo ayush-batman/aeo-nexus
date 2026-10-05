@@ -7,7 +7,6 @@ import { internal } from './_generated/api';
 import { enrichBrandFromUrl } from '../lib/services/brand-enrichment';
 import { auditUrl } from '../lib/ai/technical-audit';
 import { scanLLM, getAvailablePlatforms } from '../lib/ai/llm-scanner';
-import { estimateMentionConfidence } from '../lib/measurement/confidence';
 import type { ActionCtx } from './_generated/server';
 
 async function protect(ctx: ActionCtx, ip: string, namespace: string, limit: number) {
@@ -71,10 +70,11 @@ export const freeScan = internalAction({ args: { ip: v.string(), brandName: v.st
   const output = await scanLLM({ brandName, prompt, platforms: [platform] });
   const scan = output.results[0];
   if (!scan || !scan.response.trim()) throw new Error('free_scan_provider_failed');
-  const confidence = estimateMentionConfidence(Number(scan.brandMentioned), 1);
-  return JSON.stringify({ platform: scan.platform, mentioned: scan.brandMentioned, sentiment: scan.sentiment,
-    visibilityScore: scan.brandMentioned ? 100 : 0, samples: 1, confidence: confidence.level, confidenceInterval: confidence.interval,
+  // The question names the brand, so the answer echoing it ("I have no information
+  // about X") is not visibility evidence. No score or interval is reported.
+  return JSON.stringify({ platform: scan.platform, mentioned: scan.brandMentioned, brandNamedInQuestion: true,
+    sentiment: scan.sentiment, visibilityScore: null, samples: 1, confidence: 'none', confidenceInterval: null,
     snippet: scan.response.slice(0, 200) + (scan.response.length > 200 ? '…' : ''), limitedView: true,
-    note: 'One API answer, not a stable trend or a consumer-app result. This is an unsaved preview.',
+    note: 'One API answer to a question that names the brand, so a mention is expected and is not a visibility score. Ask a buyer question in the homepage scan for real visibility evidence. This is an unsaved preview.',
     message: 'Create an account for saved, multi-sample evidence.' });
 } });

@@ -19,7 +19,8 @@ interface ScanResult {
     platform: string;
     mentioned: boolean;
     sentiment: string;
-    visibilityScore: number;
+    visibilityScore: number | null;
+    note?: string;
     snippet: string;
     limitedView: boolean;
     message: string;
@@ -141,7 +142,7 @@ export function TryFreeSection() {
                             </div>
                             <div className="p-4 rounded-lg bg-[var(--bg-raised)] text-center">
                                 <p className="text-2xl font-bold text-[var(--text-primary)] mb-1">
-                                    {result.visibilityScore}%
+                                    {result.visibilityScore === null ? "Not scored" : `${result.visibilityScore}%`}
                                 </p>
                                 <p className="text-sm text-[var(--text-secondary)]">Visibility</p>
                             </div>
