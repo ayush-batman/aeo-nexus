@@ -1,4 +1,4 @@
-export const BRAND_MATCHING_CORPUS_VERSION = '2026-08-29.1';
+export const BRAND_MATCHING_CORPUS_VERSION = '2026-10-05.1';
 
 export interface BrandMatch {
   matched: boolean;
@@ -66,7 +66,13 @@ function findNamePositions(text: string, alias: string): number[] {
   const boundaryEnd = '(?=$|[^\\p{L}\\p{N}])';
   const suffix = isShortAlias(alias) ? '' : "(?:['’]s|s)?";
   const pattern = new RegExp(`${boundaryStart}${core}${suffix}${boundaryEnd}`, 'giu');
-  const positions = Array.from(text.matchAll(pattern), (match) => match.index ?? 0);
+  // A capitalized alias does not match an all-lowercase occurrence: brands that
+  // are also common words ("Buffer", "Notion", "Later") otherwise match prose
+  // such as "a buffer of time". Lowercase-styled brands are configured lowercase.
+  const caseSensitive = alias !== alias.toLocaleLowerCase('en-US');
+  const positions = Array.from(text.matchAll(pattern))
+    .filter((match) => !caseSensitive || match[0] !== match[0].toLocaleLowerCase('en-US'))
+    .map((match) => match.index ?? 0);
 
   if (!isShortAlias(alias)) return positions;
 

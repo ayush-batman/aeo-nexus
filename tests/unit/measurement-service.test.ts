@@ -24,7 +24,7 @@ test('canonical run records complete engine and sample receipts', async () => {
     execute: async (): Promise<ScanOutput> => ({ results: [result('gemini', ++call <= 3, `s${call}`)], errors: [] }),
   });
   assert.equal(run.contractVersion, 'measurement.v2');
-  assert.equal(run.scorerVersion, 'aelo-brand-scorer.v2');
+  assert.equal(run.scorerVersion, 'aelo-brand-scorer.v3');
   assert.equal(run.region, 'global-unspecified');
   assert.equal(run.status, 'complete');
   assert.equal(run.engines[0].successfulSamples, 4);
@@ -32,7 +32,7 @@ test('canonical run records complete engine and sample receipts', async () => {
   assert.equal(run.visibilityScore, 75);
   assert.equal(run.engines[0].confidence.level, 'low');
   assert.equal(run.samples.length, 4);
-  assert.equal(run.samples[0].scorerVersion, 'aelo-brand-scorer.v2');
+  assert.equal(run.samples[0].scorerVersion, 'aelo-brand-scorer.v3');
   assert.equal(run.samples[0].mode, 'standard');
   assert.equal(run.samples[0].recommendationStatus, 'recommended');
   assert.equal(run.samples[0].recommendationEvidence, 'Aelo is listed.');

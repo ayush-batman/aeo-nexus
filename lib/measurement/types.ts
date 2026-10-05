@@ -2,7 +2,7 @@ import type { LLMPlatform } from '../ai/llm-scanner';
 import type { CitationEvidence } from '../types';
 
 export const MEASUREMENT_CONTRACT_VERSION = 'measurement.v2' as const;
-export const MEASUREMENT_SCORER_VERSION = 'aelo-brand-scorer.v2' as const;
+export const MEASUREMENT_SCORER_VERSION = 'aelo-brand-scorer.v3' as const;
 
 export type MeasurementRunStatus = 'complete' | 'partial' | 'all_failed' | 'untracked';
 export type MeasurementConfidenceLevel = 'none' | 'low' | 'medium' | 'high';

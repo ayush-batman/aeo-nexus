@@ -50,3 +50,27 @@ test('hostnames normalize and match only exact or subdomain boundaries', () => {
   assert.equal(hostnameMatchesBrand('notexample.com', 'example.com'), false);
   assert.equal(hostnameMatchesBrand('example.com.evil.test', 'example.com'), false);
 });
+
+test('capitalized brands that are common words do not match lowercase prose', () => {
+  const prose: Array<[string, string]> = [
+    ['You need a buffer of time between posts.', 'Buffer'],
+    ['The notion of a single workspace is appealing.', 'Notion'],
+    ['There is some slack in the budget.', 'Slack'],
+    ['You can schedule it later.', 'Later'],
+    ['Teams keep buffers between releases.', 'Buffer'],
+  ];
+  for (const [text, brand] of prose) {
+    assert.equal(matchesBrand(text, [brand]).matched, false, text);
+  }
+
+  for (const text of ['Buffer is a scheduling tool.', 'Try BUFFER today', "Buffer's free plan", 'Compare Buffers']) {
+    assert.equal(matchesBrand(text, ['Buffer']).matched, true, text);
+  }
+  assert.deepEqual(matchesBrand('A buffer helps, but Buffer schedules posts.', ['Buffer']).positions, [20]);
+});
+
+test('lowercase-styled aliases still match any casing', () => {
+  for (const text of ['aelo is listed', 'Aelo is listed', 'AELO is listed']) {
+    assert.equal(matchesBrand(text, ['aelo']).matched, true, text);
+  }
+});
