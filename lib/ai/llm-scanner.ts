@@ -282,13 +282,13 @@ export async function scanLLM(options: ScanOptions): Promise<ScanOutput> {
                         winnerReason = `${compName} was prioritized earlier in the response.`;
                     }
                 } else if (myPos !== 999 && compPos !== 999 && myPos === compPos) {
-                    // Tie break by sentiment
+                    // Tie break by the brand's own sentiment; competitor sentiment is not analysed.
                     if (scanResult.sentimentScore > 0.2) {
                         winner = brandName;
-                        winnerReason = `${brandName} was favored slightly in sentiment.`;
+                        winnerReason = `${brandName} was described positively at the same position.`;
                     } else if (scanResult.sentimentScore < -0.2) {
                         winner = compName;
-                        winnerReason = `${compName} received more positive sentiment.`;
+                        winnerReason = `${brandName} was described negatively at the same position.`;
                     }
                 } else {
                     winnerReason = `Neither brand was mentioned by the AI.`;

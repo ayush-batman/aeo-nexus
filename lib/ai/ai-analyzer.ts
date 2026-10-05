@@ -70,8 +70,9 @@ export function findBrandMentions(
 export function parseListItems(response: string): string[] {
     const items: string[] = [];
 
-    // Match numbered lists: "1.", "1)", "1:"
-    const numberedPattern = /(?:^|\n)\s*(\d+)[.):]\s*(.+?)(?=\n\s*\d+[.):]\s*|\n\n|$)/gs;
+    // Match numbered lists: "1. ", "1) ", "**1. ". A colon or no following space
+    // ("2026: the year", "3.5 stars") is prose, not a list marker.
+    const numberedPattern = /(?:^|\n)[ \t]*(?:\*\*)?(\d+)[.)][ \t]+(.+?)(?=\n[ \t]*(?:\*\*)?\d+[.)][ \t]+|\n\n|$)/gs;
     let match;
     while ((match = numberedPattern.exec(response)) !== null) {
         items.push(match[2].trim());
@@ -79,7 +80,7 @@ export function parseListItems(response: string): string[] {
 
     // Match bullet lists: "•", "-", "*"
     if (items.length === 0) {
-        const bulletPattern = /(?:^|\n)\s*[•\-\*]\s*(.+?)(?=\n\s*[•\-\*]\s*|\n\n|$)/gs;
+        const bulletPattern = /(?:^|\n)[ \t]*[•\-*][ \t]+(.+?)(?=\n[ \t]*[•\-*][ \t]+|\n\n|$)/gs;
         while ((match = bulletPattern.exec(response)) !== null) {
             items.push(match[1].trim());
         }
@@ -90,6 +91,14 @@ export function parseListItems(response: string): string[] {
         const headerPattern = /(?:^|\n)#{1,3}\s*(.+?)(?=\n|$)/gs;
         while ((match = headerPattern.exec(response)) !== null) {
             items.push(match[1].trim());
+        }
+    }
+
+    // Match bold-led paragraphs: "**Buffer**: budget pick"
+    if (items.length === 0) {
+        const boldPattern = /(?:^|\n)[ \t]*\*\*(.+?)\*\*(.*)/g;
+        while ((match = boldPattern.exec(response)) !== null) {
+            items.push(`${match[1]}${match[2]}`.trim());
         }
     }
 
