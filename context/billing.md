@@ -15,4 +15,19 @@ Razorpay checkout creates a monthly Razorpay Subscription, and an organization's
 
 **Rejected alternative:** keep one-time payments, give each one a 30-day end date, and downgrade with a daily job. Quicker to build, but customers would have to pay again by hand every month, which does not match the "per month" pricing.
 
-**Consequence:** organizations that paid through the old one-time flow get 30 days from their recorded payment, then move to Free; one that paid more than 30 days before deploy moves on the first daily run. Customers cancel renewing subscriptions from Settings → Billing, keeping the plan until the end of the paid period (see the October 5 section of `docs/product-rescue/DEPLOYMENT_AND_ROLLBACK.md`).
+**Consequence:** organizations that paid through the old one-time flow needed an end date of their own (next entry). Customers cancel renewing subscriptions from Settings → Billing, keeping the plan until the end of the paid period (see the October 5 section of `docs/product-rescue/DEPLOYMENT_AND_ROLLBACK.md`).
+
+## Legacy one-time Razorpay payers get 30 days from deploy day
+
+**Id:** aff1f971-0201-4549-adc2-0dd4a0b28eb7
+**Type:** decision
+**Status:** active
+**Evidence:** inferred
+**Source:** maintainer decision in a working session, 2026-10-05
+**See:** billing.md#razorpay-bills-through-subscriptions-not-one-time-orders — b70519a2-a2a3-457a-8148-fcc6e11e9304 — as of 2026-10-05
+
+Organizations still holding a `pay_…` reference from the retired one-time flow keep their plan for 30 days from the first run of the daily expiry job after deploy, whatever their payment date, then move to Free.
+
+**Reason:** counting from the payment date would move anyone who paid more than 30 days before deploy to Free on the first run, with no notice. The choice of deploy day was made right after that consequence was pointed out; that it was the deciding reason is inferred, not stated.
+
+**Rejected alternative:** 30 days from each customer's recorded payment date. Closer to what a single month's payment bought, but it downgrades long-standing payers immediately.
