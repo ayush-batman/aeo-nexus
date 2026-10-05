@@ -12,9 +12,9 @@ The measurement pipeline is the product’s trust boundary. Do not replace faile
 
 ## Commands
 
-- Install: `npm ci`
+- Install: `npm ci`, then `npm --prefix mcp-server ci` (the MCP type-check needs the MCP server's own dependencies)
 - Development: `npm run dev`
-- Production build: `npm run build -- --webpack`
+- Production build: `npm run build -- --webpack` (requires `NEXT_PUBLIC_CONVEX_URL`; a non-production deployment URL is enough)
 - Lint: `npm run lint`
 - App type-check: `npm run typecheck`
 - MCP type-check: `npm run typecheck:mcp`
