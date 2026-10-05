@@ -1,5 +1,20 @@
 # Aelo product-rescue deployment and rollback
 
+## October 5 — Razorpay moves from one-time orders to Subscriptions
+
+Before this change a single Razorpay payment granted a "per month" plan with no end date. Checkout now creates a Razorpay Subscription (monthly, 120 cycles) and the plan follows the subscription's status, fetched from Razorpay on every event: only `active` grants the paid plan; `pending`, `halted`, `cancelled`, `completed` and `expired` return the organization to Free, as Stripe's non-active statuses already do. Moving to another tier cancels the previous Razorpay subscription immediately.
+
+Before deploying (test mode first, per environment):
+
+1. In the Razorpay dashboard create three monthly plans (interval 1, INR) whose amounts equal `lib/billing/plan-catalog.ts`: Radar ₹4,999, Command ₹14,999, Concierge ₹50,000. Checkout refuses to start if a plan's amount, currency or period differs.
+2. Set `RAZORPAY_STARTER_PLAN_ID`, `RAZORPAY_PRO_PLAN_ID` and `RAZORPAY_AGENCY_PLAN_ID` (`plan_…`) in the Convex deployment, next to the existing `RAZORPAY_KEY_ID`, `RAZORPAY_KEY_SECRET` and `RAZORPAY_WEBHOOK_SECRET`.
+3. Subscribe the webhook to `subscription.authenticated`, `subscription.activated`, `subscription.charged`, `subscription.pending`, `subscription.halted`, `subscription.cancelled`, `subscription.completed`, `subscription.paused`, `subscription.resumed` and `subscription.updated`. `payment.*` and `order.*` events are now acknowledged and ignored.
+4. Rehearse in test mode: subscribe, a failed renewal (pending → Free, then charged → paid again), an upgrade (old subscription cancelled, plan unchanged by its cancellation event), and a cancellation from the customer's side.
+
+Open: organizations that paid through the old one-time flow keep their plan with a `pay_…` reference and no end date. Nothing changes them automatically; decide whether to give them a fixed end date (for example 30 days from payment) before or at deploy. Neither Stripe nor Razorpay has a self-serve cancel button in the app yet; Razorpay customers can cancel the mandate from their bank or UPI app, which arrives as `subscription.cancelled`.
+
+Rollback: redeploy the previous build. Subscriptions created in the meantime keep charging in Razorpay, so cancel them in the dashboard or keep the subscription webhook handler deployed.
+
 ## September 28 migration-package preflight
 
 The restored Supabase source reports Healthy. Its Free-plan backup screen says scheduled project backups are unavailable; the dashboard lists no last backup. The current read-only source comparison below matches the saved 337-row application export, and `import-convex.ts --dry-run` verifies all 27 saved tables and records without contacting Convex. A read-only count found 16 Supabase Auth identities versus 15 application users; comparing normalized emails in memory found all 15 application users in Auth and one Auth identity without an application profile. The source Storage API lists zero buckets. No email addresses or record contents were printed. The importer does not transfer Supabase passwords or sessions, so account claiming still needs a signed-in staging check. This is an application-data package, **not** a full database or Auth backup.

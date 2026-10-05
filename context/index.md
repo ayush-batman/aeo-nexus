@@ -24,6 +24,8 @@
 
 ## B
 
+- [billing.md](billing.md) — why billing works the way it does across Stripe and Razorpay
+
 ## C
 
 ## D
