@@ -11,10 +11,11 @@ import { PLAN_CATALOG } from "@/lib/billing/plan-catalog";
 import { recommendationLabel } from "@/lib/measurement/recommendation-label";
 import { AnswerNameCandidates } from "@/components/marketing/answer-name-candidates";
 import { buildPublicScanMetadata } from "@/lib/measurement/public-scan-metadata";
+import { isPublicScanId } from "@/lib/public-scan-id";
 
 export const dynamic = 'force-dynamic';
 const getScan = cache(async (id: string) => {
-    if (!/^[a-f0-9-]{36}$/i.test(id)) return null;
+    if (!isPublicScanId(id)) return null;
     return readPublicScan(id);
 });
 

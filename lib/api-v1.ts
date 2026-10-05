@@ -33,6 +33,7 @@ export async function withKey(request: Request, scope: 'read' | 'measure' | null
     if (/api_scope_denied|forbidden_role/.test(message)) return NextResponse.json({ error: 'Permission denied' }, { status: 403 });
     if (/scan_quota_exceeded|rate_limit_exceeded/.test(message)) return NextResponse.json({ error: 'Scan limit reached' }, { status: 429, headers: { 'Retry-After': '60' } });
     if (/request_id_conflict/.test(message)) return NextResponse.json({ error: 'Request identifier already used', code: 'duplicate_scan_request' }, { status: 409 });
+    if (/no_engines_available/.test(message)) return NextResponse.json({ error: 'No AI engine is configured for this API key. Retrying will not help until one is enabled.', code: 'no_engines_available' }, { status: 503 });
     if (/invalid_/.test(message)) return NextResponse.json({ error: 'Invalid request values' }, { status: 400 });
     return NextResponse.json({ error: 'The API is temporarily unavailable. Please retry.' }, { status: 503, headers: { 'Retry-After': '60' } });
   }

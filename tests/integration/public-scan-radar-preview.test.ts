@@ -43,7 +43,8 @@ test('public receipt has a separate unassessed mention state', async () => {
 
 test('public scan rejects an invalid idempotency key before calling the scan backend', async () => {
   const route = await readFile(new URL('../../app/api/scan/public/route.ts', import.meta.url), 'utf8');
-  assert.match(route, /if \(!\/\^\[a-f0-9-\]\{36\}\$\/i\.test\(requestId\)\) return NextResponse\.json\(\{ error: 'invalid_public_scan' \}, \{ status: 400 \}\)/);
+  assert.match(route, /if \(!isPublicScanId\(requestId\)\) return NextResponse\.json\(\{ error: 'invalid_public_scan' \}, \{ status: 400 \}\)/);
+  assert.ok(route.indexOf('isPublicScanId(requestId)') < route.indexOf('callInternal('));
   assert.match(route, /id: requestId/);
 });
 

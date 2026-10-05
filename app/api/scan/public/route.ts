@@ -4,6 +4,7 @@ import { callInternal } from '@/lib/convex/admin';
 import { readPublicScan } from '@/lib/convex/public-scan';
 import { convexRouteError } from '@/lib/convex/http';
 import { prefersRespondAsync } from '@/lib/http-prefer';
+import { isPublicScanId } from '@/lib/public-scan-id';
 export const maxDuration = 300;
 export async function POST(request: NextRequest) {
   try {
@@ -12,7 +13,7 @@ export async function POST(request: NextRequest) {
     const brandName = body.brandName.trim(), prompt = body.prompt.trim();
     if (brandName.length < 2 || brandName.length > 80 || prompt.length < 8 || prompt.length > 240) return NextResponse.json({ error: 'invalid_public_scan' }, { status: 400 });
     const requestId = request.headers.get('idempotency-key') || crypto.randomUUID();
-    if (!/^[a-f0-9-]{36}$/i.test(requestId)) return NextResponse.json({ error: 'invalid_public_scan' }, { status: 400 });
+    if (!isPublicScanId(requestId)) return NextResponse.json({ error: 'invalid_public_scan' }, { status: 400 });
     const result = await callInternal('action', internal.publicScanActions.start, { id: requestId,
       ip: request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || request.headers.get('x-real-ip') || 'unknown', brandName, prompt });
     const deadline = Date.now()+230000;

@@ -5,6 +5,7 @@ import { citationValidator, nullableString, nullableNumber, sentimentValidator }
 import { scanResult } from './lib/measurementContract';
 import { recommendationEvidence } from './lib/recommendationEvidence';
 import { extractAnswerNameCandidates } from '../lib/ai/answer-name-candidates';
+import { isPublicScanId } from '../lib/public-scan-id';
 
 const publicReceipt = v.object({ id: v.string(), brand_name: v.string(), prompt: v.string(), platform: v.string(), response: nullableString,
   brand_mentioned: v.union(v.boolean(), v.null()), mention_position: nullableNumber, sentiment: v.union(sentimentValidator, v.null()),
@@ -17,7 +18,7 @@ const publicReceipt = v.object({ id: v.string(), brand_name: v.string(), prompt:
 export const get = query({
   args: { id: v.string() }, returns: v.union(publicReceipt, v.null()),
   handler: async (ctx, args) => {
-    if (!/^[a-f0-9-]{36}$/i.test(args.id)) return null;
+    if (!isPublicScanId(args.id)) return null;
     const row = await ctx.db.query('publicScans').withIndex('by_public_id', q => q.eq('publicId', args.id)).unique();
     if (!row || row.status === 'expired' || row.expiresAt <= Date.now()) return null;
     let status = row.status ?? (row.errorMessage ? 'failed' : row.response ? 'complete' : 'failed');
@@ -41,7 +42,7 @@ export const reserve = internalMutation({
   args: { id: v.string(), ipHash: v.string(), brandName: v.string(), prompt: v.string() },
   returns: v.object({ id: v.string(), used: v.number() }),
   handler: async (ctx, args) => {
-    if (!/^[a-f0-9-]{36}$/i.test(args.id) || !/^[a-f0-9]{64}$/i.test(args.ipHash) || args.brandName.trim().length < 2 || args.brandName.length > 80 ||
+    if (!isPublicScanId(args.id) || !/^[a-f0-9]{64}$/i.test(args.ipHash) || args.brandName.trim().length < 2 || args.brandName.length > 80 ||
       args.prompt.trim().length < 8 || args.prompt.length > 240) throw new Error('invalid_public_scan');
     const existing = await ctx.db.query('publicScans').withIndex('by_public_id', q => q.eq('publicId', args.id)).unique();
     const recent = await ctx.db.query('publicScans').withIndex('by_ip_hash_and_created_at', q => q.eq('ipHash', args.ipHash).gte('createdAt', Date.now()-7*86400000)).take(3);
