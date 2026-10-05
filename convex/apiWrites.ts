@@ -38,7 +38,21 @@ export const beginScan = internalMutation({
     const { workspace, tenant } = await requireKey(ctx, args.keyId, 'measure');
     const existing = await ctx.db.query('measurementRuns').withIndex('by_organization_request', (q) =>
       q.eq('organizationId', tenant.organization._id).eq('requestId', args.requestId)).unique();
-    if (existing) throw new Error('request_id_conflict');
+    if (existing) {
+      // An Idempotency-Key retry of the same request returns the original run.
+      // Server-derived defaults (engines, workspace competitors) may have changed
+      // since, so only fields the client supplied are compared.
+      const sameList = (left: readonly string[], right: readonly string[]) =>
+        left.length === right.length && left.every((value, index) => value === right[index]);
+      const input = existing.input;
+      const sameRequest = existing.workspaceId === workspace._id && input.prompt === args.prompt &&
+        input.brandName === args.brandName && (input.brandDomain ?? null) === (args.brandDomain ?? null) &&
+        input.samples === args.samples && (input.mode ?? 'standard') === args.mode &&
+        (args.platforms === undefined || sameList(input.platforms, args.platforms)) &&
+        (args.competitors === undefined || sameList(input.competitors ?? [], args.competitors));
+      if (!sameRequest) throw new Error('request_id_conflict');
+      return existing.publicId;
+    }
     const configured = configuredEngines();
     const entitled = configured.filter((engine) => tenant.organization.plan !== 'free' || engine === 'gemini');
     const platforms = args.platforms ?? entitled;

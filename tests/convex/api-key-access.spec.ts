@@ -85,3 +85,22 @@ test('prompt-filtered API reads use the exact question and time window', async (
   const unfiltered = await t.query(internal.apiReads.scans, args);
   expect(unfiltered.page.map((row) => row.publicId)).toEqual(['other-in-window', 'target-in-window']);
 });
+
+test('API scan retry with the same Idempotency-Key returns the original run without a second reservation', async () => {
+  const previousKey = process.env.GEMINI_API_KEY;
+  process.env.GEMINI_API_KEY = 'synthetic-test-key';
+  try {
+    const { t, owner, context } = await fixture();
+    const created = await owner.action(api.apiKeyActions.create, { workspaceId: context.workspaceId, name: 'Measure', scopes: ['read', 'measure'] });
+    const args = { keyId: created.key.id, requestId: `${created.key.id}:retry-1`, prompt: 'Best scheduling tools?',
+      brandName: 'Buffer', samples: 4, mode: 'standard' as const };
+    const first = await t.mutation(internal.apiWrites.beginScan, args);
+    expect(await t.mutation(internal.apiWrites.beginScan, args)).toBe(first);
+    await expect(t.mutation(internal.apiWrites.beginScan, { ...args, prompt: 'A different question?' })).rejects.toThrow('request_id_conflict');
+    expect(await t.run(async (ctx) => (await ctx.db.query('measurementRuns').collect()).length)).toBe(1);
+    expect(await t.run(async (ctx) => (await ctx.db.query('scanQuotaReservations').collect()).length)).toBe(1);
+  } finally {
+    if (previousKey === undefined) delete process.env.GEMINI_API_KEY;
+    else process.env.GEMINI_API_KEY = previousKey;
+  }
+});
