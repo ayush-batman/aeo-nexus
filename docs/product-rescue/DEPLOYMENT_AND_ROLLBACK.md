@@ -11,9 +11,11 @@ Before deploying (test mode first, per environment):
 3. Subscribe the webhook to `subscription.authenticated`, `subscription.activated`, `subscription.charged`, `subscription.pending`, `subscription.halted`, `subscription.cancelled`, `subscription.completed`, `subscription.paused`, `subscription.resumed` and `subscription.updated`. `payment.*` and `order.*` events are now acknowledged and ignored.
 4. Rehearse in test mode: subscribe, a failed renewal (pending → Free, then charged → paid again), an upgrade (old subscription cancelled, plan unchanged by its cancellation event), and a cancellation from the customer's side.
 
-Open: organizations that paid through the old one-time flow keep their plan with a `pay_…` reference and no end date. Nothing changes them automatically; decide whether to give them a fixed end date (for example 30 days from payment) before or at deploy. Neither Stripe nor Razorpay has a self-serve cancel button in the app yet; Razorpay customers can cancel the mandate from their bank or UPI app, which arrives as `subscription.cancelled`.
+Legacy one-time payers (organizations still holding a `pay_…` Razorpay reference) get 30 days from their recorded payment. The daily `expire legacy Razorpay one-time payments` cron (03:15 UTC) stamps that end date, shows it in Settings → Billing as "Paid until", and moves the organization to Free once it passes, writing an `aelo.legacy_payment_expired` ledger row. **An organization that paid more than 30 days before deploy moves to Free on the first run.** Organizations now billed by Stripe only lose the stale reference. Before deploying, list the affected organizations and their payment dates from the production ledger, and tell those customers.
 
-Rollback: redeploy the previous build. Subscriptions created in the meantime keep charging in Razorpay, so cancel them in the dashboard or keep the subscription webhook handler deployed.
+Settings → Billing has a "Cancel subscription" button for Stripe and Razorpay subscriptions (admins and owners). It stops renewal at the end of the paid period (`cancel_at_period_end` on Stripe, cancel at cycle end on Razorpay); the provider's cancellation event then moves the organization to Free. Razorpay customers can also cancel the mandate from their bank or UPI app.
+
+Rollback: redeploy the previous build. Subscriptions created in the meantime keep charging in Razorpay, so cancel them in the dashboard or keep the subscription webhook handler deployed. Legacy payers already moved to Free are not restored by a rollback; their `aelo.legacy_payment_expired` ledger rows list them.
 
 ## September 28 migration-package preflight
 

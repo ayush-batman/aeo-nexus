@@ -15,4 +15,4 @@ Razorpay checkout creates a monthly Razorpay Subscription, and an organization's
 
 **Rejected alternative:** keep one-time payments, give each one a 30-day end date, and downgrade with a daily job. Quicker to build, but customers would have to pay again by hand every month, which does not match the "per month" pricing.
 
-**Consequence:** organizations that paid through the old one-time flow keep their plan with no end date until someone decides what to do with them (see the October 5 section of `docs/product-rescue/DEPLOYMENT_AND_ROLLBACK.md`).
+**Consequence:** organizations that paid through the old one-time flow get 30 days from their recorded payment, then move to Free; one that paid more than 30 days before deploy moves on the first daily run. Customers cancel renewing subscriptions from Settings → Billing, keeping the plan until the end of the paid period (see the October 5 section of `docs/product-rescue/DEPLOYMENT_AND_ROLLBACK.md`).
