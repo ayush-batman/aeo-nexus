@@ -95,3 +95,32 @@ export function getStripePlanFromPrice(
 
   return null;
 }
+
+const RAZORPAY_PLAN_ENV: Readonly<Record<BillablePlan, string>> = {
+  starter: 'RAZORPAY_STARTER_PLAN_ID',
+  pro: 'RAZORPAY_PRO_PLAN_ID',
+  agency: 'RAZORPAY_AGENCY_PLAN_ID',
+};
+
+function configuredRazorpayPlanId(value: string | undefined): string | null {
+  return value && /^plan_[A-Za-z0-9]+$/.test(value) ? value : null;
+}
+
+export function getRazorpayPlanIdForPlan(
+  plan: unknown,
+  environment: BillingEnvironment,
+): string | null {
+  if (!isBillablePlan(plan)) return null;
+  return configuredRazorpayPlanId(environment[RAZORPAY_PLAN_ENV[plan]]);
+}
+
+export function getRazorpayPlanFromPlanId(
+  planId: unknown,
+  environment: BillingEnvironment,
+): BillablePlan | null {
+  if (typeof planId !== 'string' || !planId) return null;
+  for (const plan of Object.keys(RAZORPAY_PLAN_ENV) as BillablePlan[]) {
+    if (configuredRazorpayPlanId(environment[RAZORPAY_PLAN_ENV[plan]]) === planId) return plan;
+  }
+  return null;
+}

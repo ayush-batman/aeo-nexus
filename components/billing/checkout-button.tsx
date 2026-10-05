@@ -40,7 +40,7 @@ export function CheckoutButton({
         setLoading(true);
         setError(null);
         try {
-            const res = await fetch("/api/razorpay/create-order", {
+            const res = await fetch("/api/razorpay/create-subscription", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ plan }),
@@ -67,14 +67,12 @@ export function CheckoutButton({
 
             const rzp = new Ctor({
                 key: data.keyId,
-                order_id: data.orderId,
-                amount: data.amount,
-                currency: data.currency,
+                subscription_id: data.subscriptionId,
                 name: "Aelo",
-                description: `${data.planName} plan`,
+                description: `${data.planName} plan, billed monthly`,
                 theme: { color: "#B8933D" },
                 handler: async (resp: {
-                    razorpay_order_id: string;
+                    razorpay_subscription_id: string;
                     razorpay_payment_id: string;
                     razorpay_signature: string;
                 }) => {

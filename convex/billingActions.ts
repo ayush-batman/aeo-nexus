@@ -4,8 +4,9 @@ import Razorpay from 'razorpay';
 import { v } from 'convex/values';
 import { action, internalAction, type ActionCtx } from './_generated/server';
 import { internal } from './_generated/api';
-import { getRazorpayPlan, getStripePriceForPlan, getStripePlanFromPrice, isBillablePlan } from '../lib/billing/plans';
-import { extractRazorpayPaymentId, validateRazorpayPayment, verifyRazorpayPaymentSignature, verifyRazorpayWebhookSignature } from '../lib/billing/razorpay';
+import { getRazorpayPlan, getRazorpayPlanIdForPlan, getStripePriceForPlan, getStripePlanFromPrice, isBillablePlan } from '../lib/billing/plans';
+import { extractRazorpaySubscriptionId, isRazorpaySubscriptionClosed, resolveRazorpaySubscription, validateRazorpayPlanDefinition,
+  verifyRazorpaySubscriptionSignature, verifyRazorpayWebhookSignature } from '../lib/billing/razorpay';
 
 function stripeClient() {
   if (!process.env.STRIPE_SECRET_KEY) throw new Error('payment_unconfigured');
@@ -44,60 +45,84 @@ export const stripeCheckout = action({
   },
 });
 
-export const razorpayOrder = action({
+// Razorpay bills monthly through Subscriptions. A one-time order would grant a
+// "per month" plan forever, because nothing would ever charge or downgrade it.
+const RAZORPAY_BILLING_CYCLES = 120;
+
+export const razorpaySubscribe = action({
   args: { plan: v.string() },
-  returns: v.object({ orderId: v.string(), amount: v.number(), currency: v.string(), keyId: v.string(), planName: v.string(), plan: v.string() }),
-  handler: async (ctx, { plan }): Promise<{ orderId: string; amount: number; currency: string; keyId: string; planName: string; plan: string }> => {
+  returns: v.object({ subscriptionId: v.string(), keyId: v.string(), planName: v.string(), amount: v.number(), currency: v.string() }),
+  handler: async (ctx, { plan }): Promise<{ subscriptionId: string; keyId: string; planName: string; amount: number; currency: string }> => {
     const tenant = await ctx.runQuery(internal.billing.context, {});
     const details = getRazorpayPlan(plan);
     if (!details) throw new Error('invalid_plan');
-    const order = await razorpayClient().orders.create({ amount: details.amount, currency: details.currency,
-      receipt: `ord_${crypto.randomUUID().slice(0, 30)}`, notes: { org_id: tenant.orgId, user_id: tenant.userId,
-        db_plan: details.dbPlan, display_plan: plan } });
-    return { orderId: order.id, amount: Number(order.amount), currency: order.currency,
-      keyId: process.env.RAZORPAY_KEY_ID!, planName: details.displayName, plan: details.displayName };
+    const planId = getRazorpayPlanIdForPlan(details.dbPlan, process.env);
+    if (!planId) throw new Error('payment_unconfigured');
+    const provider = razorpayClient();
+    validateRazorpayPlanDefinition(await provider.plans.fetch(planId), details.dbPlan);
+    const subscription = await provider.subscriptions.create({ plan_id: planId, total_count: RAZORPAY_BILLING_CYCLES,
+      customer_notify: 1, notes: { org_id: tenant.orgId, user_id: tenant.userId, db_plan: details.dbPlan } });
+    return { subscriptionId: subscription.id, keyId: process.env.RAZORPAY_KEY_ID!, planName: details.displayName,
+      amount: details.amount, currency: details.currency };
   },
 });
 
-async function applyRazorpay(ctx: ActionCtx, paymentId: string, eventType: string, expectedOrg?: string, expectedOrder?: string) {
+async function applyRazorpaySubscription(ctx: ActionCtx, subscriptionId: string, eventType: string, eventId: string, expectedOrg?: string) {
   const provider = razorpayClient();
-  const payment = await provider.payments.fetch(paymentId);
-  if (payment.id !== paymentId || (expectedOrder && payment.order_id !== expectedOrder)) throw new Error('invalid_payment');
-  const order = await provider.orders.fetch(payment.order_id);
-  const validated = validateRazorpayPayment({ payment, order });
-  if (expectedOrg && validated.orgId !== expectedOrg) throw new Error('forbidden_role');
-  if (!Number.isFinite(payment.created_at)) throw new Error('invalid_payment_timestamp');
+  const subscription = await provider.subscriptions.fetch(subscriptionId);
+  if (subscription.id !== subscriptionId) throw new Error('invalid_subscription');
+  const resolved = resolveRazorpaySubscription(subscription, process.env);
+  if (expectedOrg && resolved.orgId !== expectedOrg) throw new Error('forbidden_role');
+  // Moving to a new tier must not leave the previous subscription charging too.
+  // Cancel it before recording the new plan so a retried event can finish the job.
+  const previous: string | null = await ctx.runQuery(internal.billing.razorpaySubscriptionFor, { orgId: resolved.orgId });
+  if (resolved.plan !== 'free' && previous && previous !== subscriptionId && previous.startsWith('sub_')) {
+    const old = await provider.subscriptions.fetch(previous);
+    if (!isRazorpaySubscriptionClosed(old.status)) await provider.subscriptions.cancel(previous, false);
+  }
   const applied: boolean = await ctx.runMutation(internal.billing.applyVerifiedEvent, {
-    provider: 'razorpay', eventId: `payment:${validated.paymentId}`, eventType, orgId: validated.orgId,
-    plan: validated.plan, subscriptionId: validated.paymentId, occurredAt: payment.created_at * 1000 });
-  return { success: true, plan: validated.plan, duplicate: !applied };
+    provider: 'razorpay', eventId, eventType, orgId: resolved.orgId, plan: resolved.plan,
+    subscriptionId, occurredAt: Date.now() });
+  return { plan: resolved.plan, status: resolved.status, duplicate: !applied };
 }
 
 export const razorpayVerify = action({
-  args: { orderId: v.string(), paymentId: v.string(), signature: v.string() },
-  returns: v.object({ success: v.boolean(), plan: v.string(), duplicate: v.boolean() }),
-  handler: async (ctx, args): Promise<{ success: boolean; plan: string; duplicate: boolean }> => {
+  args: { subscriptionId: v.string(), paymentId: v.string(), signature: v.string() },
+  returns: v.object({ success: v.boolean(), plan: v.string(), status: v.string(), duplicate: v.boolean() }),
+  handler: async (ctx, args): Promise<{ success: boolean; plan: string; status: string; duplicate: boolean }> => {
     const tenant = await ctx.runQuery(internal.billing.context, {});
     razorpayClient();
-    if (!verifyRazorpayPaymentSignature({ ...args, secret: process.env.RAZORPAY_KEY_SECRET! })) throw new Error('invalid_signature');
-    return applyRazorpay(ctx, args.paymentId, 'client.payment.verified', tenant.orgId, args.orderId);
+    if (!verifyRazorpaySubscriptionSignature({ ...args, secret: process.env.RAZORPAY_KEY_SECRET! })) throw new Error('invalid_signature');
+    const result = await applyRazorpaySubscription(ctx, args.subscriptionId, 'client.subscription.verified',
+      `client:${args.paymentId}`, tenant.orgId);
+    return { success: true, ...result };
   },
 });
 
 export const razorpayWebhook = internalAction({
-  args: { body: v.string(), signature: v.string() },
+  args: { body: v.string(), signature: v.string(), eventId: v.optional(v.string()) },
   returns: v.object({ received: v.boolean(), ignored: v.optional(v.boolean()), duplicate: v.optional(v.boolean()) }),
   handler: async (ctx, args): Promise<{ received: boolean; ignored?: boolean; duplicate?: boolean }> => {
     const secret = process.env.RAZORPAY_WEBHOOK_SECRET;
     if (!secret) throw new Error('payment_unconfigured');
     if (!verifyRazorpayWebhookSignature(args.body, args.signature, secret)) throw new Error('invalid_signature');
     const payload: unknown = JSON.parse(args.body);
-    const eventType = payload && typeof payload === 'object' && 'event' in payload ? payload.event : null;
-    if (eventType !== 'payment.captured' && eventType !== 'order.paid') return { received: true, ignored: true };
-    const paymentId = extractRazorpayPaymentId(payload);
-    if (!paymentId) throw new Error('invalid_payment');
-    const result = await applyRazorpay(ctx, paymentId, eventType);
-    return { received: true, duplicate: result.duplicate };
+    const root = payload && typeof payload === 'object' ? payload as Record<string, unknown> : {};
+    const eventType = typeof root.event === 'string' ? root.event : '';
+    // Subscription invoices also emit payment.* and order.* events; only the
+    // subscription's own state decides the plan.
+    if (!eventType.startsWith('subscription.')) return { received: true, ignored: true };
+    const subscriptionId = extractRazorpaySubscriptionId(payload);
+    if (!subscriptionId) throw new Error('invalid_subscription');
+    const eventId = args.eventId?.trim() || `${eventType}:${subscriptionId}:${String(root.created_at ?? '')}`;
+    try {
+      const result = await applyRazorpaySubscription(ctx, subscriptionId, eventType, eventId);
+      return { received: true, duplicate: result.duplicate };
+    } catch (error) {
+      // A subscription Aelo did not create carries no organization note; retrying cannot fix it.
+      if (error instanceof Error && error.message === 'invalid_subscription') return { received: true, ignored: true };
+      throw error;
+    }
   },
 });
 

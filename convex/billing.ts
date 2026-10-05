@@ -26,6 +26,15 @@ export const saveCustomer = internalMutation({
   },
 });
 
+/** The Razorpay subscription an organization is currently billed through, if any. */
+export const razorpaySubscriptionFor = internalQuery({
+  args: { orgId: v.string() }, returns: v.union(v.string(), v.null()),
+  handler: async (ctx, args) => {
+    const org = await ctx.db.query('organizations').withIndex('by_public_id', q => q.eq('publicId', args.orgId)).unique();
+    return org?.razorpaySubscriptionId ?? null;
+  },
+});
+
 /** Only signature-verified provider actions may call this atomic ledger writer. */
 export const applyVerifiedEvent = internalMutation({
   args: { provider: v.union(v.literal('stripe'), v.literal('razorpay')), eventId: v.string(), eventType: v.string(),

@@ -47,11 +47,9 @@ declare global {
 
 interface RazorpayOptions {
     key: string;
-    amount: number;
-    currency: string;
     name: string;
     description: string;
-    order_id: string;
+    subscription_id: string;
     handler: (response: RazorpayResponse) => void;
     prefill: { email: string };
     theme: { color: string };
@@ -63,7 +61,7 @@ interface RazorpayInstance {
 
 interface RazorpayResponse {
     razorpay_payment_id: string;
-    razorpay_order_id: string;
+    razorpay_subscription_id: string;
     razorpay_signature: string;
 }
 
@@ -257,8 +255,8 @@ export default function SettingsPage() {
         setUpgradeError(null);
 
         try {
-            // Create Razorpay order
-            const response = await fetch('/api/razorpay/create-order', {
+            // Create a monthly Razorpay subscription
+            const response = await fetch('/api/razorpay/create-subscription', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ plan }),
@@ -266,33 +264,25 @@ export default function SettingsPage() {
 
             const data = await response.json();
 
-            if (!response.ok) {
-                throw new Error(data.error || 'Failed to create order');
-            }
-
-            if (!data.orderId) {
-                throw new Error(data.error || 'Failed to create order');
+            if (!response.ok || !data.subscriptionId) {
+                throw new Error(data.error || 'Failed to start checkout');
             }
 
             // Open Razorpay checkout
             const options: RazorpayOptions = {
                 key: data.keyId,
-                amount: data.amount,
-                currency: data.currency,
                 name: 'Aelo',
-                description: data.plan,
-                order_id: data.orderId,
+                description: `${data.planName} plan, billed monthly`,
+                subscription_id: data.subscriptionId,
                 handler: async (response: RazorpayResponse) => {
                     // Verify payment
                     const verifyRes = await fetch('/api/razorpay/verify', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({
-                            razorpay_order_id: response.razorpay_order_id,
+                            razorpay_subscription_id: response.razorpay_subscription_id,
                             razorpay_payment_id: response.razorpay_payment_id,
                             razorpay_signature: response.razorpay_signature,
-                            plan,
-                            org_id: organization.id,
                         }),
                     });
 

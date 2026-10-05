@@ -3,12 +3,18 @@ import { createHmac } from 'node:crypto';
 import test from 'node:test';
 
 import {
-  validateRazorpayPayment,
+  extractRazorpaySubscriptionId,
+  isRazorpaySubscriptionClosed,
+  resolveRazorpaySubscription,
+  validateRazorpayPlanDefinition,
+  verifyRazorpaySubscriptionSignature,
   verifyRazorpayWebhookSignature,
 } from '../../lib/billing/razorpay';
 
+const env = { RAZORPAY_STARTER_PLAN_ID: 'plan_Radar1', RAZORPAY_PRO_PLAN_ID: 'plan_Command1' };
+
 test('Razorpay webhook verification fails closed', () => {
-  const body = JSON.stringify({ event: 'payment.captured' });
+  const body = JSON.stringify({ event: 'subscription.charged' });
   const secret = 'test_webhook_secret';
   const signature = createHmac('sha256', secret).update(body).digest('hex');
 
@@ -19,68 +25,42 @@ test('Razorpay webhook verification fails closed', () => {
   assert.equal(verifyRazorpayWebhookSignature(`${body}x`, signature, secret), false);
 });
 
-test('Razorpay payment must match the authoritative order and plan', () => {
-  const result = validateRazorpayPayment({
-    payment: {
-      id: 'pay_123',
-      order_id: 'order_123',
-      amount: 499_900,
-      currency: 'INR',
-      status: 'captured',
-    },
-    order: {
-      id: 'order_123',
-      amount: 499_900,
-      currency: 'INR',
-      status: 'paid',
-      notes: { org_id: 'org_123', db_plan: 'starter' },
-    },
-  });
-
-  assert.deepEqual(result, {
-    orgId: 'org_123',
-    plan: 'starter',
-    paymentId: 'pay_123',
-  });
+test('subscription checkout signature covers payment and subscription ids', () => {
+  const secret = 'test_key_secret';
+  const signature = createHmac('sha256', secret).update('pay_1|sub_1').digest('hex');
+  assert.equal(verifyRazorpaySubscriptionSignature({ paymentId: 'pay_1', subscriptionId: 'sub_1', signature, secret }), true);
+  assert.equal(verifyRazorpaySubscriptionSignature({ paymentId: 'pay_1', subscriptionId: 'sub_2', signature, secret }), false);
+  assert.equal(verifyRazorpaySubscriptionSignature({ paymentId: 'pay_1', subscriptionId: 'sub_1', signature, secret: null }), false);
 });
 
-test('Razorpay payment validation rejects mismatched or incomplete data', () => {
-  const base = {
-    payment: {
-      id: 'pay_123',
-      order_id: 'order_123',
-      amount: 499_900,
-      currency: 'INR',
-      status: 'captured',
-    },
-    order: {
-      id: 'order_123',
-      amount: 499_900,
-      currency: 'INR',
-      status: 'paid',
-      notes: { org_id: 'org_123', db_plan: 'starter' },
-    },
-  } as const;
-
-  assert.throws(
-    () => validateRazorpayPayment({ ...base, payment: { ...base.payment, amount: 1 } }),
-    /amount/i,
-  );
-  assert.throws(
-    () => validateRazorpayPayment({ ...base, payment: { ...base.payment, currency: 'USD' } }),
-    /currency/i,
-  );
-  assert.throws(
-    () => validateRazorpayPayment({ ...base, payment: { ...base.payment, status: 'failed' } }),
-    /captured/i,
-  );
-  assert.throws(
-    () => validateRazorpayPayment({ ...base, order: { ...base.order, notes: { org_id: 'org_123', db_plan: 'enterprise' } } }),
-    /plan/i,
-  );
-  assert.throws(
-    () => validateRazorpayPayment({ ...base, order: { ...base.order, notes: { org_id: '', db_plan: 'starter' } } }),
-    /organization/i,
-  );
+test('only an active subscription on a configured plan grants a paid plan', () => {
+  const base = { id: 'sub_1', plan_id: 'plan_Radar1', status: 'active', notes: { org_id: 'org_1' } };
+  assert.deepEqual(resolveRazorpaySubscription(base, env), { orgId: 'org_1', subscriptionId: 'sub_1', status: 'active', plan: 'starter' });
+  for (const status of ['created', 'authenticated', 'pending', 'halted', 'cancelled', 'completed', 'expired']) {
+    assert.equal(resolveRazorpaySubscription({ ...base, status }, env).plan, 'free', status);
+  }
+  assert.throws(() => resolveRazorpaySubscription({ ...base, plan_id: 'plan_Unknown' }, env), /invalid_subscription_price/);
+  assert.throws(() => resolveRazorpaySubscription({ ...base, notes: {} }, env), /invalid_subscription/);
+  assert.throws(() => resolveRazorpaySubscription({ ...base, notes: [] }, env), /invalid_subscription/);
 });
 
+test('dashboard plan must match the catalogue amount, currency and monthly period', () => {
+  const plan = { id: 'plan_Radar1', period: 'monthly', interval: 1, item: { amount: 499_900, currency: 'INR' } };
+  assert.doesNotThrow(() => validateRazorpayPlanDefinition(plan, 'starter'));
+  assert.doesNotThrow(() => validateRazorpayPlanDefinition({ ...plan, item: { ...plan.item, amount: '499900' } }, 'starter'));
+  for (const bad of [
+    { ...plan, item: { ...plan.item, amount: 1 } },
+    { ...plan, item: { ...plan.item, currency: 'USD' } },
+    { ...plan, period: 'yearly' },
+    { ...plan, interval: 3 },
+  ]) assert.throws(() => validateRazorpayPlanDefinition(bad, 'starter'), /payment_unconfigured/);
+  assert.throws(() => validateRazorpayPlanDefinition(plan, 'pro'), /payment_unconfigured/);
+});
+
+test('webhook payload subscription id and closed statuses', () => {
+  assert.equal(extractRazorpaySubscriptionId({ payload: { subscription: { entity: { id: 'sub_9' } } } }), 'sub_9');
+  assert.equal(extractRazorpaySubscriptionId({ payload: { payment: { entity: { id: 'pay_9' } } } }), null);
+  assert.equal(extractRazorpaySubscriptionId({ payload: { subscription: { entity: { id: 'pay_9' } } } }), null);
+  assert.equal(isRazorpaySubscriptionClosed('cancelled'), true);
+  assert.equal(isRazorpaySubscriptionClosed('halted'), false);
+});

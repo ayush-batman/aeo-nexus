@@ -7,11 +7,11 @@ export async function POST(request: Request) {
   try {
     if (!await getConvexWorkspaceContext()) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     const body = await request.json().catch(() => null);
-    if (!body || ['razorpay_order_id', 'razorpay_payment_id', 'razorpay_signature'].some(key => typeof body[key] !== 'string' || !body[key])) {
+    if (!body || ['razorpay_subscription_id', 'razorpay_payment_id', 'razorpay_signature'].some(key => typeof body[key] !== 'string' || !body[key])) {
       return NextResponse.json({ error: 'Missing payment fields' }, { status: 400 });
     }
     return NextResponse.json(await fetchAuthAction(api.billingActions.razorpayVerify, {
-      orderId: body.razorpay_order_id, paymentId: body.razorpay_payment_id, signature: body.razorpay_signature,
+      subscriptionId: body.razorpay_subscription_id, paymentId: body.razorpay_payment_id, signature: body.razorpay_signature,
     }));
   } catch (error) { return convexRouteError(error); }
 }

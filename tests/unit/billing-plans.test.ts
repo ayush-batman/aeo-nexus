@@ -3,6 +3,8 @@ import test from 'node:test';
 
 import {
   getRazorpayPlan,
+  getRazorpayPlanFromPlanId,
+  getRazorpayPlanIdForPlan,
   getStripePlanFromPrice,
   getStripePriceForPlan,
 } from '../../lib/billing/plans';
@@ -35,3 +37,14 @@ test('Stripe price mappings fail closed when IDs are missing or placeholders', (
   assert.equal(getStripePlanFromPrice('price_unknown', env), null);
 });
 
+
+test('Razorpay subscription plan ids map both ways and fail closed', () => {
+  const env = { RAZORPAY_STARTER_PLAN_ID: 'plan_Radar1', RAZORPAY_PRO_PLAN_ID: 'not-a-plan', RAZORPAY_AGENCY_PLAN_ID: '' };
+  assert.equal(getRazorpayPlanIdForPlan('starter', env), 'plan_Radar1');
+  assert.equal(getRazorpayPlanIdForPlan('pro', env), null);
+  assert.equal(getRazorpayPlanIdForPlan('agency', env), null);
+  assert.equal(getRazorpayPlanIdForPlan('free', env), null);
+  assert.equal(getRazorpayPlanFromPlanId('plan_Radar1', env), 'starter');
+  assert.equal(getRazorpayPlanFromPlanId('not-a-plan', env), null);
+  assert.equal(getRazorpayPlanFromPlanId('plan_Other', env), null);
+});

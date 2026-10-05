@@ -8,6 +8,6 @@ export async function POST(request: Request) {
     if (!await getConvexWorkspaceContext()) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     const body = await request.json().catch(() => null);
     if (typeof body?.plan !== 'string') return NextResponse.json({ error: 'Invalid plan' }, { status: 400 });
-    return NextResponse.json(await fetchAuthAction(api.billingActions.razorpayOrder, { plan: body.plan }));
+    return NextResponse.json(await fetchAuthAction(api.billingActions.razorpaySubscribe, { plan: body.plan }));
   } catch (error) { return convexRouteError(error); }
 }

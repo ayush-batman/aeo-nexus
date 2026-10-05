@@ -8,7 +8,8 @@ export async function POST(request: Request) {
   const body = await request.text();
   if (new TextEncoder().encode(body).length > 750_000) return NextResponse.json({ error: 'Payload too large' }, { status: 413 });
   try {
-    return NextResponse.json(await callInternal('action', internal.billingActions.razorpayWebhook, { body, signature }));
+    return NextResponse.json(await callInternal('action', internal.billingActions.razorpayWebhook, {
+      body, signature, eventId: request.headers.get('x-razorpay-event-id')?.slice(0, 200) || undefined }));
   } catch (error) {
     const invalid = error instanceof Error && error.message === 'invalid_signature';
     return NextResponse.json({ error: invalid ? 'Invalid signature' : 'Webhook could not be processed; retry required' }, { status: invalid ? 400 : 503 });

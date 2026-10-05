@@ -29,6 +29,23 @@ describe('atomic billing ledger', () => {
     await expect(t.mutation(internal.billing.applyVerifiedEvent, { ...event, eventId: 'unknown', orgId: 'missing' })).rejects.toThrow('billing_organization_not_found');
     expect(await t.run(ctx => ctx.db.query('billingWebhookEvents').withIndex('by_provider_and_event_id', q => q.eq('provider', 'stripe').eq('eventId', 'unknown')).unique())).toBeNull();
   });
+  test('Razorpay subscription states move only the subscription the organization is billed through', async () => {
+    const { t, context } = await fixture();
+    const event = { provider: 'razorpay' as const, eventType: 'subscription.activated', orgId: context.orgId,
+      plan: 'starter' as const, subscriptionId: 'sub_radar', occurredAt: 1000 };
+    const plan = async () => (await t.run(ctx => ctx.db.query('organizations').withIndex('by_public_id', q => q.eq('publicId', context.orgId)).unique()))?.plan;
+    expect(await t.mutation(internal.billing.applyVerifiedEvent, { ...event, eventId: 'activated' })).toBe(true);
+    // A new subscription that is only authenticated (not yet charged) must not downgrade the paid one.
+    expect(await t.mutation(internal.billing.applyVerifiedEvent, { ...event, eventId: 'new-authenticated', plan: 'free', subscriptionId: 'sub_command', occurredAt: 2000 })).toBe(false);
+    expect(await plan()).toBe('starter');
+    // Upgrade: the new subscription becomes current; the old one's cancellation is then ignored.
+    expect(await t.mutation(internal.billing.applyVerifiedEvent, { ...event, eventId: 'new-active', plan: 'pro', subscriptionId: 'sub_command', occurredAt: 3000 })).toBe(true);
+    expect(await t.mutation(internal.billing.applyVerifiedEvent, { ...event, eventId: 'old-cancelled', plan: 'free', occurredAt: 4000 })).toBe(false);
+    expect(await plan()).toBe('pro');
+    // A failed renewal (pending/halted) or cancellation of the current subscription ends the paid plan.
+    expect(await t.mutation(internal.billing.applyVerifiedEvent, { ...event, eventId: 'halted', plan: 'free', subscriptionId: 'sub_command', occurredAt: 5000 })).toBe(true);
+    expect(await plan()).toBe('free');
+  });
   test('checkout context and customer attachment require an authenticated admin', async () => {
     const { t, owner, context } = await fixture();
     await expect(t.query(internal.billing.context, {})).rejects.toThrow();
@@ -51,7 +68,7 @@ describe('atomic billing ledger', () => {
     Reflect.deleteProperty(process.env, 'RAZORPAY_KEY_SECRET');
     try {
       await expect(owner.action(api.billingActions.stripeCheckout, { plan: 'starter' })).rejects.toThrow('payment_unconfigured');
-      await expect(owner.action(api.billingActions.razorpayOrder, { plan: 'starter' })).rejects.toThrow('payment_unconfigured');
+      await expect(owner.action(api.billingActions.razorpaySubscribe, { plan: 'starter' })).rejects.toThrow('payment_unconfigured');
     } finally {
       for (const [name, value] of Object.entries({
         STRIPE_SECRET_KEY: previous.stripe,

@@ -1,28 +1,6 @@
 import { createHmac, timingSafeEqual } from 'node:crypto';
 
-import { getRazorpayPlan, type BillablePlan } from './plans';
-
-export interface RazorpayPaymentLike {
-  id: string;
-  order_id: string;
-  amount: number | string;
-  currency: string;
-  status: string;
-}
-
-export interface RazorpayOrderLike {
-  id: string;
-  amount: number | string;
-  currency: string;
-  status: string;
-  notes?: Record<string, string | number | null> | null;
-}
-
-export interface ValidatedRazorpayPayment {
-  orgId: string;
-  plan: BillablePlan;
-  paymentId: string;
-}
+import { getRazorpayPlan, getRazorpayPlanFromPlanId, type BillablePlan } from './plans';
 
 function safeHexEqual(expected: string, actual: string): boolean {
   if (!/^[a-f0-9]+$/i.test(actual) || expected.length !== actual.length) return false;
@@ -45,74 +23,74 @@ export function verifyRazorpayWebhookSignature(
   return safeHexEqual(expected, signature);
 }
 
-export function verifyRazorpayPaymentSignature(input: {
-  orderId: string;
+/** Checkout signature for a subscription's authorisation payment. */
+export function verifyRazorpaySubscriptionSignature(input: {
+  subscriptionId: string;
   paymentId: string;
   signature: string;
   secret: string | null;
 }): boolean {
   if (!input.secret) return false;
   const expected = createHmac('sha256', input.secret)
-    .update(`${input.orderId}|${input.paymentId}`)
+    .update(`${input.paymentId}|${input.subscriptionId}`)
     .digest('hex');
   return safeHexEqual(expected, input.signature);
 }
 
-function toAmount(value: string | number): number {
-  const amount = typeof value === 'number' ? value : Number(value);
-  if (!Number.isSafeInteger(amount) || amount < 0) {
-    throw new Error('Payment amount is invalid');
-  }
-  return amount;
+export interface RazorpayPlanLike {
+  id: string;
+  period: string;
+  interval: number;
+  item: { amount: number | string; currency: string };
 }
 
-export function validateRazorpayPayment(input: {
-  payment: RazorpayPaymentLike;
-  order: RazorpayOrderLike;
-}): ValidatedRazorpayPayment {
-  const { payment, order } = input;
-  if (!payment.id || !payment.order_id || payment.order_id !== order.id) {
-    throw new Error('Payment order does not match');
+/** A dashboard plan must charge exactly what the pricing page promises, monthly. */
+export function validateRazorpayPlanDefinition(plan: RazorpayPlanLike, expected: BillablePlan): void {
+  const catalog = getRazorpayPlan(expected);
+  const amount = typeof plan.item?.amount === 'number' ? plan.item.amount : Number(plan.item?.amount);
+  if (!catalog || plan.period !== 'monthly' || plan.interval !== 1 ||
+    amount !== catalog.amount || plan.item?.currency !== catalog.currency) {
+    throw new Error('payment_unconfigured');
   }
-  if (payment.status !== 'captured') {
-    throw new Error('Payment is not captured');
-  }
-  if (order.status !== 'paid') {
-    throw new Error('Order is not paid');
-  }
+}
 
-  const notes = order.notes ?? {};
+export interface RazorpaySubscriptionLike {
+  id: string;
+  plan_id: string;
+  status: string;
+  notes?: Record<string, string | number | null> | unknown[] | null;
+}
+
+export interface ResolvedRazorpaySubscription {
+  orgId: string;
+  subscriptionId: string;
+  /** The plan the organization is entitled to now: paid only while the subscription is active. */
+  plan: BillablePlan | 'free';
+  status: string;
+}
+
+export function resolveRazorpaySubscription(
+  subscription: RazorpaySubscriptionLike,
+  environment: Record<string, string | undefined>,
+): ResolvedRazorpaySubscription {
+  const notes = subscription.notes && !Array.isArray(subscription.notes) ? subscription.notes : {};
   const orgId = typeof notes.org_id === 'string' ? notes.org_id.trim() : '';
-  const dbPlan = typeof notes.db_plan === 'string' ? notes.db_plan : '';
-  const plan = getRazorpayPlan(dbPlan);
-  if (!orgId) throw new Error('Order is missing its organization');
-  if (!plan || plan.dbPlan !== dbPlan) throw new Error('Order has an invalid plan');
-
-  const paymentAmount = toAmount(payment.amount);
-  const orderAmount = toAmount(order.amount);
-  if (paymentAmount !== orderAmount || orderAmount !== plan.amount) {
-    throw new Error('Payment amount does not match the plan');
-  }
-  if (
-    payment.currency !== plan.currency ||
-    order.currency !== plan.currency ||
-    payment.currency !== order.currency
-  ) {
-    throw new Error('Payment currency does not match the plan');
-  }
-
-  return { orgId, plan: plan.dbPlan, paymentId: payment.id };
+  if (!subscription.id?.startsWith('sub_') || !orgId) throw new Error('invalid_subscription');
+  const paidPlan = getRazorpayPlanFromPlanId(subscription.plan_id, environment);
+  if (!paidPlan) throw new Error('invalid_subscription_price');
+  return { orgId, subscriptionId: subscription.id, status: subscription.status,
+    plan: subscription.status === 'active' ? paidPlan : 'free' };
 }
 
-export function extractRazorpayPaymentId(payload: unknown): string | null {
-  if (!payload || typeof payload !== 'object') return null;
-  const root = payload as Record<string, unknown>;
-  const payloadObject = root.payload;
-  if (!payloadObject || typeof payloadObject !== 'object') return null;
-  const payment = (payloadObject as Record<string, unknown>).payment;
-  if (!payment || typeof payment !== 'object') return null;
-  const entity = (payment as Record<string, unknown>).entity;
-  if (!entity || typeof entity !== 'object') return null;
-  const id = (entity as Record<string, unknown>).id;
-  return typeof id === 'string' && id ? id : null;
+/** Statuses after which Razorpay will never charge the subscription again. */
+export function isRazorpaySubscriptionClosed(status: string): boolean {
+  return status === 'cancelled' || status === 'completed' || status === 'expired';
+}
+
+export function extractRazorpaySubscriptionId(payload: unknown): string | null {
+  const root = payload && typeof payload === 'object' ? payload as Record<string, unknown> : null;
+  const body = root?.payload && typeof root.payload === 'object' ? root.payload as Record<string, unknown> : null;
+  const subscription = body?.subscription && typeof body.subscription === 'object' ? body.subscription as Record<string, unknown> : null;
+  const entity = subscription?.entity && typeof subscription.entity === 'object' ? subscription.entity as Record<string, unknown> : null;
+  return typeof entity?.id === 'string' && entity.id.startsWith('sub_') ? entity.id : null;
 }

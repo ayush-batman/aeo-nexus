@@ -6,12 +6,17 @@ async function routeSource(relativePath: string): Promise<string> {
   return readFile(new URL(`../../${relativePath}`, import.meta.url), 'utf8');
 }
 
-test('Razorpay webhook fails closed and verifies provider-owned payment data', async () => {
+test('Razorpay bills through subscriptions and trusts only provider-fetched subscription state', async () => {
 const [edge, backend] = await Promise.all([routeSource('app/api/webhooks/razorpay/route.ts'),routeSource('convex/billingActions.ts')]);
   assert.match(edge, /internal\.billingActions\.razorpayWebhook/);
+  assert.match(edge, /x-razorpay-event-id/);
   assert.match(backend, /verifyRazorpayWebhookSignature/);
-  assert.match(backend, /provider\.payments\.fetch/); assert.match(backend, /provider\.orders\.fetch/);
-  assert.match(backend, /validateRazorpayPayment/); assert.match(backend, /internal\.billing\.applyVerifiedEvent/);
+  assert.match(backend, /provider\.subscriptions\.create/); assert.match(backend, /provider\.subscriptions\.fetch/);
+  assert.match(backend, /validateRazorpayPlanDefinition/); assert.match(backend, /resolveRazorpaySubscription/);
+  assert.match(backend, /internal\.billing\.applyVerifiedEvent/);
+  // One-time orders granted a monthly plan forever; they must not come back.
+  assert.doesNotMatch(backend, /orders\.create|validateRazorpayPayment/);
+  assert.match(backend, /error\.message === 'invalid_subscription'\) return \{ received: true, ignored: true \}/);
   assert.doesNotMatch(backend, /Processing without signature|notes\.plan\s*\|\|/);
 });
 
