@@ -1,5 +1,6 @@
 // Organizations that paid through the retired one-time Razorpay order flow keep
-// a `pay_…` reference. They get 30 days from their payment, then return to Free.
+// a `pay_…` reference. They get 30 days from the day the expiry job first sees
+// them (deploy day), whatever their payment date, then return to Free.
 export const LEGACY_RAZORPAY_ACCESS_MS = 30 * 86_400_000;
 
 export interface OrganizationBillingFields {
@@ -29,7 +30,7 @@ export function billingProviderOf(org: OrganizationBillingFields): 'stripe' | 'r
 }
 
 export function legacyPaidUntil(org: OrganizationBillingFields, now: number): number {
-  return org.billingCancelsAt ?? (org.billingOccurredAt ?? now) + LEGACY_RAZORPAY_ACCESS_MS;
+  return org.billingCancelsAt ?? now + LEGACY_RAZORPAY_ACCESS_MS;
 }
 
 export function billingSummary(org: OrganizationBillingFields, now: number): BillingSummary {

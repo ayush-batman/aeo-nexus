@@ -46,31 +46,42 @@ describe('atomic billing ledger', () => {
     expect(await t.mutation(internal.billing.applyVerifiedEvent, { ...event, eventId: 'halted', plan: 'free', subscriptionId: 'sub_command', occurredAt: 5000 })).toBe(true);
     expect(await plan()).toBe('free');
   });
-  test('legacy one-time Razorpay payers keep 30 days from payment, then move to Free', async () => {
+  test('legacy one-time Razorpay payers keep 30 days from the first expiry run, then move to Free', async () => {
     const { t, context } = await fixture();
     const day = 86_400_000;
     const now = Date.now();
     const ids = await t.run(async ctx => {
       const own = await ctx.db.query('organizations').withIndex('by_public_id', q => q.eq('publicId', context.orgId)).unique();
-      await ctx.db.patch(own!._id, { plan: 'starter', billingProvider: 'razorpay', razorpaySubscriptionId: 'pay_expired', billingOccurredAt: now - 31 * day });
+      // Paid long ago: still gets the full 30 days from the first run, not an immediate downgrade.
+      await ctx.db.patch(own!._id, { plan: 'starter', billingProvider: 'razorpay', razorpaySubscriptionId: 'pay_old', billingOccurredAt: now - 90 * day });
       const base = { name: 'Org', stripeCustomerId: null, stripeSubscriptionId: null, createdAt: now, updatedAt: now };
       const recent = await ctx.db.insert('organizations', { ...base, publicId: 'recent', plan: 'pro', billingProvider: 'razorpay',
-        razorpaySubscriptionId: 'pay_recent', billingOccurredAt: now - 10 * day });
+        razorpaySubscriptionId: 'pay_recent', billingOccurredAt: now - 2 * day });
       const movedToStripe = await ctx.db.insert('organizations', { ...base, publicId: 'stripe', plan: 'pro', billingProvider: 'stripe',
         stripeSubscriptionId: 'sub_stripe', razorpaySubscriptionId: 'pay_stale', billingOccurredAt: now - 90 * day });
       const subscriber = await ctx.db.insert('organizations', { ...base, publicId: 'sub', plan: 'pro', billingProvider: 'razorpay',
         razorpaySubscriptionId: 'sub_live', billingOccurredAt: now - 90 * day });
       return { own: own!._id, recent, movedToStripe, subscriber };
     });
+    const read = () => t.run(ctx => Promise.all([ids.own, ids.recent, ids.movedToStripe, ids.subscriber].map(id => ctx.db.get(id))));
     await t.mutation(internal.billing.expireLegacyRazorpayOrders, { cursor: null });
-    const [own, recent, movedToStripe, subscriber] = await t.run(ctx => Promise.all(
-      [ids.own, ids.recent, ids.movedToStripe, ids.subscriber].map(id => ctx.db.get(id))));
-    expect(own).toMatchObject({ plan: 'free', razorpaySubscriptionId: null, billingCancelsAt: null });
-    expect(recent).toMatchObject({ plan: 'pro', razorpaySubscriptionId: 'pay_recent', billingCancelsAt: now - 10 * day + 30 * day });
+    const [ownFirst, recentFirst, movedToStripe, subscriber] = await read();
+    for (const org of [ownFirst, recentFirst]) {
+      expect(org?.plan).not.toBe('free');
+      expect(org?.billingCancelsAt).toBeGreaterThanOrEqual(now + 30 * day);
+      expect(org?.billingCancelsAt).toBeLessThan(now + 30 * day + 60_000);
+    }
     expect(movedToStripe).toMatchObject({ plan: 'pro', stripeSubscriptionId: 'sub_stripe', razorpaySubscriptionId: null });
     expect(subscriber).toMatchObject({ plan: 'pro', razorpaySubscriptionId: 'sub_live' });
+    // A later run keeps the stamped date; once it has passed, the organization moves to Free.
+    const stamped = recentFirst?.billingCancelsAt;
+    await t.run(ctx => ctx.db.patch(ids.own, { billingCancelsAt: now - 1 }));
+    await t.mutation(internal.billing.expireLegacyRazorpayOrders, { cursor: null });
+    const [own, recent] = await read();
+    expect(own).toMatchObject({ plan: 'free', razorpaySubscriptionId: null, billingCancelsAt: null });
+    expect(recent).toMatchObject({ plan: 'pro', razorpaySubscriptionId: 'pay_recent', billingCancelsAt: stamped });
     const ledger = await t.run(ctx => ctx.db.query('billingWebhookEvents').collect());
-    expect(ledger.map(row => row.eventId)).toEqual(['legacy-expiry:pay_expired']);
+    expect(ledger.map(row => row.eventId)).toEqual(['legacy-expiry:pay_old']);
   });
   test('a scheduled cancellation is recorded for the current subscription and cleared by a new one', async () => {
     const { t, owner, context } = await fixture();

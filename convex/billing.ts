@@ -116,7 +116,7 @@ export const recordCancellation = internalMutation({
   },
 });
 
-/** Daily: give legacy one-time Razorpay payers an end date, and move them to Free once it passes. */
+/** Daily: give legacy one-time Razorpay payers an end date 30 days after the first run, and move them to Free once it passes. */
 export const expireLegacyRazorpayOrders = internalMutation({
   args: { cursor: v.union(v.string(), v.null()) }, returns: v.null(),
   handler: async (ctx, args) => {
