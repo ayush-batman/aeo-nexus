@@ -37,6 +37,7 @@ import {
 import { PLAN_LIMITS } from "@/lib/config";
 import { PUBLIC_PLANS, planByStoredKey } from "@/lib/billing/plan-catalog";
 import { ReportsSettingsTabs } from "@/components/dashboard/reports-settings-tabs";
+import { SubscriptionStatus, type BillingSummary } from "@/components/billing/subscription-status";
 
 
 declare global {
@@ -93,6 +94,7 @@ interface Organization {
     id: string;
     name: string;
     plan: string;
+    billing: BillingSummary;
 }
 
 interface TeamMember {
@@ -595,6 +597,11 @@ export default function SettingsPage() {
                                                             </p>
                                                         </div>
                                                     </div>
+                                                    {organization && (
+                                                        <div className="mb-4">
+                                                            <SubscriptionStatus billing={organization.billing} onChanged={fetchData} />
+                                                        </div>
+                                                    )}
                                                     <div className="grid grid-cols-3 gap-4 text-sm">
                                                         <div>
                                                             <p className="text-[var(--text-secondary)]">LLM Scans</p>
@@ -617,10 +624,10 @@ export default function SettingsPage() {
                                             </CardContent>
                                         </Card>
 
-                                        {currentPlan === 'free' && (
+                                        {(currentPlan === 'free' || organization?.billing.kind === 'one_time') && (
                                             <Card>
                                                 <CardHeader>
-                                                    <CardTitle className="text-lg">Upgrade Your Plan</CardTitle>
+                                                    <CardTitle className="text-lg">{currentPlan === 'free' ? 'Upgrade Your Plan' : 'Switch to a monthly plan'}</CardTitle>
                                                 </CardHeader>
                                                 <CardContent>
                                                     {upgradeError && (
